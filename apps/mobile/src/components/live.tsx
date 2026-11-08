@@ -1,4 +1,5 @@
-import { LIVE_EMOJI, LIVE_SEATS, type LiveGame, type LiveInviteDTO, type LiveRoomDTO } from "@six/shared";
+import type { Realtime } from "@six/sdk";
+import { type CreateLiveInput, LIVE_EMOJI, LIVE_SEATS, type LiveGame, type LiveInviteDTO, type LiveRoomDTO } from "@six/shared";
 import * as Haptics from "expo-haptics";
 import { type Href, router } from "expo-router";
 import { Check, X } from "lucide-react-native";
@@ -6,6 +7,7 @@ import { useEffect, useState } from "react";
 import { FlatList, Modal, Pressable, StyleSheet, View } from "react-native";
 import Animated, { FadeInUp, FadeOutUp } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { create } from "zustand";
 import { isBotChat, isFrozen, useChats } from "@/lib/chats";
 import { useLocale, useT } from "@/lib/i18n";
 import { playGameSound } from "@/lib/game-sound";
@@ -13,10 +15,53 @@ import { useRealtime } from "@/lib/realtime";
 import { useSession } from "@/lib/session";
 import { brand, brandInk, useTheme } from "@/lib/theme";
 import { Avatar } from "./avatar";
+import { Sheet } from "./sheet";
 import { Text } from "./text";
 import { IconButton, PrimaryButton } from "./ui";
 
 export const playHref = (roomId: string) => `/play/${roomId}` as Href;
+
+type Unfinished = { input: CreateLiveInput; roomId: string; game: LiveGame };
+const useUnfinished = create<{ unfinished: Unfinished | null }>(() => ({ unfinished: null }));
+
+/**
+ * Asks for a new live game and returns its room. When an unfinished game stops it, returns null and asks, in
+ * `UnfinishedGame`, whether to go back to that one or quit it for the new one.
+ */
+export async function startLive(socket: Realtime["socket"] | undefined, input: CreateLiveInput) {
+  const res = await socket?.timeout(10_000).emitWithAck("live:create", input).catch(() => null);
+  if (res?.ok) return res.data.id;
+  if (res?.error.code === "GAME_IN_PROGRESS") {
+    useUnfinished.setState({ unfinished: { input, ...(res.error.details as { roomId: string; game: LiveGame }) } });
+  }
+  return null;
+}
+
+/** Continue the unfinished game, or quit it and start the one asked for. */
+export function UnfinishedGame() {
+  const tr = useT();
+  const socket = useRealtime().realtime?.socket;
+  const unfinished = useUnfinished((s) => s.unfinished);
+  if (!unfinished) return null;
+  const { input, roomId, game } = unfinished;
+
+  async function switchGame() {
+    await socket?.timeout(10_000).emitWithAck("live:end", { roomId }).catch(() => null);
+    const id = await startLive(socket, input);
+    if (id) router.push(playHref(id));
+  }
+
+  return (
+    <Sheet
+      title={`${LIVE_EMOJI[game]} ${tr.live.unfinished(tr.live.games[game])}`}
+      actions={[
+        { label: tr.live.continueGame, onSelect: () => router.push(playHref(roomId)) },
+        { label: tr.live.switchGame(tr.live.games[input.game]), destructive: true, onSelect: () => void switchGame() },
+      ]}
+      onClose={() => useUnfinished.setState({ unfinished: null })}
+    />
+  );
+}
 
 /** Sends a move to the room; resolves to the error code, or null when it was played. */
 export type Play = (move: unknown) => Promise<string | null>;
@@ -76,12 +121,11 @@ export function LiveInviteSheet({ game, onClose }: { game: LiveGame; onClose: ()
     setBusy(true);
     setError(false);
     try {
-      const res = await socket
-        .timeout(10_000)
-        .emitWithAck("live:create", { game, invite: picked, locale: useLocale.getState().locale });
-      if (!res.ok) throw new Error(res.error.code);
+      const id = await startLive(socket, { game, invite: picked, locale: useLocale.getState().locale });
+      if (!id && useUnfinished.getState().unfinished) return onClose();
+      if (!id) throw new Error("not created");
       onClose();
-      router.push(playHref(res.data.id));
+      router.push(playHref(id));
     } catch {
       setError(true);
     } finally {

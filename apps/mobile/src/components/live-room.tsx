@@ -566,6 +566,10 @@ export function LiveRoom({ id }: { id: string }) {
   useGameMusic(!!room && !closed);
   const turn = useMyTurn(room);
   const urgent = turn.seconds !== null && turn.seconds <= 10;
+  const solo = useRef(false);
+  useEffect(() => {
+    solo.current = !!room && room.status === "playing" && room.seats.every((s, i) => i === room.mySeat || !s.user);
+  }, [room]);
 
   useEffect(() => {
     if (!socket) return;
@@ -585,6 +589,7 @@ export function LiveRoom({ id }: { id: string }) {
       socket.off("live:room", onRoom);
       socket.off("live:closed", onClosed);
       socket.off("connect", join);
+      if (solo.current) socket.emit("live:leave", { roomId: id });
     };
   }, [socket, id]);
 

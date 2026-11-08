@@ -6,6 +6,7 @@ import { ChevronLeft, ChevronsUpDown, Lock, MoreVertical, Phone, PinOff, ShieldA
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useMedia } from "@/lib/viewport";
 import { closeChat, deleteMessages, updateChatSettings } from "@/lib/actions";
 import { setArchiveOpen } from "@/lib/app-lock";
 import { useChatShut } from "@/lib/archive-lock";
@@ -92,6 +93,7 @@ function OpenConversation({ chatId }: { chatId: string }) {
   const { realtime, status } = useRealtime();
   const list = useRef<MessageListHandle>(null);
   const [sidebar, setSidebar] = useState<HTMLDivElement | null>(null);
+  const wide = useMedia("(width >= 80rem)");
   const [menu, setMenu] = useState(false);
   const [thread, setThread] = useState<string | null>(null);
   const [editing, setEditing] = useState(false);
@@ -183,8 +185,8 @@ function OpenConversation({ chatId }: { chatId: string }) {
   const peer = chatFace(c, meId);
   const muted = isMuted(c);
   const frozen = isFrozen(c);
-  const app = c.withSupport;
-  const shownPresence = frozen || c.withSupport || c.group ? undefined : presence;
+  const app = c.withSupport || isBotChat(c);
+  const shownPresence = frozen || app || c.group ? undefined : presence;
   const count = selecting ? selectedIds.length : 0;
   const pins = c.pinnedMessages;
   const pin = pins[pinIndex % (pins.length || 1)];
@@ -394,7 +396,7 @@ function OpenConversation({ chatId }: { chatId: string }) {
               </p>
             )}
             {!selecting && (frozen || readOnlyGroup(c)) && <ChatBlocked chat={c} peerId={peer.id} peerName={peer.displayName} />}
-            {!selecting && !frozen && isBotChat(c) && <BotGames />}
+            {!selecting && !frozen && isBotChat(c) && !wide && <BotGames />}
             {!selecting && !frozen && !readOnlyGroup(c) && !isBotChat(c) && (
               <div className="chat-colors contents">
                 <Composer
@@ -413,6 +415,7 @@ function OpenConversation({ chatId }: { chatId: string }) {
             )}
           </div>
         </div>
+        {!selecting && !frozen && isBotChat(c) && wide && <BotGames side />}
         <div ref={setSidebar} className="chat-colors contents" />
       </div>
 

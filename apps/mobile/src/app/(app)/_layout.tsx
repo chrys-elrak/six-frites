@@ -7,7 +7,7 @@ import { MiniPlayer, useMiniPlayer } from "@/components/mini-player";
 import { BackupPinPrompt } from "@/components/encryption-settings";
 import { StoryPostBar } from "@/components/story-post-bar";
 import { Toasts } from "@/components/toasts";
-import { LiveInvites } from "@/components/live";
+import { LiveInvites, UnfinishedGame } from "@/components/live";
 import { WhatsNewPrompt } from "@/components/whats-new";
 import { useAppLock, useAutoLock } from "@/lib/app-lock";
 import { usePush } from "@/lib/push";
@@ -33,6 +33,7 @@ export default function AppLayout() {
         {!locked && <Toasts />}
         {!locked && <StoryPostBar />}
         {!locked && <LiveInvites />}
+        {!locked && <UnfinishedGame />}
         {!locked && <BackupPinPrompt />}
         {!locked && <WhatsNewPrompt />}
         <CallScreen />

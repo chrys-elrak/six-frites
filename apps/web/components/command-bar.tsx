@@ -1,22 +1,7 @@
 "use client";
 
 import { SixApiError, unwrap } from "@six/sdk";
-import {
-  COMMANDS,
-  type EmojiEntry,
-  type GifDTO,
-  LIVE_EMOJI,
-  LIVE_GAMES,
-  type LiveGame,
-  MessageEffect,
-  type MenuCommand,
-  type StickerDTO,
-  groupCommands,
-  isMenuCommand,
-  parseCommand,
-  silentMessage,
-  suggestEmoji,
-} from "@six/shared";
+import { COMMANDS, type EmojiEntry, type GifDTO, LIVE_EMOJI, LIVE_GAMES, type LiveGame, MessageEffect, type MenuCommand, type StickerDTO, groupCommands, isMenuCommand, parseCommand, silentMessage, suggestEmoji } from "@six/shared";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import { type Ref, useEffect, useImperativeHandle, useState } from "react";
@@ -29,6 +14,7 @@ import { useSession } from "@/lib/session";
 import { six } from "@/lib/six";
 import { VOICE_EFFECTS, useVoiceEffect } from "@/lib/voice-fx";
 import { useGifs } from "./gif-picker";
+import { startLive } from "./live-invites";
 import { StickerView } from "./sticker";
 
 interface Choice {
@@ -112,11 +98,7 @@ export function CommandBar({
   function play(game: LiveGame) {
     onComplete("");
     const invite = chat?.members.flatMap((m) => (m.user.id === meId ? [] : [m.user.id])) ?? [];
-    void realtime?.socket
-      .timeout(10_000)
-      .emitWithAck("live:create", { game, invite, locale })
-      .then((res) => res.ok && router.push(`/play/${res.data.id}`))
-      .catch(() => null);
+    void startLive(realtime?.socket, { game, invite, locale }).then((id) => id && router.push(`/play/${id}`));
   }
 
   function choicesFor(name: string, args: string): Choice[] | null {

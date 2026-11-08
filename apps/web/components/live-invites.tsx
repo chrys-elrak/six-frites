@@ -1,6 +1,7 @@
 "use client";
 
-import { LIVE_EMOJI, LIVE_SEATS, type LiveGame, type LiveInviteDTO, isFrozen } from "@six/shared";
+import type { Realtime } from "@six/sdk";
+import { type CreateLiveInput, LIVE_EMOJI, LIVE_SEATS, type LiveGame, type LiveInviteDTO, isFrozen } from "@six/shared";
 import { Check, X } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -8,9 +9,54 @@ import { isBotChat, useChats } from "@/lib/chats";
 import { useLocale, useT } from "@/lib/i18n";
 import { useRealtime } from "@/lib/realtime";
 import { useSession } from "@/lib/session";
+import { create } from "zustand";
 import { Avatar } from "./avatar";
 import { Dialog } from "./dialog";
 import { Portal } from "./portal";
+import { Sheet } from "./sheet";
+
+type Unfinished = { input: CreateLiveInput; roomId: string; game: LiveGame };
+const useUnfinished = create<{ unfinished: Unfinished | null }>(() => ({ unfinished: null }));
+
+/**
+ * Asks for a new live game and returns its room. When an unfinished game stops it, returns null and asks, in
+ * `UnfinishedGame`, whether to go back to that one or quit it for the new one.
+ */
+export async function startLive(socket: Realtime["socket"] | undefined, input: CreateLiveInput) {
+  const res = await socket?.timeout(10_000).emitWithAck("live:create", input).catch(() => null);
+  if (res?.ok) return res.data.id;
+  if (res?.error.code === "GAME_IN_PROGRESS") {
+    useUnfinished.setState({ unfinished: { input, ...(res.error.details as { roomId: string; game: LiveGame }) } });
+  }
+  return null;
+}
+
+/** Continue the unfinished game, or quit it and start the one asked for. */
+export function UnfinishedGame() {
+  const tr = useT();
+  const router = useRouter();
+  const { realtime } = useRealtime();
+  const unfinished = useUnfinished((s) => s.unfinished);
+  if (!unfinished) return null;
+  const { input, roomId, game } = unfinished;
+
+  async function switchGame() {
+    await realtime?.socket.timeout(10_000).emitWithAck("live:end", { roomId }).catch(() => null);
+    const id = await startLive(realtime?.socket, input);
+    if (id) router.push(`/play/${id}`);
+  }
+
+  return (
+    <Sheet
+      title={`${LIVE_EMOJI[game]} ${tr.live.unfinished(tr.live.games[game])}`}
+      actions={[
+        { label: tr.live.continueGame, onSelect: () => router.push(`/play/${roomId}`) },
+        { label: tr.live.switchGame(tr.live.games[input.game]), destructive: true, onSelect: () => void switchGame() },
+      ]}
+      onClose={() => useUnfinished.setState({ unfinished: null })}
+    />
+  );
+}
 
 /** Picks the contacts to ask into a new live room, as many as it has seats left, then opens it. */
 export function NewLiveRoom({ game, onClose }: { game: LiveGame; onClose: () => void }) {
@@ -32,12 +78,9 @@ export function NewLiveRoom({ game, onClose }: { game: LiveGame; onClose: () => 
   async function create() {
     if (!realtime || busy) return;
     setBusy(true);
-    const res = await realtime.socket
-      .timeout(10_000)
-      .emitWithAck("live:create", { game, invite: picked, locale })
-      .catch(() => null);
+    const id = await startLive(realtime.socket, { game, invite: picked, locale });
     setBusy(false);
-    if (res?.ok) router.push(`/play/${res.data.id}`);
+    if (id) router.push(`/play/${id}`);
     onClose();
   }
 

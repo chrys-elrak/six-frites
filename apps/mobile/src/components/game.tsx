@@ -931,6 +931,7 @@ export function GameView({
   nameOf,
   onPlay,
   onSend,
+  quick = false,
 }: {
   game: ChatGame;
   senderId: string;
@@ -940,6 +941,8 @@ export function GameView({
   nameOf: (userId: string) => string;
   onPlay?: (move: GameMove) => void;
   onSend?: (game: ChatGame) => void;
+  /** Play again sends the same game right away instead of setting up a new one, for Six Frites Game to start. */
+  quick?: boolean;
 }) {
   const t = useTheme();
   const tr = useT();
@@ -974,7 +977,7 @@ export function GameView({
       )}
       {over && onSend && (
         <Pressable
-          onPress={() => setAgain(true)}
+          onPress={() => (quick ? onSend(game) : setAgain(true))}
           accessibilityRole="button"
           style={({ pressed }) => [styles.pill, { backgroundColor: c.button }, pressed && styles.pressed]}
         >

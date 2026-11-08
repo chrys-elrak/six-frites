@@ -1,28 +1,12 @@
 import { SixApiError, unwrap } from "@six/sdk";
-import {
-  COMMANDS,
-  groupCommands,
-  type CommandName,
-  type EmojiEntry,
-  type GifDTO,
-  LIVE_EMOJI,
-  LIVE_GAMES,
-  type LiveGame,
-  MessageEffect,
-  type MenuCommand,
-  type StickerDTO,
-  isMenuCommand,
-  parseCommand,
-  silentMessage,
-  suggestEmoji,
-} from "@six/shared";
+import { COMMANDS, groupCommands, type CommandName, type EmojiEntry, type GifDTO, LIVE_EMOJI, LIVE_GAMES, type LiveGame, MessageEffect, type MenuCommand, type StickerDTO, isMenuCommand, parseCommand, silentMessage, suggestEmoji } from "@six/shared";
 import emojis from "@six/shared/emojis.json";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Image } from "expo-image";
 import { router } from "expo-router";
 import { type Ref, useEffect, useImperativeHandle, useState } from "react";
 import { Pressable, ScrollView, StyleSheet, View } from "react-native";
-import { playHref } from "./live";
+import { playHref, startLive } from "./live";
 import { StickerView } from "./sticker";
 import { Text } from "./text";
 import { updateChatSettings } from "@/lib/actions";
@@ -125,11 +109,7 @@ export function CommandBar({
   function play(game: LiveGame) {
     onComplete("");
     const invite = chat?.members.flatMap((m) => (m.user.id === meId ? [] : [m.user.id])) ?? [];
-    void socket
-      ?.timeout(10_000)
-      .emitWithAck("live:create", { game, invite, locale: useLocale.getState().locale })
-      .then((res) => res.ok && router.push(playHref(res.data.id)))
-      .catch(() => null);
+    void startLive(socket, { game, invite, locale: useLocale.getState().locale }).then((id) => id && router.push(playHref(id)));
   }
 
   function choicesFor(name: CommandName, args: string): Choice[] | null {

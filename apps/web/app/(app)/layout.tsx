@@ -22,7 +22,7 @@ import { StoryPostBar } from "@/components/story-post-bar";
 import { Toasts } from "@/components/toasts";
 import { UpdatePrompt } from "@/components/update-prompt";
 import { WhatsNewPrompt } from "@/components/whats-new";
-import { LiveInvites } from "@/components/live-invites";
+import { LiveInvites, UnfinishedGame } from "@/components/live-invites";
 import { CallScreen } from "@/components/call-screen";
 import { MiniPlayer } from "@/components/mini-player";
 import { BackupPinPrompt } from "@/components/encryption-settings";
@@ -154,6 +154,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       {!locked && <BackupPinPrompt />}
       {!locked && <WhatsNewPrompt />}
       {!locked && <LiveInvites />}
+      {!locked && <UnfinishedGame />}
       <CallScreen />
       <UnreadTitle />
       {locked && <LockScreen />}

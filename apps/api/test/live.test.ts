@@ -116,6 +116,29 @@ describe("live rooms", () => {
     await a.ask("live:end", { roomId: data!.id });
   });
 
+  it("pauses a word hunt against the bot while I'm away, keeping its clock", async () => {
+    const { host } = await makeFriends();
+    const a = await player(host);
+    const { data } = await a.ask<LiveRoomDTO>("live:create", { game: "words", invite: [], locale: "en", bot: true });
+    const left = Date.parse(data!.deadline!) - Date.now();
+    await a.ask("live:leave", { roomId: data!.id });
+    await new Promise((r) => setTimeout(r, 1500));
+    const back = (await a.ask<LiveRoomDTO>("live:join", { roomId: data!.id })).data!;
+    expect(back.status).toBe("playing");
+    expect(Date.parse(back.deadline!) - Date.now()).toBeGreaterThan(left - 1000);
+    await a.ask("live:end", { roomId: data!.id });
+  });
+
+  it("won't start a new game while one isn't finished, and points to it", async () => {
+    const { host } = await makeFriends();
+    const a = await player(host);
+    const first = (await a.ask<LiveRoomDTO>("live:create", { game: "eights", invite: [], locale: "en", bot: true })).data!;
+    const again = await a.ask<LiveRoomDTO>("live:create", { game: "reflex", invite: [], locale: "en", bot: true });
+    expect(again.error).toMatchObject({ code: "GAME_IN_PROGRESS", details: { roomId: first.id, game: "eights" } });
+    await a.ask("live:end", { roomId: first.id });
+    expect((await a.ask<LiveRoomDTO>("live:create", { game: "reflex", invite: [], locale: "en", bot: true })).ok).toBe(true);
+  });
+
   it("starts a game against the bot right away, inviting no one", async () => {
     const { host, guest } = await makeFriends();
     const a = await player(host);
@@ -140,7 +163,7 @@ describe("live rooms", () => {
     await vi.waitFor(async () => expect((await latest())?.action).toEqual({ type: "live_result", game: "words", result: "lost" }));
   });
 
-  it("posts invites in our chat, a game with the bot alone and its result in its chat, and nothing else after", async () => {
+  it("posts invites in our chat, and only the result in the bot's chat for a game played alone with it", async () => {
     const { host, guest } = await makeFriends();
     const [a, b] = [await player(host), await player(guest)];
     const { data } = await a.ask<LiveRoomDTO>("live:create", { game: "fanorona", invite: [guest.user.id], locale: "en" });
@@ -284,12 +307,12 @@ describe("live rooms", () => {
     const back = await a.ask<LiveRoomDTO>("live:join", { roomId: solo.id });
     expect(back.data).toMatchObject({ status: "playing", mySeat: 0, view: paused.view });
     expect(back.data!.deadline).not.toBeNull();
+    await a.ask("live:end", { roomId: solo.id });
 
     const lobby = (await a.ask<LiveRoomDTO>("live:create", { game: "dots", invite: [guest.user.id], locale: "en" })).data!;
     await b.ask("live:join", { roomId: lobby.id });
     await b.ask("live:leave", { roomId: lobby.id });
     expect((await b.ask<LiveRoomDTO>("live:join", { roomId: lobby.id })).data!.mySeat).toBe(1);
-    await a.ask("live:leave", { roomId: solo.id });
     await a.ask("live:leave", { roomId: lobby.id });
   });
 
@@ -330,6 +353,7 @@ describe("live rooms", () => {
       });
     }
 
+    await a.ask("live:end", { roomId: ludo.id });
     const words = (await a.ask<LiveRoomDTO>("live:create", { game: "words", invite: [guest.user.id], locale: "en" })).data!;
     await a.ask("live:start", { roomId: words.id });
     expect((await b.ask("live:join", { roomId: words.id })).error!.code).toBe("GAME_STARTED");
@@ -358,7 +382,7 @@ describe("live rooms", () => {
               ? { roll: true }
               : { card: 0 };
       expect((await p.ask("live:move", { roomId: data!.id, move })).ok).toBe(true);
-      await p.ask("live:leave", { roomId: data!.id });
+      await p.ask("live:end", { roomId: data!.id });
     }
   });
 

@@ -111,7 +111,7 @@ function OpenConversation({ chatId }: { chatId: string }) {
   const dismissKeyChange = useKeyChanges((s) => s.dismiss);
   const peerId = chat.data?.group ? undefined : chat.data?.members.find((m) => m.user.id !== meId)?.user.id;
   const frozen = !!chat.data && isFrozen(chat.data);
-  const hidePresence = frozen || !!chat.data?.withSupport || !!chat.data?.group;
+  const hidePresence = frozen || !!chat.data?.withSupport || !!chat.data?.group || (!!chat.data && isBotChat(chat.data));
   useWatchPresence(peerId && !hidePresence ? [peerId] : []);
   const presence = usePresence(hidePresence ? undefined : peerId);
   const theme = chatTheme(chat.data?.theme);
@@ -191,7 +191,7 @@ function OpenConversation({ chatId }: { chatId: string }) {
 
   const c = chat.data;
   const peer = chatFace(c, meId);
-  const app = c.withSupport;
+  const app = c.withSupport || isBotChat(c);
   const count = selecting ? selectedIds.length : 0;
   const pins = c.pinnedMessages;
   const pin = pins[pinIndex % (pins.length || 1)];

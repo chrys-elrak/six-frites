@@ -76,7 +76,6 @@ import {
 import type { User } from "../generated/prisma/client.js";
 import { lexicon } from "../lib/lexicon.js";
 import { withEvents } from "../lib/events.js";
-import { postBotLiveGame, postBotLiveResult } from "./bot.js";
 import { prisma } from "../lib/prisma.js";
 import { broadcaster, rooms } from "../lib/realtime.js";
 import { deleteObjects, presignGet } from "../lib/storage.js";
@@ -84,6 +83,7 @@ import { storeVoice } from "./ask.js";
 import { blockedWith } from "./blocks.js";
 import { profilesFor } from "./contacts.js";
 import { sharedGif } from "./gifs.js";
+import { postBotLiveResult } from "./bot.js";
 import { createMessage, endLiveInvites } from "./messages.js";
 import { deliverLiveInvitePush } from "./push.js";
 
@@ -118,6 +118,8 @@ interface Room {
   state: GameState | null;
   winners: number[];
   deadline: number | null;
+  /** Set while nobody is in a game against the bot: the time left on Word Hunt's clock, 0 for the others. */
+  paused: number | null;
   turnTimer: NodeJS.Timeout | null;
   roundTimers: NodeJS.Timeout[];
   users: Map<string, User>;
@@ -130,8 +132,6 @@ interface Room {
   saidAt: Map<string, number>;
   voiceKeys: string[];
   touched: number;
-  /** The game being posted in the bot's chat, which its result waits for so it lands after. */
-  posted?: Promise<unknown>;
 }
 
 /**
@@ -299,9 +299,7 @@ function close(room: Room) {
   clearTimers(room);
   live.delete(room.id);
   void deleteObjects(room.voiceKeys).catch(() => null);
-  void Promise.resolve(room.posted)
-    .then(() => endLiveInvites(room.id))
-    .catch((err) => console.error("could not end the live game invites:", err.message));
+  void endLiveInvites(room.id).catch((err) => console.error("could not end the live game invites:", err.message));
   const out = broadcaster();
   const seated = room.seats.flatMap((s) => (s.userId ? [s.userId] : []));
   for (const id of [...seated, ...room.invited]) out.to(rooms.user(id)).emit("live:closed", { roomId: room.id });
@@ -309,7 +307,7 @@ function close(room: Room) {
 
 /**
  * Ends the game: who won shows in the room until the next game or everyone leaves. Someone who played alone
- * against the bot also finds the result in their chat with it.
+ * against the bot also finds the result, and the score, in their chat with it.
  */
 function finish(room: Room, ended: number[]) {
   const winners = ended.filter((i) => !room.seats[i]!.gaveUp);
@@ -319,15 +317,14 @@ function finish(room: Room, ended: number[]) {
   room.deadline = null;
   broadcast(room);
   const people = room.seats.flatMap((s, i) => (s.userId ? [i] : []));
-  if (people.length === 1) {
-    const me = people[0]!;
-    const result = !winners.includes(me) ? "lost" : winners.length > 1 ? "draw" : "won";
-    const scores = scoresOf(room.state!);
-    const score = scores && scores.length > 1 && [scores[me]!, Math.max(...scores.filter((_, i) => i !== me))];
-    void Promise.resolve(room.posted)
-      .then(() => postBotLiveResult(room.seats[me]!.userId!, room.locale, room.game, result, score || undefined))
-      .catch((err) => console.error("could not post the live result in the bot's chat:", err.message));
-  }
+  if (people.length !== 1) return;
+  const me = people[0]!;
+  const result = !winners.includes(me) ? "lost" : winners.length > 1 ? "draw" : "won";
+  const scores = scoresOf(room.state!);
+  const score = scores && scores.length > 1 ? [scores[me]!, Math.max(...scores.filter((_, i) => i !== me))] : undefined;
+  void postBotLiveResult(room.seats[me]!.userId!, room.locale, room.game, result, score).catch((err) =>
+    console.error("could not post the live result in the bot's chat:", err.message),
+  );
 }
 
 /**
@@ -406,14 +403,14 @@ function reflexAfter(room: Room) {
 }
 
 /** Word hunt: everyone plays at once until the clock runs out, bots finding a word every few seconds. */
-function startRound(room: Room) {
-  room.deadline = Date.now() + WORDS_SECONDS * 1000;
+function startRound(room: Room, ms = WORDS_SECONDS * 1000) {
+  room.deadline = Date.now() + ms;
   room.roundTimers.push(
     setTimeout(() => {
       if (room.state?.game !== "words") return;
       room.state = { game: "words", s: { ...room.state.s, over: true } };
       finish(room, wordsWinners(room.state.s));
-    }, WORDS_SECONDS * 1000),
+    }, ms),
   );
   room.seats.forEach((seat, i) => {
     if (!playsItself(seat)) return;
@@ -425,6 +422,22 @@ function startRound(room: Room) {
     room.roundTimers.push(setTimeout(tick, 3000 + Math.random() * 4000));
   });
   broadcast(room);
+}
+
+/** Stops every clock while nobody is left in the game, keeping what's left of Word Hunt's. */
+function pause(room: Room) {
+  room.paused = room.state?.game === "words" && room.deadline ? Math.max(0, room.deadline - Date.now()) : 0;
+  room.deadline = null;
+  clearTimers(room);
+}
+
+/** Starts the clocks again where `pause` stopped them. */
+function resume(room: Room) {
+  const left = room.paused ?? 0;
+  room.paused = null;
+  if (room.state?.game === "words") startRound(room, left);
+  else if (room.state?.game === "reflex") room.state.s.target ? reflexRound(room) : reflexAfter(room);
+  else schedule(room);
 }
 
 function roomOf(roomId: string) {
@@ -456,6 +469,8 @@ export async function createRoom(userId: string, input: CreateLiveInput) {
   const chatWith = (id: string) => chats.find((c) => c.directKey === [userId, id].sort().join(":"));
   const known = invite.every((id) => !blocked.has(id) && chatWith(id));
   if (!known || people !== invite.length) throw new AppError("CONTACT_NOT_FOUND", "You can only invite your contacts");
+  const unfinished = myRooms(userId)[0];
+  if (unfinished) throw new AppError("GAME_IN_PROGRESS", "Finish your game first", { roomId: unfinished.roomId, game: unfinished.game });
 
   const room: Room = {
     id: randomBytes(9).toString("base64url"),
@@ -468,6 +483,7 @@ export async function createRoom(userId: string, input: CreateLiveInput) {
     state: null,
     winners: [],
     deadline: null,
+    paused: null,
     turnTimer: null,
     roundTimers: [],
     users: new Map(),
@@ -479,11 +495,6 @@ export async function createRoom(userId: string, input: CreateLiveInput) {
   };
   await refresh(room);
   live.set(room.id, room);
-  if (!invite.length) {
-    room.posted = postBotLiveGame(userId, input.locale, room.game, room.id).catch((err) =>
-      console.error("could not post the live game in the bot's chat:", err.message),
-    );
-  }
   if (input.bot) {
     while (room.seats.length < LIVE_SEATS[room.game].min) room.seats.push({ userId: null, left: false, away: false, gaveUp: false });
     startRoom(userId, room.id);
@@ -512,6 +523,10 @@ export async function joinRoom(userId: string, roomId: string) {
     const back = mine.left || mine.away;
     mine.left = false;
     mine.away = false;
+    if (back && room.paused !== null) {
+      resume(room);
+      return toDTO(room, userId);
+    }
     const turn = room.status === "playing" && room.state ? turnOf(room.state) : null;
     if (back && turn !== null && (!room.turnTimer || room.seats[turn] === mine)) schedule(room);
     else broadcast(room);
@@ -549,14 +564,20 @@ export function leaveRoom(userId: string, roomId: string) {
   } else room.seats[seat]!.left = true;
   if (!humans(room).length) {
     if (room.status !== "playing") return close(room);
-    if (room.state?.game !== "words" && room.state?.game !== "reflex") clearTimers(room);
-    return;
+    return pause(room);
   }
   if (room.status === "playing" && room.state && turnOf(room.state) === seat) return schedule(room);
   broadcast(room);
 }
 
 export const hasRoom = (roomId: string) => live.has(roomId);
+
+/** The app closed: the games I'm playing alone against the bot pause until I'm back. */
+export function leaveSoloRooms(userId: string) {
+  for (const room of [...live.values()]) {
+    if (room.status === "playing" && humans(room).length === 1 && humans(room)[0] === userId) leaveRoom(userId, room.id);
+  }
+}
 
 /** The games I have a seat in that haven't ended, even ones I left, so I can find my way back. */
 export function myRooms(userId: string) {

@@ -449,6 +449,9 @@ export async function createMessage(
     throw new AppError("STICKER_NOT_FOUND");
   }
   const chat = await tx.chat.findUniqueOrThrow({ where: { id: chatId } });
+  if (userId !== FRITE_BOT_ID && chat.directKey?.split(":").includes(FRITE_BOT_ID)) {
+    throw new AppError("FORBIDDEN", "Six Frites Game only plays the games it starts");
+  }
   if ((content?.game || content?.type === "game") && chat.type === "group") throw new AppError("NOT_IN_GROUPS", "Games aren't available in groups");
   const thread = content?.threadId ? await threadToCommentOn(tx, chat, content.threadId) : null;
   if ((content?.commentsClosed || content?.commentsLimit || content?.commentsCloseIn) && (chat.type !== "group" || member.role === "member" || thread)) {
@@ -594,10 +597,6 @@ export async function sendMessage(
       createMessage(tx, emit, userId, chatId, ready, { sessionId }),
     );
     await queuePush(message.id, recipients).catch((err) => console.error("could not queue push:", err.message));
-    if (recipients.includes(FRITE_BOT_ID) && message.type === "text") {
-      const { botReply } = await import("./bot.js");
-      await botReply(userId, chatId).catch((err) => console.error("Frite Bot could not answer:", err.message));
-    }
     return toMessageDTO(message, userId);
   } catch (err) {
     if ((err as { code?: string }).code !== "P2002") throw err;

@@ -1,6 +1,6 @@
 import { BOT_GAMES, type BotGame, GAME_EMOJI, LIVE_EMOJI, LIVE_GAMES, type LiveGame, type LiveInviteDTO } from "@six/shared";
 import { unwrap } from "@six/sdk";
-import { useQueryClient } from "@tanstack/react-query";
+import { type QueryClient, useQueryClient } from "@tanstack/react-query";
 import { router } from "expo-router";
 import { useEffect, useState } from "react";
 import { Pressable, ScrollView, StyleSheet, View, useWindowDimensions } from "react-native";
@@ -11,7 +11,7 @@ import { useRealtime } from "@/lib/realtime";
 import { six } from "@/lib/six";
 import { brand, brandInk, useTheme } from "@/lib/theme";
 import { HowToPlay } from "./how-to-play";
-import { playHref } from "./live";
+import { playHref, startLive } from "./live";
 import { Text } from "./text";
 
 /** As tall as the emoji panel, where a phone's keyboard would be. */
@@ -52,6 +52,14 @@ function GameCard({
   );
 }
 
+/** Asks Six Frites Game for a new game of `kind` in our chat; it plays its side first. */
+export function startBotGame(qc: QueryClient, kind: BotGame) {
+  void six.api
+    .POST("/v1/bot/games", { body: { kind, locale: getLocale() } })
+    .then((res) => insertMessage(qc, unwrap(res)))
+    .catch(() => null);
+}
+
 /**
  * What the chat with Six Frites Game shows instead of a message box: live games you're in, the games it plays with
  * you right in the chat, and live games against it that open already started.
@@ -75,19 +83,10 @@ export function BotGames() {
       .catch(() => null);
   }, [realtime]);
 
-  function start(kind: BotGame) {
-    void six.api
-      .POST("/v1/bot/games", { body: { kind, locale: getLocale() } })
-      .then((res) => insertMessage(qc, unwrap(res)))
-      .catch(() => null);
-  }
 
   async function play(game: LiveGame) {
-    const res = await realtime?.socket
-      .timeout(10_000)
-      .emitWithAck("live:create", { game, invite: [], locale: getLocale(), bot: true })
-      .catch(() => null);
-    if (res?.ok) router.push(playHref(res.data.id));
+    const id = await startLive(realtime?.socket, { game, invite: [], locale: getLocale(), bot: true });
+    if (id) router.push(playHref(id));
   }
 
   const heading = (text: string) => <Text style={[styles.heading, { color: t.muted }]}>{text}</Text>;
@@ -111,7 +110,7 @@ export function BotGames() {
         ))}
         {heading(tr.common.games)}
         {BOT_GAMES.map((g) => (
-          <GameCard key={g} game={g} emoji={GAME_EMOJI[g]} title={tr.calls[g]} width={cardWidth} onPress={() => start(g)} />
+          <GameCard key={g} game={g} emoji={GAME_EMOJI[g]} title={tr.calls[g]} width={cardWidth} onPress={() => startBotGame(qc, g)} />
         ))}
         {heading(tr.live.title)}
         {LIVE_GAMES.map((g) => (

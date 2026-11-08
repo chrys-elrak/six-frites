@@ -26,7 +26,7 @@ import { redisConnection } from "../lib/queue.js";
 import { type IO, rooms, setIo, socketKey } from "../lib/realtime.js";
 import { authenticateBearer } from "../plugins/auth.js";
 import { relaySignal } from "../services/calls.js";
-import { createRoom, endRoom, giveUp, hasRoom, joinRoom, leaveRoom, myRooms, playMove, react, say, setBot, startRoom } from "../services/live.js";
+import { createRoom, endRoom, giveUp, hasRoom, joinRoom, leaveRoom, leaveSoloRooms, myRooms, playMove, react, say, setBot, startRoom } from "../services/live.js";
 import { markDelivered, markRead } from "../services/chats.js";
 import { assertMember, sendMessage } from "../services/messages.js";
 
@@ -133,7 +133,14 @@ export function createSocketServer(http: HttpServer) {
       const active = typeof p === "object" && p !== null && (p as { active?: unknown }).active === true;
       void setUserPresence(userId, sessionId, active).catch(() => null);
     });
-    socket.on("disconnect", () => void setUserPresence(userId, sessionId, false).catch(() => null));
+    socket.on("disconnect", () => {
+      void setUserPresence(userId, sessionId, false).catch(() => null);
+      void io
+        .in(rooms.user(userId))
+        .fetchSockets()
+        .then((left) => !left.length && leaveSoloRooms(userId))
+        .catch(() => null);
+    });
 
     socket.on(
       "message:send",

@@ -930,6 +930,7 @@ export function GameView({
   nameOf,
   onPlay,
   onSend,
+  quick = false,
 }: {
   game: ChatGame;
   senderId: string;
@@ -939,6 +940,8 @@ export function GameView({
   nameOf: (userId: string) => string;
   onPlay?: (move: GameMove) => void;
   onSend?: (game: ChatGame) => void;
+  /** Play again sends the same game right away instead of setting up a new one, for Six Frites Game to start. */
+  quick?: boolean;
 }) {
   const tr = useT();
   const [again, setAgain] = useState(false);
@@ -967,7 +970,7 @@ export function GameView({
       {over && onSend && (
         <button
           type="button"
-          onClick={() => setAgain(true)}
+          onClick={() => (quick ? onSend(game) : setAgain(true))}
           className={`mt-3 rounded-full px-4 py-1.5 text-sm font-semibold ${button}`}
         >
           {tr.calls.playAgain}

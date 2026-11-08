@@ -1,15 +1,22 @@
 "use client";
 
 import type { LiveRoomDTO } from "@six/shared";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { playGameSound } from "./game-sound";
 import { useRealtime } from "./realtime";
 
-/** The room as the server shows it to me, kept up to date and rejoined after a reconnect; `gone` holds why I can't be in it. */
+/**
+ * The room as the server shows it to me, kept up to date and rejoined after a reconnect; `gone` holds why I can't be in it.
+ * Leaving the screen pauses a game played alone against the bot, until I'm back.
+ */
 export function useLiveRoom(roomId: string) {
   const { realtime } = useRealtime();
   const [room, setRoom] = useState<LiveRoomDTO | null>(null);
   const [gone, setGone] = useState<string | null>(null);
+  const solo = useRef(false);
+  useEffect(() => {
+    solo.current = !!room && room.status === "playing" && room.seats.every((s, i) => i === room.mySeat || !s.user);
+  }, [room]);
 
   useEffect(() => {
     const socket = realtime?.socket;
@@ -30,6 +37,7 @@ export function useLiveRoom(roomId: string) {
       socket.off("live:room", onRoom);
       socket.off("live:closed", onClosed);
       socket.off("connect", join);
+      if (solo.current) socket.emit("live:leave", { roomId });
     };
   }, [realtime, roomId]);
 

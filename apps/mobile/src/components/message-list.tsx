@@ -25,6 +25,7 @@ import {
   type GroupRole,
   type PublicUser,
   commentsClosedNow,
+  isBotGame,
 } from "@six/shared";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import * as Haptics from "expo-haptics";
@@ -84,6 +85,7 @@ import {
   type LayoutRectangle,
   type ListViewToken,
 } from "react-native";
+import { startBotGame } from "./bot-games";
 import { Avatar } from "./avatar";
 import { StickerView } from "./sticker";
 import { Text } from "./text";
@@ -103,7 +105,7 @@ import {
   updateChatSettings,
 } from "@/lib/actions";
 import { useLatest } from "@/lib/latest";
-import { isFrozen, loadUntil, useMessages } from "@/lib/chats";
+import { isBotChat, isFrozen, loadUntil, useMessages } from "@/lib/chats";
 import { revealNow, useHydratedMessages } from "@/lib/e2ee";
 import { RestoreBackupDialog, useHasRecoveryKey } from "./encryption-settings";
 import { useComposerMode } from "@/lib/composer";
@@ -846,6 +848,7 @@ function Bubble({
   onOpenAlbum,
   safe,
   frozen,
+  gamesOnly = false,
   autoPlay,
   onVoiceStop,
   sender,
@@ -879,6 +882,8 @@ function Bubble({
   /** Safe view is on: their photos and videos stay blurred until tapped. */
   safe: boolean;
   frozen: boolean;
+  /** In the chat with Six Frites Game: just the games, no menu, reactions or replies. */
+  gamesOnly?: boolean;
   autoPlay: boolean;
   onVoiceStop: (finished: boolean) => void;
   /** A group message's comments, for the link under it; null where there's none to show. */
@@ -959,7 +964,7 @@ function Bubble({
   const bubbleRef = useRef<ComponentRef<typeof View>>(null);
   const fx = !sealed && !row.deleted && row.type === "text" ? row.effect : null;
   const [fxBox, setFxBox] = useState<LayoutRectangle | null>(null);
-  const canReact = !frozen && !!row.message && !row.pending && !row.deleted && row.type !== "service" && !row.ephemeral?.purged;
+  const canReact = !frozen && !gamesOnly && !!row.message && !row.pending && !row.deleted && row.type !== "service" && !row.ephemeral?.purged;
   const latest = useLatest({ selectable, selecting, canReact, onToggle, onMenu, onReact, pick });
   const openMenu = () => {
     const node = bubbleRef.current;
@@ -967,7 +972,7 @@ function Bubble({
     node.measureInWindow((x, y, width, height) => latest.current.onMenu({ x, y, width, height }));
   };
   const hold = useLongPressGesture({
-    enabled: !selectable,
+    enabled: !selectable && !gamesOnly,
     minDuration: 350,
     runOnJS: true,
     onActivate: () => {
@@ -987,7 +992,7 @@ function Bubble({
     },
   });
   const swipe = useSwipe(
-    !selecting && !frozen && row.message && !row.pending && !row.deleted ? onReply : null,
+    !selecting && !frozen && !gamesOnly && row.message && !row.pending && !row.deleted ? onReply : null,
     row.mine ? -1 : 1,
   );
   const slide = usePanGesture({
@@ -1138,6 +1143,7 @@ function Bubble({
               nameOf={nameOf}
               onPlay={row.message && !frozen && !selecting ? onPlay : undefined}
               onSend={!frozen && !selecting ? onSendGame : undefined}
+              quick={gamesOnly}
             />
           )}
           {sealed ? (
@@ -1431,7 +1437,7 @@ export const MessageList = forwardRef<
     /** Pulling up past the latest message turns vanish mode on or off, like Instagram. */
     function pullStart(e: GestureResponderEvent) {
       const end = offset.current <= 1;
-      pullFrom.current = chat.type === "direct" && !frozen && !threadId && !selecting && end ? e.nativeEvent.pageY : null;
+      pullFrom.current = chat.type === "direct" && !isBotChat(chat) && !frozen && !threadId && !selecting && end ? e.nativeEvent.pageY : null;
     }
 
     function pullMove(e: GestureResponderEvent) {
@@ -1772,7 +1778,11 @@ export const MessageList = forwardRef<
                   onReact={(emoji) => row.message && void react(qc, row.message, meId, emoji)}
                   onCheck={(item) => row.message && void check(qc, row.message, meId, item)}
                   onPlay={(move) => row.message && void play(qc, row.message, meId, move)}
-                  onSendGame={(game) => realtime && queueMessage(qc, realtime, chat.id, { text: "", game })}
+                  onSendGame={(game) =>
+                    isBotChat(chat) && isBotGame(game.game)
+                      ? startBotGame(qc, game.game)
+                      : realtime && queueMessage(qc, realtime, chat.id, { text: "", game })
+                  }
                   onOpenAlbum={(items, start) => {
                     const shown = items.map(lightboxItem);
                     if (!shown[start]) return;
@@ -1781,6 +1791,7 @@ export const MessageList = forwardRef<
                   }}
                   safe={chat.safeView}
                   frozen={frozen}
+                  gamesOnly={isBotChat(chat)}
                   autoPlay={autoplay === row.key}
                   onVoiceStop={(finished) =>
                     finished ? playNext(row.key) : setAutoplay((k) => (k === row.key ? null : k))

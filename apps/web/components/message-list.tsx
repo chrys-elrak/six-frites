@@ -29,7 +29,9 @@ import {
   storyBackground,
   inkOn,
   commentsClosedNow,
+  isBotGame,
 } from "@six/shared";
+import { startBotGame } from "./bot-games";
 import { Avatar } from "./avatar";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import {
@@ -106,7 +108,7 @@ import { type Hydrated, hydrate, messageFile } from "@/lib/e2ee";
 import { RestoreBackupDialog, useHasRecoveryKey } from "@/components/encryption-settings";
 import { EPHEMERAL_OPTIONS, shortRule } from "@/lib/ephemeral";
 import { six } from "@/lib/six";
-import { loadUntil, useMessages } from "@/lib/chats";
+import { isBotChat, loadUntil, useMessages } from "@/lib/chats";
 import { useComposerMode } from "@/lib/composer";
 import { PhotoEditor } from "./photo-editor";
 import { clockTime, dayLabel, formatDuration, sameDay } from "@/lib/format";
@@ -799,6 +801,7 @@ function Bubble({
   onOpenAlbum,
   safe,
   frozen,
+  gamesOnly = false,
   autoPlay,
   onVoiceStop,
   sender,
@@ -833,6 +836,8 @@ function Bubble({
   /** Safe view is on: the photos and videos in the chat, yours too, stay blurred until tapped. */
   safe: boolean;
   frozen: boolean;
+  /** In the chat with Six Frites Game: just the games, no menu, reactions or replies. */
+  gamesOnly?: boolean;
   autoPlay: boolean;
   onVoiceStop: (finished: boolean) => void;
   /** A group message's comments, for the link under it; null where there's none to show. */
@@ -845,10 +850,10 @@ function Bubble({
   const bubble = useRef<HTMLDivElement>(null);
   const lastTap = useRef(0);
   const anchor = () => bubble.current!.getBoundingClientRect();
-  const press = useLongPress(selectable ? (at) => (at ? onToggle() : onDragPick(false)) : (at) => onMenu(at, anchor()));
-  const reactable = !selecting && !frozen && canReact(row);
+  const press = useLongPress(selectable ? (at) => (at ? onToggle() : onDragPick(false)) : (at) => !gamesOnly && onMenu(at, anchor()));
+  const reactable = !selecting && !frozen && !gamesOnly && canReact(row);
   const swipe = useSwipe(
-    !selecting && !frozen && row.message && !row.pending && !row.deleted ? onReply : null,
+    !selecting && !frozen && !gamesOnly && row.message && !row.pending && !row.deleted ? onReply : null,
     row.mine ? -1 : 1,
   );
 
@@ -1059,6 +1064,7 @@ function Bubble({
                   nameOf={nameOf}
                   onPlay={row.message && !frozen && !selecting ? onPlay : undefined}
                   onSend={!frozen && !selecting ? onSendGame : undefined}
+                  quick={gamesOnly}
                 />
               )}
               {sealed ? (
@@ -1150,16 +1156,18 @@ function Bubble({
                 <MessageCircle className="size-4" />
               </button>
             )}
-            <button
-              onClick={(e) => {
-                const r = e.currentTarget.getBoundingClientRect();
-                onMenu({ x: r.left, y: r.bottom }, anchor());
-              }}
-              aria-label={tr.messages.options}
-              className="hidden size-7 shrink-0 place-items-center rounded-full text-stone-400 opacity-0 transition hover:bg-stone-200 group-hover:opacity-100 focus:opacity-100 pointer-fine:grid dark:hover:bg-stone-800"
-            >
-              <MoreHorizontal className="size-4" />
-            </button>
+            {!gamesOnly && (
+              <button
+                onClick={(e) => {
+                  const r = e.currentTarget.getBoundingClientRect();
+                  onMenu({ x: r.left, y: r.bottom }, anchor());
+                }}
+                aria-label={tr.messages.options}
+                className="hidden size-7 shrink-0 place-items-center rounded-full text-stone-400 opacity-0 transition hover:bg-stone-200 group-hover:opacity-100 focus:opacity-100 pointer-fine:grid dark:hover:bg-stone-800"
+              >
+                <MoreHorizontal className="size-4" />
+              </button>
+            )}
               </div>
             </div>
             {row.message && !row.deleted && (
@@ -1407,7 +1415,7 @@ export const MessageList = forwardRef<
     function pullStart(e: React.TouchEvent) {
       const h = list.current;
       const end = !!h && h.scrollSize - h.scrollOffset - h.viewportSize < 2;
-      pullFrom.current = chat.type === "direct" && !frozen && !threadId && !selecting && end ? e.touches[0]!.clientY : null;
+      pullFrom.current = chat.type === "direct" && !isBotChat(chat) && !frozen && !threadId && !selecting && end ? e.touches[0]!.clientY : null;
     }
 
     function pullMove(e: React.TouchEvent) {
@@ -1761,10 +1769,15 @@ export const MessageList = forwardRef<
                 onReact={(emoji) => !frozen && row.message && void react(qc, row.message, meId, emoji)}
                 onCheck={(item) => row.message && void check(qc, row.message, meId, item)}
                 onPlay={(move) => row.message && void play(qc, row.message, meId, move)}
-                onSendGame={(game) => realtime && void queueMessage(qc, realtime, chat.id, { text: "", game })}
+                onSendGame={(game) =>
+                  isBotChat(chat) && isBotGame(game.game)
+                    ? startBotGame(qc, game.game)
+                    : realtime && void queueMessage(qc, realtime, chat.id, { text: "", game })
+                }
                 onOpenAlbum={(items, start) => setAlbum({ items, start })}
                 safe={chat.safeView}
                 frozen={frozen}
+                gamesOnly={isBotChat(chat)}
                 onReactButton={(anchor) => setReactAt({ row, anchor })}
                 autoPlay={autoplay === row.key}
                 onVoiceStop={(finished) => (finished ? playNext(row.key) : setAutoplay((k) => (k === row.key ? null : k)))}
