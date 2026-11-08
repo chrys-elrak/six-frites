@@ -2,7 +2,7 @@
 
 import { type MessageDTO, chatFace, durationLabel, isFrozen, isMuted, previewText, readOnlyGroup } from "@six/shared";
 import { useQueryClient } from "@tanstack/react-query";
-import { ChevronLeft, ChevronsUpDown, Lock, MoreVertical, Phone, PinOff, ShieldAlert, Trash2, Video, X } from "lucide-react";
+import { ChevronLeft, ChevronsUpDown, Images, Lock, MoreVertical, Phone, PinOff, Search, ShieldAlert, Trash2, Video, X } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -287,6 +287,32 @@ function OpenConversation({ chatId }: { chatId: string }) {
                     )}
                   </span>
                 </button>
+                {!isBotChat(c) && (
+                  <>
+                    <button
+                      onClick={() => {
+                        setSearchFor("");
+                        setShared("search");
+                      }}
+                      aria-label={tr.chat.search}
+                      title={tr.chat.search}
+                      className={iconButton}
+                    >
+                      <Search className="size-5" />
+                    </button>
+                    <button
+                      onClick={() => {
+                        setSearchFor("");
+                        setShared("media");
+                      }}
+                      aria-label={tr.chat.sharedMedia}
+                      title={tr.chat.sharedMedia}
+                      className={iconButton}
+                    >
+                      <Images className="size-5" />
+                    </button>
+                  </>
+                )}
                 {!frozen && !c.group && !c.support && !c.withSupport && !isBotChat(c) && (
                   <>
                     <button
@@ -408,10 +434,6 @@ function OpenConversation({ chatId }: { chatId: string }) {
           onGroupInfo={() => setEditing(true)}
           onDeleted={(scope) => scope === "me" && router.replace("/")}
           onChooseMessages={chooseMessages}
-          onSharedMedia={(tab) => {
-            setSearchFor("");
-            setShared(tab);
-          }}
         />
       )}
       {shared && (

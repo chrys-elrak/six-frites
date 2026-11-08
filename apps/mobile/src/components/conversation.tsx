@@ -1,7 +1,7 @@
 import { type MessageDTO, chatFace, chatTheme, durationLabel, previewText, readOnlyGroup } from "@six/shared";
 import { useQueryClient } from "@tanstack/react-query";
 import { router, useFocusEffect, useLocalSearchParams } from "expo-router";
-import { ChevronLeft, ChevronsUpDown, MoreVertical, Phone, PinOff, ShieldAlert, Trash2, Video, X } from "lucide-react-native";
+import { ChevronLeft, ChevronsUpDown, Images, MoreVertical, Phone, PinOff, Search, ShieldAlert, Trash2, Video, X } from "lucide-react-native";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { AppState, BackHandler, Pressable, StyleSheet, View } from "react-native";
 import { Text } from "./text";
@@ -275,6 +275,26 @@ function OpenConversation({ chatId }: { chatId: string }) {
               )}
             </View>
           </Pressable>
+          {!isBotChat(c) && (
+            <>
+              <IconButton
+                Icon={Search}
+                label={tr.chat.search}
+                onPress={() => {
+                  setSearchFor("");
+                  setShared("search");
+                }}
+              />
+              <IconButton
+                Icon={Images}
+                label={tr.chat.sharedMedia}
+                onPress={() => {
+                  setSearchFor("");
+                  setShared("media");
+                }}
+              />
+            </>
+          )}
           {c.encrypted && !frozen && !c.withSupport && !c.group && (
             <>
               <IconButton Icon={Phone} label={tr.chat.voiceCall} disabled={inCall} onPress={() => void startCall(c, false)} />
@@ -352,10 +372,6 @@ function OpenConversation({ chatId }: { chatId: string }) {
           onGroupInfo={() => setEditing(true)}
           onDeleted={(scope) => scope === "me" && router.replace("/")}
           onChooseMessages={chooseMessages}
-          onSharedMedia={(tab) => {
-            setSearchFor("");
-            setShared(tab);
-          }}
         />
       )}
       {shared && (
