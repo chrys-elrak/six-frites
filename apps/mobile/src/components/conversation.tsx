@@ -1,9 +1,9 @@
 import { type MessageDTO, chatFace, chatTheme, durationLabel, previewText, readOnlyGroup } from "@six/shared";
 import { useQueryClient } from "@tanstack/react-query";
 import { router, useFocusEffect, useLocalSearchParams } from "expo-router";
-import { ChevronLeft, ChevronsUpDown, EyeOff, MoreVertical, Phone, PinOff, Search, ShieldAlert, Timer, Trash2, Video, X } from "lucide-react-native";
+import { ChevronLeft, ChevronsUpDown, MoreVertical, Phone, PinOff, ShieldAlert, Trash2, Video, X } from "lucide-react-native";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { AppState, BackHandler, Pressable, ScrollView, StyleSheet, View, useWindowDimensions } from "react-native";
+import { AppState, BackHandler, Pressable, StyleSheet, View } from "react-native";
 import { Text } from "./text";
 import { KeyboardAvoidingView } from "react-native-keyboard-controller";
 import { closeChat, deleteMessages, updateChatSettings } from "@/lib/actions";
@@ -97,8 +97,6 @@ function OpenConversation({ chatId }: { chatId: string }) {
   const { realtime, status } = useRealtime();
   const list = useRef<MessageListHandle>(null);
   const [menu, setMenu] = useState(false);
-  const narrow = useWindowDimensions().width < 480;
-  const [sheet, setSheet] = useState<"autoDelete" | null>(null);
   const { info } = useLocalSearchParams<{ info?: string }>();
   const [editing, setEditing] = useState(!!info);
   const [shared, setShared] = useState<SharedTab | null>(null);
@@ -246,7 +244,7 @@ function OpenConversation({ chatId }: { chatId: string }) {
             style={({ pressed }) => [styles.peer, pressed && { backgroundColor: t.pressed }]}
           >
             <Avatar user={peer} online={!!presence?.online} />
-            <View style={{ flex: 1, display: narrow ? "none" : "flex" }}>
+            <View style={{ flex: 1 }}>
               <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
                 <Text numberOfLines={1} style={[styles.title, { color: t.text, flexShrink: 1 }]}>
                   {c.title}
@@ -278,35 +276,6 @@ function OpenConversation({ chatId }: { chatId: string }) {
               )}
             </View>
           </Pressable>
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ flexGrow: 0, flexShrink: 1 }} contentContainerStyle={{ alignItems: "center" }}>
-          {!isBotChat(c) && (
-            <>
-              <IconButton
-                Icon={Search}
-                label={tr.chat.search}
-                onPress={() => {
-                  setSearchFor("");
-                  setShared("search");
-                }}
-              />
-              {!c.withSupport && (
-                <IconButton
-                  Icon={EyeOff}
-                  label={c.safeView ? tr.chat.safeViewOff : tr.chat.safeViewOn}
-                  color={c.safeView ? brand : undefined}
-                  onPress={() => void updateChatSettings(qc, chatId, { safeView: !c.safeView }).catch(() => null)}
-                />
-              )}
-              {!c.withSupport && !frozen && (
-                <IconButton
-                  Icon={Timer}
-                  label={tr.chat.autoDelete(c.autoDeleteSecs ? durationLabel(c.autoDeleteSecs, tr) : null)}
-                  color={c.autoDeleteSecs ? brand : undefined}
-                  onPress={() => setSheet("autoDelete")}
-                />
-              )}
-            </>
-          )}
           {c.encrypted && !frozen && !c.withSupport && !c.group && (
             <>
               <IconButton Icon={Phone} label={tr.chat.voiceCall} disabled={inCall} onPress={() => void startCall(c, false)} />
@@ -314,7 +283,6 @@ function OpenConversation({ chatId }: { chatId: string }) {
             </>
           )}
           <IconButton Icon={MoreVertical} label={tr.chat.options} onPress={() => setMenu(true)} />
-          </ScrollView>
         </ScreenHeader>
       )}
 
@@ -393,7 +361,6 @@ function OpenConversation({ chatId }: { chatId: string }) {
           }}
         />
       )}
-      {sheet && <ChatMenu chat={c} peerName={peer.displayName} peerId={peer.id} start={sheet} onClose={() => setSheet(null)} />}
       {shared && (
         <SharedMedia
           chat={c}

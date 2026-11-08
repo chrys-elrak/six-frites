@@ -2,7 +2,7 @@
 
 import { type MessageDTO, chatFace, durationLabel, isFrozen, isMuted, previewText, readOnlyGroup } from "@six/shared";
 import { useQueryClient } from "@tanstack/react-query";
-import { ChevronLeft, ChevronsUpDown, EyeOff, Lock, MoreVertical, Phone, PinOff, Search, ShieldAlert, Timer, Trash2, Video, X } from "lucide-react";
+import { ChevronLeft, ChevronsUpDown, Lock, MoreVertical, Phone, PinOff, ShieldAlert, Trash2, Video, X } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -91,7 +91,6 @@ function OpenConversation({ chatId }: { chatId: string }) {
   const { realtime, status } = useRealtime();
   const list = useRef<MessageListHandle>(null);
   const [menu, setMenu] = useState(false);
-  const [sheet, setSheet] = useState<"autoDelete" | null>(null);
   const [editing, setEditing] = useState(false);
   useEffect(() => {
     if (!new URLSearchParams(window.location.search).has("info")) return;
@@ -253,7 +252,7 @@ function OpenConversation({ chatId }: { chatId: string }) {
                   aria-label={app || c.group ? c.title : tr.chat.editContact(c.title)}
                 >
                   <Avatar user={peer} online={shownPresence?.online} />
-                  <span className="min-w-0 flex-1 max-sm:hidden">
+                  <span className="min-w-0 flex-1">
                     <span className="flex items-center gap-1 font-semibold">
                       <span className="truncate">{c.title}</span>
                       {c.supportDesk && (
@@ -288,47 +287,6 @@ function OpenConversation({ chatId }: { chatId: string }) {
                     )}
                   </span>
                 </button>
-                <div className="flex min-w-0 shrink items-center overflow-x-auto [scrollbar-width:none]">
-                {!isBotChat(c) && (
-                  <>
-                    <button
-                      onClick={() => {
-                        setSearchFor("");
-                        setShared("search");
-                      }}
-                      aria-label={tr.chat.search}
-                      title={tr.chat.search}
-                      className={iconButton}
-                    >
-                      <Search className="size-5" />
-                    </button>
-                    {!c.withSupport && (
-                      <>
-                        <button
-                          onClick={() => void updateChatSettings(qc, chatId, { safeView: !c.safeView }).catch(() => null)}
-                          aria-label={c.safeView ? tr.chat.safeViewOff : tr.chat.safeViewOn}
-                          title={c.safeView ? tr.chat.safeViewOff : tr.chat.safeViewOn}
-                          aria-pressed={c.safeView}
-                          className={iconButton}
-                        >
-                          <EyeOff className={`size-5 ${c.safeView ? "text-brand" : ""}`} />
-                        </button>
-                        {!frozen && (
-                          <>
-                            <button
-                              onClick={() => setSheet("autoDelete")}
-                              aria-label={tr.chat.autoDelete(c.autoDeleteSecs ? durationLabel(c.autoDeleteSecs, tr) : null)}
-                              title={tr.chat.autoDelete(c.autoDeleteSecs ? durationLabel(c.autoDeleteSecs, tr) : null)}
-                              className={iconButton}
-                            >
-                              <Timer className={`size-5 ${c.autoDeleteSecs ? "text-brand" : ""}`} />
-                            </button>
-                          </>
-                        )}
-                      </>
-                    )}
-                  </>
-                )}
                 {!frozen && !c.group && !c.support && !c.withSupport && !isBotChat(c) && (
                   <>
                     <button
@@ -352,7 +310,6 @@ function OpenConversation({ chatId }: { chatId: string }) {
                 <button onClick={() => setMenu(true)} aria-label={tr.chat.options} className={iconButton}>
                   <MoreVertical className="size-5" />
                 </button>
-                </div>
               </header>
             )}
             {!selecting && pin && (
@@ -468,7 +425,6 @@ function OpenConversation({ chatId }: { chatId: string }) {
           }}
         />
       )}
-      {sheet && <ChatMenu chat={c} peerName={peer.displayName} start={sheet} onClose={() => setSheet(null)} />}
       {shared && (
         <SharedMedia
           chat={c}

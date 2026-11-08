@@ -115,8 +115,8 @@ export function ChatMenu({
   /** Opens straight on a sub-menu, like the mute durations from the header's bell. */
   start?: "mute" | "autoDelete" | "theme";
   /**
-   * Opened from inside the chat, whose header holds search, blur and auto-delete: the menu keeps media, mute and the
-   * background, and leaves pinning, archiving, blocking and deleting to the chat list's menu.
+   * Opened from inside the chat: the menu holds search, media, mute, blur, auto-delete and the background, and leaves
+   * pinning, archiving, blocking and deleting to the chat list's menu.
    */
   inChat?: boolean;
 }) {
@@ -355,11 +355,24 @@ export function ChatMenu({
         inChat
           ? [
               ...(chat.group && onGroupInfo ? [{ label: tr.groups.info, onSelect: onGroupInfo }] : []),
-              ...(onSharedMedia ? [{ label: tr.chat.sharedMedia, onSelect: () => onSharedMedia("media") }] : []),
+              ...(onSharedMedia
+                ? [
+                    { label: tr.chat.search, onSelect: () => onSharedMedia("search") },
+                    { label: tr.chat.sharedMedia, onSelect: () => onSharedMedia("media") },
+                  ]
+                : []),
               mute,
+              ...(chat.withSupport
+                ? []
+                : [{ label: chat.safeView ? tr.chat.safeViewOff : tr.chat.safeViewOn, onSelect: () => settings({ safeView: !chat.safeView }) }]),
               ...(chat.withSupport || frozen
                 ? []
                 : [
+                    {
+                      label: tr.chat.autoDelete(chat.autoDeleteSecs ? durationLabel(chat.autoDeleteSecs, tr) : null),
+                      keepOpen: true,
+                      onSelect: () => setView("autoDelete"),
+                    },
                     {
                       label: tr.summary.background(chat.theme ? themeName(chat.theme, tr) : tr.chat.defaultBackground),
                       keepOpen: true,
