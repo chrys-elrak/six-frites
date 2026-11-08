@@ -35,7 +35,7 @@ import { SharedMedia, type SharedTab } from "./shared-media";
 import { Sheet } from "./sheet";
 
 const headerClass =
-  "flex items-center gap-1 border-b border-black/5 bg-stone-50/45 px-2 pt-[max(0.5rem,env(safe-area-inset-top))] pb-2 md:pt-2 backdrop-blur-xl backdrop-saturate-150 dark:border-white/10 dark:bg-stone-950/40";
+  "flex items-center gap-1 border-b border-black/5 bg-stone-50/45 px-2 pt-[max(0.5rem,env(safe-area-inset-top))] pb-2 md:h-16 md:py-0 backdrop-blur-xl backdrop-saturate-150 dark:border-white/10 dark:bg-stone-950/40";
 const iconButton =
   "grid size-10 place-items-center rounded-full text-stone-600 hover:bg-stone-200 dark:text-stone-300 dark:hover:bg-stone-800";
 

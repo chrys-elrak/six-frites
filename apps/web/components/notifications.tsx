@@ -62,7 +62,7 @@ export function Notifications() {
             <p className="text-sm text-stone-500">{tr.notifications.empty}</p>
           </div>
         ) : (
-          items.map((n) => <Row key={n.id} n={n} />)
+          <div className="mx-auto w-full max-w-2xl md:py-4">{items.map((n) => <Row key={n.id} n={n} />)}</div>
         )}
       </div>
     </div>

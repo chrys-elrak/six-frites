@@ -3,7 +3,7 @@
 import { useQueryClient } from "@tanstack/react-query";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { AnonInbox } from "@/components/anon-inbox";
 import { setBrandSlot } from "@/components/brand-actions";
 import { LockScreen } from "@/components/app-lock";
@@ -76,6 +76,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   useAutoLock();
   useEffect(primeAudio, []);
   const railable = useChatRail();
+  const lastTab = useRef<Tab>("chats");
   usePushLinks(status === "authed" && !guest);
 
   useEffect(() => {
@@ -97,9 +98,22 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   }
 
   const topLevel = tabRoutes[pathname];
-  const tab = topLevel ?? "chats";
-  const wide = tab === "settings" || tab === "inbox";
+  if (topLevel) lastTab.current = topLevel;
+  const tab = topLevel ?? (lastTab.current === "contacts" ? "contacts" : "chats");
+  const wide = tab === "settings" || tab === "inbox" || tab === "notifications";
   const rail = railable && tab === "chats" && pathname !== "/archived";
+
+  const brand = (
+    <div
+      className={`flex shrink-0 items-center gap-3 border-b border-black/5 px-4 pt-[max(0.875rem,env(safe-area-inset-top))] pb-3.5 md:h-16 md:py-0 dark:border-white/10 ${rail ? glass : ""}`}
+    >
+      <Link href="/" className="flex items-center gap-3">
+        <Logo className="size-9" />
+        <span className="text-lg font-bold tracking-tight">Six Frites</span>
+      </Link>
+      <div ref={setBrandSlot} className="-my-1 ml-auto flex items-center gap-1" />
+    </div>
+  );
 
   return (
     <RealtimeProvider>
@@ -107,30 +121,25 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         <div className="pointer-events-none absolute inset-0 -z-10">
           <Wallpaper theme={appWallpaper} id="app" />
         </div>
-        <div
-          className={`${topLevel ? "flex" : "hidden"} shrink-0 items-center gap-3 border-b border-black/5 px-4 pt-[max(0.875rem,env(safe-area-inset-top))] pb-3.5 md:flex dark:border-white/10 ${glass}`}
-        >
-          <Link href="/" className="flex items-center gap-3">
-            <Logo className="size-9" />
-            <span className="text-lg font-bold tracking-tight">Six Frites</span>
-          </Link>
-          <div ref={setBrandSlot} className="-my-1 ml-auto flex items-center gap-1" />
-        </div>
-        <MiniPlayer atTop={!topLevel} />
+        <MiniPlayer atTop={!rail} />
+        {rail && brand}
         <div className="flex min-h-0 flex-1">
           <aside
-            className={`${topLevel ? "flex" : "hidden"} w-full flex-col border-black/5 md:flex md:flex-row ${wide ? "md:flex-1" : `md:shrink-0 ${rail ? "md:w-20" : "md:w-100 md:border-r lg:w-116"}`} dark:border-white/10 ${glass}`}
+            className={`${topLevel ? "flex" : "hidden"} w-full flex-col border-black/5 md:flex ${wide ? "md:flex-1" : `md:shrink-0 ${rail ? "md:w-20" : "md:w-100 md:border-r lg:w-116"}`} dark:border-white/10 ${glass}`}
           >
-            {!rail && (
-              <div className="min-h-0 min-w-0 flex-1">
-                {tab === "chats" && <ChatList archived={pathname === "/archived"} />}
-                {tab === "contacts" && <ChatList contacts />}
-                {tab === "notifications" && <Notifications />}
-                {tab === "inbox" && <AnonInbox />}
-                {tab === "settings" && <SettingsPanel />}
-              </div>
-            )}
-            <TabBar active={tab}>{rail && <ChatList rail />}</TabBar>
+            {!rail && brand}
+            <div className="flex min-h-0 flex-1 flex-col md:flex-row">
+              {!rail && (
+                <div className="min-h-0 min-w-0 flex-1">
+                  {tab === "chats" && <ChatList archived={pathname === "/archived"} />}
+                  {tab === "contacts" && <ChatList contacts />}
+                  {tab === "notifications" && <Notifications />}
+                  {tab === "inbox" && <AnonInbox />}
+                  {tab === "settings" && <SettingsPanel />}
+                </div>
+              )}
+              <TabBar active={tab}>{rail && <ChatList rail />}</TabBar>
+            </div>
           </aside>
           <section className={`${topLevel ? "hidden" : "flex"} min-w-0 flex-1 flex-col ${wide ? "" : "md:flex"}`}>
             {children}
