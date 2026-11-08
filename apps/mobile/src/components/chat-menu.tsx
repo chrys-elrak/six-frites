@@ -164,7 +164,7 @@ export function ChatMenu({
         onClose={onClose}
         actions={[
           {
-            label: tr.chat.blockName(peerName),
+            label: tr.common.block,
             destructive: true,
             onSelect: () => void setBlocked(qc, chat, peerId, true).catch(() => null),
           },
@@ -289,8 +289,8 @@ export function ChatMenu({
                     ...(!direct
                       ? []
                       : chat.blockedByMe
-                        ? [{ label: tr.chat.unblockName(peerName), onSelect: () => void setBlocked(qc, chat, peerId, false).catch(() => null) }]
-                        : [{ label: tr.chat.blockName(peerName), destructive: true, keepOpen: true, onSelect: () => setView("block") }]),
+                        ? [{ label: tr.common.unblock, onSelect: () => void setBlocked(qc, chat, peerId, false).catch(() => null) }]
+                        : [{ label: tr.common.block, destructive: true, keepOpen: true, onSelect: () => setView("block") }]),
                     { label: tr.chat.deleteChat, destructive: true, keepOpen: true, onSelect: () => setView("delete") },
                   ]),
             ]
