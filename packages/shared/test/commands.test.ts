@@ -5,10 +5,10 @@ describe("commands", () => {
   it("lists the commands a name could be", () => {
     expect(parseCommand("/")).toEqual({
       kind: "names",
-      names: ["giphy", "sticker", "silent", "effect", "emoji", "game", "play", "location", "schedule", "destruct", "voice", "autodelete", "blur", "vanish", "search"],
+      names: ["giphy", "sticker", "silent", "effect", "emoji", "game", "play", "location", "schedule", "voice", "vanish"],
     });
     expect(parseCommand("/st")).toEqual({ kind: "names", names: ["sticker"] });
-    expect(parseCommand("/s")).toEqual({ kind: "names", names: ["sticker", "silent", "schedule", "search"] });
+    expect(parseCommand("/s")).toEqual({ kind: "names", names: ["sticker", "silent", "schedule"] });
     expect(parseCommand("/GI")).toEqual({ kind: "names", names: ["giphy"] });
     expect(parseCommand("/giphy")).toEqual({ kind: "names", names: ["giphy"] });
     expect(parseCommand("/x")).toBeNull();
@@ -20,7 +20,7 @@ describe("commands", () => {
     expect(parseCommand("/giphy ")).toEqual({ kind: "run", name: "giphy", args: "" });
     expect(parseCommand("/sticker wave")).toEqual({ kind: "run", name: "sticker", args: "wave" });
     expect(parseCommand("/voice ro")).toEqual({ kind: "run", name: "voice", args: "ro" });
-    expect(parseCommand("/search pizza place")).toEqual({ kind: "run", name: "search", args: "pizza place" });
+    expect(parseCommand("/search pizza place")).toBeNull();
     expect(parseCommand("/play lu")).toEqual({ kind: "run", name: "play", args: "lu" });
   });
 
@@ -31,8 +31,8 @@ describe("commands", () => {
   });
 
   it("only knows the commands it is given", () => {
-    const here = ["giphy", "destruct"] as const;
-    expect(parseCommand("/", here)).toEqual({ kind: "names", names: ["giphy", "destruct"] });
+    const here = ["giphy", "vanish"] as const;
+    expect(parseCommand("/", here)).toEqual({ kind: "names", names: ["giphy", "vanish"] });
     expect(parseCommand("/voice", here)).toBeNull();
     expect(parseCommand("/voice ", here)).toBeNull();
   });
