@@ -586,7 +586,7 @@ export function ChatList({
                 <QrCode className="size-5" />
               </button>
             )}
-            {view !== "contacts" && !isSupport && (
+            {view !== "contacts" && (
               <button
                 onClick={() => setDialog("group")}
                 aria-label={tr.groups.newGroup}

@@ -515,7 +515,7 @@ export function ChatList({ archived = false, contacts = false }: { archived?: bo
           {view === "contacts" && (
             <IconButton Icon={QrCode} color={brand} label={tr.settings.findMe} onPress={() => setDialog("findMe")} />
           )}
-          {view !== "contacts" && !isSupport && (
+          {view !== "contacts" && (
             <IconButton Icon={Users} color={brand} label={tr.groups.newGroup} onPress={() => setDialog("group")} />
           )}
           <IconButton Icon={Share2} color={brand} label={tr.contacts.inviteFriend} onPress={() => setDialog("invite")} />
