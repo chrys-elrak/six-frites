@@ -142,6 +142,7 @@ async function toChatDTO(db: Tx, chat: ChatWithRelations, viewerId: string): Pro
     })),
     lastMessage: lastMessage ? toMessageDTO(lastMessage, viewerId) : null,
     unreadCount,
+    hiddenBefore: me.clearedAt?.toISOString() ?? null,
     archived: me.archived,
     ...muteState(me),
     pinned: me.pinned,

@@ -468,20 +468,23 @@ function Quote({
   name,
   mine,
   onPress,
+  earlier = false,
 }: {
   reply: ReplyPreview;
   name: string;
   mine: boolean;
   onPress: () => void;
+  /** Quotes a message from before I joined the group: its text stays hidden, and there's nothing to jump to. */
+  earlier?: boolean;
 }) {
   const t = useTheme();
   const tr = useT();
   const bubble = useBubbleColors();
   const fg = mine ? bubble.ink : (bubble.theirInk ?? t.text);
-  const dim = reply.deleted || reply.spoiler;
+  const dim = reply.deleted || reply.spoiler || earlier;
   return (
     <Pressable
-      onPress={onPress}
+      onPress={earlier ? undefined : onPress}
       style={[
         styles.quote,
         mine
@@ -494,7 +497,7 @@ function Quote({
     >
       <Text style={{ color: fg, fontWeight: "700", fontSize: 13 }}>{name}</Text>
       <View style={styles.quoteBody}>
-        {reply.deleted ? null : reply.ephemeral ? (
+        {reply.deleted || earlier ? null : reply.ephemeral ? (
           <Flame size={13} color={fg} />
         ) : reply.spoiler ? (
           <EyeOff size={13} color={fg} />
@@ -502,7 +505,9 @@ function Quote({
           <MediaIcon type={reply.type} color={fg} size={13} />
         ) : null}
         <Text numberOfLines={2} style={{ color: fg, fontSize: 13, opacity: dim ? 0.7 : 0.8, fontStyle: dim ? "italic" : "normal", flexShrink: 1 }}>
-          {reply.deleted
+          {earlier
+            ? tr.messages.beforeYouJoined
+            : reply.deleted
             ? tr.summary.messageDeleted
             : reply.ephemeral
               ? tr.summary.selfDestructing
@@ -842,6 +847,7 @@ function Bubble({
   sender,
   comments,
   onOpenThread,
+  quoteEarlier,
 }: {
   row: MsgRow;
   /** In a group, who sent an incoming message: their name heads a run of their messages, their picture ends it. */
@@ -874,6 +880,7 @@ function Bubble({
   /** A group message's comments, for the link under it; null where there's none to show. */
   comments?: { count: number; closed: boolean } | null;
   onOpenThread?: () => void;
+  quoteEarlier?: boolean;
 }) {
   const t = useTheme();
   const tr = useT();
@@ -1054,7 +1061,13 @@ function Bubble({
             </View>
           )}
           {row.replyTo && !row.deleted && (
-            <Quote reply={row.replyTo} mine={mine && !bare} name={nameOf(row.replyTo.senderId)} onPress={() => onQuote(row.replyTo!.id)} />
+            <Quote
+              reply={row.replyTo}
+              mine={mine && !bare}
+              name={nameOf(row.replyTo.senderId)}
+              onPress={() => onQuote(row.replyTo!.id)}
+              earlier={quoteEarlier}
+            />
           )}
           {row.story && !row.deleted && (
             <StoryQuote story={row.story} mine={mine} color={fg} reaction={!!row.text && !!emojiOnly(row.text)} />
@@ -1247,6 +1260,7 @@ export const MessageList = forwardRef<
     const pending = usePending(chat.id, threadId);
     const slot = threadId ? `${chat.id}:${threadId}` : chat.id;
     const groupAdmin = !!chat.group && chat.group.myRole !== "member";
+    const hiddenBefore = chat.group && chat.hiddenBefore ? Date.parse(chat.hiddenBefore) : null;
     useEffect(() => () => useSpoilers.getState().forget(), [chat.id]);
     const setMode = useComposerMode((s) => s.set);
     const selecting = useSelection((s) => !threadId && s.chatId === chat.id);
@@ -1727,6 +1741,7 @@ export const MessageList = forwardRef<
                   }
                   comments={!threadId && chat.group ? (row.message?.thread ?? null) : null}
                   onOpenThread={() => row.message && onOpenThread?.(row.message)}
+                  quoteEarlier={!!row.replyTo && hiddenBefore !== null && Date.parse(row.replyTo.sentAt) <= hiddenBefore}
                 />
               )
             }

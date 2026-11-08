@@ -242,6 +242,7 @@ export async function queueMessage(qc: QueryClient, realtime: Realtime, chatId: 
           ephemeral: replyTo.ephemeral !== null,
           deleted: false,
           encrypted: replyTo.encryption !== null,
+          sentAt: replyTo.createdAt,
         }
       : null,
     story: draft.story,

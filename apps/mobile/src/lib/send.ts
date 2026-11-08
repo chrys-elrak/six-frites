@@ -215,6 +215,7 @@ export function queueMessage(qc: QueryClient, realtime: Realtime, chatId: string
           ephemeral: replyTo.ephemeral !== null,
           deleted: false,
           encrypted: false,
+          sentAt: replyTo.createdAt,
         }
       : null,
     story: draft.story,

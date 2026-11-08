@@ -159,6 +159,21 @@ describe("groups", () => {
     expect((await send(ana, group.id, "Mine", { commentsClosed: true })).json().error.code).toBe("NOT_GROUP_ADMIN");
   });
 
+  it("keeps a quote of something older than a member's arrival from showing them its text", async () => {
+    const owner = await signUp("owner");
+    const group = await newGroup(owner, { maxMembers: 10 });
+    const secret = (await send(owner, group.id, "before you came")).json();
+    const ana = await signUp("ana");
+    await join(ana, group.group.inviteCode, "#A0A0A0");
+    await send(owner, group.id, "about that", { replyToId: secret.id });
+
+    const [reply] = (await get(ana, `/v1/chats/${group.id}/messages`)).items as { replyTo: { text: string | null; sentAt: string } | null }[];
+    expect(reply!.replyTo).toMatchObject({ text: null });
+    const { hiddenBefore } = await get(ana, `/v1/chats/${group.id}`);
+    expect(Date.parse(reply!.replyTo!.sentAt)).toBeLessThanOrEqual(Date.parse(hiddenBefore));
+    expect((await get(owner, `/v1/chats/${group.id}/messages`)).items[0].replyTo).toMatchObject({ text: "before you came" });
+  });
+
   it("hands the group on when the owner leaves and deletes it when the last one does", async () => {
     const owner = await signUp("owner");
     const group = await newGroup(owner);

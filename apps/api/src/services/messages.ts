@@ -86,6 +86,9 @@ function groupReactions(reactions: MessageRow["reactions"]) {
   }));
 }
 
+const hideEarlier = (p: ReplyPreview, sent: Date, cutoff: Date | null | undefined): ReplyPreview =>
+  cutoff && sent <= cutoff ? { ...p, text: null } : p;
+
 export function toReplyPreview(r: Message): ReplyPreview {
   return {
     id: r.id,
@@ -99,6 +102,7 @@ export function toReplyPreview(r: Message): ReplyPreview {
     ephemeral: isEphemeral(r),
     deleted: r.deletedAt !== null,
     encrypted: r.encrypted,
+    sentAt: r.createdAt.toISOString(),
   };
 }
 
@@ -127,7 +131,11 @@ function toStoryReply({ imageKey, ...story }: StoredStoryReply): StoryReply {
   return { ...story, imageUrl: imageKey ? presignGet(imageKey) : null };
 }
 
-export function toMessageDTO(m: MessageRow, viewerId: string, opts: { reveal?: boolean } = {}): MessageDTO {
+/**
+ * A message as `viewerId` sees it. With `hiddenBefore`, the viewer's own cutoff (in a group, when they joined), a
+ * quote of something older keeps its place but not its text.
+ */
+export function toMessageDTO(m: MessageRow, viewerId: string, opts: { reveal?: boolean; hiddenBefore?: Date | null } = {}): MessageDTO {
   const r = m.replyTo;
   const ephemeral = isEphemeral(m);
   const isSender = viewerId === m.senderId;
@@ -178,7 +186,7 @@ export function toMessageDTO(m: MessageRow, viewerId: string, opts: { reveal?: b
     groupId: m.groupId,
     threadId: m.threadId,
     thread: m.threadId || m.type === "service" ? null : { count: m.threadCount, closed: m.threadClosed },
-    replyTo: r ? toReplyPreview(r) : null,
+    replyTo: r ? hideEarlier(toReplyPreview(r), r.createdAt, opts.hiddenBefore) : null,
     story: hideContent || !m.story ? null : toStoryReply(m.story as StoredStoryReply),
     action: (m.action as ServiceAction | null) ?? null,
     location: hideContent ? null : ((m.location as GeoPoint | null) ?? null),
@@ -247,7 +255,7 @@ export async function listMessages(userId: string, chatId: string, q: MessageLis
     : 0;
   const page = { ...q, limit: Math.min(Math.max(q.limit, upTo), UNTIL_MAX) };
   const rows = await prisma.message.findMany({ where, include: messageInclude, ...pageArgs(page) });
-  return toPage(rows, page, (m) => toMessageDTO(m, userId));
+  return toPage(rows, page, (m) => toMessageDTO(m, userId, { hiddenBefore: member.clearedAt }));
 }
 
 async function findByClientId(senderId: string, chatId: string, clientId: string) {
@@ -464,14 +472,18 @@ export async function createMessage(
     },
     include: messageInclude,
   });
-  const members = await memberIds(tx, chatId);
+  const cutoffs = new Map(
+    (await tx.chatMember.findMany({ where: { chatId }, select: { userId: true, clearedAt: true } })).map((c) => [c.userId, c.clearedAt]),
+  );
+  const members = [...cutoffs.keys()];
+  const shownTo = (id: string) => toMessageDTO(message, id, { hiddenBefore: cutoffs.get(id) });
   if (thread) {
     const root = await tx.message.update({
       where: { id: thread.id },
       data: { threadCount: { increment: 1 } },
       include: messageInclude,
     });
-    for (const id of members) emit(id, "message.new", toMessageDTO(message, id));
+    for (const id of members) emit(id, "message.new", shownTo(id));
     for (const id of members) emit(id, "message.edited", toMessageDTO(root, id));
     const earlier = await tx.message.findMany({ where: { threadId: thread.id }, select: { senderId: true }, distinct: ["senderId"] });
     const following = new Set([thread.senderId, ...earlier.map((m) => m.senderId)]);
@@ -492,7 +504,7 @@ export async function createMessage(
   if (story && story.kind !== "note") {
     await notify(tx, emit, { userId: story.ownerId, actorId: userId, kind: "story_reply", chatId });
   }
-  for (const id of members) emit(id, "message.new", toMessageDTO(message, id));
+  for (const id of members) emit(id, "message.new", shownTo(id));
   if (started) {
     const { getChat } = await import("./chats.js");
     for (const id of members) emit(id, "chat.updated", await getChat(id, chatId, tx));

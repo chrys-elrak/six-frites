@@ -216,6 +216,7 @@ export const ReplyPreview = z.object({
   ephemeral: z.boolean(),
   deleted: z.boolean(),
   encrypted: z.boolean().describe("The quoted text is encrypted; show it from your own copy of that message"),
+  sentAt: IsoDate.describe("When the quoted message was sent"),
 });
 export type ReplyPreview = z.infer<typeof ReplyPreview>;
 
@@ -618,6 +619,9 @@ export const ChatDTO = z.object({
   members: z.array(ChatMemberDTO),
   lastMessage: MessageDTO.nullable(),
   unreadCount: z.number().int(),
+  hiddenBefore: IsoDate.nullable().describe(
+    "Messages sent before this are hidden from you: in a group, those from before you joined, quotes of them included",
+  ),
   archived: z.boolean(),
   muted: z.boolean(),
   mutedUntil: IsoDate.nullable().describe("When a timed mute ends; null while muted for good or not muted"),

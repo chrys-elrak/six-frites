@@ -8461,6 +8461,12 @@
                             "encrypted": {
                               "type": "boolean",
                               "description": "The quoted text is encrypted; show it from your own copy of that message"
+                            },
+                            "sentAt": {
+                              "type": "string",
+                              "format": "date-time",
+                              "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$",
+                              "description": "When the quoted message was sent"
                             }
                           },
                           "required": [
@@ -8471,7 +8477,8 @@
                             "spoiler",
                             "ephemeral",
                             "deleted",
-                            "encrypted"
+                            "encrypted",
+                            "sentAt"
                           ],
                           "additionalProperties": false
                         },
@@ -9823,6 +9830,13 @@
                       "minimum": -9007199254740991,
                       "maximum": 9007199254740991
                     },
+                    "hiddenBefore": {
+                      "nullable": true,
+                      "description": "Messages sent before this are hidden from you: in a group, those from before you joined, quotes of them included",
+                      "type": "string",
+                      "format": "date-time",
+                      "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                    },
                     "archived": {
                       "type": "boolean"
                     },
@@ -10278,6 +10292,12 @@
                               "encrypted": {
                                 "type": "boolean",
                                 "description": "The quoted text is encrypted; show it from your own copy of that message"
+                              },
+                              "sentAt": {
+                                "type": "string",
+                                "format": "date-time",
+                                "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$",
+                                "description": "When the quoted message was sent"
                               }
                             },
                             "required": [
@@ -10288,7 +10308,8 @@
                               "spoiler",
                               "ephemeral",
                               "deleted",
-                              "encrypted"
+                              "encrypted",
+                              "sentAt"
                             ],
                             "additionalProperties": false
                           },
@@ -11725,6 +11746,7 @@
                     "members",
                     "lastMessage",
                     "unreadCount",
+                    "hiddenBefore",
                     "archived",
                     "muted",
                     "mutedUntil",
@@ -12226,6 +12248,12 @@
                         "encrypted": {
                           "type": "boolean",
                           "description": "The quoted text is encrypted; show it from your own copy of that message"
+                        },
+                        "sentAt": {
+                          "type": "string",
+                          "format": "date-time",
+                          "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$",
+                          "description": "When the quoted message was sent"
                         }
                       },
                       "required": [
@@ -12236,7 +12264,8 @@
                         "spoiler",
                         "ephemeral",
                         "deleted",
-                        "encrypted"
+                        "encrypted",
+                        "sentAt"
                       ],
                       "additionalProperties": false
                     },
@@ -14169,6 +14198,12 @@
                             "encrypted": {
                               "type": "boolean",
                               "description": "The quoted text is encrypted; show it from your own copy of that message"
+                            },
+                            "sentAt": {
+                              "type": "string",
+                              "format": "date-time",
+                              "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$",
+                              "description": "When the quoted message was sent"
                             }
                           },
                           "required": [
@@ -14179,7 +14214,8 @@
                             "spoiler",
                             "ephemeral",
                             "deleted",
-                            "encrypted"
+                            "encrypted",
+                            "sentAt"
                           ],
                           "additionalProperties": false
                         },
@@ -15531,6 +15567,13 @@
                       "minimum": -9007199254740991,
                       "maximum": 9007199254740991
                     },
+                    "hiddenBefore": {
+                      "nullable": true,
+                      "description": "Messages sent before this are hidden from you: in a group, those from before you joined, quotes of them included",
+                      "type": "string",
+                      "format": "date-time",
+                      "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                    },
                     "archived": {
                       "type": "boolean"
                     },
@@ -15986,6 +16029,12 @@
                               "encrypted": {
                                 "type": "boolean",
                                 "description": "The quoted text is encrypted; show it from your own copy of that message"
+                              },
+                              "sentAt": {
+                                "type": "string",
+                                "format": "date-time",
+                                "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$",
+                                "description": "When the quoted message was sent"
                               }
                             },
                             "required": [
@@ -15996,7 +16045,8 @@
                               "spoiler",
                               "ephemeral",
                               "deleted",
-                              "encrypted"
+                              "encrypted",
+                              "sentAt"
                             ],
                             "additionalProperties": false
                           },
@@ -17433,6 +17483,7 @@
                     "members",
                     "lastMessage",
                     "unreadCount",
+                    "hiddenBefore",
                     "archived",
                     "muted",
                     "mutedUntil",
@@ -18054,6 +18105,12 @@
                             "encrypted": {
                               "type": "boolean",
                               "description": "The quoted text is encrypted; show it from your own copy of that message"
+                            },
+                            "sentAt": {
+                              "type": "string",
+                              "format": "date-time",
+                              "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$",
+                              "description": "When the quoted message was sent"
                             }
                           },
                           "required": [
@@ -18064,7 +18121,8 @@
                             "spoiler",
                             "ephemeral",
                             "deleted",
-                            "encrypted"
+                            "encrypted",
+                            "sentAt"
                           ],
                           "additionalProperties": false
                         },
@@ -19416,6 +19474,13 @@
                       "minimum": -9007199254740991,
                       "maximum": 9007199254740991
                     },
+                    "hiddenBefore": {
+                      "nullable": true,
+                      "description": "Messages sent before this are hidden from you: in a group, those from before you joined, quotes of them included",
+                      "type": "string",
+                      "format": "date-time",
+                      "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                    },
                     "archived": {
                       "type": "boolean"
                     },
@@ -19871,6 +19936,12 @@
                               "encrypted": {
                                 "type": "boolean",
                                 "description": "The quoted text is encrypted; show it from your own copy of that message"
+                              },
+                              "sentAt": {
+                                "type": "string",
+                                "format": "date-time",
+                                "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$",
+                                "description": "When the quoted message was sent"
                               }
                             },
                             "required": [
@@ -19881,7 +19952,8 @@
                               "spoiler",
                               "ephemeral",
                               "deleted",
-                              "encrypted"
+                              "encrypted",
+                              "sentAt"
                             ],
                             "additionalProperties": false
                           },
@@ -21318,6 +21390,7 @@
                     "members",
                     "lastMessage",
                     "unreadCount",
+                    "hiddenBefore",
                     "archived",
                     "muted",
                     "mutedUntil",
@@ -21966,6 +22039,12 @@
                                   "encrypted": {
                                     "type": "boolean",
                                     "description": "The quoted text is encrypted; show it from your own copy of that message"
+                                  },
+                                  "sentAt": {
+                                    "type": "string",
+                                    "format": "date-time",
+                                    "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$",
+                                    "description": "When the quoted message was sent"
                                   }
                                 },
                                 "required": [
@@ -21976,7 +22055,8 @@
                                   "spoiler",
                                   "ephemeral",
                                   "deleted",
-                                  "encrypted"
+                                  "encrypted",
+                                  "sentAt"
                                 ],
                                 "additionalProperties": false
                               },
@@ -23328,6 +23408,13 @@
                             "minimum": -9007199254740991,
                             "maximum": 9007199254740991
                           },
+                          "hiddenBefore": {
+                            "nullable": true,
+                            "description": "Messages sent before this are hidden from you: in a group, those from before you joined, quotes of them included",
+                            "type": "string",
+                            "format": "date-time",
+                            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                          },
                           "archived": {
                             "type": "boolean"
                           },
@@ -23783,6 +23870,12 @@
                                     "encrypted": {
                                       "type": "boolean",
                                       "description": "The quoted text is encrypted; show it from your own copy of that message"
+                                    },
+                                    "sentAt": {
+                                      "type": "string",
+                                      "format": "date-time",
+                                      "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$",
+                                      "description": "When the quoted message was sent"
                                     }
                                   },
                                   "required": [
@@ -23793,7 +23886,8 @@
                                     "spoiler",
                                     "ephemeral",
                                     "deleted",
-                                    "encrypted"
+                                    "encrypted",
+                                    "sentAt"
                                   ],
                                   "additionalProperties": false
                                 },
@@ -25230,6 +25324,7 @@
                           "members",
                           "lastMessage",
                           "unreadCount",
+                          "hiddenBefore",
                           "archived",
                           "muted",
                           "mutedUntil",
@@ -25862,6 +25957,12 @@
                             "encrypted": {
                               "type": "boolean",
                               "description": "The quoted text is encrypted; show it from your own copy of that message"
+                            },
+                            "sentAt": {
+                              "type": "string",
+                              "format": "date-time",
+                              "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$",
+                              "description": "When the quoted message was sent"
                             }
                           },
                           "required": [
@@ -25872,7 +25973,8 @@
                             "spoiler",
                             "ephemeral",
                             "deleted",
-                            "encrypted"
+                            "encrypted",
+                            "sentAt"
                           ],
                           "additionalProperties": false
                         },
@@ -27224,6 +27326,13 @@
                       "minimum": -9007199254740991,
                       "maximum": 9007199254740991
                     },
+                    "hiddenBefore": {
+                      "nullable": true,
+                      "description": "Messages sent before this are hidden from you: in a group, those from before you joined, quotes of them included",
+                      "type": "string",
+                      "format": "date-time",
+                      "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                    },
                     "archived": {
                       "type": "boolean"
                     },
@@ -27679,6 +27788,12 @@
                               "encrypted": {
                                 "type": "boolean",
                                 "description": "The quoted text is encrypted; show it from your own copy of that message"
+                              },
+                              "sentAt": {
+                                "type": "string",
+                                "format": "date-time",
+                                "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$",
+                                "description": "When the quoted message was sent"
                               }
                             },
                             "required": [
@@ -27689,7 +27804,8 @@
                               "spoiler",
                               "ephemeral",
                               "deleted",
-                              "encrypted"
+                              "encrypted",
+                              "sentAt"
                             ],
                             "additionalProperties": false
                           },
@@ -29126,6 +29242,7 @@
                     "members",
                     "lastMessage",
                     "unreadCount",
+                    "hiddenBefore",
                     "archived",
                     "muted",
                     "mutedUntil",
@@ -29833,6 +29950,12 @@
                             "encrypted": {
                               "type": "boolean",
                               "description": "The quoted text is encrypted; show it from your own copy of that message"
+                            },
+                            "sentAt": {
+                              "type": "string",
+                              "format": "date-time",
+                              "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$",
+                              "description": "When the quoted message was sent"
                             }
                           },
                           "required": [
@@ -29843,7 +29966,8 @@
                             "spoiler",
                             "ephemeral",
                             "deleted",
-                            "encrypted"
+                            "encrypted",
+                            "sentAt"
                           ],
                           "additionalProperties": false
                         },
@@ -31195,6 +31319,13 @@
                       "minimum": -9007199254740991,
                       "maximum": 9007199254740991
                     },
+                    "hiddenBefore": {
+                      "nullable": true,
+                      "description": "Messages sent before this are hidden from you: in a group, those from before you joined, quotes of them included",
+                      "type": "string",
+                      "format": "date-time",
+                      "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                    },
                     "archived": {
                       "type": "boolean"
                     },
@@ -31650,6 +31781,12 @@
                               "encrypted": {
                                 "type": "boolean",
                                 "description": "The quoted text is encrypted; show it from your own copy of that message"
+                              },
+                              "sentAt": {
+                                "type": "string",
+                                "format": "date-time",
+                                "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$",
+                                "description": "When the quoted message was sent"
                               }
                             },
                             "required": [
@@ -31660,7 +31797,8 @@
                               "spoiler",
                               "ephemeral",
                               "deleted",
-                              "encrypted"
+                              "encrypted",
+                              "sentAt"
                             ],
                             "additionalProperties": false
                           },
@@ -33097,6 +33235,7 @@
                     "members",
                     "lastMessage",
                     "unreadCount",
+                    "hiddenBefore",
                     "archived",
                     "muted",
                     "mutedUntil",
@@ -33890,6 +34029,12 @@
                         "encrypted": {
                           "type": "boolean",
                           "description": "The quoted text is encrypted; show it from your own copy of that message"
+                        },
+                        "sentAt": {
+                          "type": "string",
+                          "format": "date-time",
+                          "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$",
+                          "description": "When the quoted message was sent"
                         }
                       },
                       "required": [
@@ -33900,7 +34045,8 @@
                         "spoiler",
                         "ephemeral",
                         "deleted",
-                        "encrypted"
+                        "encrypted",
+                        "sentAt"
                       ],
                       "additionalProperties": false
                     },
@@ -35717,6 +35863,12 @@
                         "encrypted": {
                           "type": "boolean",
                           "description": "The quoted text is encrypted; show it from your own copy of that message"
+                        },
+                        "sentAt": {
+                          "type": "string",
+                          "format": "date-time",
+                          "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$",
+                          "description": "When the quoted message was sent"
                         }
                       },
                       "required": [
@@ -35727,7 +35879,8 @@
                         "spoiler",
                         "ephemeral",
                         "deleted",
-                        "encrypted"
+                        "encrypted",
+                        "sentAt"
                       ],
                       "additionalProperties": false
                     },
@@ -37552,6 +37705,12 @@
                         "encrypted": {
                           "type": "boolean",
                           "description": "The quoted text is encrypted; show it from your own copy of that message"
+                        },
+                        "sentAt": {
+                          "type": "string",
+                          "format": "date-time",
+                          "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$",
+                          "description": "When the quoted message was sent"
                         }
                       },
                       "required": [
@@ -37562,7 +37721,8 @@
                         "spoiler",
                         "ephemeral",
                         "deleted",
-                        "encrypted"
+                        "encrypted",
+                        "sentAt"
                       ],
                       "additionalProperties": false
                     },
@@ -39378,6 +39538,12 @@
                         "encrypted": {
                           "type": "boolean",
                           "description": "The quoted text is encrypted; show it from your own copy of that message"
+                        },
+                        "sentAt": {
+                          "type": "string",
+                          "format": "date-time",
+                          "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$",
+                          "description": "When the quoted message was sent"
                         }
                       },
                       "required": [
@@ -39388,7 +39554,8 @@
                         "spoiler",
                         "ephemeral",
                         "deleted",
-                        "encrypted"
+                        "encrypted",
+                        "sentAt"
                       ],
                       "additionalProperties": false
                     },
@@ -41214,6 +41381,12 @@
                         "encrypted": {
                           "type": "boolean",
                           "description": "The quoted text is encrypted; show it from your own copy of that message"
+                        },
+                        "sentAt": {
+                          "type": "string",
+                          "format": "date-time",
+                          "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$",
+                          "description": "When the quoted message was sent"
                         }
                       },
                       "required": [
@@ -41224,7 +41397,8 @@
                         "spoiler",
                         "ephemeral",
                         "deleted",
-                        "encrypted"
+                        "encrypted",
+                        "sentAt"
                       ],
                       "additionalProperties": false
                     },
@@ -43193,6 +43367,12 @@
                         "encrypted": {
                           "type": "boolean",
                           "description": "The quoted text is encrypted; show it from your own copy of that message"
+                        },
+                        "sentAt": {
+                          "type": "string",
+                          "format": "date-time",
+                          "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$",
+                          "description": "When the quoted message was sent"
                         }
                       },
                       "required": [
@@ -43203,7 +43383,8 @@
                         "spoiler",
                         "ephemeral",
                         "deleted",
-                        "encrypted"
+                        "encrypted",
+                        "sentAt"
                       ],
                       "additionalProperties": false
                     },
@@ -45004,6 +45185,12 @@
                             "encrypted": {
                               "type": "boolean",
                               "description": "The quoted text is encrypted; show it from your own copy of that message"
+                            },
+                            "sentAt": {
+                              "type": "string",
+                              "format": "date-time",
+                              "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$",
+                              "description": "When the quoted message was sent"
                             }
                           },
                           "required": [
@@ -45014,7 +45201,8 @@
                             "spoiler",
                             "ephemeral",
                             "deleted",
-                            "encrypted"
+                            "encrypted",
+                            "sentAt"
                           ],
                           "additionalProperties": false
                         },
@@ -46826,6 +47014,12 @@
                         "encrypted": {
                           "type": "boolean",
                           "description": "The quoted text is encrypted; show it from your own copy of that message"
+                        },
+                        "sentAt": {
+                          "type": "string",
+                          "format": "date-time",
+                          "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$",
+                          "description": "When the quoted message was sent"
                         }
                       },
                       "required": [
@@ -46836,7 +47030,8 @@
                         "spoiler",
                         "ephemeral",
                         "deleted",
-                        "encrypted"
+                        "encrypted",
+                        "sentAt"
                       ],
                       "additionalProperties": false
                     },
@@ -48634,6 +48829,12 @@
                         "encrypted": {
                           "type": "boolean",
                           "description": "The quoted text is encrypted; show it from your own copy of that message"
+                        },
+                        "sentAt": {
+                          "type": "string",
+                          "format": "date-time",
+                          "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$",
+                          "description": "When the quoted message was sent"
                         }
                       },
                       "required": [
@@ -48644,7 +48845,8 @@
                         "spoiler",
                         "ephemeral",
                         "deleted",
-                        "encrypted"
+                        "encrypted",
+                        "sentAt"
                       ],
                       "additionalProperties": false
                     },
@@ -50442,6 +50644,12 @@
                         "encrypted": {
                           "type": "boolean",
                           "description": "The quoted text is encrypted; show it from your own copy of that message"
+                        },
+                        "sentAt": {
+                          "type": "string",
+                          "format": "date-time",
+                          "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$",
+                          "description": "When the quoted message was sent"
                         }
                       },
                       "required": [
@@ -50452,7 +50660,8 @@
                         "spoiler",
                         "ephemeral",
                         "deleted",
-                        "encrypted"
+                        "encrypted",
+                        "sentAt"
                       ],
                       "additionalProperties": false
                     },
@@ -52369,6 +52578,12 @@
                         "encrypted": {
                           "type": "boolean",
                           "description": "The quoted text is encrypted; show it from your own copy of that message"
+                        },
+                        "sentAt": {
+                          "type": "string",
+                          "format": "date-time",
+                          "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$",
+                          "description": "When the quoted message was sent"
                         }
                       },
                       "required": [
@@ -52379,7 +52594,8 @@
                         "spoiler",
                         "ephemeral",
                         "deleted",
-                        "encrypted"
+                        "encrypted",
+                        "sentAt"
                       ],
                       "additionalProperties": false
                     },
@@ -54201,6 +54417,12 @@
                         "encrypted": {
                           "type": "boolean",
                           "description": "The quoted text is encrypted; show it from your own copy of that message"
+                        },
+                        "sentAt": {
+                          "type": "string",
+                          "format": "date-time",
+                          "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$",
+                          "description": "When the quoted message was sent"
                         }
                       },
                       "required": [
@@ -54211,7 +54433,8 @@
                         "spoiler",
                         "ephemeral",
                         "deleted",
-                        "encrypted"
+                        "encrypted",
+                        "sentAt"
                       ],
                       "additionalProperties": false
                     },
@@ -56144,6 +56367,12 @@
                               "encrypted": {
                                 "type": "boolean",
                                 "description": "The quoted text is encrypted; show it from your own copy of that message"
+                              },
+                              "sentAt": {
+                                "type": "string",
+                                "format": "date-time",
+                                "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$",
+                                "description": "When the quoted message was sent"
                               }
                             },
                             "required": [
@@ -56154,7 +56383,8 @@
                               "spoiler",
                               "ephemeral",
                               "deleted",
-                              "encrypted"
+                              "encrypted",
+                              "sentAt"
                             ],
                             "additionalProperties": false
                           },
@@ -58640,6 +58870,12 @@
                         "encrypted": {
                           "type": "boolean",
                           "description": "The quoted text is encrypted; show it from your own copy of that message"
+                        },
+                        "sentAt": {
+                          "type": "string",
+                          "format": "date-time",
+                          "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$",
+                          "description": "When the quoted message was sent"
                         }
                       },
                       "required": [
@@ -58650,7 +58886,8 @@
                         "spoiler",
                         "ephemeral",
                         "deleted",
-                        "encrypted"
+                        "encrypted",
+                        "sentAt"
                       ],
                       "additionalProperties": false
                     },
@@ -60292,6 +60529,12 @@
                               "encrypted": {
                                 "type": "boolean",
                                 "description": "The quoted text is encrypted; show it from your own copy of that message"
+                              },
+                              "sentAt": {
+                                "type": "string",
+                                "format": "date-time",
+                                "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$",
+                                "description": "When the quoted message was sent"
                               }
                             },
                             "required": [
@@ -60302,7 +60545,8 @@
                               "spoiler",
                               "ephemeral",
                               "deleted",
-                              "encrypted"
+                              "encrypted",
+                              "sentAt"
                             ],
                             "additionalProperties": false
                           },
@@ -61467,6 +61711,12 @@
                         "encrypted": {
                           "type": "boolean",
                           "description": "The quoted text is encrypted; show it from your own copy of that message"
+                        },
+                        "sentAt": {
+                          "type": "string",
+                          "format": "date-time",
+                          "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$",
+                          "description": "When the quoted message was sent"
                         }
                       },
                       "required": [
@@ -61477,7 +61727,8 @@
                         "spoiler",
                         "ephemeral",
                         "deleted",
-                        "encrypted"
+                        "encrypted",
+                        "sentAt"
                       ],
                       "additionalProperties": false
                     },
@@ -62125,6 +62376,12 @@
                         "encrypted": {
                           "type": "boolean",
                           "description": "The quoted text is encrypted; show it from your own copy of that message"
+                        },
+                        "sentAt": {
+                          "type": "string",
+                          "format": "date-time",
+                          "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$",
+                          "description": "When the quoted message was sent"
                         }
                       },
                       "required": [
@@ -62135,7 +62392,8 @@
                         "spoiler",
                         "ephemeral",
                         "deleted",
-                        "encrypted"
+                        "encrypted",
+                        "sentAt"
                       ],
                       "additionalProperties": false
                     },
@@ -62803,6 +63061,12 @@
                         "encrypted": {
                           "type": "boolean",
                           "description": "The quoted text is encrypted; show it from your own copy of that message"
+                        },
+                        "sentAt": {
+                          "type": "string",
+                          "format": "date-time",
+                          "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$",
+                          "description": "When the quoted message was sent"
                         }
                       },
                       "required": [
@@ -62813,7 +63077,8 @@
                         "spoiler",
                         "ephemeral",
                         "deleted",
-                        "encrypted"
+                        "encrypted",
+                        "sentAt"
                       ],
                       "additionalProperties": false
                     },
@@ -65608,6 +65873,12 @@
                                       "encrypted": {
                                         "type": "boolean",
                                         "description": "The quoted text is encrypted; show it from your own copy of that message"
+                                      },
+                                      "sentAt": {
+                                        "type": "string",
+                                        "format": "date-time",
+                                        "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$",
+                                        "description": "When the quoted message was sent"
                                       }
                                     },
                                     "required": [
@@ -65618,7 +65889,8 @@
                                       "spoiler",
                                       "ephemeral",
                                       "deleted",
-                                      "encrypted"
+                                      "encrypted",
+                                      "sentAt"
                                     ],
                                     "additionalProperties": false
                                   },
@@ -67406,6 +67678,12 @@
                                       "encrypted": {
                                         "type": "boolean",
                                         "description": "The quoted text is encrypted; show it from your own copy of that message"
+                                      },
+                                      "sentAt": {
+                                        "type": "string",
+                                        "format": "date-time",
+                                        "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$",
+                                        "description": "When the quoted message was sent"
                                       }
                                     },
                                     "required": [
@@ -67416,7 +67694,8 @@
                                       "spoiler",
                                       "ephemeral",
                                       "deleted",
-                                      "encrypted"
+                                      "encrypted",
+                                      "sentAt"
                                     ],
                                     "additionalProperties": false
                                   },
@@ -69462,6 +69741,12 @@
                                           "encrypted": {
                                             "type": "boolean",
                                             "description": "The quoted text is encrypted; show it from your own copy of that message"
+                                          },
+                                          "sentAt": {
+                                            "type": "string",
+                                            "format": "date-time",
+                                            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$",
+                                            "description": "When the quoted message was sent"
                                           }
                                         },
                                         "required": [
@@ -69472,7 +69757,8 @@
                                           "spoiler",
                                           "ephemeral",
                                           "deleted",
-                                          "encrypted"
+                                          "encrypted",
+                                          "sentAt"
                                         ],
                                         "additionalProperties": false
                                       },
@@ -70824,6 +71110,13 @@
                                     "minimum": -9007199254740991,
                                     "maximum": 9007199254740991
                                   },
+                                  "hiddenBefore": {
+                                    "nullable": true,
+                                    "description": "Messages sent before this are hidden from you: in a group, those from before you joined, quotes of them included",
+                                    "type": "string",
+                                    "format": "date-time",
+                                    "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                                  },
                                   "archived": {
                                     "type": "boolean"
                                   },
@@ -71279,6 +71572,12 @@
                                             "encrypted": {
                                               "type": "boolean",
                                               "description": "The quoted text is encrypted; show it from your own copy of that message"
+                                            },
+                                            "sentAt": {
+                                              "type": "string",
+                                              "format": "date-time",
+                                              "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$",
+                                              "description": "When the quoted message was sent"
                                             }
                                           },
                                           "required": [
@@ -71289,7 +71588,8 @@
                                             "spoiler",
                                             "ephemeral",
                                             "deleted",
-                                            "encrypted"
+                                            "encrypted",
+                                            "sentAt"
                                           ],
                                           "additionalProperties": false
                                         },
@@ -72726,6 +73026,7 @@
                                   "members",
                                   "lastMessage",
                                   "unreadCount",
+                                  "hiddenBefore",
                                   "archived",
                                   "muted",
                                   "mutedUntil",
@@ -75124,6 +75425,12 @@
                         "encrypted": {
                           "type": "boolean",
                           "description": "The quoted text is encrypted; show it from your own copy of that message"
+                        },
+                        "sentAt": {
+                          "type": "string",
+                          "format": "date-time",
+                          "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$",
+                          "description": "When the quoted message was sent"
                         }
                       },
                       "required": [
@@ -75134,7 +75441,8 @@
                         "spoiler",
                         "ephemeral",
                         "deleted",
-                        "encrypted"
+                        "encrypted",
+                        "sentAt"
                       ],
                       "additionalProperties": false
                     },
@@ -82808,6 +83116,12 @@
                             "encrypted": {
                               "type": "boolean",
                               "description": "The quoted text is encrypted; show it from your own copy of that message"
+                            },
+                            "sentAt": {
+                              "type": "string",
+                              "format": "date-time",
+                              "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$",
+                              "description": "When the quoted message was sent"
                             }
                           },
                           "required": [
@@ -82818,7 +83132,8 @@
                             "spoiler",
                             "ephemeral",
                             "deleted",
-                            "encrypted"
+                            "encrypted",
+                            "sentAt"
                           ],
                           "additionalProperties": false
                         },
@@ -84170,6 +84485,13 @@
                       "minimum": -9007199254740991,
                       "maximum": 9007199254740991
                     },
+                    "hiddenBefore": {
+                      "nullable": true,
+                      "description": "Messages sent before this are hidden from you: in a group, those from before you joined, quotes of them included",
+                      "type": "string",
+                      "format": "date-time",
+                      "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                    },
                     "archived": {
                       "type": "boolean"
                     },
@@ -84625,6 +84947,12 @@
                               "encrypted": {
                                 "type": "boolean",
                                 "description": "The quoted text is encrypted; show it from your own copy of that message"
+                              },
+                              "sentAt": {
+                                "type": "string",
+                                "format": "date-time",
+                                "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$",
+                                "description": "When the quoted message was sent"
                               }
                             },
                             "required": [
@@ -84635,7 +84963,8 @@
                               "spoiler",
                               "ephemeral",
                               "deleted",
-                              "encrypted"
+                              "encrypted",
+                              "sentAt"
                             ],
                             "additionalProperties": false
                           },
@@ -86072,6 +86401,7 @@
                     "members",
                     "lastMessage",
                     "unreadCount",
+                    "hiddenBefore",
                     "archived",
                     "muted",
                     "mutedUntil",
@@ -86798,6 +87128,12 @@
                             "encrypted": {
                               "type": "boolean",
                               "description": "The quoted text is encrypted; show it from your own copy of that message"
+                            },
+                            "sentAt": {
+                              "type": "string",
+                              "format": "date-time",
+                              "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$",
+                              "description": "When the quoted message was sent"
                             }
                           },
                           "required": [
@@ -86808,7 +87144,8 @@
                             "spoiler",
                             "ephemeral",
                             "deleted",
-                            "encrypted"
+                            "encrypted",
+                            "sentAt"
                           ],
                           "additionalProperties": false
                         },
@@ -88160,6 +88497,13 @@
                       "minimum": -9007199254740991,
                       "maximum": 9007199254740991
                     },
+                    "hiddenBefore": {
+                      "nullable": true,
+                      "description": "Messages sent before this are hidden from you: in a group, those from before you joined, quotes of them included",
+                      "type": "string",
+                      "format": "date-time",
+                      "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                    },
                     "archived": {
                       "type": "boolean"
                     },
@@ -88615,6 +88959,12 @@
                               "encrypted": {
                                 "type": "boolean",
                                 "description": "The quoted text is encrypted; show it from your own copy of that message"
+                              },
+                              "sentAt": {
+                                "type": "string",
+                                "format": "date-time",
+                                "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$",
+                                "description": "When the quoted message was sent"
                               }
                             },
                             "required": [
@@ -88625,7 +88975,8 @@
                               "spoiler",
                               "ephemeral",
                               "deleted",
-                              "encrypted"
+                              "encrypted",
+                              "sentAt"
                             ],
                             "additionalProperties": false
                           },
@@ -90062,6 +90413,7 @@
                     "members",
                     "lastMessage",
                     "unreadCount",
+                    "hiddenBefore",
                     "archived",
                     "muted",
                     "mutedUntil",
@@ -90724,6 +91076,12 @@
                             "encrypted": {
                               "type": "boolean",
                               "description": "The quoted text is encrypted; show it from your own copy of that message"
+                            },
+                            "sentAt": {
+                              "type": "string",
+                              "format": "date-time",
+                              "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$",
+                              "description": "When the quoted message was sent"
                             }
                           },
                           "required": [
@@ -90734,7 +91092,8 @@
                             "spoiler",
                             "ephemeral",
                             "deleted",
-                            "encrypted"
+                            "encrypted",
+                            "sentAt"
                           ],
                           "additionalProperties": false
                         },
@@ -92086,6 +92445,13 @@
                       "minimum": -9007199254740991,
                       "maximum": 9007199254740991
                     },
+                    "hiddenBefore": {
+                      "nullable": true,
+                      "description": "Messages sent before this are hidden from you: in a group, those from before you joined, quotes of them included",
+                      "type": "string",
+                      "format": "date-time",
+                      "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                    },
                     "archived": {
                       "type": "boolean"
                     },
@@ -92541,6 +92907,12 @@
                               "encrypted": {
                                 "type": "boolean",
                                 "description": "The quoted text is encrypted; show it from your own copy of that message"
+                              },
+                              "sentAt": {
+                                "type": "string",
+                                "format": "date-time",
+                                "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$",
+                                "description": "When the quoted message was sent"
                               }
                             },
                             "required": [
@@ -92551,7 +92923,8 @@
                               "spoiler",
                               "ephemeral",
                               "deleted",
-                              "encrypted"
+                              "encrypted",
+                              "sentAt"
                             ],
                             "additionalProperties": false
                           },
@@ -93988,6 +94361,7 @@
                     "members",
                     "lastMessage",
                     "unreadCount",
+                    "hiddenBefore",
                     "archived",
                     "muted",
                     "mutedUntil",
@@ -94609,6 +94983,12 @@
                             "encrypted": {
                               "type": "boolean",
                               "description": "The quoted text is encrypted; show it from your own copy of that message"
+                            },
+                            "sentAt": {
+                              "type": "string",
+                              "format": "date-time",
+                              "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$",
+                              "description": "When the quoted message was sent"
                             }
                           },
                           "required": [
@@ -94619,7 +94999,8 @@
                             "spoiler",
                             "ephemeral",
                             "deleted",
-                            "encrypted"
+                            "encrypted",
+                            "sentAt"
                           ],
                           "additionalProperties": false
                         },
@@ -95971,6 +96352,13 @@
                       "minimum": -9007199254740991,
                       "maximum": 9007199254740991
                     },
+                    "hiddenBefore": {
+                      "nullable": true,
+                      "description": "Messages sent before this are hidden from you: in a group, those from before you joined, quotes of them included",
+                      "type": "string",
+                      "format": "date-time",
+                      "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                    },
                     "archived": {
                       "type": "boolean"
                     },
@@ -96426,6 +96814,12 @@
                               "encrypted": {
                                 "type": "boolean",
                                 "description": "The quoted text is encrypted; show it from your own copy of that message"
+                              },
+                              "sentAt": {
+                                "type": "string",
+                                "format": "date-time",
+                                "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$",
+                                "description": "When the quoted message was sent"
                               }
                             },
                             "required": [
@@ -96436,7 +96830,8 @@
                               "spoiler",
                               "ephemeral",
                               "deleted",
-                              "encrypted"
+                              "encrypted",
+                              "sentAt"
                             ],
                             "additionalProperties": false
                           },
@@ -97873,6 +98268,7 @@
                     "members",
                     "lastMessage",
                     "unreadCount",
+                    "hiddenBefore",
                     "archived",
                     "muted",
                     "mutedUntil",
@@ -98515,6 +98911,12 @@
                             "encrypted": {
                               "type": "boolean",
                               "description": "The quoted text is encrypted; show it from your own copy of that message"
+                            },
+                            "sentAt": {
+                              "type": "string",
+                              "format": "date-time",
+                              "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$",
+                              "description": "When the quoted message was sent"
                             }
                           },
                           "required": [
@@ -98525,7 +98927,8 @@
                             "spoiler",
                             "ephemeral",
                             "deleted",
-                            "encrypted"
+                            "encrypted",
+                            "sentAt"
                           ],
                           "additionalProperties": false
                         },
@@ -99877,6 +100280,13 @@
                       "minimum": -9007199254740991,
                       "maximum": 9007199254740991
                     },
+                    "hiddenBefore": {
+                      "nullable": true,
+                      "description": "Messages sent before this are hidden from you: in a group, those from before you joined, quotes of them included",
+                      "type": "string",
+                      "format": "date-time",
+                      "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                    },
                     "archived": {
                       "type": "boolean"
                     },
@@ -100332,6 +100742,12 @@
                               "encrypted": {
                                 "type": "boolean",
                                 "description": "The quoted text is encrypted; show it from your own copy of that message"
+                              },
+                              "sentAt": {
+                                "type": "string",
+                                "format": "date-time",
+                                "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$",
+                                "description": "When the quoted message was sent"
                               }
                             },
                             "required": [
@@ -100342,7 +100758,8 @@
                               "spoiler",
                               "ephemeral",
                               "deleted",
-                              "encrypted"
+                              "encrypted",
+                              "sentAt"
                             ],
                             "additionalProperties": false
                           },
@@ -101779,6 +102196,7 @@
                     "members",
                     "lastMessage",
                     "unreadCount",
+                    "hiddenBefore",
                     "archived",
                     "muted",
                     "mutedUntil",
@@ -102431,6 +102849,12 @@
                             "encrypted": {
                               "type": "boolean",
                               "description": "The quoted text is encrypted; show it from your own copy of that message"
+                            },
+                            "sentAt": {
+                              "type": "string",
+                              "format": "date-time",
+                              "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$",
+                              "description": "When the quoted message was sent"
                             }
                           },
                           "required": [
@@ -102441,7 +102865,8 @@
                             "spoiler",
                             "ephemeral",
                             "deleted",
-                            "encrypted"
+                            "encrypted",
+                            "sentAt"
                           ],
                           "additionalProperties": false
                         },
@@ -103793,6 +104218,13 @@
                       "minimum": -9007199254740991,
                       "maximum": 9007199254740991
                     },
+                    "hiddenBefore": {
+                      "nullable": true,
+                      "description": "Messages sent before this are hidden from you: in a group, those from before you joined, quotes of them included",
+                      "type": "string",
+                      "format": "date-time",
+                      "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                    },
                     "archived": {
                       "type": "boolean"
                     },
@@ -104248,6 +104680,12 @@
                               "encrypted": {
                                 "type": "boolean",
                                 "description": "The quoted text is encrypted; show it from your own copy of that message"
+                              },
+                              "sentAt": {
+                                "type": "string",
+                                "format": "date-time",
+                                "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$",
+                                "description": "When the quoted message was sent"
                               }
                             },
                             "required": [
@@ -104258,7 +104696,8 @@
                               "spoiler",
                               "ephemeral",
                               "deleted",
-                              "encrypted"
+                              "encrypted",
+                              "sentAt"
                             ],
                             "additionalProperties": false
                           },
@@ -105695,6 +106134,7 @@
                     "members",
                     "lastMessage",
                     "unreadCount",
+                    "hiddenBefore",
                     "archived",
                     "muted",
                     "mutedUntil",

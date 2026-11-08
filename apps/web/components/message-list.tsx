@@ -453,24 +453,30 @@ function Quote({
   name,
   mine,
   onClick,
+  earlier = false,
 }: {
   reply: ReplyPreview;
   name: string;
   mine: boolean;
   onClick: () => void;
+  /** Quotes a message from before I joined the group: its text stays hidden, and there's nothing to jump to. */
+  earlier?: boolean;
 }) {
   const tr = useT();
   return (
     <button
       type="button"
-      onClick={onClick}
+      onClick={earlier ? undefined : onClick}
+      disabled={earlier}
       className={`mb-1 block w-full rounded-lg border-l-4 px-2 py-1 text-left text-[13px] leading-snug ${
         mine ? "border-brand-ink/40 bg-black/10" : "border-brand bg-black/5 dark:bg-white/10"
       }`}
     >
       <span className="block font-semibold">{name}</span>
-      <span className={`line-clamp-2 ${reply.deleted || reply.spoiler ? "italic opacity-70" : "opacity-80"}`}>
-        {reply.deleted ? (
+      <span className={`line-clamp-2 ${reply.deleted || reply.spoiler || earlier ? "italic opacity-70" : "opacity-80"}`}>
+        {earlier ? (
+          tr.messages.beforeYouJoined
+        ) : reply.deleted ? (
           tr.summary.messageDeleted
         ) : reply.ephemeral ? (
           <span className="inline-flex items-center gap-1">
@@ -795,6 +801,7 @@ function Bubble({
   sender,
   comments,
   onOpenThread,
+  quoteEarlier,
 }: {
   row: MsgRow;
   /** In a group, who sent an incoming message: their name heads a run of their messages, their picture ends it. */
@@ -828,6 +835,7 @@ function Bubble({
   /** A group message's comments, for the link under it; null where there's none to show. */
   comments?: { count: number; closed: boolean } | null;
   onOpenThread?: () => void;
+  quoteEarlier?: boolean;
 }) {
   const tr = useT();
   const selectable = selecting && row.message !== null;
@@ -988,6 +996,7 @@ function Bubble({
                   mine={mine}
                   name={nameOf(row.replyTo.senderId)}
                   onClick={() => onQuote(row.replyTo!.id)}
+                  earlier={quoteEarlier}
                 />
               )}
               {row.story && !row.deleted && <StoryQuote story={row.story} mine={mine} reaction={!!row.text && !!emojiOnly(row.text)} />}
@@ -1204,6 +1213,7 @@ export const MessageList = forwardRef<
     const pending = usePending(chat.id, threadId);
     const slot = threadId ? `${chat.id}:${threadId}` : chat.id;
     const groupAdmin = !!chat.group && chat.group.myRole !== "member";
+    const hiddenBefore = chat.group && chat.hiddenBefore ? Date.parse(chat.hiddenBefore) : null;
     const setMode = useComposerMode((s) => s.set);
     useEffect(() => () => useSpoilers.getState().forget(), [chat.id]);
     const selecting = useSelection((s) => !threadId && s.chatId === chat.id);
@@ -1695,6 +1705,7 @@ export const MessageList = forwardRef<
                 onVoiceStop={(finished) => (finished ? playNext(row.key) : setAutoplay((k) => (k === row.key ? null : k)))}
                 comments={!threadId && chat.group ? (row.message?.thread ?? null) : null}
                 onOpenThread={() => row.message && onOpenThread?.(row.message)}
+                quoteEarlier={!!row.replyTo && hiddenBefore !== null && Date.parse(row.replyTo.sentAt) <= hiddenBefore}
               />
             )
           }

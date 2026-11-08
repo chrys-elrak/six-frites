@@ -4209,6 +4209,11 @@ export interface paths {
                                     deleted: boolean;
                                     /** @description The quoted text is encrypted; show it from your own copy of that message */
                                     encrypted: boolean;
+                                    /**
+                                     * Format: date-time
+                                     * @description When the quoted message was sent
+                                     */
+                                    sentAt: string;
                                 } | null;
                                 /** @description The story or note a message answers, as it was when they answered: it may be gone since */
                                 story: {
@@ -4490,6 +4495,11 @@ export interface paths {
                                 } | null;
                             } | null;
                             unreadCount: number;
+                            /**
+                             * Format: date-time
+                             * @description Messages sent before this are hidden from you: in a group, those from before you joined, quotes of them included
+                             */
+                            hiddenBefore: string | null;
                             archived: boolean;
                             muted: boolean;
                             /**
@@ -4626,6 +4636,11 @@ export interface paths {
                                     deleted: boolean;
                                     /** @description The quoted text is encrypted; show it from your own copy of that message */
                                     encrypted: boolean;
+                                    /**
+                                     * Format: date-time
+                                     * @description When the quoted message was sent
+                                     */
+                                    sentAt: string;
                                 } | null;
                                 /** @description The story or note a message answers, as it was when they answered: it may be gone since */
                                 story: {
@@ -5107,6 +5122,11 @@ export interface paths {
                                 deleted: boolean;
                                 /** @description The quoted text is encrypted; show it from your own copy of that message */
                                 encrypted: boolean;
+                                /**
+                                 * Format: date-time
+                                 * @description When the quoted message was sent
+                                 */
+                                sentAt: string;
                             } | null;
                             /** @description The story or note a message answers, as it was when they answered: it may be gone since */
                             story: {
@@ -5585,6 +5605,11 @@ export interface paths {
                                     deleted: boolean;
                                     /** @description The quoted text is encrypted; show it from your own copy of that message */
                                     encrypted: boolean;
+                                    /**
+                                     * Format: date-time
+                                     * @description When the quoted message was sent
+                                     */
+                                    sentAt: string;
                                 } | null;
                                 /** @description The story or note a message answers, as it was when they answered: it may be gone since */
                                 story: {
@@ -5866,6 +5891,11 @@ export interface paths {
                                 } | null;
                             } | null;
                             unreadCount: number;
+                            /**
+                             * Format: date-time
+                             * @description Messages sent before this are hidden from you: in a group, those from before you joined, quotes of them included
+                             */
+                            hiddenBefore: string | null;
                             archived: boolean;
                             muted: boolean;
                             /**
@@ -6002,6 +6032,11 @@ export interface paths {
                                     deleted: boolean;
                                     /** @description The quoted text is encrypted; show it from your own copy of that message */
                                     encrypted: boolean;
+                                    /**
+                                     * Format: date-time
+                                     * @description When the quoted message was sent
+                                     */
+                                    sentAt: string;
                                 } | null;
                                 /** @description The story or note a message answers, as it was when they answered: it may be gone since */
                                 story: {
@@ -6517,6 +6552,11 @@ export interface paths {
                                     deleted: boolean;
                                     /** @description The quoted text is encrypted; show it from your own copy of that message */
                                     encrypted: boolean;
+                                    /**
+                                     * Format: date-time
+                                     * @description When the quoted message was sent
+                                     */
+                                    sentAt: string;
                                 } | null;
                                 /** @description The story or note a message answers, as it was when they answered: it may be gone since */
                                 story: {
@@ -6798,6 +6838,11 @@ export interface paths {
                                 } | null;
                             } | null;
                             unreadCount: number;
+                            /**
+                             * Format: date-time
+                             * @description Messages sent before this are hidden from you: in a group, those from before you joined, quotes of them included
+                             */
+                            hiddenBefore: string | null;
                             archived: boolean;
                             muted: boolean;
                             /**
@@ -6934,6 +6979,11 @@ export interface paths {
                                     deleted: boolean;
                                     /** @description The quoted text is encrypted; show it from your own copy of that message */
                                     encrypted: boolean;
+                                    /**
+                                     * Format: date-time
+                                     * @description When the quoted message was sent
+                                     */
+                                    sentAt: string;
                                 } | null;
                                 /** @description The story or note a message answers, as it was when they answered: it may be gone since */
                                 story: {
@@ -7447,6 +7497,11 @@ export interface paths {
                                         deleted: boolean;
                                         /** @description The quoted text is encrypted; show it from your own copy of that message */
                                         encrypted: boolean;
+                                        /**
+                                         * Format: date-time
+                                         * @description When the quoted message was sent
+                                         */
+                                        sentAt: string;
                                     } | null;
                                     /** @description The story or note a message answers, as it was when they answered: it may be gone since */
                                     story: {
@@ -7728,6 +7783,11 @@ export interface paths {
                                     } | null;
                                 } | null;
                                 unreadCount: number;
+                                /**
+                                 * Format: date-time
+                                 * @description Messages sent before this are hidden from you: in a group, those from before you joined, quotes of them included
+                                 */
+                                hiddenBefore: string | null;
                                 archived: boolean;
                                 muted: boolean;
                                 /**
@@ -7864,6 +7924,11 @@ export interface paths {
                                         deleted: boolean;
                                         /** @description The quoted text is encrypted; show it from your own copy of that message */
                                         encrypted: boolean;
+                                        /**
+                                         * Format: date-time
+                                         * @description When the quoted message was sent
+                                         */
+                                        sentAt: string;
                                     } | null;
                                     /** @description The story or note a message answers, as it was when they answered: it may be gone since */
                                     story: {
@@ -8378,6 +8443,11 @@ export interface paths {
                                     deleted: boolean;
                                     /** @description The quoted text is encrypted; show it from your own copy of that message */
                                     encrypted: boolean;
+                                    /**
+                                     * Format: date-time
+                                     * @description When the quoted message was sent
+                                     */
+                                    sentAt: string;
                                 } | null;
                                 /** @description The story or note a message answers, as it was when they answered: it may be gone since */
                                 story: {
@@ -8659,6 +8729,11 @@ export interface paths {
                                 } | null;
                             } | null;
                             unreadCount: number;
+                            /**
+                             * Format: date-time
+                             * @description Messages sent before this are hidden from you: in a group, those from before you joined, quotes of them included
+                             */
+                            hiddenBefore: string | null;
                             archived: boolean;
                             muted: boolean;
                             /**
@@ -8795,6 +8870,11 @@ export interface paths {
                                     deleted: boolean;
                                     /** @description The quoted text is encrypted; show it from your own copy of that message */
                                     encrypted: boolean;
+                                    /**
+                                     * Format: date-time
+                                     * @description When the quoted message was sent
+                                     */
+                                    sentAt: string;
                                 } | null;
                                 /** @description The story or note a message answers, as it was when they answered: it may be gone since */
                                 story: {
@@ -9362,6 +9442,11 @@ export interface paths {
                                     deleted: boolean;
                                     /** @description The quoted text is encrypted; show it from your own copy of that message */
                                     encrypted: boolean;
+                                    /**
+                                     * Format: date-time
+                                     * @description When the quoted message was sent
+                                     */
+                                    sentAt: string;
                                 } | null;
                                 /** @description The story or note a message answers, as it was when they answered: it may be gone since */
                                 story: {
@@ -9643,6 +9728,11 @@ export interface paths {
                                 } | null;
                             } | null;
                             unreadCount: number;
+                            /**
+                             * Format: date-time
+                             * @description Messages sent before this are hidden from you: in a group, those from before you joined, quotes of them included
+                             */
+                            hiddenBefore: string | null;
                             archived: boolean;
                             muted: boolean;
                             /**
@@ -9779,6 +9869,11 @@ export interface paths {
                                     deleted: boolean;
                                     /** @description The quoted text is encrypted; show it from your own copy of that message */
                                     encrypted: boolean;
+                                    /**
+                                     * Format: date-time
+                                     * @description When the quoted message was sent
+                                     */
+                                    sentAt: string;
                                 } | null;
                                 /** @description The story or note a message answers, as it was when they answered: it may be gone since */
                                 story: {
@@ -10357,6 +10452,11 @@ export interface paths {
                                 deleted: boolean;
                                 /** @description The quoted text is encrypted; show it from your own copy of that message */
                                 encrypted: boolean;
+                                /**
+                                 * Format: date-time
+                                 * @description When the quoted message was sent
+                                 */
+                                sentAt: string;
                             } | null;
                             /** @description The story or note a message answers, as it was when they answered: it may be gone since */
                             story: {
@@ -10803,6 +10903,11 @@ export interface paths {
                                 deleted: boolean;
                                 /** @description The quoted text is encrypted; show it from your own copy of that message */
                                 encrypted: boolean;
+                                /**
+                                 * Format: date-time
+                                 * @description When the quoted message was sent
+                                 */
+                                sentAt: string;
                             } | null;
                             /** @description The story or note a message answers, as it was when they answered: it may be gone since */
                             story: {
@@ -11248,6 +11353,11 @@ export interface paths {
                                 deleted: boolean;
                                 /** @description The quoted text is encrypted; show it from your own copy of that message */
                                 encrypted: boolean;
+                                /**
+                                 * Format: date-time
+                                 * @description When the quoted message was sent
+                                 */
+                                sentAt: string;
                             } | null;
                             /** @description The story or note a message answers, as it was when they answered: it may be gone since */
                             story: {
@@ -11689,6 +11799,11 @@ export interface paths {
                                 deleted: boolean;
                                 /** @description The quoted text is encrypted; show it from your own copy of that message */
                                 encrypted: boolean;
+                                /**
+                                 * Format: date-time
+                                 * @description When the quoted message was sent
+                                 */
+                                sentAt: string;
                             } | null;
                             /** @description The story or note a message answers, as it was when they answered: it may be gone since */
                             story: {
@@ -12133,6 +12248,11 @@ export interface paths {
                                 deleted: boolean;
                                 /** @description The quoted text is encrypted; show it from your own copy of that message */
                                 encrypted: boolean;
+                                /**
+                                 * Format: date-time
+                                 * @description When the quoted message was sent
+                                 */
+                                sentAt: string;
                             } | null;
                             /** @description The story or note a message answers, as it was when they answered: it may be gone since */
                             story: {
@@ -12600,6 +12720,11 @@ export interface paths {
                                 deleted: boolean;
                                 /** @description The quoted text is encrypted; show it from your own copy of that message */
                                 encrypted: boolean;
+                                /**
+                                 * Format: date-time
+                                 * @description When the quoted message was sent
+                                 */
+                                sentAt: string;
                             } | null;
                             /** @description The story or note a message answers, as it was when they answered: it may be gone since */
                             story: {
@@ -13040,6 +13165,11 @@ export interface paths {
                                     deleted: boolean;
                                     /** @description The quoted text is encrypted; show it from your own copy of that message */
                                     encrypted: boolean;
+                                    /**
+                                     * Format: date-time
+                                     * @description When the quoted message was sent
+                                     */
+                                    sentAt: string;
                                 } | null;
                                 /** @description The story or note a message answers, as it was when they answered: it may be gone since */
                                 story: {
@@ -13485,6 +13615,11 @@ export interface paths {
                                 deleted: boolean;
                                 /** @description The quoted text is encrypted; show it from your own copy of that message */
                                 encrypted: boolean;
+                                /**
+                                 * Format: date-time
+                                 * @description When the quoted message was sent
+                                 */
+                                sentAt: string;
                             } | null;
                             /** @description The story or note a message answers, as it was when they answered: it may be gone since */
                             story: {
@@ -13924,6 +14059,11 @@ export interface paths {
                                 deleted: boolean;
                                 /** @description The quoted text is encrypted; show it from your own copy of that message */
                                 encrypted: boolean;
+                                /**
+                                 * Format: date-time
+                                 * @description When the quoted message was sent
+                                 */
+                                sentAt: string;
                             } | null;
                             /** @description The story or note a message answers, as it was when they answered: it may be gone since */
                             story: {
@@ -14363,6 +14503,11 @@ export interface paths {
                                 deleted: boolean;
                                 /** @description The quoted text is encrypted; show it from your own copy of that message */
                                 encrypted: boolean;
+                                /**
+                                 * Format: date-time
+                                 * @description When the quoted message was sent
+                                 */
+                                sentAt: string;
                             } | null;
                             /** @description The story or note a message answers, as it was when they answered: it may be gone since */
                             story: {
@@ -14833,6 +14978,11 @@ export interface paths {
                                 deleted: boolean;
                                 /** @description The quoted text is encrypted; show it from your own copy of that message */
                                 encrypted: boolean;
+                                /**
+                                 * Format: date-time
+                                 * @description When the quoted message was sent
+                                 */
+                                sentAt: string;
                             } | null;
                             /** @description The story or note a message answers, as it was when they answered: it may be gone since */
                             story: {
@@ -15282,6 +15432,11 @@ export interface paths {
                                 deleted: boolean;
                                 /** @description The quoted text is encrypted; show it from your own copy of that message */
                                 encrypted: boolean;
+                                /**
+                                 * Format: date-time
+                                 * @description When the quoted message was sent
+                                 */
+                                sentAt: string;
                             } | null;
                             /** @description The story or note a message answers, as it was when they answered: it may be gone since */
                             story: {
@@ -15773,6 +15928,11 @@ export interface paths {
                                     deleted: boolean;
                                     /** @description The quoted text is encrypted; show it from your own copy of that message */
                                     encrypted: boolean;
+                                    /**
+                                     * Format: date-time
+                                     * @description When the quoted message was sent
+                                     */
+                                    sentAt: string;
                                 } | null;
                                 /** @description The story or note a message answers, as it was when they answered: it may be gone since */
                                 story: {
@@ -16364,6 +16524,11 @@ export interface paths {
                                 deleted: boolean;
                                 /** @description The quoted text is encrypted; show it from your own copy of that message */
                                 encrypted: boolean;
+                                /**
+                                 * Format: date-time
+                                 * @description When the quoted message was sent
+                                 */
+                                sentAt: string;
                             } | null;
                             /** @description The story or note a message answers, as it was when they answered: it may be gone since */
                             story: {
@@ -16744,6 +16909,11 @@ export interface paths {
                                     deleted: boolean;
                                     /** @description The quoted text is encrypted; show it from your own copy of that message */
                                     encrypted: boolean;
+                                    /**
+                                     * Format: date-time
+                                     * @description When the quoted message was sent
+                                     */
+                                    sentAt: string;
                                 } | null;
                                 /** Format: date-time */
                                 sendAt: string;
@@ -17044,6 +17214,11 @@ export interface paths {
                                 deleted: boolean;
                                 /** @description The quoted text is encrypted; show it from your own copy of that message */
                                 encrypted: boolean;
+                                /**
+                                 * Format: date-time
+                                 * @description When the quoted message was sent
+                                 */
+                                sentAt: string;
                             } | null;
                             /** Format: date-time */
                             sendAt: string;
@@ -17256,6 +17431,11 @@ export interface paths {
                                 deleted: boolean;
                                 /** @description The quoted text is encrypted; show it from your own copy of that message */
                                 encrypted: boolean;
+                                /**
+                                 * Format: date-time
+                                 * @description When the quoted message was sent
+                                 */
+                                sentAt: string;
                             } | null;
                             /** Format: date-time */
                             sendAt: string;
@@ -17450,6 +17630,11 @@ export interface paths {
                                 deleted: boolean;
                                 /** @description The quoted text is encrypted; show it from your own copy of that message */
                                 encrypted: boolean;
+                                /**
+                                 * Format: date-time
+                                 * @description When the quoted message was sent
+                                 */
+                                sentAt: string;
                             } | null;
                             /** @description The story or note a message answers, as it was when they answered: it may be gone since */
                             story: {
@@ -18476,6 +18661,11 @@ export interface paths {
                                         deleted: boolean;
                                         /** @description The quoted text is encrypted; show it from your own copy of that message */
                                         encrypted: boolean;
+                                        /**
+                                         * Format: date-time
+                                         * @description When the quoted message was sent
+                                         */
+                                        sentAt: string;
                                     } | null;
                                     /** @description The story or note a message answers, as it was when they answered: it may be gone since */
                                     story: {
@@ -18880,6 +19070,11 @@ export interface paths {
                                         deleted: boolean;
                                         /** @description The quoted text is encrypted; show it from your own copy of that message */
                                         encrypted: boolean;
+                                        /**
+                                         * Format: date-time
+                                         * @description When the quoted message was sent
+                                         */
+                                        sentAt: string;
                                     } | null;
                                     /** @description The story or note a message answers, as it was when they answered: it may be gone since */
                                     story: {
@@ -19354,6 +19549,11 @@ export interface paths {
                                             deleted: boolean;
                                             /** @description The quoted text is encrypted; show it from your own copy of that message */
                                             encrypted: boolean;
+                                            /**
+                                             * Format: date-time
+                                             * @description When the quoted message was sent
+                                             */
+                                            sentAt: string;
                                         } | null;
                                         /** @description The story or note a message answers, as it was when they answered: it may be gone since */
                                         story: {
@@ -19635,6 +19835,11 @@ export interface paths {
                                         } | null;
                                     } | null;
                                     unreadCount: number;
+                                    /**
+                                     * Format: date-time
+                                     * @description Messages sent before this are hidden from you: in a group, those from before you joined, quotes of them included
+                                     */
+                                    hiddenBefore: string | null;
                                     archived: boolean;
                                     muted: boolean;
                                     /**
@@ -19771,6 +19976,11 @@ export interface paths {
                                             deleted: boolean;
                                             /** @description The quoted text is encrypted; show it from your own copy of that message */
                                             encrypted: boolean;
+                                            /**
+                                             * Format: date-time
+                                             * @description When the quoted message was sent
+                                             */
+                                            sentAt: string;
                                         } | null;
                                         /** @description The story or note a message answers, as it was when they answered: it may be gone since */
                                         story: {
@@ -21201,6 +21411,11 @@ export interface paths {
                                 deleted: boolean;
                                 /** @description The quoted text is encrypted; show it from your own copy of that message */
                                 encrypted: boolean;
+                                /**
+                                 * Format: date-time
+                                 * @description When the quoted message was sent
+                                 */
+                                sentAt: string;
                             } | null;
                             /** @description The story or note a message answers, as it was when they answered: it may be gone since */
                             story: {
@@ -24547,6 +24762,11 @@ export interface paths {
                                     deleted: boolean;
                                     /** @description The quoted text is encrypted; show it from your own copy of that message */
                                     encrypted: boolean;
+                                    /**
+                                     * Format: date-time
+                                     * @description When the quoted message was sent
+                                     */
+                                    sentAt: string;
                                 } | null;
                                 /** @description The story or note a message answers, as it was when they answered: it may be gone since */
                                 story: {
@@ -24828,6 +25048,11 @@ export interface paths {
                                 } | null;
                             } | null;
                             unreadCount: number;
+                            /**
+                             * Format: date-time
+                             * @description Messages sent before this are hidden from you: in a group, those from before you joined, quotes of them included
+                             */
+                            hiddenBefore: string | null;
                             archived: boolean;
                             muted: boolean;
                             /**
@@ -24964,6 +25189,11 @@ export interface paths {
                                     deleted: boolean;
                                     /** @description The quoted text is encrypted; show it from your own copy of that message */
                                     encrypted: boolean;
+                                    /**
+                                     * Format: date-time
+                                     * @description When the quoted message was sent
+                                     */
+                                    sentAt: string;
                                 } | null;
                                 /** @description The story or note a message answers, as it was when they answered: it may be gone since */
                                 story: {
@@ -25520,6 +25750,11 @@ export interface paths {
                                     deleted: boolean;
                                     /** @description The quoted text is encrypted; show it from your own copy of that message */
                                     encrypted: boolean;
+                                    /**
+                                     * Format: date-time
+                                     * @description When the quoted message was sent
+                                     */
+                                    sentAt: string;
                                 } | null;
                                 /** @description The story or note a message answers, as it was when they answered: it may be gone since */
                                 story: {
@@ -25801,6 +26036,11 @@ export interface paths {
                                 } | null;
                             } | null;
                             unreadCount: number;
+                            /**
+                             * Format: date-time
+                             * @description Messages sent before this are hidden from you: in a group, those from before you joined, quotes of them included
+                             */
+                            hiddenBefore: string | null;
                             archived: boolean;
                             muted: boolean;
                             /**
@@ -25937,6 +26177,11 @@ export interface paths {
                                     deleted: boolean;
                                     /** @description The quoted text is encrypted; show it from your own copy of that message */
                                     encrypted: boolean;
+                                    /**
+                                     * Format: date-time
+                                     * @description When the quoted message was sent
+                                     */
+                                    sentAt: string;
                                 } | null;
                                 /** @description The story or note a message answers, as it was when they answered: it may be gone since */
                                 story: {
@@ -26471,6 +26716,11 @@ export interface paths {
                                     deleted: boolean;
                                     /** @description The quoted text is encrypted; show it from your own copy of that message */
                                     encrypted: boolean;
+                                    /**
+                                     * Format: date-time
+                                     * @description When the quoted message was sent
+                                     */
+                                    sentAt: string;
                                 } | null;
                                 /** @description The story or note a message answers, as it was when they answered: it may be gone since */
                                 story: {
@@ -26752,6 +27002,11 @@ export interface paths {
                                 } | null;
                             } | null;
                             unreadCount: number;
+                            /**
+                             * Format: date-time
+                             * @description Messages sent before this are hidden from you: in a group, those from before you joined, quotes of them included
+                             */
+                            hiddenBefore: string | null;
                             archived: boolean;
                             muted: boolean;
                             /**
@@ -26888,6 +27143,11 @@ export interface paths {
                                     deleted: boolean;
                                     /** @description The quoted text is encrypted; show it from your own copy of that message */
                                     encrypted: boolean;
+                                    /**
+                                     * Format: date-time
+                                     * @description When the quoted message was sent
+                                     */
+                                    sentAt: string;
                                 } | null;
                                 /** @description The story or note a message answers, as it was when they answered: it may be gone since */
                                 story: {
@@ -27399,6 +27659,11 @@ export interface paths {
                                     deleted: boolean;
                                     /** @description The quoted text is encrypted; show it from your own copy of that message */
                                     encrypted: boolean;
+                                    /**
+                                     * Format: date-time
+                                     * @description When the quoted message was sent
+                                     */
+                                    sentAt: string;
                                 } | null;
                                 /** @description The story or note a message answers, as it was when they answered: it may be gone since */
                                 story: {
@@ -27680,6 +27945,11 @@ export interface paths {
                                 } | null;
                             } | null;
                             unreadCount: number;
+                            /**
+                             * Format: date-time
+                             * @description Messages sent before this are hidden from you: in a group, those from before you joined, quotes of them included
+                             */
+                            hiddenBefore: string | null;
                             archived: boolean;
                             muted: boolean;
                             /**
@@ -27816,6 +28086,11 @@ export interface paths {
                                     deleted: boolean;
                                     /** @description The quoted text is encrypted; show it from your own copy of that message */
                                     encrypted: boolean;
+                                    /**
+                                     * Format: date-time
+                                     * @description When the quoted message was sent
+                                     */
+                                    sentAt: string;
                                 } | null;
                                 /** @description The story or note a message answers, as it was when they answered: it may be gone since */
                                 story: {
@@ -28340,6 +28615,11 @@ export interface paths {
                                     deleted: boolean;
                                     /** @description The quoted text is encrypted; show it from your own copy of that message */
                                     encrypted: boolean;
+                                    /**
+                                     * Format: date-time
+                                     * @description When the quoted message was sent
+                                     */
+                                    sentAt: string;
                                 } | null;
                                 /** @description The story or note a message answers, as it was when they answered: it may be gone since */
                                 story: {
@@ -28621,6 +28901,11 @@ export interface paths {
                                 } | null;
                             } | null;
                             unreadCount: number;
+                            /**
+                             * Format: date-time
+                             * @description Messages sent before this are hidden from you: in a group, those from before you joined, quotes of them included
+                             */
+                            hiddenBefore: string | null;
                             archived: boolean;
                             muted: boolean;
                             /**
@@ -28757,6 +29042,11 @@ export interface paths {
                                     deleted: boolean;
                                     /** @description The quoted text is encrypted; show it from your own copy of that message */
                                     encrypted: boolean;
+                                    /**
+                                     * Format: date-time
+                                     * @description When the quoted message was sent
+                                     */
+                                    sentAt: string;
                                 } | null;
                                 /** @description The story or note a message answers, as it was when they answered: it may be gone since */
                                 story: {
@@ -29306,6 +29596,11 @@ export interface paths {
                                     deleted: boolean;
                                     /** @description The quoted text is encrypted; show it from your own copy of that message */
                                     encrypted: boolean;
+                                    /**
+                                     * Format: date-time
+                                     * @description When the quoted message was sent
+                                     */
+                                    sentAt: string;
                                 } | null;
                                 /** @description The story or note a message answers, as it was when they answered: it may be gone since */
                                 story: {
@@ -29587,6 +29882,11 @@ export interface paths {
                                 } | null;
                             } | null;
                             unreadCount: number;
+                            /**
+                             * Format: date-time
+                             * @description Messages sent before this are hidden from you: in a group, those from before you joined, quotes of them included
+                             */
+                            hiddenBefore: string | null;
                             archived: boolean;
                             muted: boolean;
                             /**
@@ -29723,6 +30023,11 @@ export interface paths {
                                     deleted: boolean;
                                     /** @description The quoted text is encrypted; show it from your own copy of that message */
                                     encrypted: boolean;
+                                    /**
+                                     * Format: date-time
+                                     * @description When the quoted message was sent
+                                     */
+                                    sentAt: string;
                                 } | null;
                                 /** @description The story or note a message answers, as it was when they answered: it may be gone since */
                                 story: {
