@@ -957,6 +957,7 @@ function Bubble({
                 )}
               </span>
             )}
+            <div className="relative max-w-full">
             <div
               ref={bubble}
               {...press}
@@ -1101,6 +1102,30 @@ function Bubble({
                 </p>
               )}
             </div>
+              <div
+                className={`absolute top-1/2 flex -translate-y-1/2 items-center gap-1 ${mine ? "right-full mr-1 flex-row-reverse" : "left-full ml-1"}`}
+              >
+            {reactable && (
+              <button
+                onClick={() => onReactButton(anchor())}
+                aria-label={tr.messages.react}
+                className="hidden size-7 shrink-0 place-items-center rounded-full text-stone-400 opacity-0 transition hover:bg-stone-200 group-hover:opacity-100 focus:opacity-100 pointer-fine:grid dark:hover:bg-stone-800"
+              >
+                <SmilePlus className="size-4" />
+              </button>
+            )}
+            <button
+              onClick={(e) => {
+                const r = e.currentTarget.getBoundingClientRect();
+                onMenu({ x: r.left, y: r.bottom }, anchor());
+              }}
+              aria-label={tr.messages.options}
+              className="hidden size-7 shrink-0 place-items-center rounded-full text-stone-400 opacity-0 transition hover:bg-stone-200 group-hover:opacity-100 focus:opacity-100 pointer-fine:grid dark:hover:bg-stone-800"
+            >
+              <MoreHorizontal className="size-4" />
+            </button>
+              </div>
+            </div>
             {row.message && !row.deleted && (
               <ReactionChips message={row.message} meId={meId} mine={mine} nameOf={nameOf} onReact={onReact} />
             )}
@@ -1112,25 +1137,6 @@ function Bubble({
               </button>
             )}
           </div>
-          {reactable && (
-            <button
-              onClick={() => onReactButton(anchor())}
-              aria-label={tr.messages.react}
-              className="hidden size-7 shrink-0 place-items-center rounded-full text-stone-400 opacity-0 transition hover:bg-stone-200 group-hover:opacity-100 focus:opacity-100 pointer-fine:grid dark:hover:bg-stone-800"
-            >
-              <SmilePlus className="size-4" />
-            </button>
-          )}
-          <button
-            onClick={(e) => {
-              const r = e.currentTarget.getBoundingClientRect();
-              onMenu({ x: r.left, y: r.bottom }, anchor());
-            }}
-            aria-label={tr.messages.options}
-            className="hidden size-7 shrink-0 place-items-center rounded-full text-stone-400 opacity-0 transition hover:bg-stone-200 group-hover:opacity-100 focus:opacity-100 pointer-fine:grid dark:hover:bg-stone-800"
-          >
-            <MoreHorizontal className="size-4" />
-          </button>
         </div>
       </div>
     </div>
