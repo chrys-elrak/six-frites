@@ -1,7 +1,7 @@
-import { type MessageDTO, chatFace, chatTheme, durationLabel, previewText, readOnlyGroup, themeName } from "@six/shared";
+import { type MessageDTO, chatFace, chatTheme, durationLabel, previewText, readOnlyGroup } from "@six/shared";
 import { useQueryClient } from "@tanstack/react-query";
 import { router, useFocusEffect, useLocalSearchParams } from "expo-router";
-import { Bell, BellOff, ChevronLeft, ChevronsUpDown, EyeOff, Images, MoreVertical, Palette, Phone, PinOff, Search, ShieldAlert, Timer, Trash2, Video, X } from "lucide-react-native";
+import { ChevronLeft, ChevronsUpDown, EyeOff, MoreVertical, Phone, PinOff, Search, ShieldAlert, Timer, Trash2, Video, X } from "lucide-react-native";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { AppState, BackHandler, Pressable, ScrollView, StyleSheet, View, useWindowDimensions } from "react-native";
 import { Text } from "./text";
@@ -98,7 +98,7 @@ function OpenConversation({ chatId }: { chatId: string }) {
   const list = useRef<MessageListHandle>(null);
   const [menu, setMenu] = useState(false);
   const narrow = useWindowDimensions().width < 480;
-  const [sheet, setSheet] = useState<"autoDelete" | "theme" | null>(null);
+  const [sheet, setSheet] = useState<"autoDelete" | null>(null);
   const { info } = useLocalSearchParams<{ info?: string }>();
   const [editing, setEditing] = useState(!!info);
   const [shared, setShared] = useState<SharedTab | null>(null);
@@ -289,19 +289,6 @@ function OpenConversation({ chatId }: { chatId: string }) {
                   setShared("search");
                 }}
               />
-              <IconButton
-                Icon={Images}
-                label={tr.chat.sharedMedia}
-                onPress={() => {
-                  setSearchFor("");
-                  setShared("media");
-                }}
-              />
-              <IconButton
-                Icon={c.muted ? BellOff : Bell}
-                label={c.muted ? tr.common.unmute : tr.common.mute}
-                onPress={() => void updateChatSettings(qc, chatId, { muted: !c.muted }).catch(() => null)}
-              />
               {!c.withSupport && (
                 <IconButton
                   Icon={EyeOff}
@@ -311,20 +298,12 @@ function OpenConversation({ chatId }: { chatId: string }) {
                 />
               )}
               {!c.withSupport && !frozen && (
-                <>
-                  <IconButton
-                    Icon={Timer}
-                    label={tr.chat.autoDelete(c.autoDeleteSecs ? durationLabel(c.autoDeleteSecs, tr) : null)}
-                    color={c.autoDeleteSecs ? brand : undefined}
-                    onPress={() => setSheet("autoDelete")}
-                  />
-                  <IconButton
-                    Icon={Palette}
-                    label={tr.summary.background(c.theme ? themeName(c.theme, tr) : tr.chat.defaultBackground)}
-                    color={c.theme ? brand : undefined}
-                    onPress={() => setSheet("theme")}
-                  />
-                </>
+                <IconButton
+                  Icon={Timer}
+                  label={tr.chat.autoDelete(c.autoDeleteSecs ? durationLabel(c.autoDeleteSecs, tr) : null)}
+                  color={c.autoDeleteSecs ? brand : undefined}
+                  onPress={() => setSheet("autoDelete")}
+                />
               )}
             </>
           )}
@@ -403,11 +382,15 @@ function OpenConversation({ chatId }: { chatId: string }) {
           chat={c}
           peerName={peer.displayName}
           peerId={peer.id}
-          headerIcons={!isBotChat(c)}
+          inChat={!isBotChat(c)}
           onClose={() => setMenu(false)}
           onGroupInfo={() => setEditing(true)}
           onDeleted={(scope) => scope === "me" && router.replace("/")}
           onChooseMessages={chooseMessages}
+          onSharedMedia={(tab) => {
+            setSearchFor("");
+            setShared(tab);
+          }}
         />
       )}
       {sheet && <ChatMenu chat={c} peerName={peer.displayName} peerId={peer.id} start={sheet} onClose={() => setSheet(null)} />}

@@ -102,7 +102,7 @@ export function ChatMenu({
   onGroupInfo,
   at,
   start,
-  headerIcons,
+  inChat,
 }: {
   chat: ChatDTO;
   peerName: string;
@@ -114,8 +114,11 @@ export function ChatMenu({
   at?: { x: number; y: number };
   /** Opens straight on a sub-menu, like the mute durations from the header's bell. */
   start?: "mute" | "autoDelete" | "theme";
-  /** The header shows mute, blur, auto-delete and background as icons, so the menu leaves them out. */
-  headerIcons?: boolean;
+  /**
+   * Opened from inside the chat, whose header holds search, blur and auto-delete: the menu keeps media, mute and the
+   * background, and leaves pinning, archiving, blocking and deleting to the chat list's menu.
+   */
+  inChat?: boolean;
 }) {
   const tr = useT();
   const qc = useQueryClient();
@@ -331,83 +334,61 @@ export function ChatMenu({
     );
   }
 
+  const mute = isMuted(chat)
+    ? {
+        label: chat.mutedUntil ? tr.chat.unmuteUntil(sendAtLabel(chat.mutedUntil)) : tr.common.unmute,
+        onSelect: () => settings({ muted: false }),
+      }
+    : { label: `${tr.common.mute}…`, keepOpen: true, onSelect: () => setView("mute") };
+  const closeSupport =
+    chat.supportDesk && !chat.supportClosedAt
+      ? [{ label: tr.support.close, onSelect: () => void closeSupportChat(qc, chat.id).catch(() => null) }]
+      : [];
+  const direct = chat.type === "direct" && !chat.peerDeleted;
+
   return (
     <Sheet
       title={chat.title}
       at={at}
       onClose={onClose}
-      actions={[
-        ...(chat.group && onGroupInfo ? [{ label: tr.groups.info, onSelect: onGroupInfo }] : []),
-        ...(onSharedMedia
+      actions={
+        inChat
           ? [
-              { label: tr.chat.search, onSelect: () => onSharedMedia("search") },
-              { label: tr.chat.sharedMedia, onSelect: () => onSharedMedia("media") },
-            ]
-          : []),
-        { label: chat.pinned ? tr.chat.unpin : tr.chat.pin, onSelect: () => settings({ pinned: !chat.pinned }) },
-        ...(headerIcons
-          ? []
-          : [
-              isMuted(chat)
-                ? {
-                    label: chat.mutedUntil ? tr.chat.unmuteUntil(sendAtLabel(chat.mutedUntil)) : tr.common.unmute,
-                    onSelect: () => settings({ muted: false }),
-                  }
-                : { label: `${tr.common.mute}…`, keepOpen: true, onSelect: () => setView("mute") },
-            ]),
-        {
-          label: chat.archived ? tr.chat.unarchive : tr.chat.archive,
-          onSelect: () => settings({ archived: !chat.archived }),
-        },
-        ...(chat.supportDesk && !chat.supportClosedAt
-          ? [{ label: tr.support.close, onSelect: () => void closeSupportChat(qc, chat.id).catch(() => null) }]
-          : []),
-        ...(chat.withSupport
-          ? []
-          : [
-              ...(headerIcons
+              ...(chat.group && onGroupInfo ? [{ label: tr.groups.info, onSelect: onGroupInfo }] : []),
+              ...(onSharedMedia ? [{ label: tr.chat.sharedMedia, onSelect: () => onSharedMedia("media") }] : []),
+              mute,
+              ...(chat.withSupport || frozen
                 ? []
                 : [
-              {
-                label: chat.safeView ? tr.chat.safeViewOff : tr.chat.safeViewOn,
-                onSelect: () => settings({ safeView: !chat.safeView }),
-              },
-              ...(frozen
-                ? []
-                : [
-                    {
-                      label: tr.chat.autoDelete(chat.autoDeleteSecs ? durationLabel(chat.autoDeleteSecs, tr) : null),
-                      keepOpen: true,
-                      onSelect: () => setView("autoDelete"),
-                    },
                     {
                       label: tr.summary.background(chat.theme ? themeName(chat.theme, tr) : tr.chat.defaultBackground),
                       keepOpen: true,
                       onSelect: () => setView("theme"),
                     },
                   ]),
-                  ]),
-              ...(chat.type !== "direct" || chat.peerDeleted || frozen
-                ? []
-                : [{ label: tr.chat.poke.action(peerName), keepOpen: true, onSelect: () => setView("poke") }]),
-              ...(chat.type !== "direct" || chat.peerDeleted
-                ? []
-                : chat.blockedByMe
-                  ? [{ label: tr.chat.unblockName(peerName), onSelect: () => block(false) }]
-                  : [{ label: tr.chat.blockName(peerName), destructive: true, keepOpen: true, onSelect: () => setView("block") }]),
-              ...(chat.type !== "direct" || chat.peerDeleted
+              ...closeSupport,
+            ]
+          : [
+              { label: chat.pinned ? tr.chat.unpin : tr.chat.pin, onSelect: () => settings({ pinned: !chat.pinned }) },
+              mute,
+              { label: chat.archived ? tr.chat.unarchive : tr.chat.archive, onSelect: () => settings({ archived: !chat.archived }) },
+              ...closeSupport,
+              ...(chat.withSupport
                 ? []
                 : [
-                    {
-                      label: tr.chat.removeContact(peerName),
-                      destructive: true,
-                      keepOpen: true,
-                      onSelect: () => setView("removeContact"),
-                    },
+                    ...(!direct || frozen ? [] : [{ label: tr.chat.poke.action(peerName), keepOpen: true, onSelect: () => setView("poke") }]),
+                    ...(!direct
+                      ? []
+                      : chat.blockedByMe
+                        ? [{ label: tr.chat.unblockName(peerName), onSelect: () => block(false) }]
+                        : [{ label: tr.chat.blockName(peerName), destructive: true, keepOpen: true, onSelect: () => setView("block") }]),
+                    ...(!direct
+                      ? []
+                      : [{ label: tr.chat.removeContact(peerName), destructive: true, keepOpen: true, onSelect: () => setView("removeContact") }]),
+                    { label: tr.chat.deleteChat, destructive: true, keepOpen: true, onSelect: () => setView("delete") },
                   ]),
-              { label: tr.chat.deleteChat, destructive: true, keepOpen: true, onSelect: () => setView("delete") },
-            ]),
-      ]}
+            ]
+      }
     />
   );
 }

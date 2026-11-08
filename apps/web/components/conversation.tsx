@@ -1,8 +1,8 @@
 "use client";
 
-import { type MessageDTO, chatFace, durationLabel, isFrozen, isMuted, previewText, readOnlyGroup, themeName } from "@six/shared";
+import { type MessageDTO, chatFace, durationLabel, isFrozen, isMuted, previewText, readOnlyGroup } from "@six/shared";
 import { useQueryClient } from "@tanstack/react-query";
-import { Bell, BellOff, ChevronLeft, ChevronsUpDown, EyeOff, Images, Lock, MoreVertical, Palette, Phone, PinOff, Search, ShieldAlert, Timer, Trash2, Video, X } from "lucide-react";
+import { ChevronLeft, ChevronsUpDown, EyeOff, Lock, MoreVertical, Phone, PinOff, Search, ShieldAlert, Timer, Trash2, Video, X } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -91,7 +91,7 @@ function OpenConversation({ chatId }: { chatId: string }) {
   const { realtime, status } = useRealtime();
   const list = useRef<MessageListHandle>(null);
   const [menu, setMenu] = useState(false);
-  const [sheet, setSheet] = useState<"mute" | "autoDelete" | "theme" | null>(null);
+  const [sheet, setSheet] = useState<"autoDelete" | null>(null);
   const [editing, setEditing] = useState(false);
   useEffect(() => {
     if (!new URLSearchParams(window.location.search).has("info")) return;
@@ -302,25 +302,6 @@ function OpenConversation({ chatId }: { chatId: string }) {
                     >
                       <Search className="size-5" />
                     </button>
-                    <button
-                      onClick={() => {
-                        setSearchFor("");
-                        setShared("media");
-                      }}
-                      aria-label={tr.chat.sharedMedia}
-                      title={tr.chat.sharedMedia}
-                      className={iconButton}
-                    >
-                      <Images className="size-5" />
-                    </button>
-                    <button
-                      onClick={() => (muted ? void updateChatSettings(qc, chatId, { muted: false }).catch(() => null) : setSheet("mute"))}
-                      aria-label={muted ? tr.common.unmute : tr.common.mute}
-                      title={muted ? tr.common.unmute : tr.common.mute}
-                      className={iconButton}
-                    >
-                      {muted ? <BellOff className="size-5" /> : <Bell className="size-5" />}
-                    </button>
                     {!c.withSupport && (
                       <>
                         <button
@@ -341,14 +322,6 @@ function OpenConversation({ chatId }: { chatId: string }) {
                               className={iconButton}
                             >
                               <Timer className={`size-5 ${c.autoDeleteSecs ? "text-brand" : ""}`} />
-                            </button>
-                            <button
-                              onClick={() => setSheet("theme")}
-                              aria-label={tr.summary.background(c.theme ? themeName(c.theme, tr) : tr.chat.defaultBackground)}
-                              title={tr.summary.background(c.theme ? themeName(c.theme, tr) : tr.chat.defaultBackground)}
-                              className={iconButton}
-                            >
-                              <Palette className={`size-5 ${c.theme ? "text-brand" : ""}`} />
                             </button>
                           </>
                         )}
@@ -484,11 +457,15 @@ function OpenConversation({ chatId }: { chatId: string }) {
         <ChatMenu
           chat={c}
           peerName={peer.displayName}
-          headerIcons={!isBotChat(c)}
+          inChat={!isBotChat(c)}
           onClose={() => setMenu(false)}
           onGroupInfo={() => setEditing(true)}
           onDeleted={(scope) => scope === "me" && router.replace("/")}
           onChooseMessages={chooseMessages}
+          onSharedMedia={(tab) => {
+            setSearchFor("");
+            setShared(tab);
+          }}
         />
       )}
       {sheet && <ChatMenu chat={c} peerName={peer.displayName} start={sheet} onClose={() => setSheet(null)} />}
