@@ -211,6 +211,7 @@ interface Item {
   row: Omit<MsgRow, "kind" | "groupStart" | "groupEnd" | "delivery">;
 }
 
+/** A reply shows the message it quotes as it reads now when that one is loaded, not as it read when replied to. */
 function buildRows(
   messages: Hydrated[],
   pending: PendingMessage[],
@@ -221,6 +222,13 @@ function buildRows(
   vanish: boolean,
 ): Row[] {
   const sent = new Set(messages.filter((m) => m.senderId === meId).map((m) => m.clientId));
+  const byId = new Map(messages.map((m) => [m.id, m]));
+  const fresh = (r: ReplyPreview | null): ReplyPreview | null => {
+    const q = r && byId.get(r.id);
+    if (!r || !q) return r;
+    if (q.deletedAt) return { ...r, deleted: true, text: null };
+    return q.text !== null && !q.ephemeral ? { ...r, text: q.text } : r;
+  };
   const items: Item[] = [
     ...messages.map((m) => ({
       senderId: m.senderId,
@@ -234,7 +242,7 @@ function buildRows(
         entities: m.entities,
         spoiler: m.spoiler,
         effect: m.effect ?? null,
-        replyTo: m.replyTo,
+        replyTo: fresh(m.replyTo),
         story: m.story ?? null,
         bump: m.bump,
         vanish: m.vanish,
@@ -270,7 +278,7 @@ function buildRows(
           entities: p.entities,
           spoiler: p.spoiler,
           effect: p.effect ?? null,
-          replyTo: p.replyTo,
+          replyTo: fresh(p.replyTo),
           story: p.story ?? null,
           bump: p.bump ?? false,
           vanish,
