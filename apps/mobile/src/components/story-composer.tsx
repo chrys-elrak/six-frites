@@ -19,13 +19,13 @@ import {
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Image } from "expo-image";
 import { useVideoPlayer, VideoView } from "expo-video";
-import { CalendarDays, Camera, CaseSensitive, ChevronDown, Clock, Hourglass, ImagePlus, MapPin, Pencil, Scissors, SendHorizontal, Sticker, Type, X } from "lucide-react-native";
+import { CalendarDays, Camera, CaseSensitive, ChevronDown, Clock, Hourglass, ImagePlus, MapPin, Pencil, Scissors, SendHorizontal, Sticker, Type, Video, X } from "lucide-react-native";
 import { type ComponentRef, useEffect, useRef, useState } from "react";
 import { ActivityIndicator, FlatList, type GestureResponderEvent, Modal, Pressable, ScrollView, StyleSheet, View } from "react-native";
 import { KeyboardAvoidingView } from "react-native-keyboard-controller";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { getLocale, useT } from "@/lib/i18n";
-import { cutVideo, pickMedia, takePhoto } from "@/lib/media";
+import { cutVideo, pickMedia, recordVideo, takePhoto } from "@/lib/media";
 import type { LocalFile } from "@/lib/send";
 import { six } from "@/lib/six";
 import { brand, brandInk } from "@/lib/theme";
@@ -221,10 +221,15 @@ export function StoryComposer({ anon, onClose }: { anon?: AnonMessageDTO; onClos
     }));
   }
 
-  async function pick(from: "library" | "camera") {
+  async function pick(from: "library" | "camera" | "video") {
     setError(null);
     try {
-      const [picked] = from === "camera" ? await takePhoto() : await pickMedia(["images", "videos"]);
+      const [picked] =
+        from === "camera"
+          ? await takePhoto()
+          : from === "video"
+            ? await recordVideo(STORY_LIMITS.videoMs / 1000)
+            : await pickMedia(["images", "videos"]);
       if (picked && (picked.kind === "image" || picked.kind === "video")) setFile(picked);
     } catch (err) {
       setError((err as Error).message);
@@ -374,6 +379,7 @@ export function StoryComposer({ anon, onClose }: { anon?: AnonMessageDTO; onClos
             {file && <Tool on={false} Icon={Type} label={tr.stories.text} onPress={() => setFile(null)} />}
             <Tool on={!!file} Icon={ImagePlus} label={`${tr.stories.photo} / ${tr.stories.video}`} onPress={() => void pick("library")} />
             <Tool on={false} Icon={Camera} label={tr.stories.photo} onPress={() => void pick("camera")} />
+            <Tool on={false} Icon={Video} label={tr.stories.video} onPress={() => void pick("video")} />
             <Tool on={!!gif || pickingGif} Icon={Sticker} label={tr.stories.gif} onPress={() => (gif ? setGif(null) : setPickingGif(!pickingGif))} />
             <Tool on={!!location} busy={locating} Icon={MapPin} label={tr.stories.location} onPress={() => void locate()} />
             <Tool on={showDate} Icon={CalendarDays} label={tr.stories.date} onPress={() => setShowDate(!showDate)} />

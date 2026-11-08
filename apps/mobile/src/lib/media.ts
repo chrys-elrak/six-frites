@@ -196,6 +196,15 @@ export async function takePhoto(): Promise<LocalFile[]> {
   return checkSizes(await Promise.all(res.assets.map(fromPickerAsset)));
 }
 
+/** Films one video with the camera, up to `maxSeconds` long. */
+export async function recordVideo(maxSeconds: number): Promise<LocalFile[]> {
+  const perm = await ImagePicker.requestCameraPermissionsAsync();
+  if (!perm.granted) throw new Error(getT().composer.cameraDenied);
+  const res = await ImagePicker.launchCameraAsync({ mediaTypes: ["videos"], videoMaxDuration: maxSeconds });
+  if (res.canceled) return [];
+  return checkSizes(await Promise.all(res.assets.map(fromPickerAsset)));
+}
+
 export async function pickFiles(type = "*/*"): Promise<LocalFile[]> {
   const res = await DocumentPicker.getDocumentAsync({ type, multiple: true, copyToCacheDirectory: true });
   if (res.canceled) return [];

@@ -21,11 +21,13 @@ import {
   type StorySticker,
 } from "@six/shared";
 import { useQueryClient } from "@tanstack/react-query";
-import { CalendarDays, CaseSensitive, ChevronDown, Clock, Hourglass, ImagePlus, Loader2, MapPin, Pencil, Scissors, SendHorizontal, Sticker, Type, X } from "lucide-react";
+import { CalendarDays, Camera, CaseSensitive, ChevronDown, Clock, Hourglass, ImagePlus, Loader2, MapPin, Pencil, Scissors, SendHorizontal, Sticker, Type, X } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
+import { isTouch } from "@/lib/camera";
 import { getLocale, useT } from "@/lib/i18n";
 import { mediaMeta } from "@/lib/media-meta";
 import { six } from "@/lib/six";
+import { CameraDialog } from "./camera-dialog";
 import { GifSearch } from "./gif-picker";
 import { currentPosition } from "./location-card";
 import { Portal } from "./portal";
@@ -66,6 +68,8 @@ export function StoryComposer({ anon, onClose }: { anon?: AnonMessageDTO; onClos
   const [gif, setGif] = useState<GifDTO | null>(null);
   const [ask, setAsk] = useState(anon ?? null);
   const [pickingGif, setPickingGif] = useState(false);
+  const cameraInput = useRef<HTMLInputElement>(null);
+  const [camera, setCamera] = useState(false);
   const [location, setLocation] = useState<StoryLocation | null>(null);
   const [locating, setLocating] = useState(false);
   const [showDate, setShowDate] = useState(false);
@@ -224,6 +228,7 @@ export function StoryComposer({ anon, onClose }: { anon?: AnonMessageDTO; onClos
   const tools = [
     ...(file ? [{ label: tr.stories.text, icon: Type, on: false, onClick: () => setFile(null) }] : []),
     { label: `${tr.stories.photo} / ${tr.stories.video}`, icon: ImagePlus, on: !!file, onClick: () => picker.current?.click() },
+    { label: tr.composer.camera, icon: Camera, on: false, onClick: () => (isTouch() ? cameraInput.current?.click() : setCamera(true)) },
     { label: tr.stories.gif, icon: Sticker, on: !!gif || pickingGif, onClick: () => (gif ? setGif(null) : setPickingGif(!pickingGif)) },
     { label: tr.stories.location, icon: locating ? Loader2 : MapPin, on: !!location, onClick: () => void locate() },
     { label: tr.stories.date, icon: CalendarDays, on: showDate, onClick: () => setShowDate(!showDate) },
@@ -314,8 +319,8 @@ export function StoryComposer({ anon, onClose }: { anon?: AnonMessageDTO; onClos
               />
             )}
             {!file && !drawingOn && (
-              <div className="-mx-4 overflow-x-auto">
-                <div role="radiogroup" aria-label={tr.stories.background} className="mx-auto flex w-max gap-2.5 px-4 py-1">
+              <div className="-mx-4 shrink-0 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+                <div role="radiogroup" aria-label={tr.stories.background} className="mx-auto flex w-max gap-2.5 px-4 py-1.5">
                   {STORY_BACKGROUNDS.map((c) => (
                     <button
                       key={c}
@@ -466,6 +471,26 @@ export function StoryComposer({ anon, onClose }: { anon?: AnonMessageDTO; onClos
             e.target.value = "";
           }}
         />
+        <input
+          ref={cameraInput}
+          type="file"
+          accept="image/*,video/*"
+          capture="environment"
+          hidden
+          onChange={(e) => {
+            void pick(e.target.files?.[0]);
+            e.target.value = "";
+          }}
+        />
+        {camera && (
+          <CameraDialog
+            onClose={() => setCamera(false)}
+            onCapture={(photo) => {
+              setCamera(false);
+              void pick(photo);
+            }}
+          />
+        )}
       </div>
       {pickingDuration && (
         <Sheet
