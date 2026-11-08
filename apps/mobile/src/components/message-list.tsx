@@ -36,6 +36,7 @@ import {
   ArrowUp,
   Ban,
   Check,
+  ChevronDown,
   CheckCheck,
   CheckCircle2,
   Circle,
@@ -115,7 +116,7 @@ import { deliver, forwardMessages, type LocalFile, queueMessage } from "@/lib/se
 import { useSelection } from "@/lib/selection";
 import { useSpoilers } from "@/lib/spoilers";
 import { useSwipe } from "@/lib/swipe";
-import { brand, flame, stone, type Theme, useTheme } from "@/lib/theme";
+import { brand, brandInk, flame, stone, type Theme, useTheme } from "@/lib/theme";
 import { AnimatedEmoji } from "./animated-emoji";
 import {
   AlbumViewer,
@@ -1218,6 +1219,7 @@ export const MessageList = forwardRef<MessageListHandle, { chat: ChatDTO; meId: 
     const picker = useDragSelect(list, listFrame, () => pickOrder.current);
     const [autoplay, setAutoplay] = useState<string | null>(null);
     const atBottom = useRef(true);
+    const [away, setAway] = useState(false);
     const [menuFor, setMenuFor] = useState<MsgRow | null>(null);
     const [anchor, setAnchor] = useState<Anchor | null>(null);
     const [confirmDelete, setConfirmDelete] = useState<MessageDTO[] | null>(null);
@@ -1352,6 +1354,7 @@ export const MessageList = forwardRef<MessageListHandle, { chat: ChatDTO; meId: 
       const wasAtBottom = atBottom.current;
       atBottom.current = e.nativeEvent.contentOffset.y < 80;
       if (atBottom.current && !wasAtBottom) onSeen();
+      setAway(e.nativeEvent.contentOffset.y > e.nativeEvent.layoutMeasurement.height);
     }
 
     function rowIndex(id: string) {
@@ -1754,12 +1757,39 @@ export const MessageList = forwardRef<MessageListHandle, { chat: ChatDTO; meId: 
             ]}
           />
         )}
+        {away && (
+          <Pressable
+            onPress={() => list.current?.scrollToOffset({ offset: 0, animated: true })}
+            accessibilityLabel={tr.messages.latest}
+            style={[styles.latest, { backgroundColor: t.surface, borderColor: t.border }]}
+          >
+            <ChevronDown size={24} color={t.textSoft} />
+            {chat.unreadCount > 0 && (
+              <View style={[styles.latestBadge, { backgroundColor: brand }]}>
+                <Text style={{ color: brandInk, fontSize: 12, fontWeight: "700" }}>{chat.unreadCount > 99 ? "99+" : chat.unreadCount}</Text>
+              </View>
+            )}
+          </Pressable>
+        )}
       </View>
     );
   },
 );
 
 const styles = StyleSheet.create({
+  latest: {
+    position: "absolute",
+    right: 12,
+    bottom: 12,
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    borderWidth: StyleSheet.hairlineWidth,
+    alignItems: "center",
+    justifyContent: "center",
+    elevation: 4,
+  },
+  latestBadge: { position: "absolute", top: -6, right: -4, minWidth: 20, height: 20, borderRadius: 10, paddingHorizontal: 6, alignItems: "center", justifyContent: "center" },
   storyQuote: { gap: 4, marginBottom: 6 },
   storyThumb: { width: 64, height: 96, borderRadius: 12, alignItems: "center", justifyContent: "center", gap: 4, padding: 6, overflow: "hidden" },
   storyPlay: { width: 28, height: 28, borderRadius: 14, backgroundColor: "rgba(0,0,0,0.45)", alignItems: "center", justifyContent: "center" },

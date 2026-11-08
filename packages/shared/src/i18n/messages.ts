@@ -1,6 +1,7 @@
 const en = {
   status: { sending: "Sending", sent: "Sent", delivered: "Delivered", read: "Read" },
   edited: "edited",
+  latest: "Go to the latest message",
   options: "Message options",
   reply: "Reply",
   bump: "Bump",
@@ -117,6 +118,7 @@ const en = {
 const fr: typeof en = {
   status: { sending: "Envoi en cours", sent: "Envoyé", delivered: "Distribué", read: "Lu" },
   edited: "modifié",
+  latest: "Aller au dernier message",
   options: "Options du message",
   reply: "Répondre",
   bump: "Relancer",
@@ -233,6 +235,7 @@ const fr: typeof en = {
 const mg: typeof en = {
   status: { sending: "Eo am-pandefasana", sent: "Lasa", delivered: "Tonga", read: "Voavaky" },
   edited: "novaina",
+  latest: "Mankany amin'ny hafatra farany",
   options: "Safidy momba ny hafatra",
   reply: "Valio",
   bump: "Ampiakaro",

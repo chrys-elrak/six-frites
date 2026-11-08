@@ -34,6 +34,7 @@ import {
   ArrowUp,
   Ban,
   Check,
+  ChevronDown,
   CheckCheck,
   CheckCircle2,
   Circle,
@@ -1152,6 +1153,7 @@ export const MessageList = forwardRef<
     const pickOrder = useRef<string[]>([]);
     const [autoplay, setAutoplay] = useState<string | null>(null);
     const atBottom = useRef(true);
+    const [away, setAway] = useState(false);
     const viewportSize = useRef(0);
     const initialScrollDone = useRef(false);
     const [menuFor, setMenuFor] = useState<MsgRow | null>(null);
@@ -1307,6 +1309,7 @@ export const MessageList = forwardRef<
       const wasAtBottom = atBottom.current;
       atBottom.current = offset + h.viewportSize >= h.scrollSize - 80;
       if (atBottom.current && !wasAtBottom) onSeen();
+      setAway(h.scrollSize - offset - h.viewportSize > h.viewportSize);
       if (offset < 300 && messages.hasNextPage && !messages.isFetchingNextPage) void messages.fetchNextPage();
     }
 
@@ -1480,6 +1483,23 @@ export const MessageList = forwardRef<
 
     return (
       <div ref={listFrame} className="flex min-h-0 flex-1 flex-col justify-end">
+        {away && (
+          <button
+            type="button"
+            onClick={() => rows.length && list.current?.scrollToIndex(rows.length - 1, { align: "end", offset: insetTop + insetBottom + 16, smooth: true })}
+            aria-label={tr.messages.latest}
+            title={tr.messages.latest}
+            className="absolute right-3 z-10 grid size-11 place-items-center rounded-full bg-white text-stone-700 shadow-lg ring-1 ring-black/5 dark:bg-stone-800 dark:text-stone-200 dark:ring-white/10"
+            style={{ bottom: insetBottom + 12 }}
+          >
+            <ChevronDown className="size-6" />
+            {chat.unreadCount > 0 && (
+              <span className="absolute -top-1.5 -right-1 grid h-5 min-w-5 place-items-center rounded-full bg-brand px-1.5 text-xs font-bold text-brand-ink">
+                {chat.unreadCount > 99 ? "99+" : chat.unreadCount}
+              </span>
+            )}
+          </button>
+        )}
         {rows.length === 0 && (
           <div className="flex flex-col items-center pb-8 text-center text-sm">
             <span className="rounded-full bg-black/25 px-4 py-1.5 text-white backdrop-blur-sm">
