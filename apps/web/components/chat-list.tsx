@@ -438,20 +438,23 @@ function ContactRows({ needle, query }: { needle: string; query: string }) {
   return (
     <>
       {shown.length > 1 && (
-        <div className="flex items-center justify-end gap-2 px-4 pt-2 text-xs text-stone-500">
-          <label htmlFor="contact-sort">{tr.contacts.sortBy}</label>
-          <select
-            id="contact-sort"
-            value={sort}
-            onChange={(e) => pickSort(e.target.value as ContactSort)}
-            className="rounded-lg bg-black/5 px-2 py-1 font-medium text-stone-700 outline-none focus:ring-2 focus:ring-brand dark:bg-white/10 dark:text-stone-200"
-          >
-            {CONTACT_SORTS.map((s) => (
-              <option key={s} value={s}>
-                {tr.contacts.sorts[s]}
-              </option>
-            ))}
-          </select>
+        <div role="radiogroup" aria-label={tr.contacts.sortBy} className="flex gap-1.5 overflow-x-auto px-4 pt-2">
+          {CONTACT_SORTS.map((s) => (
+            <button
+              key={s}
+              type="button"
+              role="radio"
+              aria-checked={sort === s}
+              onClick={() => pickSort(s)}
+              className={`shrink-0 rounded-full px-3 py-1 text-sm font-medium transition ${
+                sort === s
+                  ? "bg-brand text-brand-ink"
+                  : "bg-black/5 text-stone-600 hover:bg-black/10 dark:bg-white/10 dark:text-stone-300 dark:hover:bg-white/15"
+              }`}
+            >
+              {tr.contacts.sorts[s]}
+            </button>
+          ))}
         </div>
       )}
       {contacts.isPending ? (

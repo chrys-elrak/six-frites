@@ -26,7 +26,6 @@ import {
   Ban,
   AlertCircle,
   BellOff,
-  ChevronDown,
   ChevronLeft,
   Clock,
   EyeOff,
@@ -361,7 +360,6 @@ function ContactList({ needle, query }: { needle: string; query: string }) {
   const t = useTheme();
   const tr = useT();
   const [sort, setSort] = useState<ContactSort>("name");
-  const [sorting, setSorting] = useState(false);
   const presence = usePresenceStore((s) => s.byUser);
   useEffect(() => {
     void AsyncStorage.getItem(SORT_KEY)
@@ -383,56 +381,55 @@ function ContactList({ needle, query }: { needle: string; query: string }) {
   const shown = sortContacts(matching, sort, (id) => presence[id]);
 
   return (
-    <>
-      <FlatList
-        data={shown}
-        ListHeaderComponent={
-          shown.length > 1 ? (
-            <Pressable onPress={() => setSorting(true)} accessibilityRole="button" style={styles.sortRow}>
-              <Text style={{ color: t.muted, fontSize: 13 }}>{tr.contacts.sortBy}</Text>
-              <Text style={{ color: t.text, fontSize: 13, fontWeight: "600" }}>{tr.contacts.sorts[sort]}</Text>
-              <ChevronDown size={14} color={t.muted} />
-            </Pressable>
-          ) : undefined
-        }
-        keyExtractor={(c) => c.user.id}
-        keyboardShouldPersistTaps="handled"
-        renderItem={({ item }) => <ContactRow contact={item} sort={sort} />}
-        ListFooterComponent={
-          needle ? undefined : (
-            <View style={{ padding: 16 }}>
-              <Invites />
-            </View>
-          )
-        }
-        refreshControl={
-          <RefreshControl
-            refreshing={contacts.isRefetching}
-            onRefresh={() => void contacts.refetch()}
-            colors={[brand]}
-            progressBackgroundColor={t.surface}
-          />
-        }
-        ListEmptyComponent={
-          <Text style={[styles.note, { color: contacts.isError ? t.danger : t.muted, textAlign: "center" }]}>
-            {contacts.isPending
-              ? tr.common.loading
-              : contacts.isError
-                ? tr.common.somethingWrong
-                : needle
-                  ? tr.contacts.noMatch(query)
-                  : tr.contacts.none}
-          </Text>
-        }
-      />
-      {sorting && (
-        <Sheet
-          title={tr.contacts.sortBy}
-          onClose={() => setSorting(false)}
-          actions={CONTACT_SORTS.map((s) => ({ label: `${tr.contacts.sorts[s]}${s === sort ? " ✓" : ""}`, onSelect: () => pickSort(s) }))}
+    <FlatList
+      data={shown}
+      ListHeaderComponent={
+        shown.length > 1 ? (
+          <View accessibilityRole="radiogroup" accessibilityLabel={tr.contacts.sortBy} style={[styles.filters, styles.sortRow]}>
+            {CONTACT_SORTS.map((s) => (
+              <Pressable
+                key={s}
+                onPress={() => pickSort(s)}
+                accessibilityRole="radio"
+                accessibilityState={{ checked: sort === s }}
+                style={[styles.filter, { backgroundColor: sort === s ? brand : t.chip }]}
+              >
+                <Text style={{ color: sort === s ? brandInk : t.textSoft, fontSize: 14, fontWeight: "600" }}>{tr.contacts.sorts[s]}</Text>
+              </Pressable>
+            ))}
+          </View>
+        ) : undefined
+      }
+      keyExtractor={(c) => c.user.id}
+      keyboardShouldPersistTaps="handled"
+      renderItem={({ item }) => <ContactRow contact={item} sort={sort} />}
+      ListFooterComponent={
+        needle ? undefined : (
+          <View style={{ padding: 16 }}>
+            <Invites />
+          </View>
+        )
+      }
+      refreshControl={
+        <RefreshControl
+          refreshing={contacts.isRefetching}
+          onRefresh={() => void contacts.refetch()}
+          colors={[brand]}
+          progressBackgroundColor={t.surface}
         />
-      )}
-    </>
+      }
+      ListEmptyComponent={
+        <Text style={[styles.note, { color: contacts.isError ? t.danger : t.muted, textAlign: "center" }]}>
+          {contacts.isPending
+            ? tr.common.loading
+            : contacts.isError
+              ? tr.common.somethingWrong
+              : needle
+                ? tr.contacts.noMatch(query)
+                : tr.contacts.none}
+        </Text>
+      }
+    />
   );
 }
 
@@ -655,7 +652,7 @@ export function ChatList({ archived = false, contacts = false }: { archived?: bo
 }
 
 const styles = StyleSheet.create({
-  sortRow: { flexDirection: "row", alignItems: "center", justifyContent: "flex-end", gap: 4, paddingHorizontal: 16, paddingTop: 8, paddingBottom: 4 },
+  sortRow: { paddingHorizontal: 16, paddingTop: 8, paddingBottom: 4 },
   title: { fontSize: 22, fontWeight: "700", letterSpacing: -0.3 },
   row: { flexDirection: "row", alignItems: "center", gap: 12, paddingHorizontal: 16, paddingVertical: 10 },
   rowBody: { flex: 1, minWidth: 0, gap: 2 },
