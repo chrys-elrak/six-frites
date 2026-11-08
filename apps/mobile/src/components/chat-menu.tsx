@@ -255,7 +255,7 @@ export function ChatMenu({
                     { label: tr.chat.sharedMedia, onSelect: () => onSharedMedia("media") },
                   ]
                 : []),
-              mute,
+              ...(isFrozen(chat) ? [] : [mute]),
               ...(chat.withSupport
                 ? []
                 : [{ label: chat.safeView ? tr.chat.safeViewOff : tr.chat.safeViewOn, onSelect: () => settings({ safeView: !chat.safeView }) }]),
@@ -277,7 +277,7 @@ export function ChatMenu({
             ]
           : [
               { label: chat.pinned ? tr.chat.unpin : tr.chat.pin, onSelect: () => settings({ pinned: !chat.pinned }) },
-              mute,
+              ...(isFrozen(chat) ? [] : [mute]),
               { label: chat.archived ? tr.chat.unarchive : tr.chat.archive, onSelect: () => settings({ archived: !chat.archived }) },
               ...closeSupport,
               ...(chat.withSupport
