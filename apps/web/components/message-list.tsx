@@ -1373,7 +1373,16 @@ export const MessageList = forwardRef<
       const size = list.current?.viewportSize ?? 0;
       if (size !== viewportSize.current && atBottom.current) scrollToBottom();
       viewportSize.current = size;
+      checkAway();
     }
+
+    /** Whether the latest message is more than a screen below, for the button back to it. */
+    function checkAway() {
+      const h = list.current;
+      setAway(!!h && h.scrollSize - h.scrollOffset - h.viewportSize > h.viewportSize);
+    }
+
+    useEffect(checkAway, [rows, chat.id]);
 
     function rowIndex(id: string) {
       return rows.findIndex((r) => r.kind === "msg" && (r.id === id || !!r.album?.some((it) => it.message?.id === id)));
