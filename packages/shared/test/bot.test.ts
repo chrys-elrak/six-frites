@@ -49,7 +49,9 @@ describe("botBoardMove", () => {
         const played: GameMoveDTO[] = [];
         for (let i = 0; i < 60 && !boardGame(game, BOT_ID, played).over; i++) {
           const bot = botBoardMove(game, played);
-          const n = Math.floor(Math.random() * (kind === "ttt" ? 9 : 7));
+          const { board, width } = boardGame(game, BOT_ID, played);
+          const open = board.flatMap((c, n) => (c === null && (kind === "ttt" || n < width) ? [n] : []));
+          const n = open[Math.floor(Math.random() * open.length)]!;
           played.push({ userId: bot ? BOT_ID : me, move: bot ?? (kind === "ttt" ? { cell: n } : { col: n }), at });
         }
         expect(boardGame(game, BOT_ID, played).over).toBe(true);

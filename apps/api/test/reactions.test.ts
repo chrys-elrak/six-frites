@@ -16,17 +16,17 @@ describe("reactions", () => {
     const remove = (who: typeof host, emoji: string) =>
       call(who, "DELETE", `/v1/messages/${message.id}/reactions/${encodeURIComponent(emoji)}`);
 
-    expect((await add(guest, "👍")).json().reactions).toEqual([{ emoji: "👍", userIds: [guest.user.id] }]);
-    expect((await add(guest, "❤️")).json().reactions).toEqual([
+    expect((await add(guest, "👍")).json().reactions).toMatchObject([{ emoji: "👍", userIds: [guest.user.id] }]);
+    expect((await add(guest, "❤️")).json().reactions).toMatchObject([
       { emoji: "👍", userIds: [guest.user.id] },
       { emoji: "❤️", userIds: [guest.user.id] },
     ]);
-    expect((await add(host, "👍")).json().reactions).toEqual([
+    expect((await add(host, "👍")).json().reactions).toMatchObject([
       { emoji: "👍", userIds: [guest.user.id, host.user.id] },
       { emoji: "❤️", userIds: [guest.user.id] },
     ]);
     expect((await add(host, "👍")).statusCode).toBe(200);
-    expect((await remove(guest, "👍")).json().reactions).toEqual([
+    expect((await remove(guest, "👍")).json().reactions).toMatchObject([
       { emoji: "❤️", userIds: [guest.user.id] },
       { emoji: "👍", userIds: [host.user.id] },
     ]);
@@ -34,6 +34,7 @@ describe("reactions", () => {
 
     const page = await get(host, `/v1/chats/${chatId}/messages`);
     expect(page.items[0].reactions).toHaveLength(2);
+    expect(Date.parse(page.items[0].reactions[0].reactedAt[guest.user.id])).not.toBeNaN();
 
     const edits = (await sync(host)).filter((e) => e.type === "message.edited" && e.data.id === message.id);
     expect(edits.at(-1)!.data.reactions).toEqual(page.items[0].reactions);
