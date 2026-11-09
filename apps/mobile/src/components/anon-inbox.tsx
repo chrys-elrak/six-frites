@@ -627,6 +627,7 @@ function CardExport({
 /** The Anonymous tab: your link to share, and what people sent through it. For guests it is the whole app. */
 export function AnonInbox({ guest = false }: { guest?: boolean }) {
   const t = useTheme();
+  const insets = useSafeAreaInsets();
   const tr = useT();
   const qc = useQueryClient();
   const code = useSession((s) => s.user!.askCode);
@@ -762,7 +763,7 @@ export function AnonInbox({ guest = false }: { guest?: boolean }) {
   })();
 
   return (
-    <View style={{ flex: 1, backgroundColor: guest ? t.bg : t.glass }}>
+    <View style={{ flex: 1, backgroundColor: t.glass }}>
       {guest ? (
         <ScreenHeader>
           <Logo size={36} />
@@ -837,14 +838,6 @@ export function AnonInbox({ guest = false }: { guest?: boolean }) {
         ListHeaderComponent={
           <View style={{ gap: 12 }}>
             {notice && <Notice tone={notice.tone}>{notice.text}</Notice>}
-            {guest && (
-              <Text style={{ color: t.muted, fontSize: 14 }}>
-                {chatBan ? tr.ask.chatsSuspended(chatBan.until && new Date(chatBan.until).toLocaleString(getLocale(), { dateStyle: "medium", timeStyle: "short" })) : tr.ask.guestNote}{" "}
-                <Text style={{ color: brand, fontWeight: "600" }} onPress={() => void Linking.openURL(`${WEB_URL}/support`)}>
-                  {tr.support.chatWithSupport}
-                </Text>
-              </Text>
-            )}
             <View style={[styles.tabs, { backgroundColor: t.chip }]}>
               {(["received", "sent"] as const).map((v) => (
                 <Pressable
@@ -861,7 +854,10 @@ export function AnonInbox({ guest = false }: { guest?: boolean }) {
               ))}
             </View>
             {view === "received" && messages.isSuccess && !items.length && (
-              <EmptyState Icon={VenetianMask}>{tr.ask.empty}</EmptyState>
+              <EmptyState Icon={VenetianMask}>
+                <Text style={{ color: t.muted, fontSize: 14, textAlign: "center" }}>{tr.ask.empty}</Text>
+                <PrimaryButton title={tr.common.shareLink} onPress={() => setLinkOpen(true)} style={{ paddingHorizontal: 16 }} />
+              </EmptyState>
             )}
             {view === "sent" && sent.isSuccess && !sentItems.length && (
               <Text style={{ color: t.muted, fontSize: 14, textAlign: "center", paddingVertical: 32 }}>{tr.ask.sentEmpty}</Text>
@@ -928,6 +924,16 @@ export function AnonInbox({ guest = false }: { guest?: boolean }) {
           )
         }
       />
+      {guest && (
+        <View style={{ borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: t.border, paddingHorizontal: 16, paddingTop: 12, paddingBottom: Math.max(insets.bottom, 12) }}>
+          <Text style={{ color: t.muted, fontSize: 14, textAlign: "center" }}>
+            {chatBan ? tr.ask.chatsSuspended(chatBan.until && new Date(chatBan.until).toLocaleString(getLocale(), { dateStyle: "medium", timeStyle: "short" })) : tr.ask.guestNote}{" "}
+            <Text style={{ color: brand, fontWeight: "600" }} onPress={() => void Linking.openURL(`${WEB_URL}/support`)}>
+              {tr.support.chatWithSupport}
+            </Text>
+          </Text>
+        </View>
+      )}
       {removing && (
         <Sheet
           title={tr.ask.deleteSentConfirm(removing.to.displayName)}

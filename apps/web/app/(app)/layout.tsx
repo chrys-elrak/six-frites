@@ -32,6 +32,7 @@ import { useChats } from "@/lib/chats";
 import { useT } from "@/lib/i18n";
 
 const glass = "bg-white/45 backdrop-blur-[2px] dark:bg-stone-950/55";
+const solidOnDesktop = "md:bg-stone-50 md:backdrop-blur-none md:dark:bg-stone-950";
 const appWallpaper = chatTheme(null);
 
 const tabRoutes: Record<string, Tab> = {
@@ -89,8 +90,15 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
 
   if (status === "authed" && guest) {
     return (
-      <main className="mx-auto h-dvh w-full max-w-2xl">
-        <AnonInbox guest />
+      <main className="relative isolate h-dvh">
+        <div className="pointer-events-none absolute inset-0 -z-10">
+          <Wallpaper theme={appWallpaper} id="app" />
+        </div>
+        <div className={`h-full ${glass}`}>
+          <div className="mx-auto h-full w-full max-w-2xl">
+            <AnonInbox guest />
+          </div>
+        </div>
       </main>
     );
   }
@@ -106,7 +114,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
 
   const brand = (
     <div
-      className={`flex shrink-0 items-center gap-3 border-b border-black/5 px-4 pt-[max(0.875rem,env(safe-area-inset-top))] pb-3.5 md:h-16 md:py-0 dark:border-white/10 ${rail ? glass : ""}`}
+      className={`flex shrink-0 items-center gap-3 border-b border-black/5 px-4 pt-[max(0.875rem,env(safe-area-inset-top))] pb-3.5 md:h-16 md:py-0 dark:border-white/10 ${rail ? `${glass} ${solidOnDesktop}` : ""}`}
     >
       <Link href="/" className="flex items-center gap-3">
         <Logo className="size-9" />
@@ -127,7 +135,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         {rail && brand}
         <div className="flex min-h-0 flex-1">
           <aside
-            className={`${topLevel ? "flex" : "hidden"} w-full flex-col border-black/5 md:flex ${wide ? "md:flex-1" : `md:shrink-0 ${rail ? "md:w-20" : "md:w-100 md:shadow-[inset_-1px_0_0_rgb(0_0_0/0.05)] lg:w-116 md:dark:shadow-[inset_-1px_0_0_rgb(255_255_255/0.1)]"}`} dark:border-white/10 ${glass}`}
+            className={`${topLevel ? "flex" : "hidden"} w-full flex-col border-black/5 md:flex ${wide ? "md:flex-1" : `md:shrink-0 ${rail ? "md:w-20" : "md:w-100 md:shadow-[inset_-1px_0_0_rgb(0_0_0/0.05)] lg:w-116 md:dark:shadow-[inset_-1px_0_0_rgb(255_255_255/0.1)]"}`} dark:border-white/10 ${glass} ${wide ? "" : solidOnDesktop}`}
           >
             {!rail && brand}
             <div className="flex min-h-0 flex-1 flex-col md:flex-row">

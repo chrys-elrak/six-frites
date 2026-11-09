@@ -784,15 +784,6 @@ export function AnonInbox({ guest = false }: { guest?: boolean }) {
       </header>
       <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain">
         <div className="mx-auto w-full max-w-lg space-y-4 p-4 lg:max-w-5xl lg:p-6">
-          {guest && (
-            <p className="px-1 text-sm text-stone-500 dark:text-stone-400">
-              {chatBan ? tr.ask.chatsSuspended(chatBan.until && new Date(chatBan.until).toLocaleString(getLocale(), { dateStyle: "medium", timeStyle: "short" })) : tr.ask.guestNote}{" "}
-              <Link href="/support" className="font-medium text-brand hover:underline">
-                {tr.support.chatWithSupport}
-              </Link>
-            </p>
-          )}
-          {guest && <LegalLinks />}
           <div role="tablist" className="flex rounded-full bg-stone-200/70 p-1 dark:bg-stone-800">
             {(["received", "sent"] as const).map((v) => (
               <button
@@ -819,6 +810,9 @@ export function AnonInbox({ guest = false }: { guest?: boolean }) {
                     <VenetianMask className="size-8" strokeWidth={1.6} />
                   </span>
                   <p className="max-w-xs text-sm text-stone-500">{tr.ask.empty}</p>
+                  <PrimaryButton type="button" onClick={() => setLinkOpen(true)}>
+                    {tr.common.shareLink}
+                  </PrimaryButton>
                 </div>
               )}
               <Columns gap="gap-4">
@@ -919,6 +913,17 @@ export function AnonInbox({ guest = false }: { guest?: boolean }) {
           )}
         </div>
       </div>
+      {guest && (
+        <footer className="shrink-0 space-y-2 border-t border-stone-200 px-4 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] dark:border-stone-800">
+          <p className="text-center text-sm text-stone-500 dark:text-stone-400">
+            {chatBan ? tr.ask.chatsSuspended(chatBan.until && new Date(chatBan.until).toLocaleString(getLocale(), { dateStyle: "medium", timeStyle: "short" })) : tr.ask.guestNote}{" "}
+            <Link href="/support" className="font-medium text-brand hover:underline">
+              {tr.support.chatWithSupport}
+            </Link>
+          </p>
+          <LegalLinks />
+        </footer>
+      )}
       {sharing && <StoryComposer anon={sharing} onClose={() => setSharing(null)} />}
       {menu && (
         <Sheet
