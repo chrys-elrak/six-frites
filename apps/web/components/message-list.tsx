@@ -51,7 +51,6 @@ import {
   Flag,
   Flame,
   Forward,
-  Ghost,
   Image as ImageIcon,
   ImagePlus,
   Info,
@@ -1206,8 +1205,6 @@ export interface MessageListHandle {
   jumpTo: (messageId: string) => void;
 }
 
-const VANISH_PULL = 120;
-
 export const MessageList = forwardRef<
   MessageListHandle,
   {
@@ -1245,8 +1242,6 @@ export const MessageList = forwardRef<
     const [autoplay, setAutoplay] = useState<string | null>(null);
     const atBottom = useRef(true);
     const [away, setAway] = useState(false);
-    const pullFrom = useRef<number | null>(null);
-    const [pulled, setPulled] = useState(0);
     const viewportSize = useRef(0);
     const initialScrollDone = useRef(false);
     const [menuFor, setMenuFor] = useState<MsgRow | null>(null);
@@ -1409,26 +1404,6 @@ export const MessageList = forwardRef<
       if (atBottom.current && !wasAtBottom) onSeen();
       setAway(h.scrollSize - offset - h.viewportSize > h.viewportSize);
       if (offset < 300 && messages.hasNextPage && !messages.isFetchingNextPage) void messages.fetchNextPage();
-    }
-
-    /** Pulling up past the latest message turns vanish mode on or off, like Instagram. */
-    function pullStart(e: React.TouchEvent) {
-      const h = list.current;
-      const end = !!h && h.scrollSize - h.scrollOffset - h.viewportSize < 2;
-      pullFrom.current = chat.type === "direct" && !isBotChat(chat) && !frozen && !threadId && !selecting && end ? e.touches[0]!.clientY : null;
-    }
-
-    function pullMove(e: React.TouchEvent) {
-      if (pullFrom.current === null) return;
-      const next = Math.max(0, pullFrom.current - e.touches[0]!.clientY);
-      if (next >= VANISH_PULL && pulled < VANISH_PULL) navigator.vibrate?.(10);
-      setPulled(next);
-    }
-
-    function pullEnd() {
-      if (pulled >= VANISH_PULL) void updateChatSettings(qc, chat.id, { vanish: !chat.vanish }).catch(() => null);
-      pullFrom.current = null;
-      setPulled(0);
     }
 
     /** Keeps the last message in view when the list gets shorter, like when the on-screen keyboard opens. */
@@ -1621,29 +1596,7 @@ export const MessageList = forwardRef<
     }
 
     return (
-      <div
-        ref={listFrame}
-        onTouchStart={pullStart}
-        onTouchMove={pullMove}
-        onTouchEnd={pullEnd}
-        onTouchCancel={pullEnd}
-        className="flex min-h-0 flex-1 flex-col justify-end"
-      >
-        {pulled > 0 && (
-          <div
-            className="pointer-events-none absolute inset-x-0 z-10 flex justify-center"
-            style={{ bottom: insetBottom + 12, opacity: Math.min(1, pulled / VANISH_PULL) }}
-          >
-            <span
-              className={`flex items-center gap-2 rounded-full px-4 py-2 text-sm font-semibold shadow-lg ${
-                pulled >= VANISH_PULL ? "bg-brand text-brand-ink" : "bg-black/60 text-white backdrop-blur-sm"
-              }`}
-            >
-              <Ghost className="size-4" />
-              {chat.vanish ? tr.composer.turnOffVanish : tr.composer.turnOnVanish}
-            </span>
-          </div>
-        )}
+      <div ref={listFrame} className="flex min-h-0 flex-1 flex-col justify-end">
         {away && (
           <button
             type="button"
