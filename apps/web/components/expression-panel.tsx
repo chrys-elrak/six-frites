@@ -5,6 +5,7 @@ import type { GifDTO, StickerDTO } from "@six/shared";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Plus, Smile, Sticker, X } from "lucide-react";
 import { useEffect, useState } from "react";
+import { useCloseOnBack } from "@/lib/back";
 import { useIsAdmin } from "@/lib/admin";
 import { useT } from "@/lib/i18n";
 import { six } from "@/lib/six";
@@ -216,11 +217,7 @@ export function ExpressionPanel({
   const hasStickers = admin || !!useStickerPacks().data?.some((p) => p.stickers.length > 0);
   const tab = picked === "sticker" && !hasStickers ? "emoji" : picked;
   const setTab = setPicked;
-  useEffect(() => {
-    const onKey = (e: KeyboardEvent) => e.key === "Escape" && onClose();
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
-  }, [onClose]);
+  useCloseOnBack(onClose);
   const tabs: { id: Tab; label: string; icon: React.ReactNode }[] = [
     { id: "emoji", label: tr.composer.pickerTabs.emoji, icon: <Smile className="size-5" /> },
     ...(hasStickers ? [{ id: "sticker" as const, label: tr.composer.pickerTabs.sticker, icon: <Sticker className="size-5" /> }] : []),

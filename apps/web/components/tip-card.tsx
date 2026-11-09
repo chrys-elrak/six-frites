@@ -3,6 +3,7 @@
 import { ChevronLeft, ChevronRight, Lightbulb } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import { BackLink } from "@/lib/back";
 import { useT } from "@/lib/i18n";
 
 const KEY = "six:tip";
@@ -79,13 +80,13 @@ export function TipsPage() {
   return (
     <div className="flex min-h-0 flex-1 flex-col">
       <header className="flex items-center gap-1 border-b border-black/5 bg-stone-50/45 px-2 py-2 backdrop-blur-xl md:h-16 md:py-0 dark:border-white/10 dark:bg-stone-950/40">
-        <Link
+        <BackLink
           href="/settings"
           aria-label={tr.common.back}
           className="grid size-10 shrink-0 place-items-center rounded-full text-stone-600 hover:bg-stone-200 dark:text-stone-300 dark:hover:bg-stone-800"
         >
           <ChevronLeft className="size-6" />
-        </Link>
+        </BackLink>
         <Lightbulb className="size-5 shrink-0 text-brand" />
         <h1 className="min-w-0 flex-1 truncate px-2 font-semibold">{tr.tips.all}</h1>
       </header>

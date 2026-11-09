@@ -3,6 +3,7 @@
 import { type MessageDTO, QUICK_REACTIONS, type ReactionGif, type StickerDTO, reactionGlyph } from "@six/shared";
 import { Plus, X } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
+import { useCloseOnBack } from "@/lib/back";
 import { momentLabel } from "@/lib/format";
 import { useT } from "@/lib/i18n";
 import { useSession } from "@/lib/session";
@@ -69,20 +70,18 @@ export function ReactionBar({
 
 /** Closes a floating panel on a click outside it (dialogs excepted), Escape, resize or scrolling the page. */
 function useDismiss(root: React.RefObject<HTMLElement | null>, onClose: () => void) {
+  useCloseOnBack(onClose);
   useEffect(() => {
     const onDown = (e: PointerEvent) => {
       if (!root.current?.contains(e.target as Node) && !(e.target as Element).closest?.("[role=dialog]")) onClose();
     };
-    const onKey = (e: KeyboardEvent) => e.key === "Escape" && onClose();
     const onScroll = (e: Event) =>
       !root.current?.contains(e.target as Node) && !(e.target as Element).closest?.("[role=dialog]") && onClose();
     document.addEventListener("pointerdown", onDown);
-    window.addEventListener("keydown", onKey);
     window.addEventListener("resize", onClose);
     document.addEventListener("scroll", onScroll, true);
     return () => {
       document.removeEventListener("pointerdown", onDown);
-      window.removeEventListener("keydown", onKey);
       window.removeEventListener("resize", onClose);
       document.removeEventListener("scroll", onScroll, true);
     };
@@ -181,11 +180,7 @@ export function ReactionPicker({
   media?: boolean;
 }) {
   const tr = useT();
-  useEffect(() => {
-    const onKey = (e: KeyboardEvent) => e.key === "Escape" && onClose();
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
-  }, [onClose]);
+  useCloseOnBack(onClose);
 
   return (
     <Portal>

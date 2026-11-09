@@ -1,16 +1,12 @@
 "use client";
 
-import { useEffect } from "react";
+import { useCloseOnBack } from "@/lib/back";
 import { useT } from "@/lib/i18n";
 import { Portal } from "./portal";
 
 export function Dialog({ onClose, children }: { onClose: () => void; children: React.ReactNode }) {
   const tr = useT();
-  useEffect(() => {
-    const onKey = (e: KeyboardEvent) => e.key === "Escape" && onClose();
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
-  }, [onClose]);
+  useCloseOnBack(onClose);
 
   return (
     <Portal>

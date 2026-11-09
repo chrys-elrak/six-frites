@@ -6,6 +6,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import Link from "next/link";
 import { Camera, Lock, Shuffle, Trash2, X } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
+import { useCloseOnBack } from "@/lib/back";
 import { updateContact } from "@/lib/actions";
 import { suggestAvatars } from "@/lib/avatar-suggestions";
 import { useT } from "@/lib/i18n";
@@ -44,11 +45,7 @@ export function ContactEditor({ userId, onClose }: { userId: string; onClose: ()
       .catch(() => setSuggestions([]));
   useEffect(shuffle, []);
 
-  useEffect(() => {
-    const onKey = (e: KeyboardEvent) => e.key === "Escape" && onClose();
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
-  }, [onClose]);
+  useCloseOnBack(onClose);
 
   useEffect(() => {
     if (contact.data && name === null) setName(contact.data.customName ?? "");

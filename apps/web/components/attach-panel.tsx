@@ -1,7 +1,7 @@
 "use client";
 
 import type { LucideIcon } from "lucide-react";
-import { useEffect } from "react";
+import { useCloseOnBack } from "@/lib/back";
 import { useT } from "@/lib/i18n";
 import { useMedia } from "@/lib/viewport";
 import { Portal } from "./portal";
@@ -44,11 +44,7 @@ function Row({ items, onSelect }: { items: PanelItem[]; onSelect: (item: PanelIt
 export function AttachPanel({ attach, commands, onClose }: { attach: PanelItem[]; commands: PanelItem[]; onClose: () => void }) {
   const tr = useT();
   const narrow = useMedia("(width < 48rem)");
-  useEffect(() => {
-    const onKey = (e: KeyboardEvent) => e.key === "Escape" && onClose();
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
-  }, [onClose]);
+  useCloseOnBack(onClose);
   const select = (item: PanelItem) => {
     onClose();
     item.onSelect();

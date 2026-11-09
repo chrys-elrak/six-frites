@@ -4,6 +4,7 @@ import { kindFor } from "@six/sdk";
 import { type EphemeralInput, type UploadKind, stripAudio, trimVideo } from "@six/shared";
 import { EyeOff, FileText, Pencil, Scissors, SendHorizontal, Volume2, VolumeX, X } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
+import { useCloseOnBack } from "@/lib/back";
 import { formatBytes } from "@/lib/format";
 import { useT } from "@/lib/i18n";
 import { EphemeralPicker } from "./ephemeral-picker";
@@ -164,10 +165,8 @@ export function AttachDialog({
 
   useEffect(() => {
     if (window.matchMedia("(pointer: fine)").matches) input.current?.focus();
-    const onKey = (e: KeyboardEvent) => e.key === "Escape" && onCancel();
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
-  }, [onCancel]);
+  }, []);
+  useCloseOnBack(onCancel);
 
   useEffect(() => {
     if (items.length === 0) onCancel();

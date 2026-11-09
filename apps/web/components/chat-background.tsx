@@ -13,7 +13,8 @@ import {
   type Wallpaper as WallpaperColors,
 } from "@six/shared";
 import { Check } from "lucide-react";
-import { memo, useEffect, useState } from "react";
+import { memo, useState } from "react";
+import { useCloseOnBack } from "@/lib/back";
 import { useT } from "@/lib/i18n";
 import { Portal } from "./portal";
 import { PrimaryButton } from "./ui";
@@ -129,11 +130,7 @@ export function CustomThemeDialog({
   const hex = target === "mine" ? mine : theirs;
   const theme = customTheme(mine, theirs);
 
-  useEffect(() => {
-    const onKey = (e: KeyboardEvent) => e.key === "Escape" && onClose();
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
-  }, [onClose]);
+  useCloseOnBack(onClose);
 
   const choose = (c: string | null) => {
     const value = c?.toLowerCase() ?? null;

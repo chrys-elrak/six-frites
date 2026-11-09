@@ -8,6 +8,7 @@ import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { GoogleButton } from "@/components/google-button";
 import { Logo } from "@/components/logo";
+import { BackLink } from "@/lib/back";
 import { unlock } from "@/lib/app-lock";
 import { clockTime } from "@/lib/format";
 import { getLocale, useT } from "@/lib/i18n";
@@ -17,14 +18,14 @@ import { six } from "@/lib/six";
 function Back() {
   const tr = useT();
   return (
-    <Link
+    <BackLink
       href="/"
       aria-label={tr.common.back}
       title={tr.common.back}
       className="grid size-10 shrink-0 place-items-center rounded-full text-stone-500 hover:bg-stone-200 dark:hover:bg-stone-800"
     >
       <ArrowLeft className="size-5" />
-    </Link>
+    </BackLink>
   );
 }
 

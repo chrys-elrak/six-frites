@@ -23,6 +23,7 @@ import {
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { CalendarDays, ChevronLeft, ChevronRight, Clock, Eye, Loader2, MapPin, MoveDiagonal2, Pause, Play, Plus, SendHorizontal, Trash2, X } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
+import { useCloseOnBack } from "@/lib/back";
 import { clockTime, shortDate, timeAgo } from "@/lib/format";
 import { useChats } from "@/lib/chats";
 import { dragAndPinch } from "@/lib/drag-pinch";
@@ -602,10 +603,11 @@ export function StoryViewer({ groups, start, onClose }: { groups: StoryGroupDTO[
     else void v.play().catch(() => undefined);
   }, [stopped, story]);
 
+  useCloseOnBack(onClose);
+
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") onClose();
-      else if (e.key === "ArrowRight") go(1);
+      if (e.key === "ArrowRight") go(1);
       else if (e.key === "ArrowLeft") go(-1);
       else if (e.key === " ") {
         e.preventDefault();

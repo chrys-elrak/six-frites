@@ -289,6 +289,20 @@ export const NoteDTO = z.object({
 });
 export type NoteDTO = z.infer<typeof NoteDTO>;
 
+/** How long a note was put up for, to the nearest minute because its two timestamps come from different clocks. */
+export const noteSecs = (note: Pick<NoteDTO, "createdAt" | "expiresAt">) =>
+  Math.round((Date.parse(note.expiresAt) - Date.parse(note.createdAt)) / 60_000) * 60;
+
+export const noteChanged = (
+  note: NoteDTO | null,
+  draft: { text: string; background: string | null; gifId?: string; durationSecs: number },
+) =>
+  !note ||
+  draft.text !== note.text ||
+  draft.background !== note.background ||
+  draft.gifId !== note.gif?.id ||
+  draft.durationSecs !== noteSecs(note);
+
 export const NotesDTO = z.object({
   mine: NoteDTO.nullable(),
   items: z.array(z.object({ user: PublicUser, note: NoteDTO })).describe("Contacts' notes, newest first"),

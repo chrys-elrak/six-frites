@@ -3,9 +3,9 @@
 import { type MessageDTO, chatFace, durationLabel, isFrozen, isMuted, previewText, readOnlyGroup } from "@six/shared";
 import { useQueryClient } from "@tanstack/react-query";
 import { ChevronLeft, ChevronsUpDown, Lock, MoreVertical, Phone, PinOff, ShieldAlert, Trash2, Video, X } from "lucide-react";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { BackLink, useCloseOnBack, useGoUp } from "@/lib/back";
 import { useMedia } from "@/lib/viewport";
 import { closeChat, deleteMessages, updateChatSettings } from "@/lib/actions";
 import { setArchiveOpen } from "@/lib/app-lock";
@@ -59,26 +59,26 @@ function useHeight() {
  * the window-level handlers close those overlays.
  */
 function useEscapeBack(href: string, skip: boolean) {
-  const router = useRouter();
+  const goUp = useGoUp();
   useEffect(() => {
     if (skip) return;
     const onKey = (e: KeyboardEvent) => {
       if (e.key !== "Escape" || e.isComposing || e.defaultPrevented || e.target instanceof HTMLInputElement) return;
       if (document.querySelector("[role=dialog], [role=menu], [data-dismissable]")) return;
-      router.push(href);
+      goUp(href);
     };
     document.addEventListener("keydown", onKey);
     return () => document.removeEventListener("keydown", onKey);
-  }, [href, skip, router]);
+  }, [href, skip, goUp]);
 }
 
 /** A chat, or the app lock code first when it's archived and the archive is shut, however it was opened. */
 export function Conversation({ chatId }: { chatId: string }) {
   const tr = useT();
-  const router = useRouter();
+  const goUp = useGoUp();
   const chat = useChat(useQueryClient(), chatId);
   if (useChatShut(chatId, chat.data)) {
-    return <LockScreen title={tr.common.archived} onUnlock={() => setArchiveOpen(true)} onCancel={() => router.push("/")} />;
+    return <LockScreen title={tr.common.archived} onUnlock={() => setArchiveOpen(true)} onCancel={() => goUp("/")} />;
   }
   return <OpenConversation chatId={chatId} />;
 }
@@ -87,6 +87,7 @@ function OpenConversation({ chatId }: { chatId: string }) {
   const tr = useT();
   const qc = useQueryClient();
   const router = useRouter();
+  const goUp = useGoUp();
   const meId = useSession((s) => s.user!.id);
   const chat = useChat(qc, chatId);
   const messages = useMessages(chatId);
@@ -128,12 +129,7 @@ function OpenConversation({ chatId }: { chatId: string }) {
     };
   }, [chatId]);
 
-  useEffect(() => {
-    if (!selecting) return;
-    const onKey = (e: KeyboardEvent) => e.key === "Escape" && clearSelection();
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
-  }, [selecting, clearSelection]);
+  useCloseOnBack(clearSelection, selecting);
   useEscapeBack(chat.data?.archived ? "/archived" : "/", selecting);
 
   const unread = chat.data?.unreadCount ?? 0;
@@ -173,9 +169,9 @@ function OpenConversation({ chatId }: { chatId: string }) {
       <div className="grid h-full place-items-center p-8 text-center">
         <div className="space-y-2">
           <p className="font-medium">{tr.chat.notFound}</p>
-          <Link href="/" className="text-sm text-stone-500 underline">
+          <BackLink href="/" className="text-sm text-stone-500 underline">
             {tr.common.backToChats}
-          </Link>
+          </BackLink>
         </div>
       </div>
     );
@@ -244,13 +240,13 @@ function OpenConversation({ chatId }: { chatId: string }) {
               </header>
             ) : (
               <header className={headerClass}>
-                <Link
+                <BackLink
                   href={c.archived ? "/archived" : "/"}
                   aria-label={tr.common.backToChats}
                   className={`${iconButton} md:hidden`}
                 >
                   <ChevronLeft className="size-6" />
-                </Link>
+                </BackLink>
                 <button
                   onClick={() => !app && setEditing(true)}
                   className={`flex min-w-0 flex-1 items-center gap-2 py-0.5 pr-2 text-left ${app ? "cursor-default" : "cursor-pointer"}`}
@@ -426,7 +422,7 @@ function OpenConversation({ chatId }: { chatId: string }) {
           inChat={!isBotChat(c)}
           onClose={() => setMenu(false)}
           onGroupInfo={() => setEditing(true)}
-          onDeleted={(scope) => scope === "me" && router.replace("/")}
+          onDeleted={(scope) => scope === "me" && goUp("/")}
           onChooseMessages={chooseMessages}
           onSharedMedia={(tab) => {
             setSearchFor("");

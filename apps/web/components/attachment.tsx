@@ -15,6 +15,7 @@ import {
   VenetianMask,
   X,
 } from "lucide-react";
+import { useCloseOnBack } from "@/lib/back";
 import { ProtectedImage, noSave } from "./protected-image";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useDataSaver } from "@/lib/data-saver";
@@ -855,11 +856,7 @@ function ZoomImage({ src }: { src: string }) {
 
 export function Lightbox({ item, onClose }: { item: LightboxItem; onClose: () => void }) {
   const tr = useT();
-  useEffect(() => {
-    const onKey = (e: KeyboardEvent) => e.key === "Escape" && onClose();
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
-  }, [onClose]);
+  useCloseOnBack(onClose);
 
   return (
     <Portal>
@@ -934,15 +931,16 @@ export function AlbumViewer({
   const touch = useRef<number | null>(null);
   const go = useCallback((by: number) => setIndex((i) => Math.min(items.length - 1, Math.max(0, i + by))), [items.length]);
 
+  useCloseOnBack(onClose);
+
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") onClose();
-      else if (e.key === "ArrowLeft") go(-1);
+      if (e.key === "ArrowLeft") go(-1);
       else if (e.key === "ArrowRight") go(1);
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [onClose, go]);
+  }, [go]);
 
   const side = "absolute top-1/2 grid size-11 -translate-y-1/2 place-items-center rounded-full bg-white/10 text-white hover:bg-white/20 disabled:opacity-0";
   return (

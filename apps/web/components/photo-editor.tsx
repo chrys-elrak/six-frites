@@ -28,6 +28,7 @@ import {
 } from "@six/shared";
 import { Check, Crop, Droplet, FlipHorizontal2, Pencil, RotateCcw, Smile, Trash2, Type, Undo2, X } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
+import { useCloseOnBack } from "@/lib/back";
 import { useT } from "@/lib/i18n";
 import { Emojis } from "./emoji-picker";
 import { Portal } from "./portal";
@@ -263,14 +264,15 @@ export function PhotoEditor({
     setSelected(null);
   };
 
+  useCloseOnBack(() => {
+    if (writing) setWriting(null);
+    else if (picking) setPicking(false);
+    else onCancel();
+  });
+
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") {
-        e.stopPropagation();
-        if (writing) setWriting(null);
-        else if (picking) setPicking(false);
-        else onCancel();
-      } else if (e.key === "z" && (e.metaKey || e.ctrlKey) && !writing) {
+      if (e.key === "z" && (e.metaKey || e.ctrlKey) && !writing) {
         e.preventDefault();
         undo();
       }

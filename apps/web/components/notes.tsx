@@ -7,6 +7,8 @@ import {
   emojifyTyped,
   NOTE_LIMIT,
   NOTE_SECS,
+  noteChanged,
+  noteSecs,
   type NoteDTO,
   type PublicUser,
   STORY_DURATIONS,
@@ -138,10 +140,11 @@ export function NoteEditor({ note, onClose }: { note: NoteDTO | null; onClose: (
   const [background, setBackground] = useState(note?.background ?? null);
   const [gif, setGif] = useState(note?.gif ? { id: note.gif.id, src: note.gif.url, video: true } : null);
   const [pickingGif, setPickingGif] = useState(false);
-  const [durationSecs, setDurationSecs] = useState(NOTE_SECS);
+  const [durationSecs, setDurationSecs] = useState(note ? noteSecs(note) : NOTE_SECS);
   const [custom, setCustom] = useState(false);
   const [busy, setBusy] = useState(false);
   const [failed, setFailed] = useState(false);
+  const changed = noteChanged(note, { text: emojifyEnd(text).trim(), background, gifId: gif?.id, durationSecs });
   const chip = (on: boolean) =>
     `shrink-0 rounded-full px-3 py-1.5 text-sm font-medium ${on ? "bg-brand text-brand-ink" : "bg-stone-100 hover:bg-stone-200 dark:bg-stone-800 dark:hover:bg-stone-700"}`;
   const preset = (STORY_DURATIONS as readonly number[]).includes(durationSecs);
@@ -164,7 +167,7 @@ export function NoteEditor({ note, onClose }: { note: NoteDTO | null; onClose: (
       <form
         onSubmit={(e) => {
           e.preventDefault();
-          if (text.trim() || gif)
+          if (changed && (text.trim() || gif))
             void run(async () =>
               unwrap(await six.api.PUT("/v1/notes", { body: { text: emojifyEnd(text).trim(), gifId: gif?.id, background: background ?? undefined, durationSecs } })),
             );
@@ -279,9 +282,11 @@ export function NoteEditor({ note, onClose }: { note: NoteDTO | null; onClose: (
               {tr.stories.deleteNote}
             </button>
           )}
-          <PrimaryButton type="submit" disabled={busy || (!text.trim() && !gif)} className="ml-auto">
-            {tr.stories.post}
-          </PrimaryButton>
+          {changed && (
+            <PrimaryButton type="submit" disabled={busy || (!text.trim() && !gif)} className="ml-auto">
+              {tr.stories.post}
+            </PrimaryButton>
+          )}
         </div>
       </form>
       {custom && <LastsPicker value={durationSecs} onSave={setDurationSecs} onClose={() => setCustom(false)} />}

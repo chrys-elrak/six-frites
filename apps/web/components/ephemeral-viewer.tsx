@@ -3,6 +3,7 @@
 import { previewLink } from "@six/shared";
 import { Flame, Loader2, X } from "lucide-react";
 import { useEffect, useState } from "react";
+import { useCloseOnBack } from "@/lib/back";
 import type { Hydrated } from "@/lib/e2ee";
 import { shortRule } from "@/lib/ephemeral";
 import { useT } from "@/lib/i18n";
@@ -103,11 +104,7 @@ export function EphemeralViewer({
     if (msLeft === 0) onClose();
   }, [msLeft, onClose]);
 
-  useEffect(() => {
-    const onKey = (ev: KeyboardEvent) => ev.key === "Escape" && onClose();
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
-  }, [onClose]);
+  useCloseOnBack(onClose);
 
   const a = message?.attachment;
   const viewsLeft = e?.maxViews ? e.maxViews - e.views : null;

@@ -14,6 +14,7 @@ import { Reports } from "@/components/admin/reports";
 import { OfficialStickers } from "@/components/admin/stickers";
 import { TwoFactor } from "@/components/admin/two-factor";
 import { Users } from "@/components/admin/users";
+import { BackLink } from "@/lib/back";
 import { adminKeys, useIsAdmin } from "@/lib/admin";
 import { useSession } from "@/lib/session";
 import { six } from "@/lib/six";
@@ -75,13 +76,13 @@ export default function AdminPage() {
     <main className="mx-auto min-h-dvh max-w-4xl px-4 pb-12">
       <div className="sticky top-0 z-20 mb-5 bg-stone-50 pt-[max(1rem,env(safe-area-inset-top))] dark:bg-stone-950">
         <header className="mb-4 flex items-center gap-2">
-          <Link
+          <BackLink
             href="/settings"
             aria-label="Back to the app"
             className="grid size-10 place-items-center rounded-full text-stone-600 hover:bg-stone-200 dark:text-stone-300 dark:hover:bg-stone-800"
           >
             <ChevronLeft className="size-6" />
-          </Link>
+          </BackLink>
           <ShieldCheck className="size-6 text-brand" />
           <h1 className="text-xl font-semibold tracking-tight">Moderation</h1>
         </header>
