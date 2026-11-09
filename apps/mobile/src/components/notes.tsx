@@ -5,6 +5,8 @@ import {
   emojifyTyped,
   NOTE_LIMIT,
   NOTE_SECS,
+  noteChanged,
+  noteSecs,
   type NoteDTO,
   type PublicUser,
   STORY_DURATIONS,
@@ -174,10 +176,11 @@ export function NoteEditor({ note, onClose }: { note: NoteDTO | null; onClose: (
     note?.gif ? { id: note.gif.id, video: note.gif, preview: null } : null,
   );
   const [pickingGif, setPickingGif] = useState(false);
-  const [durationSecs, setDurationSecs] = useState(NOTE_SECS);
+  const [durationSecs, setDurationSecs] = useState(note ? noteSecs(note) : NOTE_SECS);
   const [custom, setCustom] = useState(false);
   const [busy, setBusy] = useState(false);
   const [failed, setFailed] = useState(false);
+  const changed = noteChanged(note, { text: emojifyEnd(text).trim(), background, gifId: gif?.id, durationSecs });
   const preset = (STORY_DURATIONS as readonly number[]).includes(durationSecs);
   const chip = (on: boolean, label: string, onPress: () => void) => (
     <Pressable
@@ -204,6 +207,7 @@ export function NoteEditor({ note, onClose }: { note: NoteDTO | null; onClose: (
     }
   }
   const share = () =>
+    changed &&
     (text.trim() || gif) &&
     void run(async () =>
       unwrap(await six.api.PUT("/v1/notes", { body: { text: emojifyEnd(text).trim(), gifId: gif?.id, background: background ?? undefined, durationSecs } })),
@@ -289,7 +293,7 @@ export function NoteEditor({ note, onClose }: { note: NoteDTO | null; onClose: (
             <Text style={{ color: "#dc2626", fontSize: 15, fontWeight: "600" }}>{tr.stories.deleteNote}</Text>
           </Pressable>
         )}
-        <PrimaryButton title={tr.stories.post} onPress={share} disabled={busy || (!text.trim() && !gif)} busy={busy} style={{ marginLeft: "auto" }} />
+        {changed && <PrimaryButton title={tr.stories.post} onPress={share} disabled={busy || (!text.trim() && !gif)} busy={busy} style={{ marginLeft: "auto" }} />}
       </View>
     </Popup>
   );
