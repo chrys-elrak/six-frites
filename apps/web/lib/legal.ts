@@ -732,3 +732,126 @@ export const privacy: Record<Locale, LegalDoc> = {
     ],
   },
 };
+
+export const deleteAccount: Record<Locale, LegalDoc> = {
+  en: {
+    title: "Delete your Six Frites account",
+    intro: "You can delete your Six Frites account and the data linked to it yourself, at any time. It can't be undone.",
+    sections: [
+      {
+        heading: "How to delete it",
+        body: [
+          [
+            "Open the Six Frites app, or sign in at six-frites.koera.mg.",
+            "Open Settings. If you only have anonymous messages, it's the gear icon at the top.",
+            "Under Account, choose Delete, type DELETE and confirm.",
+          ],
+          "Your account is deleted as soon as you confirm. Signing in again with the same Google account starts a new, empty account.",
+          "Can't do it yourself? Ask our support at six-frites.koera.mg/support and we'll delete it for you.",
+        ],
+      },
+      {
+        heading: "What we delete",
+        body: [
+          [
+            "Your name, photos, email address and the link to your Google account.",
+            "Your contact code, contact links, invites, blocks, notes and scheduled messages.",
+            "Your message backups and notification tokens. You're signed out everywhere.",
+            "Your stories stop showing right away, and are erased when their time runs out.",
+          ],
+        ],
+      },
+      {
+        heading: "What we keep",
+        body: [
+          [
+            'Messages you already sent stay with the people who got them, under "Deleted account", until they are deleted or their timer runs out.',
+            "Anonymous messages you sent or got, with their photos and voice notes, until a moderator removes them, to deal with abuse.",
+            "Your sign-in records, with their device ID, so a ban still reaches that phone or browser.",
+            "Moderation records, as long as they are needed for safety.",
+          ],
+        ],
+      },
+    ],
+  },
+  fr: {
+    title: "Supprimer votre compte Six Frites",
+    intro: "Vous pouvez supprimer vous-même votre compte Six Frites et les données qui y sont liées, à tout moment. C'est irréversible.",
+    sections: [
+      {
+        heading: "Comment le supprimer",
+        body: [
+          [
+            "Ouvrez l'application Six Frites, ou connectez-vous sur six-frites.koera.mg.",
+            "Ouvrez les Paramètres. Si vous n'avez que les messages anonymes, c'est l'icône d'engrenage en haut.",
+            "Dans Compte, choisissez Supprimer, tapez DELETE et confirmez.",
+          ],
+          "Votre compte est supprimé dès que vous confirmez. Vous reconnecter avec le même compte Google crée un nouveau compte vide.",
+          "Vous n'y arrivez pas ? Demandez à notre support sur six-frites.koera.mg/support et nous le supprimerons pour vous.",
+        ],
+      },
+      {
+        heading: "Ce que nous supprimons",
+        body: [
+          [
+            "Votre nom, vos photos, votre adresse e-mail et le lien avec votre compte Google.",
+            "Votre code de contact, vos liens de contact, invitations, blocages, notes et messages programmés.",
+            "Vos sauvegardes de messages et jetons de notification. Vous êtes déconnecté partout.",
+            "Vos stories cessent d'apparaître tout de suite, et sont effacées à la fin de leur durée.",
+          ],
+        ],
+      },
+      {
+        heading: "Ce que nous gardons",
+        body: [
+          [
+            "Les messages déjà envoyés restent chez leurs destinataires, sous « Compte supprimé », jusqu'à leur suppression ou la fin de leur minuteur.",
+            "Les messages anonymes envoyés ou reçus, avec leurs photos et messages vocaux, jusqu'à ce qu'un modérateur les retire, pour lutter contre les abus.",
+            "Vos traces de connexion, avec l'identifiant de l'appareil, pour qu'un bannissement s'applique toujours à ce téléphone ou navigateur.",
+            "Les dossiers de modération, aussi longtemps que la sécurité l'exige.",
+          ],
+        ],
+      },
+    ],
+  },
+  mg: {
+    title: "Fafao ny kaontinao Six Frites",
+    intro: "Afaka mamafa ny kaontinao Six Frites sy ny mombamomba mifandray aminy ianao, amin'ny fotoana rehetra. Tsy azo averina izany.",
+    sections: [
+      {
+        heading: "Ahoana no famafana azy",
+        body: [
+          [
+            "Sokafy ny fampiharana Six Frites, na midira ao amin'ny six-frites.koera.mg.",
+            "Sokafy ny Fikirana. Raha hafatra tsy fantatra mpandefa ihany no anananao, io ilay kisary kodiarana eo ambony.",
+            "Ao amin'ny Kaonty, safidio ny Fafao, soraty DELETE ary hamafiso.",
+          ],
+          "Voafafa avy hatrany ny kaontinao rehefa manamafy ianao. Raha miditra indray amin'io kaonty Google io ianao dia kaonty vaovao sady foana no misokatra.",
+          "Tsy vitanao? Angataho amin'ny fanampiana ao amin'ny six-frites.koera.mg/support dia izahay no hamafa azy ho anao.",
+        ],
+      },
+      {
+        heading: "Izay fafanay",
+        body: [
+          [
+            "Ny anaranao, ny sarinao, ny mailakao ary ny rohy amin'ny kaontinao Google.",
+            "Ny kaody fifandraisanao, ny rohy fifandraisanao, ny fanasana, ny fanakanana, ny naoty ary ny hafatra voalahatra.",
+            "Ny tahirin'ny hafatrao sy ny famantarana fampandrenesana. Avoaka amin'ny fitaovana rehetra ianao.",
+            "Tsy miseho intsony avy hatrany ny story-nao, ary voafafa rehefa tapitra ny fotoanany.",
+          ],
+        ],
+      },
+      {
+        heading: "Izay tehirizinay",
+        body: [
+          [
+            "Mijanona eo amin'ireo nandray azy ny hafatra efa nalefanao, amin'ny anarana hoe « Kaonty voafafa », mandra-pamafana azy na fahataperan'ny fotoanany.",
+            "Ny hafatra tsy fantatra mpandefa nalefanao na noraisinao, miaraka amin'ny sary sy feo, mandra-pamafan'ny mpandrindra azy, mba hiadiana amin'ny fanararaotana.",
+            "Ny firaketana ny fidiranao, miaraka amin'ny famantarana ny fitaovana, mba hihatra amin'io finday na mpitety tranonkala io foana ny fandrarana.",
+            "Ny firaketana momba ny fanaraha-maso, raha mbola ilaina amin'ny fiarovana.",
+          ],
+        ],
+      },
+    ],
+  },
+};

@@ -634,7 +634,7 @@ export function LegalLinks() {
   const tr = useT();
   return (
     <View style={styles.legal}>
-      {(["about", "terms", "privacy"] as const).map((page) => (
+      {(["about", "terms", "privacy", "delete-account"] as const).map((page) => (
         <Pressable key={page} onPress={() => void Linking.openURL(`${WEB_URL}/${page}`)} accessibilityRole="link" hitSlop={6}>
           <Text style={{ color: t.muted, fontSize: 12 }}>{tr.legal[page]}</Text>
         </Pressable>

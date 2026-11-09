@@ -2,6 +2,7 @@ const en = {
   about: "About",
   terms: "Terms of Service",
   privacy: "Privacy Policy",
+  "delete-account": "Delete account",
   welcomeTitle: "Before you start",
   welcomeBody:
     "Six Frites has a few rules to keep everyone safe. Please read and accept our Terms of Service and Privacy Policy to continue.",
@@ -13,6 +14,7 @@ const fr: typeof en = {
   about: "À propos",
   terms: "Conditions d'utilisation",
   privacy: "Politique de confidentialité",
+  "delete-account": "Supprimer le compte",
   welcomeTitle: "Avant de commencer",
   welcomeBody:
     "Six Frites a quelques règles pour que chacun soit en sécurité. Lisez et acceptez nos Conditions d'utilisation et notre Politique de confidentialité pour continuer.",
@@ -24,6 +26,7 @@ const mg: typeof en = {
   about: "Momba anay",
   terms: "Fepetra fampiasana",
   privacy: "Fiarovana ny fiainana manokana",
+  "delete-account": "Fafao ny kaonty",
   welcomeTitle: "Alohan'ny hanombohana",
   welcomeBody:
     "Manana fitsipika vitsivitsy ny Six Frites mba hiarovana ny rehetra. Vakio ary ekeo ny Fepetra fampiasana sy ny Fiarovana ny fiainana manokana mba hanohizana.",

@@ -9,7 +9,7 @@ import { six } from "@/lib/six";
 import { Dialog } from "./dialog";
 import { PrimaryButton } from "./ui";
 
-const LEGAL_PAGES = new Set(["/terms", "/privacy", "/about"]);
+const LEGAL_PAGES = new Set(["/terms", "/privacy", "/about", "/delete-account"]);
 
 /** Asks someone who just joined to accept the terms before anything else, while the legal pages stay readable. */
 export function TermsGate() {

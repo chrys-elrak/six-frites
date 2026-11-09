@@ -29,6 +29,7 @@ import { segments } from "@/lib/markup";
 import { useSession } from "@/lib/session";
 import { six } from "@/lib/six";
 import { useMedia } from "@/lib/viewport";
+import { DeleteAccount } from "./account-settings";
 import { VoicePlayer } from "./attachment";
 import { Avatar } from "./avatar";
 import { BrandActions } from "./brand-actions";
@@ -761,6 +762,7 @@ export function AnonInbox({ guest = false }: { guest?: boolean }) {
             >
               {tr.ask.newLink}
             </button>
+            {guest && <DeleteAccount />}
           </div>
         </Dialog>
       )}

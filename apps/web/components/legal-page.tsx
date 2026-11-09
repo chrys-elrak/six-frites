@@ -21,6 +21,9 @@ export function LegalLinks({ className = "" }: { className?: string }) {
       <Link href="/privacy" className="hover:underline">
         {tr.legal.privacy}
       </Link>
+      <Link href="/delete-account" className="hover:underline">
+        {tr.legal["delete-account"]}
+      </Link>
     </nav>
   );
 }

@@ -35,6 +35,7 @@ import { receiveAnon } from "@/lib/realtime";
 import { logout, useSession } from "@/lib/session";
 import { six, WEB_URL } from "@/lib/six";
 import { brand, stone, useTheme } from "@/lib/theme";
+import { AccountCard } from "./account-settings";
 import { GifLoop, VoicePlayer } from "./attachment";
 import { Avatar } from "./avatar";
 import { DoodlePattern } from "./chat-background";
@@ -826,6 +827,7 @@ export function AnonInbox({ guest = false }: { guest?: boolean }) {
                   }}
                 />
               </View>
+              {guest && <AccountCard />}
         </Popup>
       )}
       <FlatList

@@ -191,7 +191,7 @@ const meRoutes: FastifyPluginAsyncZod = async (app) => {
   app.delete(
     "/me",
     {
-      config: { rateLimit: { max: 5, timeWindow: "1 minute" } },
+      config: { guest: true, rateLimit: { max: 5, timeWindow: "1 minute" } },
       schema: {
         tags: ["me"],
         summary: "Delete your account",

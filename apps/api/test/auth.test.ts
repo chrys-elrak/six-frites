@@ -76,6 +76,13 @@ describe("auth", () => {
     expect(me.statusCode).toBe(401);
   });
 
+  it("lets a guest delete their account", async () => {
+    const { accessToken } = (await login(`leaver-${Date.now()}`, "web", { guest: true })).json();
+    const headers = bearer(accessToken);
+    expect((await ctx.app.inject({ method: "DELETE", url: "/v1/me", headers, payload: { confirm: "DELETE" } })).statusCode).toBe(204);
+    expect((await ctx.app.inject({ url: "/v1/me", headers })).statusCode).toBe(401);
+  });
+
   it("asks a newcomer to accept the terms once, guests too", async () => {
     const { accessToken, user } = (await login(`newcomer-${Date.now()}`, "web", { guest: true })).json();
     expect(user.termsAccepted).toBe(false);

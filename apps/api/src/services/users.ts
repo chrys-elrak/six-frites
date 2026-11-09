@@ -153,6 +153,7 @@ export async function deleteAccount(userId: string) {
     const { leaveAllGroups } = await import("./groups.js");
     const groups = await leaveAllGroups(tx, emit, userId);
     await tx.scheduledMessage.deleteMany({ where: { senderId: userId } });
+    await tx.note.deleteMany({ where: { userId } });
     await tx.pushToken.deleteMany({ where: { session: { userId } } });
     await tx.messageBackup.deleteMany({ where: { userId } });
     await tx.user.update({
