@@ -1,7 +1,8 @@
 "use client";
 
 import { placeMessageMenu, placeReactionBar } from "@six/shared";
-import { useEffect, useRef } from "react";
+import { useRef } from "react";
+import { useCloseOnBack } from "@/lib/back";
 import { useT } from "@/lib/i18n";
 import { useMedia } from "@/lib/viewport";
 import { Portal } from "./portal";
@@ -30,11 +31,7 @@ export function MessageMenu({
   const tr = useT();
   const bar = useRef<HTMLDivElement>(null);
   const narrow = useMedia("(width < 48rem)");
-  useEffect(() => {
-    const onKey = (e: KeyboardEvent) => e.key === "Escape" && onClose();
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
-  }, [onClose]);
+  useCloseOnBack(onClose);
 
   if (!rect) {
     return (

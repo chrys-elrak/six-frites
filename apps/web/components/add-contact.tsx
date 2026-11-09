@@ -3,7 +3,8 @@
 import { unwrap } from "@six/sdk";
 import { useMutation } from "@tanstack/react-query";
 import { ArrowLeft, QrCode, Search, X } from "lucide-react";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useState } from "react";
+import { useCloseOnBack } from "@/lib/back";
 import { useT } from "@/lib/i18n";
 import { six } from "@/lib/six";
 import { FoundUser, findErrorText } from "./found-user";
@@ -22,11 +23,7 @@ export function AddContact({ onClose }: { onClose: () => void }) {
     }),
   });
 
-  useEffect(() => {
-    const onKey = (e: KeyboardEvent) => e.key === "Escape" && onClose();
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
-  }, [onClose]);
+  useCloseOnBack(onClose);
 
   const onScan = useCallback(
     (value: string) => {

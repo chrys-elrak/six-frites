@@ -6,6 +6,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { Copy, LogOut, MoreHorizontal, Pencil, RefreshCw, Share2, Shuffle } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { useGoUp } from "@/lib/back";
 import { groupUrl, shareGroup } from "@/lib/format";
 import {
   createGroup,
@@ -315,7 +316,7 @@ type View = "info" | "edit" | "me" | "reset" | "leave" | { member: ChatMemberDTO
 export function GroupInfo({ chat, onClose }: { chat: ChatDTO; onClose: () => void }) {
   const tr = useT();
   const qc = useQueryClient();
-  const router = useRouter();
+  const goUp = useGoUp();
   const meId = useSession((s) => s.user!.id);
   const [view, setView] = useState<View>("info");
   const [copied, setCopied] = useState(false);
@@ -351,7 +352,7 @@ export function GroupInfo({ chat, onClose }: { chat: ChatDTO; onClose: () => voi
               run(
                 leaveGroup(qc, chat.id).then(() => {
                   onClose();
-                  router.replace("/");
+                  goUp("/");
                 }),
               ),
           },

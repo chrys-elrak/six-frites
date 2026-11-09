@@ -3,6 +3,7 @@
 import { Bell, MessageCircle, Settings, Users, VenetianMask } from "lucide-react";
 import Link from "next/link";
 import { isMuted } from "@six/shared";
+import { useGoUp } from "@/lib/back";
 import { useChats } from "@/lib/chats";
 import { useT } from "@/lib/i18n";
 import { useNotifications } from "@/lib/notifications";
@@ -25,6 +26,7 @@ const count = (n: number) => (n > 99 ? "99+" : n);
  */
 export function TabBar({ active, children, top }: { active: Tab; children?: React.ReactNode; top?: boolean }) {
   const tr = useT();
+  const goUp = useGoUp();
   const chats = useChats();
   const notifications = useNotifications();
   const badges: Partial<Record<Tab, number>> = {
@@ -46,6 +48,12 @@ export function TabBar({ active, children, top }: { active: Tab; children?: Reac
       <Link
         key={id}
         href={href}
+        replace={active !== "chats"}
+        onClick={(e) => {
+          if (id !== "chats") return;
+          e.preventDefault();
+          goUp("/", true);
+        }}
         aria-label={labels[id]}
         title={labels[id]}
         aria-current={on ? "page" : undefined}

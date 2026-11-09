@@ -2,7 +2,8 @@
 
 import { AUTO_DELETE, AUTO_DELETE_UNITS, durationLabel } from "@six/shared";
 import { X } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useState } from "react";
+import { useCloseOnBack } from "@/lib/back";
 import { useT } from "@/lib/i18n";
 import { Portal } from "./portal";
 import { PrimaryButton } from "./ui";
@@ -68,15 +69,7 @@ export function DurationPicker({
   const [amount, setAmount] = useState(() => initial(value, units, range.min).amount);
   const [unit, setUnit] = useState<Unit>(() => initial(value, units, range.min).unit);
 
-  useEffect(() => {
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key !== "Escape") return;
-      e.stopPropagation();
-      onClose();
-    };
-    window.addEventListener("keydown", onKey, true);
-    return () => window.removeEventListener("keydown", onKey, true);
-  }, [onClose]);
+  useCloseOnBack(onClose);
 
   const n = Number(amount);
   const secs = Number.isInteger(n) && n > 0 ? n * units.find(([u]) => u === unit)![1] : 0;

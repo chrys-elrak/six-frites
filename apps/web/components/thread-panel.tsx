@@ -3,6 +3,7 @@
 import { type ChatDTO, type CommentRule, commentRuleOf, commentsClosedNow } from "@six/shared";
 import { ChevronLeft, Lock, Timer } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
+import { useCloseOnBack } from "@/lib/back";
 import { setCommentsClosed } from "@/lib/actions";
 import { useMessages } from "@/lib/chats";
 import { listTime } from "@/lib/format";
@@ -67,11 +68,7 @@ export function ThreadPanel({
     out.onfinish = onClose;
   }, [onClose]);
 
-  useEffect(() => {
-    const onKey = (e: KeyboardEvent) => e.key === "Escape" && close();
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
-  }, [close]);
+  useCloseOnBack(close);
 
   return (
     <div

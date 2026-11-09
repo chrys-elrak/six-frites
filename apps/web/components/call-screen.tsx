@@ -56,6 +56,7 @@ import {
   toggleMute,
   useCall,
 } from "@/lib/call";
+import { useCloseOnBack } from "@/lib/back";
 import { useChat } from "@/lib/chats";
 import { formatDuration } from "@/lib/format";
 import { useT } from "@/lib/i18n";
@@ -477,6 +478,7 @@ function CallView({ call }: { call: Call }) {
     if (call.gameOpen) setSmall(null);
   }, [call.gameOpen]);
   useRingtone(call.phase === "incoming");
+  useCloseOnBack(() => setSmall(call.video ? "video" : "pill"), !small && call.phase !== "incoming" && call.phase !== "ended");
   const [cameras, setCameras] = useState(0);
   useEffect(() => {
     void navigator.mediaDevices

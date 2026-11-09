@@ -14,7 +14,7 @@ export const findErrorText = (err: unknown, tr: Dict) =>
     ? ((tr.contacts.findErrors as Record<string, string | undefined>)[err.code] ?? err.message)
     : tr.common.somethingWrong;
 
-export function FoundUser({ found, query, onAdded }: { found: FoundUserDTO; query: string; onAdded?: () => void }) {
+export function FoundUser({ found, query, onAdded, replace }: { found: FoundUserDTO; query: string; onAdded?: () => void; replace?: boolean }) {
   const tr = useT();
   const qc = useQueryClient();
   const router = useRouter();
@@ -24,7 +24,7 @@ export function FoundUser({ found, query, onAdded }: { found: FoundUserDTO; quer
     onSuccess: (contact) => {
       void qc.invalidateQueries({ queryKey: ["contacts"] });
       onAdded?.();
-      router.push(`/chats/${contact.chatId}`);
+      router[replace ? "replace" : "push"](`/chats/${contact.chatId}`);
     },
   });
 

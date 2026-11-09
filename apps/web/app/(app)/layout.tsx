@@ -1,7 +1,6 @@
 "use client";
 
 import { useQueryClient } from "@tanstack/react-query";
-import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useRef } from "react";
 import { AnonInbox } from "@/components/anon-inbox";
@@ -13,11 +12,12 @@ import { SettingsPanel } from "@/components/settings-panel";
 import { Notifications } from "@/components/notifications";
 import { type Tab, TabBar } from "@/components/tab-bar";
 import { useAppLock, useAutoLock } from "@/lib/app-lock";
+import { BackLink, historyIndex, tabRoutes, useCloseOnBack, useGoUp } from "@/lib/back";
 import { RealtimeProvider } from "@/lib/realtime";
 import { useSession } from "@/lib/session";
 import { primeAudio, useNotifyPrefs } from "@/lib/notify";
 import { relinkPush } from "@/lib/push";
-import { useAppHeight } from "@/lib/viewport";
+import { useAppHeight, useMedia } from "@/lib/viewport";
 import { StoryPostBar } from "@/components/story-post-bar";
 import { Toasts } from "@/components/toasts";
 import { UpdatePrompt } from "@/components/update-prompt";
@@ -35,15 +35,6 @@ const glass = "bg-white/45 backdrop-blur-[2px] dark:bg-stone-950/55";
 const solidOnDesktop = "md:bg-stone-50 md:backdrop-blur-none md:dark:bg-stone-950";
 const appWallpaper = chatTheme(null);
 
-const tabRoutes: Record<string, Tab> = {
-  "/": "chats",
-  "/archived": "chats",
-  "/contacts": "contacts",
-  "/notifications": "notifications",
-  "/inbox": "inbox",
-  "/settings": "settings",
-};
-
 function usePushLinks(signedIn: boolean) {
   const router = useRouter();
   useEffect(() => {
@@ -54,6 +45,15 @@ function usePushLinks(signedIn: boolean) {
     navigator.serviceWorker.addEventListener("message", onMessage);
     return () => navigator.serviceWorker.removeEventListener("message", onMessage);
   }, [signedIn, router]);
+}
+
+/** A screen opened straight from a notification or link has nothing beneath it, so on a phone back goes to the chats instead of leaving. */
+function BackFromDeepLink() {
+  const pathname = usePathname();
+  const goUp = useGoUp();
+  const coarse = useMedia("(pointer: coarse)");
+  useCloseOnBack(() => goUp("/"), coarse && historyIndex() === 0 && pathname !== "/");
+  return null;
 }
 
 function UnreadTitle() {
@@ -116,10 +116,10 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
     <div
       className={`flex shrink-0 items-center gap-3 border-b border-black/5 px-4 pt-[max(0.875rem,env(safe-area-inset-top))] pb-3.5 md:h-16 md:py-0 dark:border-white/10 ${rail ? `${glass} ${solidOnDesktop}` : ""}`}
     >
-      <Link href="/" className="flex items-center gap-3">
+      <BackLink href="/" exact className="flex items-center gap-3">
         <Logo className="size-9" />
         <span className="text-lg font-bold tracking-tight whitespace-nowrap short:md:hidden">Six Frites</span>
-      </Link>
+      </BackLink>
       <TabBar active={tab} top />
       <div ref={setBrandSlot} className="-my-1 ml-auto flex items-center gap-1" />
     </div>
@@ -165,6 +165,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       {!locked && <UnfinishedGame />}
       <CallScreen />
       <UnreadTitle />
+      <BackFromDeepLink />
       {locked && <LockScreen />}
     </RealtimeProvider>
   );

@@ -43,6 +43,7 @@ import {
   Users,
 } from "lucide-react";
 import { unwrap } from "@six/sdk";
+import { BackLink, useGoUp } from "@/lib/back";
 import { useOutbox } from "@/lib/outbox";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import Link from "next/link";
@@ -173,7 +174,7 @@ function Preview({ chat, meId }: { chat: ChatDTO; meId: string }) {
 
 function ChatRow({ chat, meId, active, rail }: { chat: ChatDTO; meId: string; active: boolean; rail: boolean }) {
   const tr = useT();
-  const router = useRouter();
+  const goUp = useGoUp();
   const [menu, setMenu] = useState<{ at?: { x: number; y: number } } | null>(null);
   const press = useLongPress((at) => setMenu({ at }));
   const qc = useQueryClient();
@@ -332,7 +333,7 @@ function ChatRow({ chat, meId, active, rail }: { chat: ChatDTO; meId: string; ac
           peerName={peer.displayName}
           at={menu.at}
           onClose={() => setMenu(null)}
-          onDeleted={(scope) => scope === "me" && active && router.replace("/")}
+          onDeleted={(scope) => scope === "me" && active && goUp("/")}
         />
       )}
     </div>
@@ -493,6 +494,7 @@ export function ChatList({
 }) {
   const tr = useT();
   const router = useRouter();
+  const goUp = useGoUp();
   const openSupport = async () => {
     try {
       router.push(`/chats/${unwrap(await six.api.POST("/v1/support")).id}`);
@@ -554,7 +556,7 @@ export function ChatList({
 
   if (archived && hasAppLock && !archiveOpen) {
     return (
-      <LockScreen title={tr.common.archived} onUnlock={() => setArchiveOpen(true)} onCancel={() => router.push("/")} />
+      <LockScreen title={tr.common.archived} onUnlock={() => setArchiveOpen(true)} onCancel={() => goUp("/")} />
     );
   }
 
@@ -600,13 +602,13 @@ export function ChatList({
     <div className="flex h-full min-h-0 flex-col">
       {archived ? (
         <header className="flex items-center gap-2 border-b border-stone-200 px-4 py-2 dark:border-stone-800">
-          <Link
+          <BackLink
             href="/"
             aria-label={tr.common.backToChats}
             className="-ml-2 grid size-9 place-items-center rounded-full hover:bg-stone-200 dark:hover:bg-stone-800"
           >
             <ChevronLeft className="size-6" />
-          </Link>
+          </BackLink>
           <h1 className="min-w-0 flex-1 text-xl font-semibold tracking-tight">{tr.common.archived}</h1>
         </header>
       ) : (

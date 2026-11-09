@@ -3,6 +3,7 @@
 import { cutStart, videoCuts } from "@six/shared";
 import { Check, Play, X } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
+import { useCloseOnBack } from "@/lib/back";
 import { formatDuration } from "@/lib/format";
 import { useT } from "@/lib/i18n";
 
@@ -45,15 +46,7 @@ export function VideoTrimmer({
       live = false;
     };
   }, [file]);
-  useEffect(() => {
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key !== "Escape") return;
-      e.stopPropagation();
-      onCancel();
-    };
-    window.addEventListener("keydown", onKey, true);
-    return () => window.removeEventListener("keydown", onKey, true);
-  }, [onCancel]);
+  useCloseOnBack(onCancel);
 
   const seek = (t: number) => {
     const v = video.current;

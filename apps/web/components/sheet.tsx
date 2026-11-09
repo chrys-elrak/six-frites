@@ -1,7 +1,7 @@
 "use client";
 
 import { Check, type LucideIcon } from "lucide-react";
-import { useEffect } from "react";
+import { useCloseOnBack } from "@/lib/back";
 import { useT } from "@/lib/i18n";
 import { useMedia } from "@/lib/viewport";
 import { Portal } from "./portal";
@@ -35,11 +35,7 @@ export function Sheet({
 }) {
   const tr = useT();
   const narrow = useMedia("(width < 48rem)");
-  useEffect(() => {
-    const onKey = (e: KeyboardEvent) => e.key === "Escape" && onClose();
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
-  }, [onClose]);
+  useCloseOnBack(onClose);
 
   const select = (a: SheetAction) => {
     if (!a.keepOpen) onClose();

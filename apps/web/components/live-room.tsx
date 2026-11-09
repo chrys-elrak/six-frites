@@ -18,9 +18,8 @@ import {
   snackScores,
 } from "@six/shared";
 import { Bot, ChevronLeft, MessageCircle, Mic, MoreVertical, Reply, SendHorizontal, Smile, SmilePlus, X } from "lucide-react";
-import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { type FormEvent, useEffect, useRef, useState } from "react";
+import { BackLink, useGoUp } from "@/lib/back";
 import { useT } from "@/lib/i18n";
 import { clockTime, formatDuration } from "@/lib/format";
 import { useCountdown, useLiveRoom, useMyTurn } from "@/lib/live";
@@ -625,7 +624,7 @@ type Ask = (
 /** A live game room: the lobby, then the game, then who won and a rematch. */
 export function LiveRoom({ roomId }: { roomId: string }) {
   const tr = useT();
-  const router = useRouter();
+  const goUp = useGoUp();
   const meId = useSession((s) => s.user!.id);
   const { room, gone, socket } = useLiveRoom(roomId);
   const [menu, setMenu] = useState(false);
@@ -644,7 +643,7 @@ export function LiveRoom({ roomId }: { roomId: string }) {
   };
   const exit = (event: "live:leave" | "live:end") => {
     socket?.emit(event, { roomId });
-    router.push("/");
+    goUp("/");
   };
   const leave = () => exit("live:leave");
   const nameOf = (seat: number) => {
@@ -657,9 +656,9 @@ export function LiveRoom({ roomId }: { roomId: string }) {
   return (
     <div className="flex min-h-0 flex-1 flex-col">
       <header className="flex items-center gap-1 border-b border-black/5 bg-stone-50/45 px-2 py-2 backdrop-blur-xl dark:border-white/10 dark:bg-stone-950/40">
-        <Link href="/" aria-label={tr.common.backToChats} className={`${iconButton} md:hidden`}>
+        <BackLink href="/" aria-label={tr.common.backToChats} className={`${iconButton} md:hidden`}>
           <ChevronLeft className="size-6" />
-        </Link>
+        </BackLink>
         <h1 className="min-w-0 flex-1 truncate px-2 font-semibold">
           {room ? `${LIVE_EMOJI[room.game]} ${tr.live.games[room.game]}` : tr.live.title}
         </h1>
@@ -677,9 +676,9 @@ export function LiveRoom({ roomId }: { roomId: string }) {
               <p className="pt-10 text-center text-stone-500">
                 {gone === "GAME_STARTED" ? tr.live.started : gone === "ROOM_FULL" ? tr.live.full : tr.live.closed}
               </p>
-              <Link href="/" className={`${pill} bg-brand text-brand-ink`}>
+              <BackLink href="/" className={`${pill} bg-brand text-brand-ink`}>
                 {tr.common.backToChats}
-              </Link>
+              </BackLink>
             </>
           ) : !room ? (
             <p className="pt-10 text-sm text-stone-500">{tr.common.loading}</p>

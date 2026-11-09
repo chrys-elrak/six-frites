@@ -23,6 +23,7 @@ import {
 import { useQueryClient } from "@tanstack/react-query";
 import { CalendarDays, Camera, CaseSensitive, ChevronDown, Clock, Hourglass, ImagePlus, Loader2, MapPin, Pencil, Scissors, SendHorizontal, Sticker, Type, X } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
+import { useCloseOnBack } from "@/lib/back";
 import { getLocale, useT } from "@/lib/i18n";
 import { mediaMeta } from "@/lib/media-meta";
 import { six } from "@/lib/six";
@@ -98,16 +99,11 @@ export function StoryComposer({ anon, onClose }: { anon?: AnonMessageDTO; onClos
     return () => URL.revokeObjectURL(made);
   }, [file]);
 
-  useEffect(() => {
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key !== "Escape" || cutting || pickingDuration || customDuration) return;
-      if (writing) setWriting(null);
-      else if (drawingOn) setDrawingOn(false);
-      else onClose();
-    };
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
-  }, [onClose, cutting, pickingDuration, customDuration, writing, drawingOn]);
+  useCloseOnBack(() => {
+    if (writing) setWriting(null);
+    else if (drawingOn) setDrawingOn(false);
+    else onClose();
+  });
 
   useEffect(() => {
     const onPaste = (e: ClipboardEvent) => {

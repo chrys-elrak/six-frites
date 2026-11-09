@@ -5,6 +5,7 @@ import { type ChatDTO, findInText, maskSpoilers, messageLinks, previewText } fro
 import { useInfiniteQuery } from "@tanstack/react-query";
 import { CalendarDays, MessageSquareText, Search as SearchIcon, X } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
+import { useCloseOnBack } from "@/lib/back";
 import { hydrateAll } from "@/lib/e2ee";
 import { dayLabel, listTime } from "@/lib/format";
 import { useT } from "@/lib/i18n";
@@ -335,12 +336,7 @@ export function SharedMedia({
   const [picking, setPicking] = useState(false);
   const [viewer, setViewer] = useState<{ items: ShownAttachment[]; ids: string[]; start: number } | null>(null);
 
-  useEffect(() => {
-    if (viewer || picking) return;
-    const onKey = (e: KeyboardEvent) => e.key === "Escape" && onClose();
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
-  }, [viewer, picking, onClose]);
+  useCloseOnBack(onClose, !(viewer || picking));
 
   return (
     <Portal>

@@ -4,6 +4,7 @@ import { unwrap } from "@six/sdk";
 import { useMutation } from "@tanstack/react-query";
 import { Delete, Lock } from "lucide-react";
 import { useState } from "react";
+import { useCloseOnBack } from "@/lib/back";
 import { codeLength, setCodeLength, unlock } from "@/lib/app-lock";
 import { e2ee, signOut } from "@/lib/e2ee";
 import { useT } from "@/lib/i18n";
@@ -181,6 +182,7 @@ export function LockScreen({
   const [length, setLength] = useState(codeLength);
   const [confirmSignOut, setConfirmSignOut] = useState(false);
   const hasKey = useHasRecoveryKey();
+  useCloseOnBack(() => onCancel?.(), !!onCancel);
   const check = useMutation({
     mutationFn: async (value: string) =>
       verify ? verify(value) : unwrap(await six.api.POST("/v1/me/app-lock/unlock", { body: { code: value } })),

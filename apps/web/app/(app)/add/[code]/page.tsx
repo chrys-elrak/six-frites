@@ -28,7 +28,7 @@ export default function AddPage({ params }: { params: Promise<{ code: string }> 
           <p className="text-sm text-stone-500">{findErrorText(find.error, tr)}</p>
         </>
       )}
-      {find.data && <FoundUser found={find.data} query={code} />}
+      {find.data && <FoundUser found={find.data} query={code} replace />}
     </main>
   );
 }

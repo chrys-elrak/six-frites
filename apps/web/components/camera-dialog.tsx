@@ -2,6 +2,7 @@
 
 import { Camera, RefreshCw, Square, X } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
+import { useCloseOnBack } from "@/lib/back";
 import { useCamera } from "@/lib/camera";
 import { formatDuration } from "@/lib/format";
 import { useT } from "@/lib/i18n";
@@ -26,11 +27,7 @@ export function CameraDialog({
   const [startedAt, setStartedAt] = useState<number | null>(null);
   const [now, setNow] = useState(0);
 
-  useEffect(() => {
-    const onKey = (e: KeyboardEvent) => e.key === "Escape" && onClose();
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
-  }, [onClose]);
+  useCloseOnBack(onClose);
 
   useEffect(() => {
     if (startedAt === null) return;
