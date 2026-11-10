@@ -23,6 +23,13 @@ const Env = z.object({
   FCM_SERVICE_ACCOUNT: z.string().optional(),
   GIPHY_API_KEY: z.string().optional(),
   KLIPY_API_KEY: z.string().optional(),
+  /** Place search goes to Google with it, to OpenStreetMap without. */
+  GOOGLE_MAPS_API_KEY: z.string().optional(),
+  /** Each person's monthly share of what Google bills, so the app stays within Google's free amounts. */
+  PLACE_SEARCHES_PER_MONTH: z.coerce.number().int().min(0).default(50),
+  PLACE_SUGGESTIONS_PER_MONTH: z.coerce.number().int().min(0).default(100),
+  MAP_PREVIEWS_PER_MONTH: z.coerce.number().int().min(0).default(100),
+  MAP_PICKERS_PER_MONTH: z.coerce.number().int().min(0).default(30),
   STUN_URLS: z
     .string()
     .default("stun:stun.l.google.com:19302")

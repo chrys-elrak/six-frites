@@ -3,6 +3,7 @@ import type { ConfigContext, ExpoConfig } from "expo/config";
 const iosUrlScheme = process.env.GOOGLE_IOS_URL_SCHEME;
 const googleServicesFile = process.env.GOOGLE_SERVICES_FILE;
 const playStore = process.env.PLAY_STORE === "1";
+const googleMapsKey = process.env.GOOGLE_MAPS_PUBLIC_KEY;
 
 export default ({ config }: ConfigContext): ExpoConfig => ({
   ...config,
@@ -99,9 +100,10 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     ],
     ["expo-build-properties", { android: { minSdkVersion: 26, buildArchs: ["armeabi-v7a", "arm64-v8a"], useLegacyPackaging: true, extraProguardRules: "-keep class org.webrtc.** { *; }\n-dontwarn org.webrtc.**" } }],
     ...(iosUrlScheme ? [["react-native-nitro-google-signin", { iosUrlScheme }] as [string, object]] : []),
+    ...(googleMapsKey ? [["react-native-maps", { androidGoogleMapsApiKey: googleMapsKey }] as [string, object]] : []),
   ],
   experiments: {
     typedRoutes: true,
   },
-  extra: { playStore },
+  extra: { playStore, googleMapsKey: googleMapsKey ?? null },
 });

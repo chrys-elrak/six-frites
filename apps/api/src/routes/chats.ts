@@ -428,7 +428,7 @@ const chatRoutes: FastifyPluginAsyncZod = async (app) => {
         tags: ["messages"],
         summary: "Make a message you already sent self-destruct",
         description:
-          "Sender only. It locks for the recipient until they open it (POST /v1/messages/{id}/view), then follows the rule like one sent that way. Both people get message.edited. MESSAGE_NOT_EDITABLE if it already self-destructs, or is a service message, sticker, location or checklist.",
+          "Sender only. It locks for the recipient until they open it (POST /v1/messages/{id}/view), then follows the rule like one sent that way. Both people get message.edited. MESSAGE_NOT_EDITABLE if it already self-destructs, or is a service message, sticker, checklist or game.",
         security,
         params: MessageParams,
         body: EphemeralInput,

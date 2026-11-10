@@ -9133,6 +9133,12 @@
                               "type": "number",
                               "minimum": 0,
                               "maximum": 100000
+                            },
+                            "name": {
+                              "description": "What the place is called, for a place picked on the map",
+                              "type": "string",
+                              "minLength": 1,
+                              "maxLength": 120
                             }
                           },
                           "required": [
@@ -10995,6 +11001,12 @@
                                 "type": "number",
                                 "minimum": 0,
                                 "maximum": 100000
+                              },
+                              "name": {
+                                "description": "What the place is called, for a place picked on the map",
+                                "type": "string",
+                                "minLength": 1,
+                                "maxLength": 120
                               }
                             },
                             "required": [
@@ -12982,6 +12994,12 @@
                           "type": "number",
                           "minimum": 0,
                           "maximum": 100000
+                        },
+                        "name": {
+                          "description": "What the place is called, for a place picked on the map",
+                          "type": "string",
+                          "minLength": 1,
+                          "maxLength": 120
                         }
                       },
                       "required": [
@@ -14963,6 +14981,12 @@
                               "type": "number",
                               "minimum": 0,
                               "maximum": 100000
+                            },
+                            "name": {
+                              "description": "What the place is called, for a place picked on the map",
+                              "type": "string",
+                              "minLength": 1,
+                              "maxLength": 120
                             }
                           },
                           "required": [
@@ -16825,6 +16849,12 @@
                                 "type": "number",
                                 "minimum": 0,
                                 "maximum": 100000
+                              },
+                              "name": {
+                                "description": "What the place is called, for a place picked on the map",
+                                "type": "string",
+                                "minLength": 1,
+                                "maxLength": 120
                               }
                             },
                             "required": [
@@ -18932,6 +18962,12 @@
                               "type": "number",
                               "minimum": 0,
                               "maximum": 100000
+                            },
+                            "name": {
+                              "description": "What the place is called, for a place picked on the map",
+                              "type": "string",
+                              "minLength": 1,
+                              "maxLength": 120
                             }
                           },
                           "required": [
@@ -20794,6 +20830,12 @@
                                 "type": "number",
                                 "minimum": 0,
                                 "maximum": 100000
+                              },
+                              "name": {
+                                "description": "What the place is called, for a place picked on the map",
+                                "type": "string",
+                                "minLength": 1,
+                                "maxLength": 120
                               }
                             },
                             "required": [
@@ -22928,6 +22970,12 @@
                                     "type": "number",
                                     "minimum": 0,
                                     "maximum": 100000
+                                  },
+                                  "name": {
+                                    "description": "What the place is called, for a place picked on the map",
+                                    "type": "string",
+                                    "minLength": 1,
+                                    "maxLength": 120
                                   }
                                 },
                                 "required": [
@@ -24790,6 +24838,12 @@
                                       "type": "number",
                                       "minimum": 0,
                                       "maximum": 100000
+                                    },
+                                    "name": {
+                                      "description": "What the place is called, for a place picked on the map",
+                                      "type": "string",
+                                      "minLength": 1,
+                                      "maxLength": 120
                                     }
                                   },
                                   "required": [
@@ -26908,6 +26962,12 @@
                               "type": "number",
                               "minimum": 0,
                               "maximum": 100000
+                            },
+                            "name": {
+                              "description": "What the place is called, for a place picked on the map",
+                              "type": "string",
+                              "minLength": 1,
+                              "maxLength": 120
                             }
                           },
                           "required": [
@@ -28770,6 +28830,12 @@
                                 "type": "number",
                                 "minimum": 0,
                                 "maximum": 100000
+                              },
+                              "name": {
+                                "description": "What the place is called, for a place picked on the map",
+                                "type": "string",
+                                "minLength": 1,
+                                "maxLength": 120
                               }
                             },
                             "required": [
@@ -30963,6 +31029,12 @@
                               "type": "number",
                               "minimum": 0,
                               "maximum": 100000
+                            },
+                            "name": {
+                              "description": "What the place is called, for a place picked on the map",
+                              "type": "string",
+                              "minLength": 1,
+                              "maxLength": 120
                             }
                           },
                           "required": [
@@ -32825,6 +32897,12 @@
                                 "type": "number",
                                 "minimum": 0,
                                 "maximum": 100000
+                              },
+                              "name": {
+                                "description": "What the place is called, for a place picked on the map",
+                                "type": "string",
+                                "minLength": 1,
+                                "maxLength": 120
                               }
                             },
                             "required": [
@@ -35112,6 +35190,12 @@
                           "type": "number",
                           "minimum": 0,
                           "maximum": 100000
+                        },
+                        "name": {
+                          "description": "What the place is called, for a place picked on the map",
+                          "type": "string",
+                          "minLength": 1,
+                          "maxLength": 120
                         }
                       },
                       "required": [
@@ -36989,6 +37073,12 @@
                           "type": "number",
                           "minimum": 0,
                           "maximum": 100000
+                        },
+                        "name": {
+                          "description": "What the place is called, for a place picked on the map",
+                          "type": "string",
+                          "minLength": 1,
+                          "maxLength": 120
                         }
                       },
                       "required": [
@@ -38862,6 +38952,12 @@
                           "type": "number",
                           "minimum": 0,
                           "maximum": 100000
+                        },
+                        "name": {
+                          "description": "What the place is called, for a place picked on the map",
+                          "type": "string",
+                          "minLength": 1,
+                          "maxLength": 120
                         }
                       },
                       "required": [
@@ -40726,6 +40822,12 @@
                           "type": "number",
                           "minimum": 0,
                           "maximum": 100000
+                        },
+                        "name": {
+                          "description": "What the place is called, for a place picked on the map",
+                          "type": "string",
+                          "minLength": 1,
+                          "maxLength": 120
                         }
                       },
                       "required": [
@@ -42600,6 +42702,12 @@
                           "type": "number",
                           "minimum": 0,
                           "maximum": 100000
+                        },
+                        "name": {
+                          "description": "What the place is called, for a place picked on the map",
+                          "type": "string",
+                          "minLength": 1,
+                          "maxLength": 120
                         }
                       },
                       "required": [
@@ -44617,6 +44725,12 @@
                           "type": "number",
                           "minimum": 0,
                           "maximum": 100000
+                        },
+                        "name": {
+                          "description": "What the place is called, for a place picked on the map",
+                          "type": "string",
+                          "minLength": 1,
+                          "maxLength": 120
                         }
                       },
                       "required": [
@@ -46466,6 +46580,12 @@
                               "type": "number",
                               "minimum": 0,
                               "maximum": 100000
+                            },
+                            "name": {
+                              "description": "What the place is called, for a place picked on the map",
+                              "type": "string",
+                              "minLength": 1,
+                              "maxLength": 120
                             }
                           },
                           "required": [
@@ -48326,6 +48446,12 @@
                           "type": "number",
                           "minimum": 0,
                           "maximum": 100000
+                        },
+                        "name": {
+                          "description": "What the place is called, for a place picked on the map",
+                          "type": "string",
+                          "minLength": 1,
+                          "maxLength": 120
                         }
                       },
                       "required": [
@@ -50172,6 +50298,12 @@
                           "type": "number",
                           "minimum": 0,
                           "maximum": 100000
+                        },
+                        "name": {
+                          "description": "What the place is called, for a place picked on the map",
+                          "type": "string",
+                          "minLength": 1,
+                          "maxLength": 120
                         }
                       },
                       "required": [
@@ -52018,6 +52150,12 @@
                           "type": "number",
                           "minimum": 0,
                           "maximum": 100000
+                        },
+                        "name": {
+                          "description": "What the place is called, for a place picked on the map",
+                          "type": "string",
+                          "minLength": 1,
+                          "maxLength": 120
                         }
                       },
                       "required": [
@@ -53983,6 +54121,12 @@
                           "type": "number",
                           "minimum": 0,
                           "maximum": 100000
+                        },
+                        "name": {
+                          "description": "What the place is called, for a place picked on the map",
+                          "type": "string",
+                          "minLength": 1,
+                          "maxLength": 120
                         }
                       },
                       "required": [
@@ -54956,7 +55100,7 @@
         "tags": [
           "messages"
         ],
-        "description": "Sender only. It locks for the recipient until they open it (POST /v1/messages/{id}/view), then follows the rule like one sent that way. Both people get message.edited. MESSAGE_NOT_EDITABLE if it already self-destructs, or is a service message, sticker, location or checklist.",
+        "description": "Sender only. It locks for the recipient until they open it (POST /v1/messages/{id}/view), then follows the rule like one sent that way. Both people get message.edited. MESSAGE_NOT_EDITABLE if it already self-destructs, or is a service message, sticker, checklist or game.",
         "requestBody": {
           "required": true,
           "content": {
@@ -55853,6 +55997,12 @@
                           "type": "number",
                           "minimum": 0,
                           "maximum": 100000
+                        },
+                        "name": {
+                          "description": "What the place is called, for a place picked on the map",
+                          "type": "string",
+                          "minLength": 1,
+                          "maxLength": 120
                         }
                       },
                       "required": [
@@ -57834,6 +57984,12 @@
                                 "type": "number",
                                 "minimum": 0,
                                 "maximum": 100000
+                              },
+                              "name": {
+                                "description": "What the place is called, for a place picked on the map",
+                                "type": "string",
+                                "minLength": 1,
+                                "maxLength": 120
                               }
                             },
                             "required": [
@@ -58917,6 +59073,12 @@
                         "type": "number",
                         "minimum": 0,
                         "maximum": 100000
+                      },
+                      "name": {
+                        "description": "What the place is called, for a place picked on the map",
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 120
                       }
                     },
                     "required": [
@@ -60380,6 +60542,12 @@
                           "type": "number",
                           "minimum": 0,
                           "maximum": 100000
+                        },
+                        "name": {
+                          "description": "What the place is called, for a place picked on the map",
+                          "type": "string",
+                          "minLength": 1,
+                          "maxLength": 120
                         }
                       },
                       "required": [
@@ -61955,6 +62123,12 @@
                         "type": "number",
                         "minimum": 0,
                         "maximum": 100000
+                      },
+                      "name": {
+                        "description": "What the place is called, for a place picked on the map",
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 120
                       }
                     },
                     "required": [
@@ -64614,6 +64788,12 @@
                           "type": "number",
                           "minimum": 0,
                           "maximum": 100000
+                        },
+                        "name": {
+                          "description": "What the place is called, for a place picked on the map",
+                          "type": "string",
+                          "minLength": 1,
+                          "maxLength": 120
                         }
                       },
                       "required": [
@@ -67485,6 +67665,12 @@
                                         "type": "number",
                                         "minimum": 0,
                                         "maximum": 100000
+                                      },
+                                      "name": {
+                                        "description": "What the place is called, for a place picked on the map",
+                                        "type": "string",
+                                        "minLength": 1,
+                                        "maxLength": 120
                                       }
                                     },
                                     "required": [
@@ -69321,6 +69507,12 @@
                                         "type": "number",
                                         "minimum": 0,
                                         "maximum": 100000
+                                      },
+                                      "name": {
+                                        "description": "What the place is called, for a place picked on the map",
+                                        "type": "string",
+                                        "minLength": 1,
+                                        "maxLength": 120
                                       }
                                     },
                                     "required": [
@@ -71415,6 +71607,12 @@
                                             "type": "number",
                                             "minimum": 0,
                                             "maximum": 100000
+                                          },
+                                          "name": {
+                                            "description": "What the place is called, for a place picked on the map",
+                                            "type": "string",
+                                            "minLength": 1,
+                                            "maxLength": 120
                                           }
                                         },
                                         "required": [
@@ -73277,6 +73475,12 @@
                                               "type": "number",
                                               "minimum": 0,
                                               "maximum": 100000
+                                            },
+                                            "name": {
+                                              "description": "What the place is called, for a place picked on the map",
+                                              "type": "string",
+                                              "minLength": 1,
+                                              "maxLength": 120
                                             }
                                           },
                                           "required": [
@@ -77161,6 +77365,12 @@
                           "type": "number",
                           "minimum": 0,
                           "maximum": 100000
+                        },
+                        "name": {
+                          "description": "What the place is called, for a place picked on the map",
+                          "type": "string",
+                          "minLength": 1,
+                          "maxLength": 120
                         }
                       },
                       "required": [
@@ -82245,6 +82455,307 @@
         }
       }
     },
+    "/v1/place-suggest": {
+      "get": {
+        "summary": "Places matching what you have typed so far, to share one in a chat",
+        "tags": [
+          "chats"
+        ],
+        "description": "Asks Google Maps, or OpenStreetMap, on your behalf, so neither sees who you are. Each new `session` is one of the few searches you have a month (`left`); typing more in the same session is free. PLACE_SEARCH_LIMIT_REACHED once they are used up, PLACES_UNAVAILABLE when the provider can't be reached.",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 2,
+              "maxLength": 120
+            },
+            "in": "query",
+            "name": "q",
+            "required": true
+          },
+          {
+            "schema": {
+              "type": "string",
+              "pattern": "^[\\w-]{8,36}$"
+            },
+            "in": "query",
+            "name": "session",
+            "required": true,
+            "description": "Made up by the app for one search: the suggestions while typing and the place picked share it"
+          },
+          {
+            "schema": {
+              "type": "number",
+              "minimum": -90,
+              "maximum": 90
+            },
+            "in": "query",
+            "name": "lat",
+            "required": false,
+            "description": "Favour places near here"
+          },
+          {
+            "schema": {
+              "type": "number",
+              "minimum": -180,
+              "maximum": 180
+            },
+            "in": "query",
+            "name": "lng",
+            "required": false
+          },
+          {
+            "schema": {
+              "default": "en",
+              "type": "string",
+              "enum": [
+                "en",
+                "fr",
+                "mg"
+              ]
+            },
+            "in": "query",
+            "name": "locale",
+            "required": false
+          }
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "suggestions": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string",
+                            "description": "Pass to GET /v1/place-details to learn where it is"
+                          },
+                          "name": {
+                            "type": "string"
+                          },
+                          "address": {
+                            "nullable": true,
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "id",
+                          "name",
+                          "address"
+                        ],
+                        "additionalProperties": false
+                      }
+                    },
+                    "left": {
+                      "type": "integer",
+                      "minimum": -9007199254740991,
+                      "maximum": 9007199254740991,
+                      "description": "Searches you have left this month, this one counted"
+                    }
+                  },
+                  "required": [
+                    "suggestions",
+                    "left"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/place-details": {
+      "get": {
+        "summary": "Where a suggested place is",
+        "tags": [
+          "chats"
+        ],
+        "description": "With the `session` its suggestion came in, which this ends: start a new one for the next search. NOT_FOUND for an unknown place.",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 300
+            },
+            "in": "query",
+            "name": "id",
+            "required": true
+          },
+          {
+            "schema": {
+              "type": "string",
+              "pattern": "^[\\w-]{8,36}$"
+            },
+            "in": "query",
+            "name": "session",
+            "required": true,
+            "description": "Made up by the app for one search: the suggestions while typing and the place picked share it"
+          },
+          {
+            "schema": {
+              "default": "en",
+              "type": "string",
+              "enum": [
+                "en",
+                "fr",
+                "mg"
+              ]
+            },
+            "in": "query",
+            "name": "locale",
+            "required": false
+          }
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "lat": {
+                      "type": "number"
+                    },
+                    "lng": {
+                      "type": "number"
+                    }
+                  },
+                  "required": [
+                    "lat",
+                    "lng"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/map-preview": {
+      "get": {
+        "summary": "A small Google map of a place, for a message",
+        "tags": [
+          "chats"
+        ],
+        "description": "A 512×256 picture with a pin. Each different place counts once against your monthly share (MAP_LIMIT_REACHED past it); PLACES_UNAVAILABLE when Google can't be reached or isn't set up. Draw the place yourself then.",
+        "parameters": [
+          {
+            "schema": {
+              "type": "number",
+              "minimum": -90,
+              "maximum": 90
+            },
+            "in": "query",
+            "name": "lat",
+            "required": true
+          },
+          {
+            "schema": {
+              "type": "number",
+              "minimum": -180,
+              "maximum": 180
+            },
+            "in": "query",
+            "name": "lng",
+            "required": true
+          },
+          {
+            "schema": {
+              "default": "en",
+              "type": "string",
+              "enum": [
+                "en",
+                "fr",
+                "mg"
+              ]
+            },
+            "in": "query",
+            "name": "locale",
+            "required": false
+          }
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response"
+          }
+        }
+      }
+    },
+    "/v1/map-picker": {
+      "get": {
+        "summary": "Ask to open the place picker on Google's interactive map",
+        "tags": [
+          "chats"
+        ],
+        "description": "Each `session` (one opening of the picker) counts once against your monthly share. MAP_LIMIT_REACHED past it: use OpenStreetMap instead.",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "pattern": "^[\\w-]{8,36}$"
+            },
+            "in": "query",
+            "name": "session",
+            "required": true,
+            "description": "Made up by the app for one search: the suggestions while typing and the place picked share it"
+          }
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "left": {
+                      "type": "integer",
+                      "minimum": -9007199254740991,
+                      "maximum": 9007199254740991,
+                      "description": "How many more you may have this month"
+                    }
+                  },
+                  "required": [
+                    "left"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/v1/ask/{code}": {
       "get": {
         "summary": "Whose anonymous messages link this is",
@@ -84948,6 +85459,12 @@
                               "type": "number",
                               "minimum": 0,
                               "maximum": 100000
+                            },
+                            "name": {
+                              "description": "What the place is called, for a place picked on the map",
+                              "type": "string",
+                              "minLength": 1,
+                              "maxLength": 120
                             }
                           },
                           "required": [
@@ -86810,6 +87327,12 @@
                                 "type": "number",
                                 "minimum": 0,
                                 "maximum": 100000
+                              },
+                              "name": {
+                                "description": "What the place is called, for a place picked on the map",
+                                "type": "string",
+                                "minLength": 1,
+                                "maxLength": 120
                               }
                             },
                             "required": [
@@ -89022,6 +89545,12 @@
                               "type": "number",
                               "minimum": 0,
                               "maximum": 100000
+                            },
+                            "name": {
+                              "description": "What the place is called, for a place picked on the map",
+                              "type": "string",
+                              "minLength": 1,
+                              "maxLength": 120
                             }
                           },
                           "required": [
@@ -90884,6 +91413,12 @@
                                 "type": "number",
                                 "minimum": 0,
                                 "maximum": 100000
+                              },
+                              "name": {
+                                "description": "What the place is called, for a place picked on the map",
+                                "type": "string",
+                                "minLength": 1,
+                                "maxLength": 120
                               }
                             },
                             "required": [
@@ -93032,6 +93567,12 @@
                               "type": "number",
                               "minimum": 0,
                               "maximum": 100000
+                            },
+                            "name": {
+                              "description": "What the place is called, for a place picked on the map",
+                              "type": "string",
+                              "minLength": 1,
+                              "maxLength": 120
                             }
                           },
                           "required": [
@@ -94894,6 +95435,12 @@
                                 "type": "number",
                                 "minimum": 0,
                                 "maximum": 100000
+                              },
+                              "name": {
+                                "description": "What the place is called, for a place picked on the map",
+                                "type": "string",
+                                "minLength": 1,
+                                "maxLength": 120
                               }
                             },
                             "required": [
@@ -97001,6 +97548,12 @@
                               "type": "number",
                               "minimum": 0,
                               "maximum": 100000
+                            },
+                            "name": {
+                              "description": "What the place is called, for a place picked on the map",
+                              "type": "string",
+                              "minLength": 1,
+                              "maxLength": 120
                             }
                           },
                           "required": [
@@ -98863,6 +99416,12 @@
                                 "type": "number",
                                 "minimum": 0,
                                 "maximum": 100000
+                              },
+                              "name": {
+                                "description": "What the place is called, for a place picked on the map",
+                                "type": "string",
+                                "minLength": 1,
+                                "maxLength": 120
                               }
                             },
                             "required": [
@@ -100991,6 +101550,12 @@
                               "type": "number",
                               "minimum": 0,
                               "maximum": 100000
+                            },
+                            "name": {
+                              "description": "What the place is called, for a place picked on the map",
+                              "type": "string",
+                              "minLength": 1,
+                              "maxLength": 120
                             }
                           },
                           "required": [
@@ -102853,6 +103418,12 @@
                                 "type": "number",
                                 "minimum": 0,
                                 "maximum": 100000
+                              },
+                              "name": {
+                                "description": "What the place is called, for a place picked on the map",
+                                "type": "string",
+                                "minLength": 1,
+                                "maxLength": 120
                               }
                             },
                             "required": [
@@ -104991,6 +105562,12 @@
                               "type": "number",
                               "minimum": 0,
                               "maximum": 100000
+                            },
+                            "name": {
+                              "description": "What the place is called, for a place picked on the map",
+                              "type": "string",
+                              "minLength": 1,
+                              "maxLength": 120
                             }
                           },
                           "required": [
@@ -106853,6 +107430,12 @@
                                 "type": "number",
                                 "minimum": 0,
                                 "maximum": 100000
+                              },
+                              "name": {
+                                "description": "What the place is called, for a place picked on the map",
+                                "type": "string",
+                                "minLength": 1,
+                                "maxLength": 120
                               }
                             },
                             "required": [

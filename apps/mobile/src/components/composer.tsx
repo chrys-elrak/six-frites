@@ -104,7 +104,7 @@ import { brand, brandInk, flame, useTheme } from "@/lib/theme";
 import { AttachDialog, type PickedFile } from "./attach-dialog";
 import { NewChecklist } from "./checklist";
 import { NewGame } from "./game";
-import { currentPosition } from "./location-card";
+import { LocationPicker, currentPosition } from "./location-card";
 import { CommandBar, type CommandBarHandle } from "./command-bar";
 import { CommentsPicker } from "./comments-picker";
 import { EphemeralPicker } from "./ephemeral-picker";
@@ -542,7 +542,7 @@ export function Composer({
     reset();
   }
 
-  function sendSpecial(extra: Pick<Draft, "location" | "checklist" | "game">) {
+  function sendSpecial(extra: Pick<Draft, "location" | "checklist" | "game" | "ephemeral">) {
     if (!realtime) return;
     queue({
       text: "",
@@ -1141,10 +1141,14 @@ export function Composer({
         />
       )}
       {askLocation && (
-        <Sheet
-          title={tr.composer.sendLocationTitle}
+        <LocationPicker
+          initialEphemeral={ephemeral}
           onClose={() => setAskLocation(false)}
-          actions={[{ label: tr.composer.sendLocation, onSelect: () => void sendLocation() }]}
+          onSend={(location, chosen) => {
+            setAskLocation(false);
+            sendSpecial({ location, ephemeral: chosen });
+            setEphemeral(null);
+          }}
         />
       )}
       {writingChecklist && (

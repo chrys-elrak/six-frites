@@ -9,6 +9,7 @@ import { shortRule } from "@/lib/ephemeral";
 import { useT } from "@/lib/i18n";
 import { segments } from "@/lib/markup";
 import { AttachmentView, type ShownAttachment, useAttachmentUrl } from "./attachment";
+import { DirectionsView, LocationDetails, openDirections } from "./location-card";
 import { LinkCard, Linked } from "./message-list";
 import { Portal } from "./portal";
 import { ProtectedImage, noSave } from "./protected-image";
@@ -91,6 +92,7 @@ export function EphemeralViewer({
   const tr = useT();
   const deadline = expiresAt ? Date.parse(expiresAt) : null;
   const [now, setNow] = useState(Date.now());
+  const [directions, setDirections] = useState(false);
   const e = message?.ephemeral;
   const msLeft = deadline ? Math.max(0, deadline - now) : null;
 
@@ -150,6 +152,19 @@ export function EphemeralViewer({
                     ))
                   : <Linked text={text} />}
               </p>
+            )}
+            {message?.location && (
+              <div className="w-[min(90vw,28rem)] space-y-2">
+                <LocationDetails point={message.location} className="bg-stone-900" />
+                <button
+                  type="button"
+                  onClick={() => openDirections(message.location!, () => setDirections(true))}
+                  className="block w-full rounded-full bg-white/10 py-2.5 text-center font-semibold hover:bg-white/20"
+                >
+                  {tr.messages.directions}
+                </button>
+                {directions && <DirectionsView point={message.location} onClose={() => setDirections(false)} />}
+              </div>
             )}
             {link && (
               <div className="rounded-lg bg-white/10">

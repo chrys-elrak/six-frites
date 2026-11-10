@@ -28,6 +28,7 @@ export const GeoPoint = z.object({
   lat: z.number().min(-90).max(90),
   lng: z.number().min(-180).max(180),
   accuracy: z.number().min(0).max(100_000).nullable().optional().describe("How far off it may be, in meters"),
+  name: z.string().trim().min(1).max(120).optional().describe("What the place is called, for a place picked on the map"),
 });
 export type GeoPoint = z.infer<typeof GeoPoint>;
 
@@ -35,6 +36,59 @@ export type GeoPoint = z.infer<typeof GeoPoint>;
 export const mapsUrl = (p: GeoPoint) => `https://www.google.com/maps/search/?api=1&query=${p.lat},${p.lng}`;
 
 export const coordsLabel = (p: GeoPoint) => `${p.lat.toFixed(5)}, ${p.lng.toFixed(5)}`;
+
+export type TravelMode = "driving" | "walking";
+
+/** Starts Google Maps directions from wherever you are to the place. */
+export const directionsUrl = (p: GeoPoint, mode: TravelMode = "driving") =>
+  `https://www.google.com/maps/dir/?api=1&destination=${p.lat},${p.lng}&travelmode=${mode}`;
+
+/** How far apart two places are as the crow flies, in meters. */
+export function distanceMeters(a: GeoPoint, b: GeoPoint) {
+  const rad = Math.PI / 180;
+  const h =
+    Math.sin(((b.lat - a.lat) * rad) / 2) ** 2 +
+    Math.cos(a.lat * rad) * Math.cos(b.lat * rad) * Math.sin(((b.lng - a.lng) * rad) / 2) ** 2;
+  return 2 * 6_371_000 * Math.asin(Math.sqrt(h));
+}
+
+/** Where a place falls on the whole world's map at `zoom`, in pixels of 256-pixel tiles. */
+export function project(p: { lat: number; lng: number }, zoom: number) {
+  const lat = (Math.max(-85, Math.min(85, p.lat)) * Math.PI) / 180;
+  const size = 256 * 2 ** zoom;
+  return { x: ((p.lng + 180) / 360) * size, y: ((1 - Math.log(Math.tan(lat) + 1 / Math.cos(lat)) / Math.PI) / 2) * size };
+}
+
+/** The place at a pixel of the world's map at `zoom`; the inverse of `project`. */
+export function unproject(x: number, y: number, zoom: number) {
+  const size = 256 * 2 ** zoom;
+  const lng = (((((x / size) * 360) % 360) + 540) % 360) - 180;
+  const lat = (Math.atan(Math.sinh(Math.PI * (1 - (2 * Math.max(0, Math.min(size, y))) / size))) * 180) / Math.PI;
+  return { lat, lng };
+}
+
+export const distanceLabel = (m: number) =>
+  m < 1000 ? `${Math.round(m)} m` : `${(m / 1000).toFixed(m < 10_000 ? 1 : 0)} km`;
+
+/**
+ * The OpenStreetMap tiles that cover a `width` × `height` view with `p` at its centre, each with where its top-left
+ * corner falls in the view.
+ */
+export function mapTiles(p: GeoPoint, width: number, height: number, zoom = 15) {
+  const n = 2 ** zoom;
+  const centre = project(p, zoom);
+  const left = centre.x - width / 2;
+  const top = centre.y - height / 2;
+  const tiles: { url: string; x: number; y: number }[] = [];
+  for (let ty = Math.floor(top / 256); ty * 256 < top + height; ty++) {
+    if (ty < 0 || ty >= n) continue;
+    for (let tx = Math.floor(left / 256); tx * 256 < left + width; tx++) {
+      const url = `https://tile.openstreetmap.org/${zoom}/${((tx % n) + n) % n}/${ty}.png`;
+      tiles.push({ url, x: tx * 256 - left, y: ty * 256 - top });
+    }
+  }
+  return tiles;
+}
 
 export const CHECKLIST = { title: 128, item: 200, items: 30 } as const;
 
@@ -604,8 +658,8 @@ export const SendMessageInput = z
         !v.attachmentId &&
         !v.gifId &&
         !v.stickerId &&
-        !v.ephemeral),
-    { message: "Locations, checklists and games are sent on their own", path: ["location"] },
+        (!v.ephemeral || !!v.location || v.type === "location")),
+    { message: "Locations, checklists and games are sent on their own, and only a location can self-destruct", path: ["location"] },
   )
   .refine((v) => [v.attachmentId, v.gifId, v.stickerId].filter((x) => x !== undefined).length <= 1, {
     message: "Send one attachment, GIF or sticker at a time",

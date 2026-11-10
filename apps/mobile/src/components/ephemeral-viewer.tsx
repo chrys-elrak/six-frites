@@ -11,6 +11,7 @@ import { useT } from "@/lib/i18n";
 import { segments } from "@/lib/markup";
 import { brand, brandInk, flame, stone } from "@/lib/theme";
 import { AttachmentView, LightboxVideo } from "./attachment";
+import { DirectionsView, LocationDetails, openDirections } from "./location-card";
 import { LinkCard, Linked } from "./message-list";
 import { GradientText, styleFor } from "./rich-text";
 
@@ -36,6 +37,7 @@ export function EphemeralViewer({
   const { width, height } = useWindowDimensions();
   const deadline = expiresAt ? Date.parse(expiresAt) : null;
   const [now, setNow] = useState(Date.now);
+  const [directions, setDirections] = useState(false);
   const left = deadline ? Math.max(0, deadline - now) : null;
   const e = message?.ephemeral;
   const a = message?.attachment;
@@ -103,6 +105,17 @@ export function EphemeralViewer({
                 : <Linked text={text} selecting={false} />}
             </Text>
           )}
+          {message?.location && (
+            <View style={{ width: Math.min(width - 32, 420), gap: 12 }}>
+              <View style={[styles.card, { padding: 0, paddingBottom: 12, overflow: "hidden" }]}>
+                <LocationDetails point={message.location} color="#fff" />
+              </View>
+              <Pressable onPress={() => openDirections(message.location!, () => setDirections(true))} style={styles.directions}>
+                <Text style={{ color: "#fff", fontSize: 16, fontWeight: "600" }}>{tr.messages.directions}</Text>
+              </Pressable>
+              {directions && <DirectionsView point={message.location} onClose={() => setDirections(false)} />}
+            </View>
+          )}
           {link && (
             <BubbleColorsContext.Provider value={ON_DARK}>
               <LinkCard url={link} mine={false} width={Math.min(width - 64, 320)} />
@@ -134,6 +147,7 @@ const styles = StyleSheet.create({
   close: { width: 44, height: 44, alignItems: "center", justifyContent: "center" },
   body: { flexGrow: 1, alignItems: "center", justifyContent: "center", gap: 16, padding: 16 },
   card: { borderRadius: 16, backgroundColor: stone[900], padding: 12 },
+  directions: { borderRadius: 999, backgroundColor: "rgba(255,255,255,0.12)", paddingVertical: 12, alignItems: "center" },
   text: { color: "#fff", fontSize: 19, lineHeight: 28, textAlign: "center" },
   footer: { color: "rgba(255,255,255,0.6)", fontSize: 12, textAlign: "center", paddingHorizontal: 16 },
 });

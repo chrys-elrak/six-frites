@@ -1121,7 +1121,7 @@ function Bubble({
             )
           )}
           {link && <LinkCard url={link} mine={mine} width={Math.min(280, maxWidth - 24)} />}
-          {row.location && !row.deleted && <LocationCard point={row.location} mine={mine} />}
+          {row.location && !row.deleted && !sealed && <LocationCard point={row.location} mine={mine} />}
           {row.checklist && !row.deleted && (
             <ChecklistView
               list={row.checklist}
@@ -1596,7 +1596,7 @@ export const MessageList = forwardRef<
         ...(m.ephemeral && canResend(m.ephemeral)
           ? [{ label: tr.messages.resendAgain, icon: RotateCcw, onSelect: () => void resendEphemeral(m) }]
           : []),
-        ...(!m.ephemeral && row.mine && !frozen && !["sticker", "location", "checklist", "game"].includes(m.type)
+        ...(!m.ephemeral && row.mine && !frozen && !["sticker", "checklist", "game"].includes(m.type)
           ? [{ label: tr.messages.makeSelfDestruct, icon: Flame, onSelect: () => setDestructFor(m) }]
           : []),
         { label: tr.messages.timing, icon: Info, onSelect: () => setTimingFor(m.id) },

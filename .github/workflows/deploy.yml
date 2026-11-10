@@ -80,6 +80,7 @@ jobs:
         run: npm run build:android
         env:
           SIX_KEYSTORE_PASSWORD: ${{ secrets.SIX_KEYSTORE_PASSWORD }}
+          GOOGLE_MAPS_PUBLIC_KEY: ${{ secrets.GOOGLE_MAPS_PUBLIC_KEY }}
       - if: steps.check.outputs.new
         run: npm run publish:android
         env:

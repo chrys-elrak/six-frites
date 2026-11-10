@@ -993,7 +993,7 @@ export async function makeEphemeral(userId: string, messageId: string, rule: Eph
       throw new AppError("MESSAGE_NOT_FOUND");
     });
     if (m.senderId !== userId) throw new AppError("NOT_MESSAGE_SENDER", "Only the sender can make it self-destruct");
-    if (isEphemeral(m) || ["service", "sticker", "location", "checklist", "game"].includes(m.type)) {
+    if (isEphemeral(m) || ["service", "sticker", "checklist", "game"].includes(m.type)) {
       throw new AppError("MESSAGE_NOT_EDITABLE", "This message can't be made to self-destruct");
     }
 

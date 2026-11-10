@@ -68,7 +68,7 @@ import { AttachPanel, type PanelItem } from "./attach-panel";
 import { AttachDialog, type PickedFile } from "./attach-dialog";
 import { ChecklistDialog } from "./checklist";
 import { GameDialog } from "./game";
-import { currentPosition } from "./location-card";
+import { LocationPicker, currentPosition } from "./location-card";
 import { EmojiSuggestions, useEmojiSuggestions } from "./emoji-suggestions";
 import { CommentsPicker } from "./comments-picker";
 import { EphemeralPicker } from "./ephemeral-picker";
@@ -268,7 +268,7 @@ export function Composer({
     onSent();
   }
 
-  function sendSpecial(extra: Pick<Draft, "location" | "checklist" | "game">) {
+  function sendSpecial(extra: Pick<Draft, "location" | "checklist" | "game" | "ephemeral">) {
     if (!realtime) return;
     queue({
       text: "",
@@ -1140,10 +1140,14 @@ export function Composer({
       )}
       {attachMenu && <AttachPanel attach={attachActions} commands={commandActions} onClose={() => setAttachMenu(false)} />}
       {askLocation && (
-        <Sheet
-          title={tr.composer.sendLocationTitle}
-          actions={[{ label: tr.composer.sendLocation, onSelect: () => void sendLocation() }]}
+        <LocationPicker
+          initialEphemeral={ephemeral}
           onClose={() => setAskLocation(false)}
+          onSend={(location, chosen) => {
+            setAskLocation(false);
+            sendSpecial({ location, ephemeral: chosen });
+            setEphemeral(null);
+          }}
         />
       )}
       {writingChecklist && (

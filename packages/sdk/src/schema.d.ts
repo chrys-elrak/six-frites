@@ -4419,6 +4419,8 @@ export interface paths {
                                     lng: number;
                                     /** @description How far off it may be, in meters */
                                     accuracy?: number | null;
+                                    /** @description What the place is called, for a place picked on the map */
+                                    name?: string;
                                 } | null;
                                 checklist: {
                                     title: string;
@@ -4859,6 +4861,8 @@ export interface paths {
                                     lng: number;
                                     /** @description How far off it may be, in meters */
                                     accuracy?: number | null;
+                                    /** @description What the place is called, for a place picked on the map */
+                                    name?: string;
                                 } | null;
                                 checklist: {
                                     title: string;
@@ -5358,6 +5362,8 @@ export interface paths {
                                 lng: number;
                                 /** @description How far off it may be, in meters */
                                 accuracy?: number | null;
+                                /** @description What the place is called, for a place picked on the map */
+                                name?: string;
                             } | null;
                             checklist: {
                                 title: string;
@@ -5854,6 +5860,8 @@ export interface paths {
                                     lng: number;
                                     /** @description How far off it may be, in meters */
                                     accuracy?: number | null;
+                                    /** @description What the place is called, for a place picked on the map */
+                                    name?: string;
                                 } | null;
                                 checklist: {
                                     title: string;
@@ -6294,6 +6302,8 @@ export interface paths {
                                     lng: number;
                                     /** @description How far off it may be, in meters */
                                     accuracy?: number | null;
+                                    /** @description What the place is called, for a place picked on the map */
+                                    name?: string;
                                 } | null;
                                 checklist: {
                                     title: string;
@@ -6827,6 +6837,8 @@ export interface paths {
                                     lng: number;
                                     /** @description How far off it may be, in meters */
                                     accuracy?: number | null;
+                                    /** @description What the place is called, for a place picked on the map */
+                                    name?: string;
                                 } | null;
                                 checklist: {
                                     title: string;
@@ -7267,6 +7279,8 @@ export interface paths {
                                     lng: number;
                                     /** @description How far off it may be, in meters */
                                     accuracy?: number | null;
+                                    /** @description What the place is called, for a place picked on the map */
+                                    name?: string;
                                 } | null;
                                 checklist: {
                                     title: string;
@@ -7798,6 +7812,8 @@ export interface paths {
                                         lng: number;
                                         /** @description How far off it may be, in meters */
                                         accuracy?: number | null;
+                                        /** @description What the place is called, for a place picked on the map */
+                                        name?: string;
                                     } | null;
                                     checklist: {
                                         title: string;
@@ -8238,6 +8254,8 @@ export interface paths {
                                         lng: number;
                                         /** @description How far off it may be, in meters */
                                         accuracy?: number | null;
+                                        /** @description What the place is called, for a place picked on the map */
+                                        name?: string;
                                     } | null;
                                     checklist: {
                                         title: string;
@@ -8770,6 +8788,8 @@ export interface paths {
                                     lng: number;
                                     /** @description How far off it may be, in meters */
                                     accuracy?: number | null;
+                                    /** @description What the place is called, for a place picked on the map */
+                                    name?: string;
                                 } | null;
                                 checklist: {
                                     title: string;
@@ -9210,6 +9230,8 @@ export interface paths {
                                     lng: number;
                                     /** @description How far off it may be, in meters */
                                     accuracy?: number | null;
+                                    /** @description What the place is called, for a place picked on the map */
+                                    name?: string;
                                 } | null;
                                 checklist: {
                                     title: string;
@@ -9795,6 +9817,8 @@ export interface paths {
                                     lng: number;
                                     /** @description How far off it may be, in meters */
                                     accuracy?: number | null;
+                                    /** @description What the place is called, for a place picked on the map */
+                                    name?: string;
                                 } | null;
                                 checklist: {
                                     title: string;
@@ -10235,6 +10259,8 @@ export interface paths {
                                     lng: number;
                                     /** @description How far off it may be, in meters */
                                     accuracy?: number | null;
+                                    /** @description What the place is called, for a place picked on the map */
+                                    name?: string;
                                 } | null;
                                 checklist: {
                                     title: string;
@@ -10836,6 +10862,8 @@ export interface paths {
                                 lng: number;
                                 /** @description How far off it may be, in meters */
                                 accuracy?: number | null;
+                                /** @description What the place is called, for a place picked on the map */
+                                name?: string;
                             } | null;
                             checklist: {
                                 title: string;
@@ -11304,6 +11332,8 @@ export interface paths {
                                 lng: number;
                                 /** @description How far off it may be, in meters */
                                 accuracy?: number | null;
+                                /** @description What the place is called, for a place picked on the map */
+                                name?: string;
                             } | null;
                             checklist: {
                                 title: string;
@@ -11767,6 +11797,8 @@ export interface paths {
                                 lng: number;
                                 /** @description How far off it may be, in meters */
                                 accuracy?: number | null;
+                                /** @description What the place is called, for a place picked on the map */
+                                name?: string;
                             } | null;
                             checklist: {
                                 title: string;
@@ -12226,6 +12258,8 @@ export interface paths {
                                 lng: number;
                                 /** @description How far off it may be, in meters */
                                 accuracy?: number | null;
+                                /** @description What the place is called, for a place picked on the map */
+                                name?: string;
                             } | null;
                             checklist: {
                                 title: string;
@@ -12688,6 +12722,8 @@ export interface paths {
                                 lng: number;
                                 /** @description How far off it may be, in meters */
                                 accuracy?: number | null;
+                                /** @description What the place is called, for a place picked on the map */
+                                name?: string;
                             } | null;
                             checklist: {
                                 title: string;
@@ -13173,6 +13209,8 @@ export interface paths {
                                 lng: number;
                                 /** @description How far off it may be, in meters */
                                 accuracy?: number | null;
+                                /** @description What the place is called, for a place picked on the map */
+                                name?: string;
                             } | null;
                             checklist: {
                                 title: string;
@@ -13631,6 +13669,8 @@ export interface paths {
                                     lng: number;
                                     /** @description How far off it may be, in meters */
                                     accuracy?: number | null;
+                                    /** @description What the place is called, for a place picked on the map */
+                                    name?: string;
                                 } | null;
                                 checklist: {
                                     title: string;
@@ -14094,6 +14134,8 @@ export interface paths {
                                 lng: number;
                                 /** @description How far off it may be, in meters */
                                 accuracy?: number | null;
+                                /** @description What the place is called, for a place picked on the map */
+                                name?: string;
                             } | null;
                             checklist: {
                                 title: string;
@@ -14551,6 +14593,8 @@ export interface paths {
                                 lng: number;
                                 /** @description How far off it may be, in meters */
                                 accuracy?: number | null;
+                                /** @description What the place is called, for a place picked on the map */
+                                name?: string;
                             } | null;
                             checklist: {
                                 title: string;
@@ -15008,6 +15052,8 @@ export interface paths {
                                 lng: number;
                                 /** @description How far off it may be, in meters */
                                 accuracy?: number | null;
+                                /** @description What the place is called, for a place picked on the map */
+                                name?: string;
                             } | null;
                             checklist: {
                                 title: string;
@@ -15496,6 +15542,8 @@ export interface paths {
                                 lng: number;
                                 /** @description How far off it may be, in meters */
                                 accuracy?: number | null;
+                                /** @description What the place is called, for a place picked on the map */
+                                name?: string;
                             } | null;
                             checklist: {
                                 title: string;
@@ -15711,7 +15759,7 @@ export interface paths {
         put?: never;
         /**
          * Make a message you already sent self-destruct
-         * @description Sender only. It locks for the recipient until they open it (POST /v1/messages/{id}/view), then follows the rule like one sent that way. Both people get message.edited. MESSAGE_NOT_EDITABLE if it already self-destructs, or is a service message, sticker, location or checklist.
+         * @description Sender only. It locks for the recipient until they open it (POST /v1/messages/{id}/view), then follows the rule like one sent that way. Both people get message.edited. MESSAGE_NOT_EDITABLE if it already self-destructs, or is a service message, sticker, checklist or game.
          */
         post: {
             parameters: {
@@ -15963,6 +16011,8 @@ export interface paths {
                                 lng: number;
                                 /** @description How far off it may be, in meters */
                                 accuracy?: number | null;
+                                /** @description What the place is called, for a place picked on the map */
+                                name?: string;
                             } | null;
                             checklist: {
                                 title: string;
@@ -16472,6 +16522,8 @@ export interface paths {
                                     lng: number;
                                     /** @description How far off it may be, in meters */
                                     accuracy?: number | null;
+                                    /** @description What the place is called, for a place picked on the map */
+                                    name?: string;
                                 } | null;
                                 checklist: {
                                     title: string;
@@ -16712,6 +16764,8 @@ export interface paths {
                             lng: number;
                             /** @description How far off it may be, in meters */
                             accuracy?: number | null;
+                            /** @description What the place is called, for a place picked on the map */
+                            name?: string;
                         };
                         /** @description Send a checklist, on its own */
                         checklist?: {
@@ -17085,6 +17139,8 @@ export interface paths {
                                 lng: number;
                                 /** @description How far off it may be, in meters */
                                 accuracy?: number | null;
+                                /** @description What the place is called, for a place picked on the map */
+                                name?: string;
                             } | null;
                             checklist: {
                                 title: string;
@@ -17472,6 +17528,8 @@ export interface paths {
                             lng: number;
                             /** @description How far off it may be, in meters */
                             accuracy?: number | null;
+                            /** @description What the place is called, for a place picked on the map */
+                            name?: string;
                         };
                         /** @description Send a checklist, on its own */
                         checklist?: {
@@ -18208,6 +18266,8 @@ export interface paths {
                                 lng: number;
                                 /** @description How far off it may be, in meters */
                                 accuracy?: number | null;
+                                /** @description What the place is called, for a place picked on the map */
+                                name?: string;
                             } | null;
                             checklist: {
                                 title: string;
@@ -19272,6 +19332,8 @@ export interface paths {
                                         lng: number;
                                         /** @description How far off it may be, in meters */
                                         accuracy?: number | null;
+                                        /** @description What the place is called, for a place picked on the map */
+                                        name?: string;
                                     } | null;
                                     checklist: {
                                         title: string;
@@ -19694,6 +19756,8 @@ export interface paths {
                                         lng: number;
                                         /** @description How far off it may be, in meters */
                                         accuracy?: number | null;
+                                        /** @description What the place is called, for a place picked on the map */
+                                        name?: string;
                                     } | null;
                                     checklist: {
                                         title: string;
@@ -20186,6 +20250,8 @@ export interface paths {
                                             lng: number;
                                             /** @description How far off it may be, in meters */
                                             accuracy?: number | null;
+                                            /** @description What the place is called, for a place picked on the map */
+                                            name?: string;
                                         } | null;
                                         checklist: {
                                             title: string;
@@ -20626,6 +20692,8 @@ export interface paths {
                                             lng: number;
                                             /** @description How far off it may be, in meters */
                                             accuracy?: number | null;
+                                            /** @description What the place is called, for a place picked on the map */
+                                            name?: string;
                                         } | null;
                                         checklist: {
                                             title: string;
@@ -22074,6 +22142,8 @@ export interface paths {
                                 lng: number;
                                 /** @description How far off it may be, in meters */
                                 accuracy?: number | null;
+                                /** @description What the place is called, for a place picked on the map */
+                                name?: string;
                             } | null;
                             checklist: {
                                 title: string;
@@ -24213,6 +24283,195 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/place-suggest": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Places matching what you have typed so far, to share one in a chat
+         * @description Asks Google Maps, or OpenStreetMap, on your behalf, so neither sees who you are. Each new `session` is one of the few searches you have a month (`left`); typing more in the same session is free. PLACE_SEARCH_LIMIT_REACHED once they are used up, PLACES_UNAVAILABLE when the provider can't be reached.
+         */
+        get: {
+            parameters: {
+                query: {
+                    q: string;
+                    /** @description Made up by the app for one search: the suggestions while typing and the place picked share it */
+                    session: string;
+                    /** @description Favour places near here */
+                    lat?: number;
+                    lng?: number;
+                    locale?: "en" | "fr" | "mg";
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            suggestions: {
+                                /** @description Pass to GET /v1/place-details to learn where it is */
+                                id: string;
+                                name: string;
+                                address: string | null;
+                            }[];
+                            /** @description Searches you have left this month, this one counted */
+                            left: number;
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/place-details": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Where a suggested place is
+         * @description With the `session` its suggestion came in, which this ends: start a new one for the next search. NOT_FOUND for an unknown place.
+         */
+        get: {
+            parameters: {
+                query: {
+                    id: string;
+                    /** @description Made up by the app for one search: the suggestions while typing and the place picked share it */
+                    session: string;
+                    locale?: "en" | "fr" | "mg";
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            lat: number;
+                            lng: number;
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/map-preview": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * A small Google map of a place, for a message
+         * @description A 512×256 picture with a pin. Each different place counts once against your monthly share (MAP_LIMIT_REACHED past it); PLACES_UNAVAILABLE when Google can't be reached or isn't set up. Draw the place yourself then.
+         */
+        get: {
+            parameters: {
+                query: {
+                    lat: number;
+                    lng: number;
+                    locale?: "en" | "fr" | "mg";
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/map-picker": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Ask to open the place picker on Google's interactive map
+         * @description Each `session` (one opening of the picker) counts once against your monthly share. MAP_LIMIT_REACHED past it: use OpenStreetMap instead.
+         */
+        get: {
+            parameters: {
+                query: {
+                    /** @description Made up by the app for one search: the suggestions while typing and the place picked share it */
+                    session: string;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @description How many more you may have this month */
+                            left: number;
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/ask/{code}": {
         parameters: {
             query?: never;
@@ -25484,6 +25743,8 @@ export interface paths {
                                     lng: number;
                                     /** @description How far off it may be, in meters */
                                     accuracy?: number | null;
+                                    /** @description What the place is called, for a place picked on the map */
+                                    name?: string;
                                 } | null;
                                 checklist: {
                                     title: string;
@@ -25924,6 +26185,8 @@ export interface paths {
                                     lng: number;
                                     /** @description How far off it may be, in meters */
                                     accuracy?: number | null;
+                                    /** @description What the place is called, for a place picked on the map */
+                                    name?: string;
                                 } | null;
                                 checklist: {
                                     title: string;
@@ -26498,6 +26761,8 @@ export interface paths {
                                     lng: number;
                                     /** @description How far off it may be, in meters */
                                     accuracy?: number | null;
+                                    /** @description What the place is called, for a place picked on the map */
+                                    name?: string;
                                 } | null;
                                 checklist: {
                                     title: string;
@@ -26938,6 +27203,8 @@ export interface paths {
                                     lng: number;
                                     /** @description How far off it may be, in meters */
                                     accuracy?: number | null;
+                                    /** @description What the place is called, for a place picked on the map */
+                                    name?: string;
                                 } | null;
                                 checklist: {
                                     title: string;
@@ -27490,6 +27757,8 @@ export interface paths {
                                     lng: number;
                                     /** @description How far off it may be, in meters */
                                     accuracy?: number | null;
+                                    /** @description What the place is called, for a place picked on the map */
+                                    name?: string;
                                 } | null;
                                 checklist: {
                                     title: string;
@@ -27930,6 +28199,8 @@ export interface paths {
                                     lng: number;
                                     /** @description How far off it may be, in meters */
                                     accuracy?: number | null;
+                                    /** @description What the place is called, for a place picked on the map */
+                                    name?: string;
                                 } | null;
                                 checklist: {
                                     title: string;
@@ -28459,6 +28730,8 @@ export interface paths {
                                     lng: number;
                                     /** @description How far off it may be, in meters */
                                     accuracy?: number | null;
+                                    /** @description What the place is called, for a place picked on the map */
+                                    name?: string;
                                 } | null;
                                 checklist: {
                                     title: string;
@@ -28899,6 +29172,8 @@ export interface paths {
                                     lng: number;
                                     /** @description How far off it may be, in meters */
                                     accuracy?: number | null;
+                                    /** @description What the place is called, for a place picked on the map */
+                                    name?: string;
                                 } | null;
                                 checklist: {
                                     title: string;
@@ -29441,6 +29716,8 @@ export interface paths {
                                     lng: number;
                                     /** @description How far off it may be, in meters */
                                     accuracy?: number | null;
+                                    /** @description What the place is called, for a place picked on the map */
+                                    name?: string;
                                 } | null;
                                 checklist: {
                                     title: string;
@@ -29881,6 +30158,8 @@ export interface paths {
                                     lng: number;
                                     /** @description How far off it may be, in meters */
                                     accuracy?: number | null;
+                                    /** @description What the place is called, for a place picked on the map */
+                                    name?: string;
                                 } | null;
                                 checklist: {
                                     title: string;
@@ -30448,6 +30727,8 @@ export interface paths {
                                     lng: number;
                                     /** @description How far off it may be, in meters */
                                     accuracy?: number | null;
+                                    /** @description What the place is called, for a place picked on the map */
+                                    name?: string;
                                 } | null;
                                 checklist: {
                                     title: string;
@@ -30888,6 +31169,8 @@ export interface paths {
                                     lng: number;
                                     /** @description How far off it may be, in meters */
                                     accuracy?: number | null;
+                                    /** @description What the place is called, for a place picked on the map */
+                                    name?: string;
                                 } | null;
                                 checklist: {
                                     title: string;

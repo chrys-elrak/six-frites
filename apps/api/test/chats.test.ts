@@ -309,6 +309,20 @@ describe("locations and checklists", () => {
     expect((await post(host, chatId, { type: "location" })).statusCode).toBe(400);
   });
 
+  it("shares a named place that self-destructs once opened", async () => {
+    const { host, guest, chatId } = await makeFriends();
+    const where = { lat: -18.9137, lng: 47.5361, name: "Lac Anosy" };
+    const sent = (await post(host, chatId, { location: where, ephemeral: { maxViews: 1 } })).json();
+    expect(sent).toMatchObject({ type: "location", location: where, ephemeral: { maxViews: 1 } });
+    expect((await get(guest, `/v1/chats/${chatId}/messages`)).items[0]).toMatchObject({ location: null, ephemeral: { locked: true } });
+    expect((await call(guest, "POST", `/v1/messages/${sent.id}/view`)).json().message.location).toEqual(where);
+    expect((await post(host, chatId, { checklist: { title: "Gone", items: ["a"] }, ephemeral: { maxViews: 1 } })).statusCode).toBe(400);
+
+    const plain = (await post(host, chatId, { location: where })).json();
+    const destruct = await call(host, "POST", `/v1/messages/${plain.id}/self-destruct`, { maxViews: 1 });
+    expect(destruct.statusCode, destruct.body).toBe(200);
+  });
+
   it("lets either person tick checklist items, and keeps them from being edited", async () => {
     const { host, guest, chatId } = await makeFriends();
     const sent = await post(host, chatId, { checklist: { title: " Groceries ", items: ["Milk", "Bread"] } });

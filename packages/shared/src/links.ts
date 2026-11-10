@@ -122,3 +122,51 @@ export const PlaceNameDTO = z.object({
   name: z.string().nullable().describe("The neighbourhood and town, like Analakely, Antananarivo; null when nothing is known there"),
 });
 export type PlaceNameDTO = z.infer<typeof PlaceNameDTO>;
+
+const PlaceSession = z
+  .string()
+  .regex(/^[\w-]{8,36}$/)
+  .describe("Made up by the app for one search: the suggestions while typing and the place picked share it");
+
+export const PlaceSuggestQuery = z.object({
+  q: z.string().trim().min(2).max(120),
+  session: PlaceSession,
+  lat: z.coerce.number().min(-90).max(90).optional().describe("Favour places near here"),
+  lng: z.coerce.number().min(-180).max(180).optional(),
+  locale: z.enum(LOCALES).default("en"),
+});
+export type PlaceSuggestQuery = z.infer<typeof PlaceSuggestQuery>;
+
+export const PlaceSuggestionDTO = z.object({
+  id: z.string().describe("Pass to GET /v1/place-details to learn where it is"),
+  name: z.string(),
+  address: z.string().nullable(),
+});
+export type PlaceSuggestionDTO = z.infer<typeof PlaceSuggestionDTO>;
+
+export const PlaceSuggestDTO = z.object({
+  suggestions: z.array(PlaceSuggestionDTO),
+  left: z.number().int().describe("Searches you have left this month, this one counted"),
+});
+export type PlaceSuggestDTO = z.infer<typeof PlaceSuggestDTO>;
+
+export const PlaceDetailsQuery = z.object({
+  id: z.string().min(1).max(300),
+  session: PlaceSession,
+  locale: z.enum(LOCALES).default("en"),
+});
+export type PlaceDetailsQuery = z.infer<typeof PlaceDetailsQuery>;
+
+export const PlaceDetailsDTO = z.object({ lat: z.number(), lng: z.number() });
+export type PlaceDetailsDTO = z.infer<typeof PlaceDetailsDTO>;
+
+export const MapPreviewQuery = z.object({
+  lat: z.coerce.number().min(-90).max(90),
+  lng: z.coerce.number().min(-180).max(180),
+  locale: z.enum(LOCALES).default("en"),
+});
+export type MapPreviewQuery = z.infer<typeof MapPreviewQuery>;
+
+export const MapPickerQuery = z.object({ session: PlaceSession });
+export const MapAllowanceDTO = z.object({ left: z.number().int().describe("How many more you may have this month") });
+export type MapAllowanceDTO = z.infer<typeof MapAllowanceDTO>;
