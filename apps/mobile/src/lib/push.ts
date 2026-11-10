@@ -1,4 +1,5 @@
 import { unwrap } from "@six/sdk";
+import Constants from "expo-constants";
 import * as Notifications from "expo-notifications";
 import { AndroidImportance } from "expo-notifications";
 import { type Href, router } from "expo-router";
@@ -7,7 +8,7 @@ import { Linking, Platform } from "react-native";
 import { getLocale, getT } from "./i18n";
 import { six } from "./six";
 
-const provider = Platform.OS === "ios" ? "apns" : "fcm";
+const provider = Platform.OS === "ios" ? "apns" : Constants.expoConfig?.extra?.playStore ? "fcmPlay" : "fcm";
 
 Notifications.setNotificationHandler({
   handleNotification: async () => ({

@@ -78428,6 +78428,7 @@
                     "enum": [
                       "webpush",
                       "fcm",
+                      "fcmPlay",
                       "apns"
                     ]
                   },
@@ -78489,6 +78490,7 @@
               "enum": [
                 "webpush",
                 "fcm",
+                "fcmPlay",
                 "apns"
               ]
             },

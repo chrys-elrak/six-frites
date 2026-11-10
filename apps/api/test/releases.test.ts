@@ -41,7 +41,11 @@ describe("android releases on Koera Store", () => {
     const token = `fcm-${phone.user.id}`;
     await call(phone, "POST", "/v1/devices/push-token", { provider: "fcm", token, locale: "fr" });
     const pushed: { token: string; payload: PushPayload }[] = [];
-    setPushProviders({ fcm: { send: async (to, payload) => (pushed.push({ token: to, payload }), "sent") } });
+    const send = async (to: string, payload: PushPayload) => (pushed.push({ token: to, payload }), "sent" as const);
+    setPushProviders({ fcm: { send }, fcmPlay: { send } });
+    const playPhone = await signUp("play-fan");
+    const playToken = `play-${playPhone.user.id}`;
+    expect((await call(playPhone, "POST", "/v1/devices/push-token", { provider: "fcmPlay", token: playToken, locale: "en" })).statusCode).toBeLessThan(300);
 
     const body = JSON.stringify(published);
     const hook = (signature: string) =>
@@ -58,6 +62,7 @@ describe("android releases on Koera Store", () => {
     const res = await hook(`sha256=${createHmac("sha256", "test-store-secret").update(body).digest("hex")}`);
     expect(res.statusCode, res.body).toBe(204);
     await vi.waitFor(() => expect(pushed.find((p) => p.token === token)).toBeDefined());
+    expect(pushed.find((p) => p.token === playToken)).toBeUndefined();
     expect(pushed.find((p) => p.token === token)!.payload).toMatchObject({
       title: "Six Frites 1.2.0 est disponible",
       chatId: null,

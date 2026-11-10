@@ -14,12 +14,12 @@ import { IconButton } from "./ui";
 
 const SKIPPED_KEY = "six:skipped-update";
 
-/** The newest Android release when it is newer than this app, or null. */
+/** The newest Android release when it is newer than this app, or null. Play builds update through Play, so never offer one. */
 function useNewRelease() {
   const latest = useQuery({
     queryKey: ["app", "android"],
     queryFn: async () => unwrap(await six.api.GET("/v1/app/android")),
-    enabled: Platform.OS === "android",
+    enabled: Platform.OS === "android" && !Constants.expoConfig?.extra?.playStore,
     staleTime: 6 * 60 * 60 * 1000,
   });
   const release = latest.data;

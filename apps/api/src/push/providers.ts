@@ -75,12 +75,14 @@ export class FcmProvider implements PushProvider {
 let providers: Partial<Record<ProviderName, PushProvider>> | null = null;
 
 export function pushProviders() {
-  providers ??= {
+  if (providers) return providers;
+  const fcm = env.FCM_SERVICE_ACCOUNT ? new FcmProvider(JSON.parse(env.FCM_SERVICE_ACCOUNT)) : null;
+  providers = {
     ...(env.WEB_PUSH_PUBLIC_KEY &&
       env.WEB_PUSH_PRIVATE_KEY && {
         webpush: new WebPushProvider(env.WEB_PUSH_PUBLIC_KEY, env.WEB_PUSH_PRIVATE_KEY, env.WEB_PUSH_SUBJECT),
       }),
-    ...(env.FCM_SERVICE_ACCOUNT && { fcm: new FcmProvider(JSON.parse(env.FCM_SERVICE_ACCOUNT)) }),
+    ...(fcm && { fcm, fcmPlay: fcm }),
   };
   return providers;
 }

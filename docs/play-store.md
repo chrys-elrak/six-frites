@@ -11,21 +11,22 @@ Images are in `apps/mobile/store-listing/`.
 
 All names, chats and photos in the screenshots are invented.
 
+## Build
+
+`npm run build:android:play -w apps/mobile` writes `apps/mobile/dist/six-frites-<version>.aab`, signed with our
+`six-frites` key as the upload key. Compared with the Koera Store build it has no new-version banner, no gallery
+permissions, and registers for push as `fcmPlay`, so the new-version push skips it. Deploy the API before releasing a
+Play build: an older API refuses `fcmPlay`, and that phone would get no notifications.
+
+Play has never seen this app, so `versionCode` 8 is fine for the first upload. Each later upload needs a higher one.
+
 ## Fix before submitting
 
-1. **In-app updates outside Play.** `apps/mobile/src/components/update-banner.tsx` offers a new version and opens
-   `release.downloadUrl`. Play doesn't allow an app to update itself outside Play. The Play build must hide this banner.
-2. **Photo and video permissions.** The release APK requests `READ_MEDIA_IMAGES` and `READ_MEDIA_VIDEO`. Play only
-   allows them for apps whose core purpose needs broad gallery access; otherwise use the system photo picker. Either
-   remove them or fill in the declaration form and expect a review.
-3. **Delete-account URL.** `/delete-account` returns 404 in production because deploys are failing. Play needs it live.
-4. **Child safety standards.** Play requires social and messaging apps to publish child sexual abuse and exploitation
+1. **Child safety standards.** Play requires social and messaging apps to publish child sexual abuse and exploitation
    standards, and name a contact. The Terms ban sexual content involving minors, but a dedicated page is still needed.
-5. **App bundle.** Play needs an `.aab`. `apps/mobile/scripts/build-android-release.sh` only runs `assembleRelease`, so
-   a `bundleRelease` build is needed, with a `versionCode` above the current 8.
-6. **Signing.** Decide this at setup, as it can't be changed freely later: a build signed by Play is a different
+2. **Signing.** Decide this at setup, as it can't be changed freely later: a build signed by Play is a different
    signature from the Koera Store APK, so people can't update from one store's build to the other.
-7. **Screenshots come from the web app.** Android has the same design but is built separately. Compare them with the
+3. **Screenshots come from the web app.** Android has the same design but is built separately. Compare them with the
    real app before publishing, as Play expects screenshots to show the actual app.
 
 Also check in the Console: new personal developer accounts must run a closed test with at least 12 testers for 14 days

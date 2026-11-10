@@ -1,7 +1,8 @@
 import { z } from "zod";
 import { LOCALES } from "./i18n/index.js";
 
-export const PushProvider = z.enum(["webpush", "fcm", "apns"]);
+/** `fcmPlay` is FCM from a Google Play install, which updates through Play and so never gets our new-version push. */
+export const PushProvider = z.enum(["webpush", "fcm", "fcmPlay", "apns"]);
 export type PushProvider = z.infer<typeof PushProvider>;
 
 export const RegisterPushTokenInput = z.object({

@@ -2,6 +2,7 @@ import type { ConfigContext, ExpoConfig } from "expo/config";
 
 const iosUrlScheme = process.env.GOOGLE_IOS_URL_SCHEME;
 const googleServicesFile = process.env.GOOGLE_SERVICES_FILE;
+const playStore = process.env.PLAY_STORE === "1";
 
 export default ({ config }: ConfigContext): ExpoConfig => ({
   ...config,
@@ -29,6 +30,14 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     softwareKeyboardLayoutMode: "resize",
     predictiveBackGestureEnabled: false,
     ...(googleServicesFile && { googleServicesFile }),
+    ...(playStore && {
+      blockedPermissions: [
+        "android.permission.READ_MEDIA_IMAGES",
+        "android.permission.READ_MEDIA_VIDEO",
+        "android.permission.READ_MEDIA_AUDIO",
+        "android.permission.READ_MEDIA_VISUAL_USER_SELECTED",
+      ],
+    }),
   },
   plugins: [
     "expo-router",
@@ -94,4 +103,5 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   experiments: {
     typedRoutes: true,
   },
+  extra: { playStore },
 });

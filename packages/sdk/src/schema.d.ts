@@ -22468,7 +22468,7 @@ export interface paths {
                 content: {
                     "application/json": {
                         /** @enum {string} */
-                        provider: "webpush" | "fcm" | "apns";
+                        provider: "webpush" | "fcm" | "fcmPlay" | "apns";
                         /** @description webpush: the JSON PushSubscription; fcm/apns: the device token */
                         token: string;
                         /**
@@ -22495,7 +22495,7 @@ export interface paths {
         delete: {
             parameters: {
                 query: {
-                    provider: "webpush" | "fcm" | "apns";
+                    provider: "webpush" | "fcm" | "fcmPlay" | "apns";
                 };
                 header?: never;
                 path?: never;
