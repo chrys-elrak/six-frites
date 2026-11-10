@@ -325,12 +325,19 @@ export class E2EE {
    * Encrypts content for every device in a chat except this one, starting sessions where needed,
    * plus a backup copy when a recovery key is set up. `memberIds` are the chat's members.
    */
-  async seal(chatId: string, memberIds: string[], clientId: string, input: ContentInput, cached = false): Promise<EncryptedInput> {
+  async seal(
+    chatId: string,
+    memberIds: string[],
+    clientId: string,
+    input: ContentInput,
+    cached = false,
+    restartFor: string[] = [],
+  ): Promise<EncryptedInput> {
     await this.ready();
     const content = MessageContentSchema.parse({ v: 1, chatId, clientId, ...input });
     return this.serial(async () => {
       const plaintext = utf8(JSON.stringify(content));
-      const envelopes = await this.encryptForAll(memberIds, plaintext, cached);
+      const envelopes = await this.encryptForAll(memberIds, plaintext, cached, restartFor);
       await this.setJSON(`sent:${chatId}:${clientId}`, content);
       const key = await this.backupKey();
       const backup = key ? sealBackup(key, plaintext, backupLabel(chatId, this.userId, clientId)) : undefined;
@@ -360,13 +367,16 @@ export class E2EE {
     });
   }
 
-  /** Encrypts for every device of these people but this one, starting sessions as needed. Runs inside serial(). */
-  private async encryptForAll(memberIds: string[], plaintext: Uint8Array, cached = false) {
+  /**
+   * Encrypts for every device of these people but this one, starting sessions as needed, and new ones with the
+   * devices of `restartFor` whatever this device has. Runs inside serial().
+   */
+  private async encryptForAll(memberIds: string[], plaintext: Uint8Array, cached = false, restartFor: string[] = []) {
     const devices = (await this.devicesOf(memberIds, cached)).filter((d) => d.id !== this.deviceId);
     const missing: string[] = [];
     const sessions = new Map<string, Session>();
     for (const d of devices) {
-      const s = await this.loadSession(d.id);
+      const s = restartFor.includes(d.userId) ? null : await this.loadSession(d.id);
       if (s && sameIdentity(s.remoteIdentity, publicIdentityFromJSON(d.identity))) sessions.set(d.id, s);
       else missing.push(d.id);
     }
@@ -403,9 +413,10 @@ export class E2EE {
     clientId: string,
     input: ContentInput,
     post: (encrypted: EncryptedInput) => Promise<T>,
+    restartFor: string[] = [],
   ): Promise<T> {
     for (let attempt = 0; ; attempt++) {
-      const encrypted = await this.seal(chatId, memberIds, clientId, input, attempt === 0);
+      const encrypted = await this.seal(chatId, memberIds, clientId, input, attempt === 0, restartFor);
       try {
         return await post(encrypted);
       } catch (err) {
@@ -419,12 +430,16 @@ export class E2EE {
   /**
    * Seals one of my messages again, from what this device can read of it, for every device in the
    * chat now; for someone who couldn't open it. Throws when this device can't read it either.
+   *
+   * Whoever asked usually lost their side of our session, so sealing with it again would fail the same way: their
+   * devices get a new session instead, which also mends it for the messages that follow.
    */
   async reseal<T>(m: MessageDTO, memberIds: string[], post: (encrypted: EncryptedInput) => Promise<T>): Promise<T> {
     const opened = await this.open(m);
     if (opened.status !== "ok") throw new CryptoError("DECRYPT_FAILED", "This device can't read that message");
     const { v: _v, chatId: _chatId, clientId: _clientId, ...input } = opened.content;
-    return this.send(m.chatId, memberIds, m.clientId, input, ({ envelopes }) => post({ envelopes }));
+    const asker = m.encryption?.reseal?.by;
+    return this.send(m.chatId, memberIds, m.clientId, input, ({ envelopes }) => post({ envelopes }), asker ? [asker] : []);
   }
 
   /**

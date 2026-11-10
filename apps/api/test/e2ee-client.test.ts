@@ -325,6 +325,29 @@ describe("E2EE client", () => {
     expect(await textOf(phone, await latest(phone, chatId))).toBe("before the tablet");
   });
 
+  it("resends to a device that lost its session with the sender, without anyone writing first", async () => {
+    const store = new MemoryStore();
+    const { phone, guest: first, chatId, members } = await setup();
+    const guest = appFor(first.auth, store);
+    await guest.e2ee.ready();
+    await say(phone, chatId, members, "hello");
+    expect(await textOf(guest, await latest(guest, chatId))).toBe("hello");
+
+    for (const key of [...store.data.keys()]) if (key.startsWith("session:") || key.startsWith("archive:")) store.data.delete(key);
+    await say(phone, chatId, members, "lost");
+    const lost = await latest(guest, chatId);
+    expect(await textOf(guest, lost)).toBe("unavailable");
+
+    const path = { id: lost.id };
+    unwrap(await guest.api.POST("/v1/messages/{id}/reseal-request", { params: { path } }));
+    await phone.e2ee.reseal(await latest(phone, chatId), members, async (encrypted) =>
+      unwrap(await phone.api.PUT("/v1/messages/{id}/envelopes", { params: { path }, body: encrypted })),
+    );
+    expect(await textOf(guest, await latest(guest, chatId))).toBe("lost");
+    await say(phone, chatId, members, "and after");
+    expect(await textOf(guest, await latest(guest, chatId))).toBe("and after");
+  });
+
   it("treats a view-once message the recipient opened as gone, not unreadable", async () => {
     const { phone, guest, chatId, members } = await setup();
     const clientId = `m-${n++}`;
