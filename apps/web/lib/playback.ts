@@ -59,7 +59,11 @@ export function claimMedia(next: HTMLMediaElement) {
 function audio() {
   if (el) return el;
   const a = new Audio();
-  a.playbackRate = usePlaybackRate.getState().rate;
+  const setRate = (rate: Rate) => {
+    a.defaultPlaybackRate = rate;
+    a.playbackRate = rate;
+  };
+  setRate(usePlaybackRate.getState().rate);
   a.ontimeupdate = () => useVoice.setState({ position: a.currentTime * 1000 });
   a.ondurationchange = () => Number.isFinite(a.duration) && useVoice.setState({ duration: a.duration * 1000 });
   a.onplay = () => useVoice.setState({ playing: true });
@@ -72,7 +76,7 @@ function audio() {
     useVoice.setState({ track: null, playing: false, position: 0 });
     track?.onStop?.(true);
   };
-  usePlaybackRate.subscribe(({ rate }) => (a.playbackRate = rate));
+  usePlaybackRate.subscribe(({ rate }) => setRate(rate));
   el = a;
   return a;
 }
