@@ -322,7 +322,8 @@ export function Composer({
   }, [chat?.id, chat?.encrypted, chat?.draft?.at]);
 
   useEffect(() => {
-    if (mode) ref.current?.focus();
+    if (mode) ref.current?.refocus();
+    if (editing) ref.current?.setSelectionRange(text.length, text.length);
   }, [mode]);
 
   function change(value: string) {

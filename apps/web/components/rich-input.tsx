@@ -10,6 +10,8 @@ import { Styled, highlightStyle, outlineStyle, paintStyle } from "./rich-text";
 
 export interface RichInputHandle {
   focus(): void;
+  /** Like focus, but also brings back an on-screen keyboard that was closed while the box kept its focus. */
+  refocus(): void;
   /** Where the selection starts and ends, in the markup the composer keeps. */
   readonly selectionStart: number;
   readonly selectionEnd: number;
@@ -284,6 +286,10 @@ export const RichInput = forwardRef<RichInputHandle, Props>(function RichInput(
     sent.current = value;
     model.current = parseRaw(value);
     render();
+    if (root.current && document.activeElement === root.current) {
+      select(model.current.text.length);
+      root.current.scrollTop = root.current.scrollHeight;
+    }
     onSelectionChange?.(value.length, value.length);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [value]);
@@ -310,6 +316,15 @@ export const RichInput = forwardRef<RichInputHandle, Props>(function RichInput(
 
   useImperativeHandle(handle, () => ({
     focus: () => root.current?.focus(),
+    refocus() {
+      const el = root.current;
+      if (el && document.activeElement === el) {
+        const [start, end] = selection();
+        el.blur();
+        el.focus();
+        select(start, end);
+      } else el?.focus();
+    },
     get selectionStart() {
       return map().at[selection()[0]] ?? 0;
     },

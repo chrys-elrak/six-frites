@@ -285,7 +285,9 @@ export function Composer({
   const [shownFor, setShownFor] = useState({ editing: null as typeof editing, chatId, draftsReady, stored });
   if (shownFor.editing !== editing || shownFor.chatId !== chatId || shownFor.draftsReady !== draftsReady) {
     setShownFor({ editing, chatId, draftsReady, stored });
-    setText(editing ? toMarkup(editing.text ?? "", editing.entities) : stored);
+    const shown = editing ? toMarkup(editing.text ?? "", editing.entities) : stored;
+    setText(shown);
+    if (editing) setForced({ start: shown.length, end: shown.length });
   } else if (shownFor.stored !== stored) {
     setShownFor({ ...shownFor, stored });
     if (!editing && stored.trim() !== text.trim()) setText(stored);

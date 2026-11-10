@@ -456,6 +456,7 @@ function RoomChat({
                 onPickReaction={(at) => setReacting({ id: l.id, at })}
                 onReply={() => {
                   setReplying(l);
+                  input.current?.blur();
                   input.current?.focus();
                 }}
               />
