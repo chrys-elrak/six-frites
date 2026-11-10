@@ -48,6 +48,8 @@ model User {
   inviteLimit     Int       @default(10)
   /// Space their uploads may take, set by an admin; null means no limit.
   storageLimitMb  Int?
+  /// Calls to Google Maps they may make a month, set by an admin; null means only the app-wide limits.
+  mapsLimit       Int?
   queuedAt        DateTime?
   guest           Boolean   @default(false)
   /// The app language last seen for this account, for what Frite Bot says.

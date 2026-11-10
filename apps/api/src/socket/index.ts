@@ -20,6 +20,7 @@ import {
 } from "@six/shared";
 import { env } from "../env.js";
 import { setUserPresence } from "../lib/presence.js";
+import { addTime, countCall } from "../services/usage.js";
 import { blockedWith } from "../services/blocks.js";
 import { prisma } from "../lib/prisma.js";
 import { createAdapter } from "@socket.io/redis-adapter";
@@ -132,13 +133,26 @@ export function createSocketServer(http: HttpServer) {
     const { userId, sessionId, device } = socket.data;
     socket.join([rooms.user(userId), rooms.session(sessionId)]);
 
+    socket.use(([event], next) => {
+      if (event !== "presence" && event !== "ping") countCall(userId, `ws ${event}`);
+      next();
+    });
     socket.on("ping", handle(async () => ({ at: new Date().toISOString() })));
 
+    let visible: { at: number; page: string } | null = null;
+    const track = (active: boolean, page?: unknown) => {
+      const now = Date.now();
+      if (visible) addTime(userId, visible.page, Math.round(Math.min(now - visible.at, 75_000) / 1000));
+      const named = typeof page === "string" && /^\/[\w/:.-]{0,99}$/.test(page) ? page : null;
+      visible = active ? { at: now, page: named ?? visible?.page ?? "/" } : null;
+    };
     socket.on("presence", (p) => {
       const active = typeof p === "object" && p !== null && (p as { active?: unknown }).active === true;
+      track(active, (p as { page?: unknown } | null)?.page);
       void setUserPresence(userId, sessionId, device, active).catch(() => null);
     });
     socket.on("disconnect", () => {
+      track(false);
       void setUserPresence(userId, sessionId, device, false).catch(() => null);
       void io
         .in(rooms.user(userId))

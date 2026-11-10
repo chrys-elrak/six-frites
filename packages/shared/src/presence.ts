@@ -28,3 +28,14 @@ export type PresenceQuery = z.infer<typeof PresenceQuery>;
 
 export const PresenceList = z.object({ items: z.array(PresenceDTO) });
 export type PresenceList = z.infer<typeof PresenceList>;
+
+const looksLikeId = (segment: string) => segment.length >= 16 || (segment.length >= 6 && /\d/.test(segment));
+
+/** A screen's path with ids and codes swapped for `:id`, so usage counts screens, never which chat or person. */
+export const pageName = (path: string) =>
+  `/${path
+    .split(/[?#]/)[0]!
+    .split("/")
+    .filter(Boolean)
+    .map((s) => (looksLikeId(s) ? ":id" : s))
+    .join("/")}`.slice(0, 100);

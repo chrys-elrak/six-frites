@@ -13,6 +13,7 @@ import {
 import { z } from "zod";
 import { env } from "./env.js";
 import authPlugin from "./plugins/auth.js";
+import { countCall } from "./services/usage.js";
 import errorsPlugin from "./plugins/errors.js";
 import adminRoutes, { adminSignInRoutes, reportRoutes } from "./routes/admin.js";
 import authRoutes from "./routes/auth.js";
@@ -69,6 +70,9 @@ export async function buildApp() {
   await app.register(swaggerUi, { routePrefix: "/docs" });
 
   await app.register(authPlugin);
+  app.addHook("onResponse", async (req) => {
+    if (req.auth?.userId && req.routeOptions.url) countCall(req.auth.userId, `${req.method} ${req.routeOptions.url}`);
+  });
 
   app.get("/health", { schema: { hide: true, response: { 200: z.object({ ok: z.boolean() }) } } }, () => ({ ok: true }));
 

@@ -24,6 +24,9 @@ import {
   ResolveReportInput,
   SetAdsInput,
   StorageLimitInput,
+  MapsLimitInput,
+  UserUsageDTO,
+  UsageQuery,
   StickerDTO,
   page,
   AdminMailDTO,
@@ -50,6 +53,7 @@ import {
   setAds,
   setInviteLimit,
   setStorageLimit,
+  setMapsLimit,
   giveFullAccess,
   signOutEverywhere,
   unbanUser,
@@ -60,6 +64,7 @@ import { listAnonForAdmin } from "../services/ask.js";
 import { cancelStickerImport, dropUnfinishedZip, latestStickerImport, startStickerImport, stickerImportProgress } from "../services/sticker-import.js";
 import { createReport, listReports, resolveReport } from "../services/reports.js";
 import { listMailLog, mailStats } from "../services/emails.js";
+import { usageOf } from "../services/usage.js";
 
 const Params = z.object({ id: Id });
 const security = [{ bearer: [] }];
@@ -220,6 +225,39 @@ const adminRoutes: FastifyPluginAsyncZod = async (app) => {
       },
     },
     (req) => setStorageLimit(req.params.id, req.body.limitMb),
+  );
+
+  app.get(
+    "/admin/users/:id/usage",
+    {
+      schema: {
+        tags,
+        summary: "How a user used the app: time in it, by screen and hour, and calls to the API",
+        description: "Kept 90 days.",
+        security,
+        params: Params,
+        querystring: UsageQuery,
+        response: { 200: UserUsageDTO },
+      },
+    },
+    (req) => usageOf(req.params.id, req.query.days),
+  );
+
+  app.post(
+    "/admin/users/:id/maps-limit",
+    {
+      schema: {
+        tags,
+        summary: "Cap the calls a user makes to Google Maps each month, or lift the cap",
+        description:
+          "Past it their place search uses OpenStreetMap, and map pictures and the map picker answer MAP_LIMIT_REACHED so the apps draw OpenStreetMap.",
+        security,
+        params: Params,
+        body: MapsLimitInput,
+        response: { 200: AdminUserDTO },
+      },
+    },
+    (req) => setMapsLimit(req.params.id, req.body.limit),
   );
 
   app.post(

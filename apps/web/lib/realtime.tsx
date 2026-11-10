@@ -1,9 +1,9 @@
 "use client";
 
 import type { Realtime } from "@six/sdk";
-import type { AnonMessageDTO, ChangeEventDTO, ChatDTO } from "@six/shared";
+import { type AnonMessageDTO, type ChangeEventDTO, type ChatDTO, pageName } from "@six/shared";
 import { type QueryClient, useQueryClient } from "@tanstack/react-query";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { createContext, useContext, useEffect, useRef, useState } from "react";
 import { applyChatDeleted, applyDeleted, applyEdited, scheduledKey } from "./actions";
 import { receiveSignal, setCallRealtime } from "./call";
@@ -151,6 +151,8 @@ export function RealtimeProvider({ children }: { children: React.ReactNode }) {
   const [status, setStatus] = useState<Status>("connecting");
   const [realtime, setRealtime] = useState<Realtime | null>(null);
   const me = useRef(meId);
+  const pathname = usePathname();
+  useEffect(() => realtime?.setPage(pageName(pathname)), [realtime, pathname]);
   me.current = meId;
 
   useEffect(() => {

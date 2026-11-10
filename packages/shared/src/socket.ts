@@ -54,8 +54,8 @@ export interface ClientToServerEvents {
   "chat:read": (p: MarkReadInput & { chatId: string }, cb: Ack<ChatReadDTO | null>) => void;
   "chat:delivered": (p: MarkDeliveredInput & { chatId: string }, cb: Ack<ChatDeliveredDTO | null>) => void;
   "chat:typing": (p: TypingInput, cb?: Ack<null>) => void;
-  /** Sent by open apps when they become visible or hidden, and every 30s while visible. */
-  presence: (p: { active: boolean }) => void;
+  /** Sent by open apps when they become visible or hidden, when the screen changes, and every 30s while visible. */
+  presence: (p: { active: boolean; page?: string }) => void;
   "call:signal": (p: CallSignalInput, cb: Ack<{ delivered: number }>) => void;
   "live:create": (p: CreateLiveInput, cb: Ack<LiveRoomDTO>) => void;
   /** Takes an invited seat, or comes back to my own after a reconnect. */

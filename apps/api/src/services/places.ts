@@ -12,6 +12,7 @@ import {
 } from "@six/shared";
 import type { Redis } from "ioredis";
 import { env } from "../env.js";
+import { prisma } from "../lib/prisma.js";
 import { redisConnection } from "../lib/queue.js";
 
 interface Nominatim {
@@ -87,6 +88,27 @@ async function spend(userId: string, kind: string, limit: number, code: LimitCod
   if (used > limit) throw new AppError(code, `${limit} ${kind} a month`);
 }
 
+/**
+ * Counts one call to Google Maps for this person this month, or says no once they used the cap an admin set them.
+ * The counter runs for everyone, so moderation can see who uses Google most.
+ */
+async function useGoogle(userId: string) {
+  const key = monthKey("google-maps", userId);
+  const [user, used] = await Promise.all([
+    prisma.user.findUnique({ where: { id: userId }, select: { mapsLimit: true } }),
+    redis().get(key),
+  ]);
+  if (user?.mapsLimit != null && Number(used ?? 0) >= user.mapsLimit) return false;
+  await redis().multi().incr(key).expire(key, MONTH_SECONDS).exec();
+  return true;
+}
+
+/** Calls to Google Maps each of these people made this month. */
+export async function googleMapsUsed(userIds: string[]) {
+  const counts = userIds.length ? await redis().mget(userIds.map((id) => monthKey("google-maps", id))) : [];
+  return new Map(userIds.map((id, i) => [id, Number(counts[i] ?? 0)]));
+}
+
 const openSession = (userId: string, session: string) =>
   allowance(userId, "place-sessions", session, env.PLACE_SEARCHES_PER_MONTH, "PLACE_SEARCH_LIMIT_REACHED");
 
@@ -98,8 +120,9 @@ const openSession = (userId: string, session: string) =>
 export async function suggestPlaces(userId: string, q: PlaceSuggestQuery): Promise<PlaceSuggestDTO> {
   const left = await openSession(userId, q.session);
   const osm = () => inTurn(() => nominatim(q));
-  const key = env.GOOGLE_MAPS_API_KEY;
+  let key = env.GOOGLE_MAPS_API_KEY;
   if (key) await spend(userId, "place-suggestions", env.PLACE_SUGGESTIONS_PER_MONTH, "PLACE_SEARCH_LIMIT_REACHED");
+  if (key && !(await useGoogle(userId))) key = undefined;
   const suggestions = await (key ? googleSuggest(q, key).catch(osm) : osm()).catch(() => {
     throw new AppError("PLACES_UNAVAILABLE");
   });
@@ -113,6 +136,7 @@ export async function placeDetails(userId: string, q: PlaceDetailsQuery): Promis
   const key = env.GOOGLE_MAPS_API_KEY;
   if (!key || !/^[\w-]+$/.test(q.id)) throw new AppError("NOT_FOUND", "No such place");
   await openSession(userId, q.session);
+  if (!(await useGoogle(userId))) throw new AppError("PLACE_SEARCH_LIMIT_REACHED", "Google Maps limit reached");
   const url = `https://places.googleapis.com/v1/places/${q.id}?${new URLSearchParams({ sessionToken: q.session, languageCode: googleLanguage(q.locale) })}`;
   const res = await fetch(url, { headers: { "x-goog-api-key": key, "x-goog-fieldmask": "location" }, signal: AbortSignal.timeout(8000) }).catch(() => null);
   if (res?.status === 404 || res?.status === 400) throw new AppError("NOT_FOUND", "No such place");
@@ -131,6 +155,7 @@ export async function mapPreview(userId: string, q: MapPreviewQuery) {
   if (!key) throw new AppError("PLACES_UNAVAILABLE");
   const spot = `${q.lat.toFixed(5)},${q.lng.toFixed(5)}`;
   await allowance(userId, "map-previews", spot, env.MAP_PREVIEWS_PER_MONTH, "MAP_LIMIT_REACHED");
+  if (!(await useGoogle(userId))) throw new AppError("MAP_LIMIT_REACHED", "Google Maps limit reached");
   const params = { center: spot, zoom: "15", size: "256x128", scale: "2", markers: `color:red|${spot}`, language: googleLanguage(q.locale), key };
   const res = await fetch(`https://maps.googleapis.com/maps/api/staticmap?${new URLSearchParams(params)}`, { signal: AbortSignal.timeout(8000) }).catch(() => null);
   if (!res?.ok) throw new AppError("PLACES_UNAVAILABLE");
@@ -138,9 +163,11 @@ export async function mapPreview(userId: string, q: MapPreviewQuery) {
 }
 
 /** Whether this person may open the picker on Google's interactive map once more this month. */
-export const openMapPicker = async (userId: string, session: string) => ({
-  left: await allowance(userId, "map-pickers", session, env.MAP_PICKERS_PER_MONTH, "MAP_LIMIT_REACHED"),
-});
+export async function openMapPicker(userId: string, session: string) {
+  const left = await allowance(userId, "map-pickers", session, env.MAP_PICKERS_PER_MONTH, "MAP_LIMIT_REACHED");
+  if (!(await useGoogle(userId))) throw new AppError("MAP_LIMIT_REACHED", "Google Maps limit reached");
+  return { left };
+}
 
 interface GooglePrediction {
   placePrediction?: {

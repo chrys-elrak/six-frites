@@ -390,7 +390,7 @@ export const terms: Record<Locale, LegalDoc> = {
 export const privacy: Record<Locale, LegalDoc> = {
   en: {
     title: "Privacy Policy",
-    updated: "Last updated: 1 November 2026",
+    updated: "Last updated: 10 November 2026",
     intro:
       "This policy explains what Six Frites collects, why, who else is involved, and the choices you have. We collect what we need to run the app, and we never sell your data.",
     sections: [
@@ -401,7 +401,7 @@ export const privacy: Record<Locale, LegalDoc> = {
             "Your Google account's name, email address, photo and ID, when you sign in. We never see your Google password.",
             "Your profile: the name and photo you show, the name and photo on your anonymous link, and the names and photos you give your contacts.",
             "Your devices: their name and type, a random ID the app keeps for each phone or browser, when they signed in, their encryption public keys, and notification tokens.",
-            "How you use the service: who you talk to and when, message types and sizes, reactions, read and delivery receipts, timers, and when you were last online.",
+            "How you use the service: who you talk to and when, message types and sizes, reactions, read and delivery receipts, timers, when you were last online, how long you keep the app open and on which screens, and how much you use our servers. Moderators can see this per account.",
             "Reports you make and moderation decisions.",
             "Your IP address, which our servers see whenever you connect.",
           ],
@@ -503,7 +503,7 @@ export const privacy: Record<Locale, LegalDoc> = {
   },
   fr: {
     title: "Politique de confidentialité",
-    updated: "Dernière mise à jour : 1er novembre 2026",
+    updated: "Dernière mise à jour : 10 novembre 2026",
     intro:
       "Cette politique explique ce que Six Frites collecte, pourquoi, qui d'autre intervient, et les choix que vous avez. Nous collectons ce qu'il faut pour faire fonctionner l'application, et nous ne vendons jamais vos données.",
     sections: [
@@ -514,7 +514,7 @@ export const privacy: Record<Locale, LegalDoc> = {
             "Le nom, l'adresse e-mail, la photo et l'identifiant de votre compte Google, quand vous vous connectez. Nous ne voyons jamais votre mot de passe Google.",
             "Votre profil : le nom et la photo que vous affichez, ceux de votre lien anonyme, et les noms et photos que vous donnez à vos contacts.",
             "Vos appareils : leur nom et leur type, un identifiant au hasard que l'application garde pour chaque téléphone ou navigateur, leur date de connexion, leurs clés publiques de chiffrement et leurs jetons de notification.",
-            "Votre utilisation du service : avec qui vous parlez et quand, le type et la taille des messages, les réactions, les accusés de lecture et de réception, les minuteurs, et votre dernière connexion.",
+            "Votre utilisation du service : avec qui vous parlez et quand, le type et la taille des messages, les réactions, les accusés de lecture et de réception, les minuteurs, votre dernière connexion, le temps passé dans l'application et sur quels écrans, et votre usage de nos serveurs. Les modérateurs peuvent le voir pour chaque compte.",
             "Les signalements que vous faites et les décisions de modération.",
             "Votre adresse IP, que nos serveurs voient à chaque connexion.",
           ],
@@ -618,7 +618,7 @@ export const privacy: Record<Locale, LegalDoc> = {
   },
   mg: {
     title: "Fiarovana ny fiainana manokana",
-    updated: "Novaina farany: 1 Novambra 2026",
+    updated: "Novaina farany: 10 Novambra 2026",
     intro:
       "Manazava ity politika ity hoe inona no angonin'ny Six Frites, nahoana, iza avy koa no voakasika, ary inona no safidinao. Izay ilaina hampandehanana ny fampiharana ihany no angoninay, ary tsy amidinay mihitsy ny mombamomba anao.",
     sections: [
@@ -629,7 +629,7 @@ export const privacy: Record<Locale, LegalDoc> = {
             "Ny anarana, adiresy mailaka, sary ary famantarana ny kaonty Google anao, rehefa miditra ianao. Tsy hitanay mihitsy ny tenimiafinao Google.",
             "Ny mombamomba anao: ny anarana sy sary asehonao, ireo eo amin'ny rohinao tsy fantatra mpandefa, ary ny anarana sy sary omenao ny olona ao amin'ny lisitrao.",
             "Ny fitaovanao: ny anarany sy ny karazany, famantarana kisendrasendra tehirizin'ny fampiharana ho an'ny finday na navigateur tsirairay, ny fotoana nidirany, ny fanalahidy ampahibemaso fiarovana, ary ny famantarana ho an'ny fampahafantarana.",
-            "Ny fampiasanao ny tolotra: iza no iresahanao sy rahoviana, ny karazana sy haben'ny hafatra, ny fihetsika, ny marika voavaky sy tonga, ny fe-potoana, ary ny fotoana farany nisianao.",
+            "Ny fampiasanao ny tolotra: iza no iresahanao sy rahoviana, ny karazana sy haben'ny hafatra, ny fihetsika, ny marika voavaky sy tonga, ny fe-potoana, ny fotoana farany nisianao, ny faharetan'ny fampiasanao ny fampiharana sy ny efijery nojerenao, ary ny fampiasanao ny mpizara anay. Hitan'ny mpandrindra izany isaky ny kaonty.",
             "Ny tatitra ataonao sy ny fanapahan-kevitry ny mpandrindra.",
             "Ny adiresy IP-nao, izay hitan'ny mpizara anay isaky ny miditra ianao.",
           ],

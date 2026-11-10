@@ -19,6 +19,7 @@ import {
 import type { Prisma } from "../generated/prisma/client.js";
 import { withEvents } from "../lib/events.js";
 import { pageArgs, toPage } from "../lib/paginate.js";
+import { presenceOf } from "../lib/presence.js";
 import { prisma } from "../lib/prisma.js";
 import { deleteObjects } from "../lib/storage.js";
 import { matchTotp, newTotpSecret, totpUri } from "../lib/totp.js";
@@ -29,6 +30,7 @@ import { admitQueued, grantFullAccess, invitesOf } from "./referrals.js";
 import { toUserRef } from "./reports.js";
 import { revokeSession } from "./sessions.js";
 import { SEEDED_PREFIX, attachSticker, isSeededPack, toStickerDTO } from "./stickers.js";
+import { googleMapsUsed } from "./places.js";
 import { finishUpload, storageOf, uploadKeys } from "./uploads.js";
 import { toUserDTO } from "./users.js";
 
@@ -71,7 +73,12 @@ const userInclude = () =>
   }) satisfies Prisma.UserInclude;
 type UserRow = Prisma.UserGetPayload<{ include: ReturnType<typeof userInclude> }>;
 
-function toAdminUser(u: UserRow, storageBytes: number, invites: { invited: number; waiting: number }): AdminUserDTO {
+function toAdminUser(
+  u: UserRow,
+  storageBytes: number,
+  mapsUsed: number,
+  invites: { invited: number; waiting: number },
+): Omit<AdminUserDTO, "online" | "devices"> {
   const lastActive = u.sessions.map((s) => s.lastUsedAt).sort((a, b) => +b - +a)[0];
   return {
     ...toUserRef(u),
@@ -90,13 +97,25 @@ function toAdminUser(u: UserRow, storageBytes: number, invites: { invited: numbe
     ...invites,
     ads: !u.adsDisabled,
     storageLimitMb: u.storageLimitMb,
+    mapsLimit: u.mapsLimit,
+    mapsUsed,
   };
 }
 
 async function withTotals(rows: UserRow[]) {
   const ids = rows.map((u) => u.id);
-  const [storage, invites] = await Promise.all([storageOf(ids), invitesOf(prisma, ids)]);
-  return rows.map((u) => toAdminUser(u, storage.get(u.id) ?? 0, invites(u.id)));
+  const [storage, maps, invites, presence] = await Promise.all([
+    storageOf(ids),
+    googleMapsUsed(ids),
+    invitesOf(prisma, ids),
+    presenceOf(ids),
+  ]);
+  const live = new Map(presence.map((p) => [p.userId, p]));
+  return rows.map((u) => ({
+    ...toAdminUser(u, storage.get(u.id) ?? 0, maps.get(u.id) ?? 0, invites(u.id)),
+    online: live.get(u.id)?.online ?? false,
+    devices: live.get(u.id)?.devices ?? [],
+  }));
 }
 
 const ALIAS = /^(?:potato\s*)?#([0-9a-f]{6})$/i;
@@ -196,6 +215,13 @@ export async function setInviteLimit(userId: string, limit: number) {
     throw new AppError("USER_NOT_FOUND");
   });
   await admitQueued(userId);
+  return getUser(userId);
+}
+
+export async function setMapsLimit(userId: string, limit: number | null) {
+  await prisma.user.update({ where: { id: userId }, data: { mapsLimit: limit } }).catch(() => {
+    throw new AppError("USER_NOT_FOUND");
+  });
   return getUser(userId);
 }
 

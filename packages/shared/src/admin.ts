@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { Id, IsoDate, PageQuery } from "./common.js";
 import { MessageEntity, MessageType } from "./chats.js";
+import { ClientDevice } from "./presence.js";
 import { StickerDTO } from "./stickers.js";
 import { AttachmentDTO, UploadKind, UploadStatus } from "./uploads.js";
 
@@ -74,6 +75,8 @@ export const AdminUserDTO = AdminUserRef.extend({
   admin: z.boolean(),
   createdAt: IsoDate,
   lastActiveAt: IsoDate.nullable(),
+  online: z.boolean().describe("Has the app open on at least one device right now"),
+  devices: z.array(ClientDevice).describe("What they have it open on right now; empty when offline"),
   chats: z.number().int(),
   messages: z.number().int(),
   activeSessions: z.number().int(),
@@ -86,6 +89,8 @@ export const AdminUserDTO = AdminUserRef.extend({
   waiting: z.number().int().describe("People waiting for them to get a higher limit"),
   ads: z.boolean().describe("Whether they see ads"),
   storageLimitMb: z.number().int().nullable().describe("Space their uploads may take; null means no limit"),
+  mapsLimit: z.number().int().nullable().describe("Calls to Google Maps they may make a month; null means only the app-wide limits"),
+  mapsUsed: z.number().int().describe("Calls to Google Maps they made this month (UTC)"),
   seenBy: z
     .array(AdminUserRef)
     .optional()
@@ -173,6 +178,26 @@ export const StorageLimitInput = z.object({
   limitMb: z.number().int().min(0).max(10_000_000).nullable().describe("Null lifts the limit"),
 });
 export type StorageLimitInput = z.infer<typeof StorageLimitInput>;
+
+export const MapsLimitInput = z.object({
+  limit: z.number().int().min(0).max(1_000_000).nullable().describe("0 keeps them on OpenStreetMap; null lifts the cap"),
+});
+export type MapsLimitInput = z.infer<typeof MapsLimitInput>;
+
+export const UserUsageDTO = z.object({
+  days: z
+    .array(z.object({ day: z.string(), seconds: z.number().int(), calls: z.number().int() }))
+    .describe("Each day (UTC), oldest first: seconds with the app open and visible, summed over devices, and calls to the API"),
+  hours: z.array(z.number().int()).length(24).describe("Seconds with the app open in each UTC hour of the day, over the whole range"),
+  pages: z.array(z.object({ page: z.string(), seconds: z.number().int() })).describe("Screens, ids left out, most time first"),
+  calls: z
+    .array(z.object({ name: z.string(), count: z.number().int() }))
+    .describe("The 40 most used REST routes (`GET /v1/chats/:id`) and socket events (`ws message:send`)"),
+});
+export type UserUsageDTO = z.infer<typeof UserUsageDTO>;
+
+export const UsageQuery = z.object({ days: z.coerce.number().int().min(1).max(90).default(30) });
+export type UsageQuery = z.infer<typeof UsageQuery>;
 
 export const SetAdsInput = z.object({ userIds: z.array(Id).min(1).max(100), ads: z.boolean() });
 export type SetAdsInput = z.infer<typeof SetAdsInput>;

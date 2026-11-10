@@ -133,8 +133,9 @@ export function createRealtime(baseUrl: string, tokens: TokenManager, api: RestC
   }
 
   let active = false;
+  let page: string | undefined;
   let heartbeat: ReturnType<typeof setInterval> | null = null;
-  const sendPresence = () => socket.connected && socket.emit("presence", { active });
+  const sendPresence = () => socket.connected && socket.emit("presence", { active, page });
 
   socket.on("connect", async () => {
     sendPresence();
@@ -225,6 +226,12 @@ export function createRealtime(baseUrl: string, tokens: TokenManager, api: RestC
       sendPresence();
       if (heartbeat) clearInterval(heartbeat);
       heartbeat = next ? setInterval(sendPresence, 30_000) : null;
+    },
+    /** Tells the server which screen is open (see pageName), for the time spent on each. */
+    setPage(next: string) {
+      if (next === page) return;
+      page = next;
+      if (active) sendPresence();
     },
     /** Sends over the socket when live, otherwise over REST. Safe to retry with the same clientId. */
     async sendMessage(chatId: string, input: SendMessageInput): Promise<MessageDTO> {
