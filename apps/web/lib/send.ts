@@ -1,5 +1,6 @@
 import { type Realtime, encryptFile, unwrap } from "@six/sdk";
 import {
+  cleanLinksIn,
   type ChatDTO,
   type ChatGame,
   type Checklist,
@@ -222,8 +223,17 @@ async function forDataSaver(file: Draft["file"]): Promise<Draft["file"]> {
   return { ...file, blob, mime: "image/jpeg", name: file.name.replace(/\.\w+$/, "") + ".jpg" };
 }
 
+/** Where a share link really leads, asked of our server so the site never sees who shares or reads it. */
+const followLink = async (url: string) => (await six.api.GET("/v1/link-resolve", { params: { query: { url } } })).data?.url ?? null;
+
+/** Messages wait for the ones before them to have their links cleaned, so they go out in the order they were sent. */
+let cleaning: Promise<unknown> = Promise.resolve();
+
 export async function queueMessage(qc: QueryClient, realtime: Realtime, chatId: string, draft: Draft) {
   const clientId = crypto.randomUUID();
+  const cleaned = cleaning.then(() => cleanLinksIn(draft.text, draft.entities ?? [], followLink));
+  cleaning = cleaned.catch(() => null);
+  const { text, entities } = await cleaned;
   const { replyTo, gif } = draft;
   const file = await forDataSaver(draft.file);
   if (file) pendingFiles.set(clientId, file.blob);
@@ -231,8 +241,8 @@ export async function queueMessage(qc: QueryClient, realtime: Realtime, chatId: 
   const pending: PendingMessage = {
     clientId,
     chatId,
-    text: draft.text,
-    entities: draft.entities ?? [],
+    text,
+    entities,
     replyTo: replyTo
       ? {
           id: replyTo.id,

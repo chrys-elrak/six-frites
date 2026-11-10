@@ -1,6 +1,6 @@
 import type { FastifyPluginAsyncZod } from "fastify-type-provider-zod";
-import { LinkPreviewDTO, LinkPreviewQuery, PlaceNameDTO, PlaceNameQuery } from "@six/shared";
-import { linkPreview } from "../services/link-previews.js";
+import { LinkPreviewDTO, LinkPreviewQuery, PlaceNameDTO, PlaceNameQuery, ResolvedLinkDTO } from "@six/shared";
+import { followShareLink, linkPreview } from "../services/link-previews.js";
 import { placeName } from "../services/places.js";
 
 const linkRoutes: FastifyPluginAsyncZod = async (app) => {
@@ -21,6 +21,23 @@ const linkRoutes: FastifyPluginAsyncZod = async (app) => {
       },
     },
     (req) => linkPreview(req.query.url),
+  );
+
+  app.get(
+    "/link-resolve",
+    {
+      config: { guest: true, rateLimit: { max: 60, timeWindow: "1 minute" } },
+      schema: {
+        tags: ["chats"],
+        summary: "A shared link without who shared it",
+        description:
+          "Drops the parameters that tell a site who shared a link, and follows share links whose code itself names the sender (TikTok, Instagram and Facebook short links) to the page they lead to. The server follows them, so the site sees neither the sender nor the reader. Null when a share link can't be followed.",
+        security: [{ bearer: [] }],
+        querystring: LinkPreviewQuery,
+        response: { 200: ResolvedLinkDTO },
+      },
+    },
+    async (req) => ({ url: await followShareLink(req.query.url) }),
   );
 
   app.get(

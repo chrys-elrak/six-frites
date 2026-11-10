@@ -1,5 +1,6 @@
 import { type Hydrated, type Realtime, SixApiError, encryptFile, unwrap } from "@six/sdk";
 import {
+  cleanLinksIn,
   type ChatGame,
   type Checklist,
   ENCRYPT_MAX_BYTES,
@@ -199,13 +200,22 @@ export function resendWaiting(qc: QueryClient, realtime: Realtime, clientId?: st
   }
 }
 
-export function queueMessage(qc: QueryClient, realtime: Realtime, chatId: string, draft: Draft) {
+/** Where a share link really leads, asked of our server so the site never sees who shares or reads it. */
+const followLink = async (url: string) => (await six.api.GET("/v1/link-resolve", { params: { query: { url } } })).data?.url ?? null;
+
+/** Messages wait for the ones before them to have their links cleaned, so they go out in the order they were sent. */
+let cleaning: Promise<unknown> = Promise.resolve();
+
+export async function queueMessage(qc: QueryClient, realtime: Realtime, chatId: string, draft: Draft) {
+  const cleaned = cleaning.then(() => cleanLinksIn(draft.text, draft.entities ?? [], followLink));
+  cleaning = cleaned.catch(() => null);
+  const { text, entities } = await cleaned;
   const { replyTo, file, gif } = draft;
   const pending: PendingMessage = {
     clientId: randomUUID(),
     chatId,
-    text: draft.text,
-    entities: draft.entities ?? [],
+    text,
+    entities,
     replyTo: replyTo
       ? {
           id: replyTo.id,

@@ -7,7 +7,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import type { Readable } from "node:stream";
 import { createBrotliDecompress, createGunzip, createInflate } from "node:zlib";
-import type { LinkPreviewDTO } from "@six/shared";
+import { type LinkPreviewDTO, cleanLink, isShareLink } from "@six/shared";
 import type { Redis } from "ioredis";
 import { env } from "../env.js";
 import { redisConnection } from "../lib/queue.js";
@@ -201,4 +201,39 @@ export async function linkPreview(link: string): Promise<LinkPreviewDTO | null> 
   const preview = await build(new URL(link)).catch(() => null);
   await redis().set(key, JSON.stringify(preview), "EX", preview ? CACHE_SECONDS.found : CACHE_SECONDS.missing);
   return preview;
+}
+
+/** The address a short link redirects to, without opening the page itself; null when it isn't a redirect. */
+async function redirectOf(url: URL): Promise<URL | null> {
+  if (url.protocol !== "http:" && url.protocol !== "https:") return null;
+  const res = await new Promise<http.IncomingMessage>((resolve, reject) => {
+    (url.protocol === "https:" ? https : http)
+      .get(url, { headers: { "user-agent": BROWSER_AGENT, accept: "text/html" }, lookup: publicLookup, signal: AbortSignal.timeout(5000) }, resolve)
+      .on("error", reject);
+  });
+  res.destroy();
+  const status = res.statusCode ?? 0;
+  return status >= 300 && status < 400 && res.headers.location ? new URL(res.headers.location, url) : null;
+}
+
+const BROWSER_AGENT = "Mozilla/5.0 (Linux; Android 14) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0 Mobile Safari/537.36";
+
+/**
+ * The page a share link leads to, without what names the sender, or null when it can't be followed there. Our server
+ * follows it, so the site sees neither the sender nor the reader.
+ */
+export async function followShareLink(link: string): Promise<string | null> {
+  if (!isShareLink(link)) return cleanLink(link);
+  const key = `${env.QUEUE_PREFIX}:share-link:${link}`;
+  const cached = await redis().get(key);
+  if (cached !== null) return cached || null;
+  let url = new URL(link);
+  for (let hop = 0; hop < 5 && isShareLink(url.href); hop++) {
+    const next = await redirectOf(url).catch(() => null);
+    if (!next) break;
+    url = next;
+  }
+  const found = isShareLink(url.href) || /login|checkpoint/i.test(url.pathname) ? null : cleanLink(url.href);
+  await redis().set(key, found ?? "", "EX", found ? CACHE_SECONDS.found : CACHE_SECONDS.missing);
+  return found;
 }

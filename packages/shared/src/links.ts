@@ -21,9 +21,71 @@ export const LinkPreviewDTO = z.object({
 });
 export type LinkPreviewDTO = z.infer<typeof LinkPreviewDTO>;
 
+export const ResolvedLinkDTO = z.object({
+  url: z.string().nullable().describe("The link without who shared it; null when a share link can't be followed"),
+});
+export type ResolvedLinkDTO = z.infer<typeof ResolvedLinkDTO>;
+
 const LINK = /\b(?:https?:\/\/|www\.)[^\s<>"]*[^\s<>"'.,;:!?)\]}]/gi;
 
-const href = (link: string) => (/^www\./i.test(link) ? `https://${link}` : link);
+const TRACKING: [host: RegExp, param: RegExp][] = [
+  [/./, /^(utm_\w+|fbclid|gclid|dclid|msclkid|igsh|igshid|mibextid)$/i],
+  [/(^|\.)(tiktok\.com|instagram\.com|threads\.net)$/i, /./],
+  [/(^|\.)(facebook\.com|fb\.watch)$/i, /^(rdid|share_url|sfnsn|ref|__cft__.*|__tn__)$/i],
+  [/(^|\.)(x\.com|twitter\.com)$/i, /^[st]$/],
+  [/(^|\.)(youtube\.com|youtu\.be|spotify\.com)$/i, /^si$/],
+];
+
+/** A link without the parameters that tell its site who shared it, so whoever opens it isn't tied to the sender. */
+export function cleanLink(link: string): string {
+  let url: URL;
+  try {
+    url = new URL(link);
+  } catch {
+    return link;
+  }
+  const params = TRACKING.filter(([host]) => host.test(url.hostname)).map(([, param]) => param);
+  const drop = [...url.searchParams.keys()].filter((key) => params.some((param) => param.test(key)));
+  if (!drop.length) return link;
+  for (const key of drop) url.searchParams.delete(key);
+  return url.toString();
+}
+
+const SHARE_LINK =
+  /^https?:\/\/(?:(?:vm|vt)\.tiktok\.com\/|(?:www\.|m\.)?tiktok\.com\/t\/|(?:www\.|m\.)?(?:instagram|facebook)\.com\/share\/)/i;
+
+/** A short link whose code itself says who shared it, so only following it to the page it leads to can clean it. */
+export const isShareLink = (link: string) => SHARE_LINK.test(link);
+
+const href = (link: string) => cleanLink(/^www\./i.test(link) ? `https://${link}` : link);
+
+/**
+ * Cleans every link in a message with cleanLink, and swaps share links for the page they lead to, as `resolve` says
+ * (null keeps the link as it is). Formatting around and after a link moves with it.
+ */
+export async function cleanLinksIn(
+  text: string,
+  entities: MessageEntity[],
+  resolve: (link: string) => Promise<string | null>,
+): Promise<{ text: string; entities: MessageEntity[] }> {
+  let out = text;
+  let spans = entities;
+  for (const m of [...text.matchAll(LINK)].reverse()) {
+    const full = /^www\./i.test(m[0]) ? `https://${m[0]}` : m[0];
+    const resolved = isShareLink(full) ? await resolve(full).catch(() => null) : null;
+    const cleaned = cleanLink(resolved ?? full);
+    if (cleaned === full) continue;
+    const next = full === m[0] || resolved ? cleaned : cleaned.replace(/^https:\/\//, "");
+    const start = m.index;
+    const end = start + m[0].length;
+    const at = (p: number) => (p <= start ? p : p >= end ? p + next.length - m[0].length : start + Math.min(p - start, next.length));
+    out = out.slice(0, start) + next + out.slice(end);
+    spans = spans
+      .map((e) => ({ ...e, offset: at(e.offset), length: at(e.offset + e.length) - at(e.offset) }))
+      .filter((e) => e.length > 0);
+  }
+  return { text: out, entities: spans };
+}
 
 /** Cuts text into plain runs and links (http(s) URLs or bare www. hosts), in order. */
 export function splitLinks(text: string): { text: string; href: string | null }[] {

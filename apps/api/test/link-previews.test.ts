@@ -5,7 +5,7 @@ import { readPreview } from "../src/services/link-previews.js";
 import { chatHelpers, useApp } from "./helpers.js";
 
 const ctx = useApp();
-const { signUp, get } = chatHelpers(ctx);
+const { signUp, get, makeFriends } = chatHelpers(ctx);
 
 describe("link previews", () => {
   it("reads Open Graph tags, falling back to the page title", () => {
@@ -40,5 +40,23 @@ describe("link previews", () => {
     }
     expect(hits).toBe(0);
     server.close();
+  });
+
+  it("takes out of a shared link who shared it", async () => {
+    const reader = await signUp("cleaner");
+    const resolve = (url: string) => get(reader, `/v1/link-resolve?url=${encodeURIComponent(url)}`);
+    expect(await resolve("https://www.instagram.com/reel/abc/?igsh=MXd6")).toEqual({ url: "https://www.instagram.com/reel/abc/" });
+    expect(await resolve("https://shop.example/?id=3")).toEqual({ url: "https://shop.example/?id=3" });
+  });
+
+  it("cleans the links in a note", async () => {
+    const { host } = await makeFriends();
+    const put = await ctx.app.inject({
+      method: "PUT",
+      url: "/v1/notes",
+      headers: { authorization: `Bearer ${host.accessToken}` },
+      payload: { text: "fy www.instagram.com/p/x?igsh=abc" },
+    });
+    expect(put.json().text).toBe("fy www.instagram.com/p/x");
   });
 });

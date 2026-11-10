@@ -82123,6 +82123,55 @@
         }
       }
     },
+    "/v1/link-resolve": {
+      "get": {
+        "summary": "A shared link without who shared it",
+        "tags": [
+          "chats"
+        ],
+        "description": "Drops the parameters that tell a site who shared a link, and follows share links whose code itself names the sender (TikTok, Instagram and Facebook short links) to the page they lead to. The server follows them, so the site sees neither the sender nor the reader. Null when a share link can't be followed.",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "maxLength": 2000,
+              "pattern": "^https?:\\/\\/\\S+$"
+            },
+            "in": "query",
+            "name": "url",
+            "required": true
+          }
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "url": {
+                      "nullable": true,
+                      "description": "The link without who shared it; null when a share link can't be followed",
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "url"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/v1/place-name": {
       "get": {
         "summary": "What a spot is called, to name the place on a story",

@@ -1,5 +1,6 @@
 import type { Prisma } from "../generated/prisma/client.js";
 import {
+  cleanLinksIn,
   AppError,
   type CreateStoryInput,
   NOTE_SECS,
@@ -24,6 +25,7 @@ import { profilesFor } from "./contacts.js";
 import { deliverStoryReactionPush } from "./push.js";
 import { notify } from "./notifications.js";
 import { sharedGif } from "./gifs.js";
+import { followShareLink } from "./link-previews.js";
 import { SHARED_PREFIX, purgeUploads, toAttachmentDTO } from "./uploads.js";
 
 /** Most stories one person can have up at once. */
@@ -307,11 +309,12 @@ export async function setNote(
   { text, gifId, background, durationSecs = NOTE_SECS }: { text: string; gifId?: string; background?: string; durationSecs?: number },
 ): Promise<NoteDTO> {
   const gif = gifId ? await sharedGif(gifId) : null;
+  const clean = await cleanLinksIn(text, [], followShareLink);
   await prisma.note.deleteMany({ where: { userId } });
   const note = await prisma.note.create({
     data: {
       userId,
-      text,
+      text: clean.text,
       background,
       gifKey: gif?.key,
       gifWidth: gif?.width,

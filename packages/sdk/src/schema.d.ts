@@ -24123,6 +24123,50 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/link-resolve": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * A shared link without who shared it
+         * @description Drops the parameters that tell a site who shared a link, and follows share links whose code itself names the sender (TikTok, Instagram and Facebook short links) to the page they lead to. The server follows them, so the site sees neither the sender nor the reader. Null when a share link can't be followed.
+         */
+        get: {
+            parameters: {
+                query: {
+                    url: string;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @description The link without who shared it; null when a share link can't be followed */
+                            url: string | null;
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/place-name": {
         parameters: {
             query?: never;
