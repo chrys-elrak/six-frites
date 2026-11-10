@@ -461,6 +461,39 @@ function GamesPanel({ call, peerName }: { call: Call; peerName: string }) {
 const roundButton = "grid size-14 place-items-center rounded-full transition active:scale-95";
 const smallButton = "grid size-9 shrink-0 place-items-center rounded-full";
 
+const clamp = (v: number, lo: number, hi: number) => Math.min(Math.max(v, lo), hi);
+
+/** Lets a shrunk call be dragged anywhere on screen. A drag doesn't count as a tap on the button it started on. */
+function useDrag() {
+  const [at, setAt] = useState({ x: 0, y: 0 });
+  const drag = useRef<{ x: number; y: number; from: typeof at; box: DOMRect; moved: boolean } | null>(null);
+  return {
+    style: { transform: `translate(${at.x}px, ${at.y}px)`, touchAction: "none" } satisfies CSSProperties,
+    onPointerDown(e: React.PointerEvent<HTMLElement>) {
+      drag.current = { x: e.clientX, y: e.clientY, from: at, box: e.currentTarget.getBoundingClientRect(), moved: false };
+    },
+    onPointerMove(e: React.PointerEvent<HTMLElement>) {
+      const d = drag.current;
+      if (!d || !e.buttons) return;
+      const dx = clamp(e.clientX - d.x, -d.box.left, innerWidth - d.box.right);
+      const dy = clamp(e.clientY - d.y, -d.box.top, innerHeight - d.box.bottom);
+      if (!d.moved) {
+        if (Math.hypot(dx, dy) < 6) return;
+        d.moved = true;
+        e.currentTarget.setPointerCapture(e.pointerId);
+      }
+      setAt({ x: d.from.x + dx, y: d.from.y + dy });
+    },
+    onClickCapture(e: React.MouseEvent) {
+      if (drag.current?.moved) {
+        e.preventDefault();
+        e.stopPropagation();
+      }
+      drag.current = null;
+    },
+  };
+}
+
 export function CallScreen() {
   const call = useCall((s) => s.call);
   return call ? <CallView call={call} /> : null;
@@ -474,6 +507,7 @@ function CallView({ call }: { call: Call }) {
   const effect = useVoiceEffect((s) => s.effect);
   const [small, setSmall] = useState<"video" | "pill" | null>(null);
   const [tray, setTray] = useState(false);
+  const drag = useDrag();
   useEffect(() => {
     if (call.gameOpen) setSmall(null);
   }, [call.gameOpen]);
@@ -537,7 +571,9 @@ function CallView({ call }: { call: Call }) {
   return (
     <Portal>
       {floating === "video" ? (
-        <div className="fixed right-4 bottom-[max(6rem,calc(env(safe-area-inset-bottom)+5rem))] z-[70] w-36 overflow-hidden rounded-2xl bg-stone-900 text-white shadow-2xl ring-1 ring-white/15 md:w-52">
+        <div
+          {...drag}
+          className="fixed right-4 bottom-[max(6rem,calc(env(safe-area-inset-bottom)+5rem))] z-[70] w-36 overflow-hidden rounded-2xl bg-stone-900 text-white shadow-2xl ring-1 ring-white/15 md:w-52">
           <button
             onClick={() => setSmall(null)}
             aria-label={tr.calls.backToCall}
@@ -577,7 +613,9 @@ function CallView({ call }: { call: Call }) {
           )}
         </div>
       ) : floating === "pill" ? (
-        <div className="fixed top-[max(0.75rem,env(safe-area-inset-top))] left-1/2 z-[70] flex max-w-[calc(100vw-2rem)] -translate-x-1/2 items-center gap-2 rounded-full bg-stone-900 p-1.5 text-white shadow-xl ring-1 ring-white/10">
+        <div
+          {...drag}
+          className="fixed top-[max(0.75rem,env(safe-area-inset-top))] left-1/2 z-[70] flex max-w-[calc(100vw-2rem)] -translate-x-1/2 items-center gap-2 rounded-full bg-stone-900 p-1.5 text-white shadow-xl ring-1 ring-white/10">
           <button
             onClick={() => setSmall(null)}
             aria-label={tr.calls.backToCall}

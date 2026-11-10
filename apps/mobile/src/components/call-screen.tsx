@@ -38,8 +38,20 @@ import {
   VolumeX,
   X,
 } from "lucide-react-native";
-import { Fragment, type ReactNode, useEffect, useState } from "react";
-import { Animated, Easing, Modal, Pressable, ScrollView, StyleSheet, View, useWindowDimensions } from "react-native";
+import { Fragment, type ReactNode, useEffect, useRef, useState } from "react";
+import {
+  Animated,
+  Dimensions,
+  Easing,
+  type LayoutRectangle,
+  Modal,
+  PanResponder,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  View,
+  useWindowDimensions,
+} from "react-native";
 import { Text } from "./text";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { RTCView } from "react-native-webrtc";
@@ -514,6 +526,36 @@ function Small({
  * Full-screen call UI, shown over everything while a call rings, runs or has just ended. Minimized, a video call
  * keeps playing in a floating window and a voice call (or a hidden video) shrinks to a pill.
  */
+const clamp = (v: number, lo: number, hi: number) => Math.min(Math.max(v, lo), hi);
+
+/** Lets a shrunk call be dragged anywhere on screen, kept inside it when let go. A tap still reaches its buttons. */
+function useDrag() {
+  const pos = useRef(new Animated.ValueXY()).current;
+  const box = useRef<LayoutRectangle | null>(null);
+  const pan = useRef(
+    PanResponder.create({
+      onMoveShouldSetPanResponder: (_, g) => Math.hypot(g.dx, g.dy) > 6,
+      onPanResponderGrant: () => pos.extractOffset(),
+      onPanResponderMove: Animated.event([null, { dx: pos.x, dy: pos.y }], { useNativeDriver: false }),
+      onPanResponderRelease: () => {
+        pos.flattenOffset();
+        pos.stopAnimation(({ x, y }) => {
+          const b = box.current;
+          if (!b) return;
+          const { width, height } = Dimensions.get("window");
+          pos.setValue({ x: clamp(x, -b.x, width - b.x - b.width), y: clamp(y, -b.y, height - b.y - b.height) });
+        });
+      },
+      onPanResponderTerminate: () => pos.flattenOffset(),
+    }),
+  ).current;
+  return {
+    ...pan.panHandlers,
+    onLayout: (e: { nativeEvent: { layout: LayoutRectangle } }) => (box.current = e.nativeEvent.layout),
+    style: { transform: pos.getTranslateTransform() },
+  };
+}
+
 export function CallScreen() {
   const tr = useT();
   const call = useCall((s) => s.call);
@@ -522,6 +564,7 @@ export function CallScreen() {
   const elapsed = useElapsed(call?.status === "active" ? call.startedAt : null);
   const [small, setSmall] = useState<"video" | "pill" | null>(null);
   const [tray, setTray] = useState(false);
+  const { style: dragStyle, ...drag } = useDrag();
   const [seen, setSeen] = useState({ id: call?.id, gameOpen: call?.gameOpen });
   if (seen.id !== call?.id || seen.gameOpen !== call?.gameOpen) {
     setSeen({ id: call?.id, gameOpen: call?.gameOpen });
@@ -547,7 +590,7 @@ export function CallScreen() {
   if (floating === "video") {
     return (
       <>
-        <View style={[styles.pip, { bottom: insets.bottom + 96 }]}>
+        <Animated.View {...drag} style={[styles.pip, { bottom: insets.bottom + 96 }, dragStyle]}>
           <Pressable onPress={() => setSmall(null)} accessibilityLabel={tr.calls.backToCall} style={styles.pipVideo}>
             {showRemoteVideo ? (
               <RTCView streamURL={call.remote!.toURL()} style={StyleSheet.absoluteFill} objectFit="cover" zOrder={1} />
@@ -571,7 +614,7 @@ export function CallScreen() {
               <Small Icon={PhoneOff} label={tr.calls.hangUp} color={RED} onPress={() => void hangUp()} />
             </View>
           )}
-        </View>
+        </Animated.View>
         <FloatingReactions reactions={call.reactions} />
       </>
     );
@@ -580,7 +623,7 @@ export function CallScreen() {
   if (floating === "pill") {
     return (
       <>
-        <View style={[styles.pill, { top: insets.top + 8 }]}>
+        <Animated.View {...drag} style={[styles.pill, { top: insets.top + 8 }, dragStyle]}>
           <Pressable onPress={() => setSmall(null)} accessibilityLabel={tr.calls.backToCall} style={styles.pillInfo}>
             <Avatar user={call.peer} size="sm" />
             <View style={{ flexShrink: 1 }}>
@@ -597,7 +640,7 @@ export function CallScreen() {
               <Small Icon={PhoneOff} label={tr.calls.hangUp} color={RED} onPress={() => void hangUp()} />
             </>
           )}
-        </View>
+        </Animated.View>
         <FloatingReactions reactions={call.reactions} />
       </>
     );
