@@ -17,10 +17,12 @@ import {
 import { SixApiError, unwrap } from "@six/sdk";
 import { Car, Footprints, Layers, LocateFixed, MapPin, Minus, Navigation, Plus, Search, X } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { create } from "zustand";
 import { useCloseOnBack } from "@/lib/back";
 import { getLocale, useT } from "@/lib/i18n";
 import { six } from "@/lib/six";
+import { useMedia } from "@/lib/viewport";
 import { EphemeralPicker } from "./ephemeral-picker";
 import { Portal } from "./portal";
 import { Sheet } from "./sheet";
@@ -270,6 +272,7 @@ export function DirectionsView({ point, onClose }: { point: GeoPoint; onClose: (
   const tr = useT();
   const { at, problem } = useHere();
   const [mode, setMode] = useState<TravelMode>("driving");
+  const pane = useMedia("(width >= 48rem)") ? document.getElementById("pane") : null;
   useCloseOnBack(onClose);
   useEffect(() => locateMe(true), []);
   const src =
@@ -282,54 +285,58 @@ export function DirectionsView({ point, onClose }: { point: GeoPoint; onClose: (
       language: getLocale() === "mg" ? "fr" : getLocale(),
     })}`;
 
-  return (
-    <Portal>
-      <div className="fixed inset-0 z-[70] flex flex-col bg-white dark:bg-stone-900" role="dialog" aria-modal aria-label={tr.messages.directions}>
-        <div className="flex items-center gap-2 p-2 pt-[max(0.5rem,env(safe-area-inset-top))]">
-          <button type="button" onClick={onClose} aria-label={tr.common.close} className="grid size-10 shrink-0 place-items-center rounded-full hover:bg-black/5 dark:hover:bg-white/10">
-            <X className="size-5" />
-          </button>
-          <span className="min-w-0 flex-1 truncate font-semibold">{point.name ?? tr.summary.kinds.location}</span>
-          <div className="flex shrink-0 rounded-full bg-black/5 p-0.5 dark:bg-white/10">
-            {(["driving", "walking"] as const).map((m) => (
-              <button
-                key={m}
-                type="button"
-                onClick={() => setMode(m)}
-                aria-pressed={mode === m}
-                className={`flex items-center gap-1 rounded-full px-3 py-1.5 text-sm font-semibold ${
-                  mode === m ? "bg-white shadow dark:bg-stone-700" : "text-stone-500"
-                }`}
-              >
-                {m === "driving" ? <Car className="size-4" /> : <Footprints className="size-4" />}
-                {tr.messages[m]}
-              </button>
-            ))}
-          </div>
-        </div>
-        <div className="relative min-h-0 flex-1 bg-stone-200 dark:bg-stone-800">
-          {src ? (
-            <iframe title={tr.messages.directions} src={src} referrerPolicy="no-referrer-when-downgrade" className="size-full border-0" />
-          ) : (
-            <p className="grid size-full place-items-center p-6 text-center text-sm text-stone-500">
-              {problem === "denied" ? tr.composer.locationDenied : problem ? tr.composer.locationFailed : tr.messages.findingYou}
-            </p>
-          )}
-        </div>
-        <div className="p-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
-          <a
-            href={directionsUrl(point, mode)}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="flex items-center justify-center gap-2 rounded-full bg-brand py-3 font-semibold text-brand-ink"
-          >
-            <Navigation className="size-5" />
-            {tr.messages.startInGoogleMaps}
-          </a>
+  const view = (
+    <div
+      className={`${pane ? "absolute" : "fixed"} inset-0 z-[70] flex flex-col bg-white dark:bg-stone-900`}
+      role="dialog"
+      aria-modal={!pane}
+      aria-label={tr.messages.directions}
+    >
+      <div className="flex items-center gap-2 p-2 pt-[max(0.5rem,env(safe-area-inset-top))]">
+        <button type="button" onClick={onClose} aria-label={tr.common.close} className="grid size-10 shrink-0 place-items-center rounded-full hover:bg-black/5 dark:hover:bg-white/10">
+          <X className="size-5" />
+        </button>
+        <span className="min-w-0 flex-1 truncate font-semibold">{point.name ?? tr.summary.kinds.location}</span>
+        <div className="flex shrink-0 rounded-full bg-black/5 p-0.5 dark:bg-white/10">
+          {(["driving", "walking"] as const).map((m) => (
+            <button
+              key={m}
+              type="button"
+              onClick={() => setMode(m)}
+              aria-pressed={mode === m}
+              className={`flex items-center gap-1 rounded-full px-3 py-1.5 text-sm font-semibold ${
+                mode === m ? "bg-white shadow dark:bg-stone-700" : "text-stone-500"
+              }`}
+            >
+              {m === "driving" ? <Car className="size-4" /> : <Footprints className="size-4" />}
+              {tr.messages[m]}
+            </button>
+          ))}
         </div>
       </div>
-    </Portal>
+      <div className="relative min-h-0 flex-1 bg-stone-200 dark:bg-stone-800">
+        {src ? (
+          <iframe title={tr.messages.directions} src={src} referrerPolicy="no-referrer-when-downgrade" className="size-full border-0" />
+        ) : (
+          <p className="grid size-full place-items-center p-6 text-center text-sm text-stone-500">
+            {problem === "denied" ? tr.composer.locationDenied : problem ? tr.composer.locationFailed : tr.messages.findingYou}
+          </p>
+        )}
+      </div>
+      <div className="p-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
+        <a
+          href={directionsUrl(point, mode)}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="flex items-center justify-center gap-2 rounded-full bg-brand py-3 font-semibold text-brand-ink"
+        >
+          <Navigation className="size-5" />
+          {tr.messages.startInGoogleMaps}
+        </a>
+      </div>
+    </div>
   );
+  return pane ? createPortal(view, pane) : <Portal>{view}</Portal>;
 }
 
 function LocationSheet({ point, onDirections, onClose }: { point: GeoPoint; onDirections: () => void; onClose: () => void }) {

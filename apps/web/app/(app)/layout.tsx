@@ -154,7 +154,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
               <TabBar active={tab}>{rail && <ChatList rail />}</TabBar>
             </div>
           </aside>
-          <section className={`${topLevel ? "hidden" : "flex"} min-w-0 flex-1 flex-col ${wide ? "" : "md:flex"}`}>
+          <section id="pane" className={`${topLevel ? "hidden" : "flex"} relative min-w-0 flex-1 flex-col ${wide ? "" : "md:flex"}`}>
             {children}
           </section>
         </div>
