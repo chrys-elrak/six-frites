@@ -72,6 +72,8 @@ const TONE_FILES: Record<Tone, number> = {
 
 /** From Pixabay; see assets/sounds/Pixabay.txt. */
 const ANON_SOUND: number = require("../../assets/sounds/anonymous.mp3");
+/** Reactions, so they don't sound like a message. */
+const NOTIFY_SOUND: number = require("../../assets/sounds/notification.wav");
 
 const players = new Map<number, AudioPlayer>();
 
@@ -116,7 +118,7 @@ export function notifyAnon(m: AnonMessageDTO, viewing: boolean) {
 /** Tells you a contact reacted to your story. */
 export function notifyStoryReaction(e: StoryReactedDTO) {
   const t = getT();
-  alert(`story-${e.storyId}-${e.user.id}`, "/", e.user.displayName, `${e.emoji} ${e.note ? t.stories.reactedToYourNote : t.stories.reactedToYours}`, e.user.avatarUrl);
+  alert(`story-${e.storyId}-${e.user.id}`, "/", e.user.displayName, `${e.emoji} ${e.note ? t.stories.reactedToYourNote : t.stories.reactedToYours}`, e.user.avatarUrl, NOTIFY_SOUND);
 }
 
 function alert(id: string, href: string, title: string, body: string, avatarUrl: string | null, sound?: number) {
@@ -143,5 +145,5 @@ export function notifyReaction(
   const t = getT();
   const title = reactor?.displayName ?? chat?.title ?? t.common.someone;
   const body = message ? reactionText(e.emoji, message, t) : t.summary.reactedToYours(e.emoji);
-  alert(`${e.messageId}:${e.userId}:${e.emoji}`, `/chats/${e.chatId}`, title, body, reactor?.avatarUrl ?? null);
+  alert(`${e.messageId}:${e.userId}:${e.emoji}`, `/chats/${e.chatId}`, title, body, reactor?.avatarUrl ?? null, NOTIFY_SOUND);
 }

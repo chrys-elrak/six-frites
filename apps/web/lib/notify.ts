@@ -84,6 +84,8 @@ const toneUrl = (tone: Tone) => `/tones/${tone}.wav`;
 /** Sounds from Pixabay; see public/sounds/Pixabay.txt. */
 export const ANON_SOUND = "/sounds/anonymous.mp3";
 export const RINGTONE = "/sounds/call.mp3";
+/** Reactions, so they don't sound like a message. */
+const NOTIFY_SOUND = "/sounds/notification.wav";
 
 function decode(ctx: AudioContext, url: string) {
   let buffer = decoded.get(url);
@@ -176,6 +178,7 @@ export function notifyReaction(
     },
     reactor?.avatarUrl ?? null,
     open,
+    NOTIFY_SOUND,
   );
 }
 
@@ -205,6 +208,7 @@ export function notifyStoryReaction(e: StoryReactedDTO, open: (href: string) => 
     { id: `story-${e.storyId}-${e.user.id}`, href: "/", title: e.user.displayName, body: `${e.emoji} ${e.note ? t.stories.reactedToYourNote : t.stories.reactedToYours}` },
     e.user.avatarUrl,
     open,
+    NOTIFY_SOUND,
   );
 }
 
