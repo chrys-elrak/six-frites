@@ -1,7 +1,7 @@
 import { type NotificationDTO, notificationText } from "@six/shared";
 import { useQueryClient } from "@tanstack/react-query";
 import { router, useFocusEffect } from "expo-router";
-import { Bell, Mail, MailOpen, Settings2, Trash2, VenetianMask } from "lucide-react-native";
+import { Bell, Mail, MailOpen, PartyPopper, Settings2, Trash2, VenetianMask } from "lucide-react-native";
 import { useCallback, useState } from "react";
 import { FlatList, Pressable, RefreshControl, StyleSheet, View } from "react-native";
 import { GestureDetector } from "react-native-gesture-handler";
@@ -121,7 +121,7 @@ function Row({ n }: { n: NotificationDTO }) {
               <Avatar user={n.user} size="md" />
             ) : (
               <View style={[styles.anonIcon, { backgroundColor: "rgba(235,138,0,0.15)" }]}>
-                <VenetianMask size={24} color={brand} />
+                {n.kind === "full_access" ? <PartyPopper size={24} color={brand} /> : <VenetianMask size={24} color={brand} />}
               </View>
             )}
             <View style={{ flex: 1, minWidth: 0, gap: 2 }}>

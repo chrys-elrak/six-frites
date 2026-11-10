@@ -1,5 +1,5 @@
 import type { Realtime } from "@six/sdk";
-import type { AnonMessageDTO, ChangeEventDTO, ChatDTO, MessageDTO } from "@six/shared";
+import { type AnonMessageDTO, type ChangeEventDTO, type ChatDTO, type MessageDTO, isLimited } from "@six/shared";
 import { type QueryClient, useQueryClient } from "@tanstack/react-query";
 import { usePathname } from "expo-router";
 import { createContext, useContext, useEffect, useRef, useState } from "react";
@@ -158,7 +158,8 @@ export function RealtimeProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     if (!meId) return;
-    startE2EE(meId);
+    const user = useSession.getState().user;
+    if (user && !isLimited(user)) startE2EE(meId);
     const rt = six.realtime({
       device: "app",
       onEvent: (e) => me.current && applyEvent(qc, me.current, e),

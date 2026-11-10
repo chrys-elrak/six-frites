@@ -4,6 +4,10 @@ const en = {
   start: "Let's go",
   again: "Take the tour again",
   againHint: "Five cards on how Six Frites works.",
+  upgraded: {
+    title: "You're all the way in!",
+    body: "You now have full access to Six Frites: chat with anyone, post stories, join groups and invite your friends. Here's how it works.",
+  },
   cards: [
     {
       title: "Welcome to Six Frites",
@@ -34,6 +38,10 @@ const fr: typeof en = {
   start: "C'est parti",
   again: "Refaire la visite",
   againHint: "Cinq cartes sur le fonctionnement de Six Frites.",
+  upgraded: {
+    title: "Bienvenue, pour de bon !",
+    body: "Vous avez maintenant accès à tout Six Frites : discutez avec tout le monde, publiez des stories, rejoignez des groupes et invitez vos amis. Voici comment ça marche.",
+  },
   cards: [
     {
       title: "Bienvenue sur Six Frites",
@@ -64,6 +72,10 @@ const mg: typeof en = {
   start: "Andao",
   again: "Avereno ny fitsidihana",
   againHint: "Karatra dimy manazava ny fiasan'ny Six Frites.",
+  upgraded: {
+    title: "Tafiditra tanteraka ianao!",
+    body: "Afaka mampiasa ny Six Frites manontolo ianao izao: miresaka amin'iza na iza, mamoaka story, miditra amin'ny vondrona ary manasa ny namanao. Ity ny fiasany.",
+  },
   cards: [
     {
       title: "Tongasoa eto amin'ny Six Frites",

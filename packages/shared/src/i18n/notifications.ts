@@ -12,6 +12,7 @@ const en = {
   missedVideoCall: (name: string) => `You missed a video call from ${name}.`,
   anonMessage: "You got an anonymous message.",
   unblocked: (name: string) => `${name} unblocked you. You can write to each other again.`,
+  fullAccess: "You now have full access to Six Frites. Chat with anyone, post stories, join groups and invite friends.",
 };
 
 const fr: typeof en = {
@@ -28,6 +29,7 @@ const fr: typeof en = {
   missedVideoCall: (name) => `Appel vidéo manqué de ${name}.`,
   anonMessage: "Vous avez reçu un message anonyme.",
   unblocked: (name) => `${name} vous a débloqué. Vous pouvez à nouveau vous écrire.`,
+  fullAccess: "Vous avez maintenant accès à tout Six Frites. Discutez avec tout le monde, publiez des stories, rejoignez des groupes et invitez vos amis.",
 };
 
 const mg: typeof en = {
@@ -44,6 +46,7 @@ const mg: typeof en = {
   missedVideoCall: (name) => `Antso video tsy voaray avy amin'i ${name}.`,
   anonMessage: "Nahazo hafatra tsy fantatra ny mpandefa ianao.",
   unblocked: (name) => `Nesorin'i ${name} ny sakana anao. Afaka mifandefa hafatra indray ianareo.`,
+  fullAccess: "Afaka mampiasa ny Six Frites manontolo ianao izao. Miresaha amin'iza na iza, mamoaha story, midira amin'ny vondrona ary manasa namana.",
 };
 
 export default { en, fr, mg };

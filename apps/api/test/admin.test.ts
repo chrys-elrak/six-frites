@@ -1,8 +1,11 @@
+import type { AddressInfo } from "node:net";
 import { strToU8, zipSync } from "fflate";
-import { describe, expect, it } from "vitest";
+import { io as connect } from "socket.io-client";
+import { describe, expect, it, vi } from "vitest";
 import { runStickerImport } from "../src/services/sticker-import.js";
 import { headObject, putObject } from "../src/lib/storage.js";
 import { liftExpiredBans } from "../src/services/admin.js";
+import { createSocketServer } from "../src/socket/index.js";
 import { pairAlias } from "../src/services/users.js";
 import { totp, totpStep } from "../src/lib/totp.js";
 import { ADMIN_SECRET, type Auth, asAdmin, bearer, chatHelpers, loginAs, makeAdmin, prisma, uniqueSub, useApp } from "./helpers.js";
@@ -429,5 +432,48 @@ describe("sticker zip import", () => {
     expect(cancelled).toMatchObject({ finished: true, error: "Cancelled" });
     expect((await call(boss, "POST", "/v1/admin/sticker-packs/import", { uploadId: second })).statusCode).toBe(202);
     await call(boss, "POST", `/v1/admin/sticker-packs/import/${second}/cancel`);
+  });
+});
+
+describe("full access", () => {
+  it("lets a guest or someone waiting all the way in, and tells them once, in the app and by email", async () => {
+    const boss = await admin();
+    const guest = await signUp("upgraded");
+    await prisma.user.update({ where: { id: guest.user.id }, data: { guest: true } });
+    const grant = (who: Auth, id: string) => call(who, "POST", `/v1/admin/users/${id}/full-access`);
+
+    expect((await grant(guest, guest.user.id)).statusCode).toBe(403);
+    createSocketServer(ctx.app.server);
+    await ctx.app.listen({ port: 0, host: "127.0.0.1" });
+    const url = `http://127.0.0.1:${(ctx.app.server.address() as AddressInfo).port}`;
+    const socket = connect(url, { auth: { token: guest.accessToken }, transports: ["websocket"], forceNew: true });
+    try {
+      await new Promise<void>((resolve) => socket.once("connect", () => resolve()));
+      const told = new Promise((resolve) => socket.once("notifications:changed", resolve));
+      const upgraded = new Promise<{ data: { guest: boolean } }>((resolve) =>
+        socket.on("change", (e: { type: string; data: { guest: boolean } }) => e.type === "me.updated" && resolve(e)),
+      );
+      const res = await grant(boss, guest.user.id);
+      expect(res.statusCode).toBe(200);
+      expect(res.json()).toMatchObject({ guest: false, queued: false });
+      expect((await upgraded).data.guest).toBe(false);
+      await told;
+    } finally {
+      socket.disconnect();
+    }
+    expect((await get(guest, "/v1/notifications")).items).toEqual([expect.objectContaining({ kind: "full_access", user: null })]);
+    await vi.waitFor(async () =>
+      expect(await prisma.mailLog.findFirst({ where: { userId: guest.user.id } })).toMatchObject({ kind: "access" }),
+    );
+
+    await grant(boss, guest.user.id);
+    expect(await prisma.notification.count({ where: { userId: guest.user.id, kind: "full_access" } })).toBe(1);
+
+    const sub = uniqueSub("waiting");
+    const waiting = (await loginAs(ctx.app, sub)).json();
+    await prisma.user.update({ where: { id: waiting.user.id }, data: { queuedAt: new Date() } });
+    expect((await loginAs(ctx.app, sub)).json().error.code).toBe("ACCOUNT_QUEUED");
+    await grant(boss, waiting.user.id);
+    expect((await loginAs(ctx.app, sub)).statusCode).toBe(200);
   });
 });

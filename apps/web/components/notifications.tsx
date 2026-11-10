@@ -2,7 +2,7 @@
 
 import { type NotificationDTO, notificationText } from "@six/shared";
 import { useQueryClient } from "@tanstack/react-query";
-import { Bell, Mail, MailOpen, Settings2, Trash2, VenetianMask } from "lucide-react";
+import { Bell, Mail, MailOpen, PartyPopper, Settings2, Trash2, VenetianMask } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { listTime } from "@/lib/format";
@@ -106,7 +106,7 @@ function Row({ n }: { n: NotificationDTO }) {
             <Avatar user={n.user} size="md" />
           ) : (
             <span className="grid size-14 shrink-0 place-items-center rounded-full bg-brand/15 text-brand">
-              <VenetianMask className="size-6" />
+              {n.kind === "full_access" ? <PartyPopper className="size-6" /> : <VenetianMask className="size-6" />}
             </span>
           )}
           <span className="min-w-0 flex-1">

@@ -1,4 +1,5 @@
 import { createHmac, randomBytes } from "node:crypto";
+import { env } from "../env.js";
 
 const BASE32 = "ABCDEFGHIJKLMNOPQRSTUVWXYZ234567";
 const STEP_SECONDS = 30;
@@ -40,5 +41,8 @@ export function matchTotp(secret: string, code: string, now = Date.now()) {
   return [step - 1, step, step + 1].find((s) => totp(secret, s) === code) ?? null;
 }
 
-export const totpUri = (secret: string, account: string) =>
-  `otpauth://totp/Six%20Frites:${encodeURIComponent(account)}?secret=${secret}&issuer=Six%20Frites`;
+/** The authenticator entry reads "Six Frites (host): email", so prod and dev entries can be told apart. */
+export function totpUri(secret: string, account: string) {
+  const issuer = encodeURIComponent(`Six Frites (${new URL(env.WEB_ORIGIN.split(",")[0]!).host})`);
+  return `otpauth://totp/${issuer}:${encodeURIComponent(account)}?secret=${secret}&issuer=${issuer}`;
+}

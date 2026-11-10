@@ -11,10 +11,11 @@ import { Card, IconButton, ScreenHeader } from "./ui";
 
 const KEY = "six:tip";
 const today = () => new Date().toDateString();
+const dayNumber = () => Math.floor((Date.now() - new Date().getTimezoneOffset() * 60_000) / 86_400_000);
 
 /**
- * One tip about the app at a time, at most one a day: closing it moves on to the next one, shown the next day, and
- * the list starts over once it's done. Kept per device, so a fresh one doesn't follow you around.
+ * Today's tip about the app: a new one each day, the same on every device, going through the whole list in turn.
+ * Closing it hides it until tomorrow.
  */
 export function TipCard() {
   const t = useTheme();
@@ -24,8 +25,8 @@ export function TipCard() {
   useEffect(() => {
     void AsyncStorage.getItem(KEY)
       .then((raw) => {
-        const saved = JSON.parse(raw ?? "{}") as { next?: number; closedOn?: string };
-        if (saved.closedOn !== today()) setNext(saved.next ?? 0);
+        const saved = JSON.parse(raw ?? "{}") as { closedOn?: string };
+        if (saved.closedOn !== today()) setNext(dayNumber());
       })
       .catch(() => setNext(0));
   }, []);
@@ -33,7 +34,7 @@ export function TipCard() {
   if (next === null) return null;
 
   function close() {
-    void AsyncStorage.setItem(KEY, JSON.stringify({ next: next! + 1, closedOn: today() })).catch(() => null);
+    void AsyncStorage.setItem(KEY, JSON.stringify({ closedOn: today() })).catch(() => null);
     setNext(null);
   }
 

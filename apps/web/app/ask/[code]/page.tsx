@@ -13,10 +13,11 @@ import {
   emojifyEnd,
   hasLink,
   emojifyTyped,
+  randomAskIdea,
   signInMessage,
 } from "@six/shared";
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { Camera, ImagePlus, Info, Mic, Pencil, SearchX, Square, VenetianMask, X } from "lucide-react";
+import { Camera, Dices, ImagePlus, Info, Mic, Pencil, SearchX, Square, VenetianMask, X } from "lucide-react";
 import Link from "next/link";
 import { use, useRef, useState } from "react";
 import { VoicePlayer } from "@/components/attachment";
@@ -439,6 +440,20 @@ export default function AskPage({ params }: { params: Promise<{ code: string }> 
                     className="grid size-8 place-items-center rounded-full text-stone-500 hover:bg-stone-100 dark:hover:bg-stone-800"
                   >
                     <Mic className="size-5" />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={async () => {
+                      const next = await randomAskIdea(getLocale(), "messages", text);
+                      setText(next);
+                      box.current?.focus();
+                      requestAnimationFrame(() => box.current?.setSelectionRange(next.length, next.length));
+                    }}
+                    aria-label={tr.ask.randomMessage}
+                    title={tr.ask.randomMessage}
+                    className="grid size-8 place-items-center rounded-full text-stone-500 hover:bg-stone-100 dark:hover:bg-stone-800"
+                  >
+                    <Dices className="size-5" />
                   </button>
                 </>
               )}

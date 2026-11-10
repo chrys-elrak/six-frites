@@ -70,7 +70,7 @@ import {
   Image as ImageIcon,
   Users,
 } from "lucide-react-native";
-import { type ComponentRef, forwardRef, useCallback, useEffect, useImperativeHandle, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { type ComponentRef, forwardRef, type ReactElement, useCallback, useEffect, useImperativeHandle, useLayoutEffect, useMemo, useRef, useState } from "react";
 import {
   ActivityIndicator,
   FlatList,
@@ -1254,9 +1254,11 @@ export const MessageList = forwardRef<
     /** Shows the comments on this group message, with the message itself on top, instead of the chat. */
     threadId?: string;
     onOpenThread?: (m: MessageDTO) => void;
+    /** Shown right under the newest message, like the typing bubble. */
+    after?: ReactElement;
   }
 >(
-  function MessageList({ chat, meId, onSeen, threadId, onOpenThread }, handle) {
+  function MessageList({ chat, meId, onSeen, threadId, onOpenThread, after }, handle) {
     useFonts(FONT_FILES);
     const t = useTheme();
     const tr = useT();
@@ -1641,6 +1643,7 @@ export const MessageList = forwardRef<
             onEndReachedThreshold={0.5}
             onEndReached={() => messages.hasNextPage && !messages.isFetchingNextPage && void messages.fetchNextPage()}
             ListFooterComponent={messages.isFetchingNextPage ? <OlderLoader /> : undefined}
+            ListHeaderComponent={after}
             onScrollToIndexFailed={(info) => {
               list.current?.scrollToOffset({ offset: info.averageItemLength * info.index, animated: false });
               setTimeout(() => list.current?.scrollToIndex({ index: info.index, viewPosition: 0.5 }), 100);

@@ -78,6 +78,8 @@ export function WhatsNew() {
  */
 export function WhatsNewPrompt() {
   const user = useSession((s) => (s.status === "authed" ? s.user : null));
+  const upgraded = useSession((s) => s.upgraded);
+  const clearUpgraded = useSession((s) => s.clearUpgraded);
   const [fresh, setFresh] = useState<Release[]>([]);
 
   useEffect(() => {
@@ -91,6 +93,18 @@ export function WhatsNewPrompt() {
     void AsyncStorage.setItem(SEEN_KEY, CHANGELOG[0]!.version).catch(() => null);
   }
 
+  if (user && !user.guest && upgraded) {
+    return (
+      <Tour
+        upgraded
+        onClose={() => {
+          clearUpgraded();
+          close();
+          markTourSeen();
+        }}
+      />
+    );
+  }
   if (user && !user.guest && !user.tourSeen) {
     if (!user.termsAccepted) return null;
     return (

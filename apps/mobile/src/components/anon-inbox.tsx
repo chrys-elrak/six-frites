@@ -15,13 +15,14 @@ import {
   durationLabel,
   expiryLabel,
   hasLink,
+  randomAskIdea,
   splitLinks,
 } from "@six/shared";
 import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import * as Clipboard from "expo-clipboard";
 import { Asset, requestPermissionsAsync } from "expo-media-library";
 import * as Sharing from "expo-sharing";
-import { Camera, Check, Copy, Ellipsis, Globe, Link2, LogOut, Play, Settings2, Share2, ShieldAlert, Trash2, VenetianMask } from "lucide-react-native";
+import { Camera, Check, Copy, Dices, Ellipsis, Globe, Link2, LogOut, Play, Settings2, Share2, ShieldAlert, Trash2, VenetianMask } from "lucide-react-native";
 import { type ComponentRef, useEffect, useRef, useState } from "react";
 import { AppState, FlatList, Image, Linking, Modal, Pressable, StyleSheet, View, ScrollView } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -112,6 +113,7 @@ function PromptField({ code }: { code: string }) {
           onSubmitEditing={savePrompt}
           style={[styles.promptInput, { color: t.text, backgroundColor: t.surfaceAlt }]}
         />
+        <IconButton Icon={Dices} label={tr.ask.randomPrompt} color={t.muted} onPress={() => void randomAskIdea(getLocale(), "prompts", text).then(setPrompt)} />
         {dirty && <TextButton title={tr.common.save} onPress={savePrompt} disabled={save.isPending} color={t.text} />}
       </View>
       {error && <Notice tone="error">{error}</Notice>}
@@ -250,16 +252,19 @@ function TempLinks({ code }: { code: string }) {
               {title.length}/{ASK_PROMPT_MAX}
             </Text>
           </View>
-          <TextInput
-            autoFocus
-            value={title}
-            onChangeText={setTitle}
-            maxLength={ASK_PROMPT_MAX}
-            placeholder={tr.ask.prompt}
-            placeholderTextColor={t.muted}
-            accessibilityLabel={tr.ask.tempTitle}
-            style={[styles.promptInput, { flex: 0, color: t.text, backgroundColor: t.surface }]}
-          />
+          <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
+            <TextInput
+              autoFocus
+              value={title}
+              onChangeText={setTitle}
+              maxLength={ASK_PROMPT_MAX}
+              placeholder={tr.ask.prompt}
+              placeholderTextColor={t.muted}
+              accessibilityLabel={tr.ask.tempTitle}
+              style={[styles.promptInput, { color: t.text, backgroundColor: t.surface }]}
+            />
+            <IconButton Icon={Dices} label={tr.ask.randomPrompt} color={t.muted} onPress={() => void randomAskIdea(getLocale(), "prompts", title).then(setTitle)} />
+          </View>
           <Text style={{ color: t.muted, fontSize: 14 }}>{tr.ask.tempFor}</Text>
           <View style={{ flexDirection: "row", gap: 8 }}>
             {TEMP_LINK_HOURS.map((h) => (
@@ -857,7 +862,8 @@ export function AnonInbox({ guest = false }: { guest?: boolean }) {
             </View>
             {view === "received" && messages.isSuccess && !items.length && (
               <EmptyState Icon={VenetianMask}>
-                <Text style={{ color: t.muted, fontSize: 14, textAlign: "center" }}>{tr.ask.empty}</Text>
+                {guest && <Text style={{ color: t.text, fontSize: 18, fontWeight: "700", textAlign: "center" }}>{tr.ask.guestWelcome}</Text>}
+                <Text style={{ color: t.muted, fontSize: 14, textAlign: "center" }}>{guest ? tr.ask.guestWelcomeBody : tr.ask.empty}</Text>
                 <PrimaryButton title={tr.common.shareLink} onPress={() => setLinkOpen(true)} style={{ paddingHorizontal: 16 }} />
               </EmptyState>
             )}

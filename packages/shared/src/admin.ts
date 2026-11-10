@@ -224,12 +224,12 @@ export const AdminLargeFileDTO = z.object({
 });
 export type AdminLargeFileDTO = z.infer<typeof AdminLargeFileDTO>;
 
-export const MAIL_KINDS = ["poke", "inactive", "anon"] as const;
+export const MAIL_KINDS = ["poke", "inactive", "anon", "access"] as const;
 export const MAIL_STATUSES = ["sent", "failed", "skipped"] as const;
 
 export const AdminMailDTO = z.object({
   id: Id,
-  kind: z.enum(MAIL_KINDS).describe("poke: someone poked them; inactive: away for a day; anon: a guest reminded to share their link"),
+  kind: z.enum(MAIL_KINDS).describe("poke: someone poked them; inactive: away for a day; anon: a guest reminded to share their link; access: an admin gave them full access"),
   status: z.enum(MAIL_STATUSES).describe("skipped: mail isn't set up here, or no redirect address outside production"),
   subject: z.string(),
   to: z.string().describe("The person's address"),

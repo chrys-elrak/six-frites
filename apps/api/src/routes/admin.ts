@@ -48,6 +48,7 @@ import {
   newAdminSecret,
   setAds,
   setInviteLimit,
+  giveFullAccess,
   signOutEverywhere,
   unbanUser,
   verifyAdminCode,
@@ -201,6 +202,21 @@ const adminRoutes: FastifyPluginAsyncZod = async (app) => {
       },
     },
     (req) => setInviteLimit(req.params.id, req.body.limit),
+  );
+
+  app.post(
+    "/admin/users/:id/full-access",
+    {
+      schema: {
+        tags,
+        summary: "Give a guest or someone on the waiting list full access",
+        description: "They get a notification and an email. Nothing happens if they already had full access.",
+        security,
+        params: Params,
+        response: { 200: AdminUserDTO },
+      },
+    },
+    (req) => giveFullAccess(req.params.id),
   );
 
   app.post(

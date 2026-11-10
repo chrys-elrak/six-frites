@@ -212,6 +212,19 @@ async function emailGuests() {
   return sent;
 }
 
+/** Tells someone an admin gave them full access, unless they turned emails off. */
+export async function emailFullAccess(userId: string) {
+  const user = await prisma.user.findFirst({ where: { ...reachable, id: userId }, select: { id: true, email: true, locale: true } });
+  if (!user) return;
+  const t = mailStrings(user.locale).access;
+  await deliver(
+    user,
+    { preheader: t.body, badge: { emoji: "🎉" }, title: t.title, paragraphs: [t.body], cta: { label: t.cta, href: webUrl() }, why: t.why },
+    t.subject,
+    { kind: "access" },
+  );
+}
+
 /** The worker's hourly round of reminder emails. */
 export async function sendDueEmails() {
   const { count: forgotten } = await prisma.mailLog.deleteMany({ where: { createdAt: { lt: new Date(Date.now() - 90 * DAY) } } });

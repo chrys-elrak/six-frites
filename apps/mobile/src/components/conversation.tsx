@@ -337,9 +337,15 @@ function OpenConversation({ chatId }: { chatId: string }) {
       <KeyboardAvoidingView behavior="padding" style={{ flex: 1 }}>
         <View style={{ flex: 1 }}>
           <BubbleColorsContext.Provider value={bubble}>
-            <MessageList ref={list} chat={c} meId={meId} onSeen={onSeen} onOpenThread={(m) => setThread(m.id)} />
+            <MessageList
+              ref={list}
+              chat={c}
+              meId={meId}
+              onSeen={onSeen}
+              onOpenThread={(m) => setThread(m.id)}
+              after={typing && !selecting ? <TypingBubble kind={typing} /> : undefined}
+            />
           </BubbleColorsContext.Provider>
-          {typing && !selecting && <TypingBubble kind={typing} />}
         </View>
         {!selecting && c.supportClosedAt && (
           <Text style={[styles.closed, { color: t.muted, borderColor: t.border }]}>

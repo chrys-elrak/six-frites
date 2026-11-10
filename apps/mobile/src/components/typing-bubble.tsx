@@ -15,7 +15,7 @@ function Dot({ delay, color }: { delay: number; color: string }) {
   return <Animated.View style={[styles.dot, { backgroundColor: color }, style]} />;
 }
 
-/** Floats at the bottom of a chat while the other person is typing or recording, with what they're doing. */
+/** Sits under the newest message while the other person is typing or recording, with what they're doing. */
 export function TypingBubble({ kind }: { kind: TypingKind }) {
   const t = useTheme();
   const tr = useT();
@@ -33,9 +33,9 @@ export function TypingBubble({ kind }: { kind: TypingKind }) {
 
 const styles = StyleSheet.create({
   bubble: {
-    position: "absolute",
-    left: 12,
-    bottom: 8,
+    alignSelf: "flex-start",
+    marginLeft: 12,
+    marginTop: 4,
     flexDirection: "row",
     alignItems: "center",
     gap: 8,

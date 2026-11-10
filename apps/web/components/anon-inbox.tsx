@@ -14,10 +14,11 @@ import {
   durationLabel,
   expiryLabel,
   hasLink,
+  randomAskIdea,
   splitLinks,
 } from "@six/shared";
 import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Camera, Check, Copy, Ellipsis, Link2, LogOut, Settings2, Share, ShieldAlert, Trash2, VenetianMask, X } from "lucide-react";
+import { Camera, Check, Copy, Dices, Ellipsis, Link2, LogOut, Settings2, Share, ShieldAlert, Trash2, VenetianMask, X } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { type CardStyle, askCardPng, saveAskCard, shareAskCard } from "@/lib/ask-card";
@@ -391,6 +392,15 @@ function PromptField({ code }: { code: string }) {
           placeholder={tr.ask.prompt}
           className="min-w-0 flex-1 rounded-lg bg-stone-100 px-3 py-2 text-sm ring-stone-300 outline-none focus:ring-2 dark:bg-stone-800 dark:ring-stone-700"
         />
+        <button
+          type="button"
+          onClick={() => void randomAskIdea(getLocale(), "prompts", text).then(setPrompt)}
+          aria-label={tr.ask.randomPrompt}
+          title={tr.ask.randomPrompt}
+          className="grid size-9 shrink-0 place-items-center rounded-lg text-stone-500 hover:bg-stone-200 hover:text-stone-700 dark:text-stone-400 dark:hover:bg-stone-700 dark:hover:text-stone-200"
+        >
+          <Dices className="size-5" />
+        </button>
         {dirty && (
           <button disabled={save.isPending} className={saveButton}>
             {tr.common.save}
@@ -586,15 +596,26 @@ function TempLinks({ code }: { code: string }) {
               {title.length}/{ASK_PROMPT_MAX}
             </span>
           </label>
-          <input
-            id="temp-title"
-            autoFocus
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-            maxLength={ASK_PROMPT_MAX}
-            placeholder={tr.ask.prompt}
-            className="w-full rounded-lg bg-white px-3 py-2 text-sm ring-1 ring-stone-200 outline-none focus:ring-2 dark:bg-stone-900 dark:ring-stone-700"
-          />
+          <div className="flex gap-2">
+            <input
+              id="temp-title"
+              autoFocus
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              maxLength={ASK_PROMPT_MAX}
+              placeholder={tr.ask.prompt}
+              className="min-w-0 flex-1 rounded-lg bg-white px-3 py-2 text-sm ring-1 ring-stone-200 outline-none focus:ring-2 dark:bg-stone-900 dark:ring-stone-700"
+            />
+            <button
+              type="button"
+              onClick={() => void randomAskIdea(getLocale(), "prompts", title).then(setTitle)}
+              aria-label={tr.ask.randomPrompt}
+              title={tr.ask.randomPrompt}
+              className="grid size-9 shrink-0 place-items-center rounded-lg text-stone-500 hover:bg-stone-200 hover:text-stone-700 dark:text-stone-400 dark:hover:bg-stone-700 dark:hover:text-stone-200"
+            >
+              <Dices className="size-5" />
+            </button>
+          </div>
           <p className="text-sm text-stone-500 dark:text-stone-400">{tr.ask.tempFor}</p>
           <div className="flex gap-2">
             {TEMP_LINK_HOURS.map((h) => (
@@ -811,7 +832,8 @@ export function AnonInbox({ guest = false }: { guest?: boolean }) {
                   <span className="grid size-16 place-items-center rounded-full bg-stone-200/70 text-stone-400 dark:bg-stone-800">
                     <VenetianMask className="size-8" strokeWidth={1.6} />
                   </span>
-                  <p className="max-w-xs text-sm text-stone-500">{tr.ask.empty}</p>
+                  {guest && <h2 className="text-lg font-semibold">{tr.ask.guestWelcome}</h2>}
+                  <p className="max-w-xs text-sm text-stone-500">{guest ? tr.ask.guestWelcomeBody : tr.ask.empty}</p>
                   <PrimaryButton type="button" onClick={() => setLinkOpen(true)}>
                     {tr.common.shareLink}
                   </PrimaryButton>

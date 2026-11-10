@@ -1152,6 +1152,109 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/admin/users/{id}/full-access": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Give a guest or someone on the waiting list full access
+         * @description They get a notification and an email. Nothing happens if they already had full access.
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            id: string;
+                            displayName: string;
+                            email: string;
+                            /** Format: uri */
+                            avatarUrl: string | null;
+                            /** Format: date-time */
+                            bannedAt: string | null;
+                            /**
+                             * Format: date-time
+                             * @description When the ban is lifted on its own; null when it lasts until an admin lifts it
+                             */
+                            bannedUntil: string | null;
+                            /**
+                             * @description What the ban takes away, while bannedAt is set
+                             * @enum {string}
+                             */
+                            banScope: "full" | "chat";
+                            banReason: string | null;
+                            admin: boolean;
+                            /** Format: date-time */
+                            createdAt: string;
+                            /** Format: date-time */
+                            lastActiveAt: string | null;
+                            chats: number;
+                            messages: number;
+                            activeSessions: number;
+                            /** @description Open reports against this person */
+                            openReports: number;
+                            /** @description Space their uploads take, processed copies included; GIFs not counted */
+                            storageBytes: number;
+                            /** @description Signed up after their inviter hit the limit and can't sign in yet */
+                            queued: boolean;
+                            /** @description Joined without an invite: anonymous messages and support only */
+                            guest: boolean;
+                            inviteLimit: number;
+                            /** @description People who joined with their links */
+                            invited: number;
+                            /** @description People waiting for them to get a higher limit */
+                            waiting: number;
+                            /** @description Whether they see ads */
+                            ads: boolean;
+                            /** @description When searching an alias: the people who see this user under it */
+                            seenBy?: {
+                                id: string;
+                                displayName: string;
+                                email: string;
+                                /** Format: uri */
+                                avatarUrl: string | null;
+                                /** Format: date-time */
+                                bannedAt: string | null;
+                                /**
+                                 * Format: date-time
+                                 * @description When the ban is lifted on its own; null when it lasts until an admin lifts it
+                                 */
+                                bannedUntil: string | null;
+                                /**
+                                 * @description What the ban takes away, while bannedAt is set
+                                 * @enum {string}
+                                 */
+                                banScope: "full" | "chat";
+                            }[];
+                        };
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/admin/users/ads": {
         parameters: {
             query?: never;
@@ -1422,7 +1525,7 @@ export interface paths {
                 query?: {
                     cursor?: string;
                     limit?: number;
-                    kind?: "poke" | "inactive" | "anon";
+                    kind?: "poke" | "inactive" | "anon" | "access";
                     status?: "sent" | "failed" | "skipped";
                     /** @description Part of the recipient's name or address */
                     q?: string;
@@ -1443,10 +1546,10 @@ export interface paths {
                             items: {
                                 id: string;
                                 /**
-                                 * @description poke: someone poked them; inactive: away for a day; anon: a guest reminded to share their link
+                                 * @description poke: someone poked them; inactive: away for a day; anon: a guest reminded to share their link; access: an admin gave them full access
                                  * @enum {string}
                                  */
-                                kind: "poke" | "inactive" | "anon";
+                                kind: "poke" | "inactive" | "anon" | "access";
                                 /**
                                  * @description skipped: mail isn't set up here, or no redirect address outside production
                                  * @enum {string}
@@ -24832,7 +24935,7 @@ export interface paths {
                             items: {
                                 id: string;
                                 /** @enum {string} */
-                                kind: "joined" | "added" | "story_reaction" | "note_reaction" | "story_reply" | "missed_call" | "anon_message" | "unblocked";
+                                kind: "joined" | "added" | "story_reaction" | "note_reaction" | "story_reply" | "missed_call" | "anon_message" | "unblocked" | "full_access";
                                 /** @description Who did it; null for anon_message, which never says who sent it */
                                 user: {
                                     id: string;

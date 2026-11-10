@@ -90,16 +90,18 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
 
   if (status === "authed" && guest) {
     return (
-      <main className="relative isolate h-dvh">
-        <div className="pointer-events-none absolute inset-0 -z-10">
-          <Wallpaper theme={appWallpaper} id="app" />
-        </div>
-        <div className={`h-full ${glass}`}>
-          <div className="mx-auto h-full w-full max-w-2xl">
-            <AnonInbox guest />
+      <RealtimeProvider>
+        <main className="relative isolate h-dvh">
+          <div className="pointer-events-none absolute inset-0 -z-10">
+            <Wallpaper theme={appWallpaper} id="app" />
           </div>
-        </div>
-      </main>
+          <div className={`h-full ${glass}`}>
+            <div className="mx-auto h-full w-full max-w-2xl">
+              <AnonInbox guest />
+            </div>
+          </div>
+        </main>
+      </RealtimeProvider>
     );
   }
   if (status !== "authed") {

@@ -2,6 +2,7 @@ import { z } from "zod";
 import { Entities, MessageEntity, entitiesFit } from "./chats.js";
 import { Id, IsoDate } from "./common.js";
 import { ContactPhoto } from "./contacts.js";
+import type { Locale } from "./i18n/index.js";
 import { splitLinks } from "./links.js";
 
 export const ASK_MAX = 500;
@@ -22,6 +23,21 @@ const BARE_DOMAIN = /\b[a-z0-9-]+\.(com|net|org|io|me|ly|gg|co|app|link|site|xyz
  * included: URLs, www. hosts and bare domains like bit.ly/x.
  */
 export const hasLink = (text: string) => splitLinks(text).some((p) => p.href) || BARE_DOMAIN.test(text);
+
+const ASK_IDEAS = {
+  en: () => import("./ask-ideas/en.js"),
+  fr: () => import("./ask-ideas/fr.js"),
+  mg: () => import("./ask-ideas/mg.js"),
+};
+
+/**
+ * A random question for the top of a link, or message to send through one, never the one already there. The lists
+ * are long, so they load the first time someone asks for one instead of with the app.
+ */
+export async function randomAskIdea(locale: Locale, kind: "prompts" | "messages", current: string) {
+  const others = (await ASK_IDEAS[locale]()).default[kind].filter((p) => p !== current);
+  return others[Math.floor(Math.random() * others.length)]!;
+}
 
 const visible = (s: string) => !s || VISIBLE.test(s);
 

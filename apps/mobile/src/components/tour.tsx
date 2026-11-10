@@ -24,14 +24,18 @@ export function markTourSeen() {
     .catch(() => null);
 }
 
-/** A few cards that swipe sideways, on how the app works, for someone new or anyone who asks for them again. */
-export function Tour({ onClose }: { onClose: () => void }) {
+/**
+ * A few cards that swipe sideways, on how the app works, for someone new or anyone who asks for them again. A guest
+ * who was just let all the way in gets a first card saying so.
+ */
+export function Tour({ onClose, upgraded }: { onClose: () => void; upgraded?: boolean }) {
   const t = useTheme();
   const tr = useT();
   const track = useRef<ComponentRef<typeof ScrollView>>(null);
   const [width, setWidth] = useState(0);
   const [at, setAt] = useState(0);
-  const cards = tr.tour.cards;
+  const cards = upgraded ? [tr.tour.upgraded, ...tr.tour.cards.slice(1)] : tr.tour.cards;
+  const art = upgraded ? ["🎉", ...ART.slice(1)] : ART;
   const last = at === cards.length - 1;
 
   return (
@@ -48,9 +52,9 @@ export function Tour({ onClose }: { onClose: () => void }) {
           >
             {cards.map((c, i) => (
               <View key={c.title} style={[styles.page, { width }]}>
-                {ART[i] ? (
+                {art[i] ? (
                   <View style={[styles.art, { backgroundColor: `${brand}26` }]}>
-                    <Text style={styles.emoji}>{ART[i]}</Text>
+                    <Text style={styles.emoji}>{art[i]}</Text>
                   </View>
                 ) : (
                   <Avatar user={SAMPLE} size="lg" />

@@ -182,8 +182,9 @@ function UserRow({ u, checked, onCheck }: { u: AdminUserDTO; checked: boolean; o
   const [banning, setBanning] = useState(false);
   const [limiting, setLimiting] = useState(false);
   const [signingOut, setSigningOut] = useState(false);
+  const [granting, setGranting] = useState(false);
 
-  async function act(path: "/v1/admin/users/{id}/unban" | "/v1/admin/users/{id}/sign-out") {
+  async function act(path: "/v1/admin/users/{id}/unban" | "/v1/admin/users/{id}/sign-out" | "/v1/admin/users/{id}/full-access") {
     unwrap(await six.api.POST(path, { params: { path: { id: u.id } } }));
     refreshAdmin(qc);
   }
@@ -243,6 +244,15 @@ function UserRow({ u, checked, onCheck }: { u: AdminUserDTO; checked: boolean; o
       </div>
       {!u.admin && (
         <div className="ml-auto flex gap-2">
+          {(u.guest || u.queued) && (
+            <button
+              type="button"
+              onClick={() => setGranting(true)}
+              className="rounded-lg bg-emerald-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-emerald-700"
+            >
+              Give full access
+            </button>
+          )}
           <button
             type="button"
             onClick={() => setLimiting(true)}
@@ -280,6 +290,13 @@ function UserRow({ u, checked, onCheck }: { u: AdminUserDTO; checked: boolean; o
       )}
       {banning && <BanDialog user={u} onClose={() => setBanning(false)} />}
       {limiting && <LimitDialog user={u} onClose={() => setLimiting(false)} />}
+      {granting && (
+        <Sheet
+          title={`Give ${u.displayName} full access? They'll get a notification and an email.`}
+          onClose={() => setGranting(false)}
+          actions={[{ label: "Give full access", onSelect: () => void act("/v1/admin/users/{id}/full-access") }]}
+        />
+      )}
       {signingOut && (
         <Sheet
           title={`Sign ${u.displayName} out of ${u.activeSessions} device${u.activeSessions === 1 ? "" : "s"}?`}

@@ -179,6 +179,22 @@ async function welcomeGuest(tx: Tx, emit: Emit, userId: string) {
   return user;
 }
 
+/**
+ * An admin lets someone all the way in: off the waiting list (meeting whoever invited them) and out of guest mode.
+ * Returns null when they already had full access, so nobody is told twice.
+ */
+export async function grantFullAccess(tx: Tx, emit: Emit, userId: string) {
+  const user = await tx.user.findUnique({ where: { id: userId }, include: { referredBy: { select: { referrerId: true } } } });
+  if (!user || user.deletedAt) throw new AppError("USER_NOT_FOUND");
+  if (!user.guest && !user.queuedAt) return null;
+  if (user.queuedAt) {
+    await tx.user.update({ where: { id: userId }, data: { queuedAt: null } });
+    const referrerId = user.referredBy?.referrerId;
+    if (referrerId) await ensureDirectChat(tx, emit, referrerId, userId, { to: referrerId, kind: "joined" });
+  }
+  return welcomeGuest(tx, emit, userId);
+}
+
 /** Lets in the people waiting on someone's links, first come first served, while they have room. */
 export async function admitQueued(referrerId: string) {
   await withEvents(async (tx, emit) => {

@@ -3,7 +3,7 @@ import { IsoDate } from "./common.js";
 import { PublicUser } from "./invites.js";
 import type { Dict } from "./i18n/index.js";
 
-export const NOTIFICATION_KINDS = ["joined", "added", "story_reaction", "note_reaction", "story_reply", "missed_call", "anon_message", "unblocked"] as const;
+export const NOTIFICATION_KINDS = ["joined", "added", "story_reaction", "note_reaction", "story_reply", "missed_call", "anon_message", "unblocked", "full_access"] as const;
 export type NotificationKind = (typeof NOTIFICATION_KINDS)[number];
 
 export const NotificationDTO = z.object({
@@ -46,5 +46,7 @@ export function notificationText(t: Dict["notifications"], n: NotificationDTO) {
       return t.anonMessage;
     case "unblocked":
       return t.unblocked(name);
+    case "full_access":
+      return t.fullAccess;
   }
 }

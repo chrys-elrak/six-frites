@@ -14,11 +14,14 @@ interface SessionState {
   user: UserDTO | null;
   bootstrap: () => Promise<void>;
   setUser: (user: UserDTO) => void;
+  /** Set when this guest was let all the way in while the app was open, for the welcome card. */
+  upgraded: boolean;
+  clearUpgraded: () => void;
 }
 
 let bootstrapped: Promise<void> | null = null;
 
-export const useSession = create<SessionState>((set) => {
+export const useSession = create<SessionState>((set, get) => {
   six.auth.onChange((auth) => {
     if (auth) set({ status: "authed", user: auth.user });
     else set({ status: "anon", user: null });
@@ -27,7 +30,9 @@ export const useSession = create<SessionState>((set) => {
   return {
     status: "loading",
     user: null,
-    setUser: (user) => set({ user }),
+    upgraded: false,
+    clearUpgraded: () => set({ upgraded: false }),
+    setUser: (user) => set({ user, upgraded: get().upgraded || (!!get().user?.guest && !user.guest) }),
     bootstrap() {
       bootstrapped ??= six.auth
         .resume()
