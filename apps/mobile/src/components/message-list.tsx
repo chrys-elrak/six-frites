@@ -119,6 +119,7 @@ import { segments } from "@/lib/markup";
 import { six } from "@/lib/six";
 import { type PendingMessage, useOutbox, usePending } from "@/lib/outbox";
 import { useRealtime } from "@/lib/realtime";
+import { HelloGif } from "./hello-gif";
 import { deliver, forwardMessages, type LocalFile, queueMessage } from "@/lib/send";
 import { useSelection } from "@/lib/selection";
 import { useSpoilers } from "@/lib/spoilers";
@@ -1636,6 +1637,7 @@ export const MessageList = forwardRef<
             <Text style={[styles.onWallpaper, styles.emptyChip]}>
               {chat.withSupport ? tr.support.welcome : tr.messages.empty}
             </Text>
+            {!chat.withSupport && <HelloGif chatId={chat.id} />}
           </View>
         ) : (
           <FlatList

@@ -117,6 +117,7 @@ import { useLongPress } from "@/lib/long-press";
 import { segments } from "@/lib/markup";
 import { type PendingMessage, useOutbox, usePending } from "@/lib/outbox";
 import { useRealtime } from "@/lib/realtime";
+import { HelloGif } from "./hello-gif";
 import { deliver, forwardMessages, queueMessage } from "@/lib/send";
 import { useSelection } from "@/lib/selection";
 import { useSpoilers } from "@/lib/spoilers";
@@ -1619,6 +1620,7 @@ export const MessageList = forwardRef<
             <span className="rounded-full bg-black/25 px-4 py-1.5 text-white backdrop-blur-sm">
               {chat.withSupport ? tr.support.welcome : tr.messages.empty}
             </span>
+            {!chat.withSupport && <HelloGif chatId={chat.id} />}
           </div>
         )}
         {messages.isFetchingNextPage && (
