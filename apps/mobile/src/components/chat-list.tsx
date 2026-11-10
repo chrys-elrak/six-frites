@@ -365,7 +365,7 @@ const contactsQuery = {
 function ContactList({ needle, query }: { needle: string; query: string }) {
   const t = useTheme();
   const tr = useT();
-  const [sort, setSort] = useState<ContactSort>("name");
+  const [sort, setSort] = useState<ContactSort>("active");
   const presence = usePresenceStore((s) => s.byUser);
   useEffect(() => {
     void AsyncStorage.getItem(SORT_KEY)

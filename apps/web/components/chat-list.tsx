@@ -418,7 +418,7 @@ const contactsQuery = {
 function ContactRows({ needle, query }: { needle: string; query: string }) {
   const tr = useT();
   const pathname = usePathname();
-  const [sort, setSort] = useState<ContactSort>("name");
+  const [sort, setSort] = useState<ContactSort>("active");
   const presence = usePresenceStore((s) => s.byUser);
   useEffect(() => {
     try {
