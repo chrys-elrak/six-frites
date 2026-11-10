@@ -326,16 +326,16 @@ export async function setNote(
   return toNoteDTO(note, 0);
 }
 
-/** Counts a contact opening a note; opening your own doesn't count. */
-export async function markNoteViewed(viewerId: string, noteId: string) {
+/** Counts a contact opening a note, or the link in it; opening your own doesn't count. */
+export async function markNoteViewed(viewerId: string, noteId: string, clicked = false) {
   const note = await prisma.note.findUnique({ where: { id: noteId } });
   if (!note || note.expiresAt <= new Date()) throw new AppError("STORY_NOT_FOUND");
   if (note.userId === viewerId) return;
   if (!(await contactIds(prisma, viewerId)).includes(note.userId)) throw new AppError("STORY_NOT_FOUND");
   await prisma.noteView.upsert({
     where: { noteId_userId: { noteId, userId: viewerId } },
-    create: { noteId, userId: viewerId },
-    update: {},
+    create: { noteId, userId: viewerId, clickedAt: clicked ? new Date() : null },
+    update: clicked ? { clickedAt: new Date() } : {},
   });
 }
 
@@ -369,7 +369,7 @@ export async function listNoteViewers(userId: string): Promise<{ items: NoteView
   });
   const profile = await profilesFor(prisma, userId, views.map((v) => v.userId));
   return {
-    items: views.map((v) => ({ user: profile(v.user), viewedAt: v.viewedAt.toISOString(), reactions: v.reactions as StoryReaction[] })),
+    items: views.map((v) => ({ user: profile(v.user), viewedAt: v.viewedAt.toISOString(), clickedAt: v.clickedAt?.toISOString() ?? null, reactions: v.reactions as StoryReaction[] })),
   };
 }
 

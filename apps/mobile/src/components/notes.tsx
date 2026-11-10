@@ -153,6 +153,7 @@ function NoteViewers({ count }: { count: number }) {
                 {v.user.displayName}
               </Text>
               <Text style={{ color: t.muted, fontSize: 12 }}>{timeAgo(v.viewedAt)}</Text>
+              {v.clickedAt && <Text accessibilityLabel={tr.stories.openedLink}>🔗</Text>}
               {countReactions(v.reactions).map(([emoji, n]) => (
                 <Text key={emoji} style={{ fontSize: 20 }}>
                   {emoji}
@@ -314,6 +315,7 @@ export function NoteReader({ user, note, onClose }: { user: PublicUser; note: No
   useEffect(() => {
     void six.api.POST("/v1/notes/{id}/view", { params: { path: { id: note.id } } });
   }, [note.id]);
+  const clicked = () => void six.api.POST("/v1/notes/{id}/click", { params: { path: { id: note.id } } });
 
   const react = (emoji: StoryReaction) => {
     void six.api.POST("/v1/notes/{id}/react", { params: { path: { id: note.id } }, body: { emoji } });
@@ -334,11 +336,11 @@ export function NoteReader({ user, note, onClose }: { user: PublicUser; note: No
           {note.gif && <Loop gif={note.gif} height={180} maxWidth={280} radius={18} />}
           {!!note.text && (
             <Text style={[{ color: note.background ? inkOn(note.background) : t.text, fontSize: 16, fontWeight: "500", textAlign: "center" }, note.gif && { padding: 6 }]}>
-              <Linked text={note.text} selecting={false} />
+              <Linked text={note.text} selecting={false} onOpen={clicked} />
             </Text>
           )}
         </View>
-        {previewLink(note.text) && <LinkCard url={previewLink(note.text)!} mine={false} width={280} />}
+        {previewLink(note.text) && <LinkCard url={previewLink(note.text)!} mine={false} width={280} onOpen={clicked} />}
         <Avatar user={user} size="lg" />
         <Text style={{ color: t.text, fontSize: 15 }}>
           <Text style={{ fontWeight: "700" }}>{user.displayName}</Text>

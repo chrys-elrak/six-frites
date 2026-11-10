@@ -567,7 +567,7 @@ function MessageText({ row, selecting, color }: { row: MsgRow; selecting: boolea
 }
 
 /** Text with its links and animated emoji; the emoji grow with the text's size when it has one. */
-export function Linked({ text, selecting, size }: { text: string; selecting: boolean; size?: string }) {
+export function Linked({ text, selecting, size, onOpen }: { text: string; selecting: boolean; size?: string; onOpen?: () => void }) {
   const emoji = Math.round((textSize(size) ?? 16) * 1.25);
   return (
     <>
@@ -575,7 +575,14 @@ export function Linked({ text, selecting, size }: { text: string; selecting: boo
         part.href ? (
           <Text
             key={i}
-            onPress={selecting ? undefined : () => void Linking.openURL(part.href!)}
+            onPress={
+              selecting
+                ? undefined
+                : () => {
+                    onOpen?.();
+                    void Linking.openURL(part.href!);
+                  }
+            }
             style={{ textDecorationLine: "underline" }}
           >
             {part.text}
@@ -588,7 +595,7 @@ export function Linked({ text, selecting, size }: { text: string; selecting: boo
   );
 }
 
-export function LinkCard({ url, mine, width }: { url: string; mine: boolean; width: number }) {
+export function LinkCard({ url, mine, width, onOpen }: { url: string; mine: boolean; width: number; onOpen?: () => void }) {
   const t = useTheme();
   const bubble = useBubbleColors();
   const fg = mine ? bubble.ink : (bubble.theirInk ?? t.text);
@@ -601,7 +608,10 @@ export function LinkCard({ url, mine, width }: { url: string; mine: boolean; wid
   if (!data) return null;
   return (
     <Pressable
-      onPress={() => void Linking.openURL(url)}
+      onPress={() => {
+        onOpen?.();
+        void Linking.openURL(url);
+      }}
       style={[
         styles.quote,
         styles.linkCard,

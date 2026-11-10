@@ -78,6 +78,17 @@ const storyRoutes: FastifyPluginAsyncZod = async (app) => {
   );
 
   app.post(
+    "/notes/:id/click",
+    {
+      schema: { tags: ["stories"], summary: "Mark the link in a contact's note as opened", security, params: Params, response: { 204: z.null() } },
+    },
+    async (req, reply) => {
+      await markNoteViewed(req.auth.userId, req.params.id, true);
+      return reply.status(204).send(null);
+    },
+  );
+
+  app.post(
     "/notes/:id/react",
     {
       config: { rateLimit: { max: 60, timeWindow: "1 minute" } },

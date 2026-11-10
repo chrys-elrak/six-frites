@@ -336,5 +336,5 @@ export const StoryViewerDTO = z.object({
 });
 export type StoryViewerDTO = z.infer<typeof StoryViewerDTO>;
 
-export const NoteViewerDTO = StoryViewerDTO;
+export const NoteViewerDTO = StoryViewerDTO.extend({ clickedAt: IsoDate.nullable().describe("When they last opened the link in it") });
 export type NoteViewerDTO = z.infer<typeof NoteViewerDTO>;

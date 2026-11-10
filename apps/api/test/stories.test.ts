@@ -176,8 +176,11 @@ describe("stories", () => {
     expect((await call(guest, "POST", `/v1/notes/${note.id}/view`)).statusCode).toBe(204);
     expect((await get(host, "/v1/notes")).mine.viewCount).toBe(1);
     expect((await get(guest, "/v1/notes")).items[0].note.viewCount).toBeNull();
-    expect((await get(host, "/v1/notes/viewers")).items).toMatchObject([{ user: { id: guest.user.id } }]);
+    expect((await get(host, "/v1/notes/viewers")).items).toMatchObject([{ user: { id: guest.user.id }, clickedAt: null }]);
     expect((await get(guest, "/v1/notes/viewers")).items).toEqual([]);
+    expect((await call(stranger, "POST", `/v1/notes/${note.id}/click`)).statusCode).toBe(404);
+    expect((await call(guest, "POST", `/v1/notes/${note.id}/click`)).statusCode).toBe(204);
+    expect((await get(host, "/v1/notes/viewers")).items[0].clickedAt).toEqual(expect.any(String));
     await call(host, "PUT", "/v1/notes", { text: "Anyone?" });
     expect((await get(host, "/v1/notes/viewers")).items).toEqual([]);
   });

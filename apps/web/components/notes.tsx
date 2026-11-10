@@ -121,6 +121,11 @@ function NoteViewers({ count }: { count: number }) {
               <Avatar user={v.user} />
               <span className="min-w-0 flex-1 truncate">{v.user.displayName}</span>
               <span className="text-xs text-stone-500">{timeAgo(v.viewedAt)}</span>
+              {v.clickedAt && (
+                <span role="img" aria-label={tr.stories.openedLink} title={tr.stories.openedLink}>
+                  🔗
+                </span>
+              )}
               {countReactions(v.reactions).map(([emoji, n]) => (
                 <span key={emoji} className="flex items-baseline text-xl leading-none">
                   {emoji}
@@ -324,7 +329,12 @@ export function NoteReader({ user, note, onClose }: { user: PublicUser; note: No
 
   return (
     <Dialog onClose={onClose}>
-      <div className="flex flex-col items-center gap-3 p-5">
+      <div
+        className="flex flex-col items-center gap-3 p-5"
+        onClickCapture={(e) => {
+          if ((e.target as Element).closest("a[href]")) void six.api.POST("/v1/notes/{id}/click", { params: { path: { id: note.id } } });
+        }}
+      >
         <span
           style={tint(note.background)}
           className={`flex max-w-full flex-col items-center gap-2 rounded-3xl text-center text-base font-medium break-words shadow ${note.background ? "" : plain} ${note.gif ? "p-1.5" : "px-4 py-2.5"}`}

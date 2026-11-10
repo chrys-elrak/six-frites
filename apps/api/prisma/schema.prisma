@@ -775,6 +775,8 @@ model NoteView {
   noteId    String
   userId    String
   viewedAt  DateTime @default(now())
+  /// When they last opened the link in it.
+  clickedAt DateTime?
   /// The emojis they reacted with, as on StoryView.
   reactions String[] @default([])
 

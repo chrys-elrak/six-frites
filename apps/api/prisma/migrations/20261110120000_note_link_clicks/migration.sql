@@ -1,0 +1,1 @@
+ALTER TABLE "NoteView" ADD COLUMN "clickedAt" TIMESTAMP(3);
