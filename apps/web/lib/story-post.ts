@@ -28,7 +28,7 @@ export async function postStory(qc: QueryClient, body: CreateStoryInput, file?: 
     const upload = file ? await six.upload(file.blob, { ...file, onProgress: (progress) => set({ progress }) }) : null;
     unwrap(await six.api.POST("/v1/stories", { body: { ...body, uploadId: upload?.id, background: upload ? undefined : body.background } }));
     void qc.invalidateQueries({ queryKey: ["stories"] });
-    set({ state: "done", progress: 1 });
+    set((s) => (s.state ? { state: "done", progress: 1 } : {}));
     hide = setTimeout(() => set({ state: null }), 3000);
   } catch {
     set({ state: "failed", retry: () => void postStory(qc, body, file) });

@@ -29,19 +29,17 @@ export function StoryPostBar() {
                 : tr.stories.couldNotPostShort}
           </Text>
           {state === "failed" && (
-            <>
-              <Pressable onPress={() => retry?.()} hitSlop={8}>
-                <Text style={{ color: brand, fontSize: 14, fontWeight: "700" }}>{tr.common.retry}</Text>
-              </Pressable>
-              <Pressable
-                onPress={() => useStoryPost.setState({ state: null, retry: null })}
-                accessibilityLabel={tr.common.dismiss}
-                hitSlop={8}
-              >
-                <X size={18} color={t.muted} />
-              </Pressable>
-            </>
+            <Pressable onPress={() => retry?.()} hitSlop={8}>
+              <Text style={{ color: brand, fontSize: 14, fontWeight: "700" }}>{tr.common.retry}</Text>
+            </Pressable>
           )}
+          <Pressable
+            onPress={() => useStoryPost.setState({ state: null, retry: null })}
+            accessibilityLabel={tr.common.dismiss}
+            hitSlop={8}
+          >
+            <X size={18} color={t.muted} />
+          </Pressable>
         </View>
         {state === "posting" && (
           <View style={{ height: 3, backgroundColor: "rgba(0,0,0,0.06)" }}>

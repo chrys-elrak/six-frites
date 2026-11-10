@@ -13,7 +13,7 @@ export function StoryPostBar() {
 
   return (
     <Portal>
-      <div className="pointer-events-none fixed inset-x-0 bottom-0 z-[60] flex justify-center p-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] md:justify-end md:p-4">
+      <div className="pointer-events-none fixed inset-x-0 top-0 z-[60] flex justify-center p-3 pt-[max(0.75rem,env(safe-area-inset-top))] md:justify-end md:p-4">
         <div
           role="status"
           className="pointer-events-auto w-full max-w-sm overflow-hidden rounded-2xl bg-white/85 shadow-xl ring-1 ring-black/5 backdrop-blur-xl dark:bg-stone-900/85 dark:ring-white/10"
@@ -30,20 +30,18 @@ export function StoryPostBar() {
                   : tr.stories.couldNotPostShort}
             </span>
             {state === "failed" && (
-              <>
-                <button type="button" onClick={() => retry?.()} className="font-semibold text-brand">
-                  {tr.common.retry}
-                </button>
-                <button
-                  type="button"
-                  onClick={() => useStoryPost.setState({ state: null, retry: null })}
-                  aria-label={tr.common.dismiss}
-                  className="grid size-7 place-items-center rounded-full text-stone-400 hover:bg-stone-900/5"
-                >
-                  <X className="size-4" />
-                </button>
-              </>
+              <button type="button" onClick={() => retry?.()} className="font-semibold text-brand">
+                {tr.common.retry}
+              </button>
             )}
+            <button
+              type="button"
+              onClick={() => useStoryPost.setState({ state: null, retry: null })}
+              aria-label={tr.common.dismiss}
+              className="grid size-7 place-items-center rounded-full text-stone-400 hover:bg-stone-900/5"
+            >
+              <X className="size-4" />
+            </button>
           </div>
           {state === "posting" && (
             <div className="h-1 bg-brand/15">

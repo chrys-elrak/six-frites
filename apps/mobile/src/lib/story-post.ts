@@ -54,7 +54,7 @@ export async function postStory(qc: QueryClient, body: CreateStoryInput, file?: 
       : null;
     unwrap(await six.api.POST("/v1/stories", { body: { ...body, uploadId: upload?.id, background: upload ? undefined : body.background } }));
     void qc.invalidateQueries({ queryKey: ["stories"] });
-    set({ state: "done", progress: 1 });
+    set((s) => (s.state ? { state: "done", progress: 1 } : {}));
     hide = setTimeout(() => set({ state: null }), 3000);
     void notify(tr.stories.posted, "", "in-app").catch(() => null);
   } catch {
