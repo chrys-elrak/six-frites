@@ -36,6 +36,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   const theme = readTheme(jar.get("theme")?.value);
   return (
     <html
+      suppressHydrationWarning
       lang={locale}
       data-font={jar.get("font")?.value === "plain" ? "plain" : undefined}
       data-theme={theme === "system" ? undefined : theme}
