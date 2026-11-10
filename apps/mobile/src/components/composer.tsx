@@ -214,6 +214,10 @@ export function Composer({
   const selection = useRef<Range>({ start: 0, end: 0 });
   const [forced, setForced] = useState<Range | undefined>(undefined);
   const [expressions, setExpressions] = useState(false);
+  const [tall, setTall] = useState(false);
+  useEffect(() => {
+    if (!text) setTall(false);
+  }, [text]);
   const [hasSelection, setHasSelection] = useState(false);
   const [panel, setPanel] = useState<"color" | "highlight" | "outline" | "custom" | "font" | "size" | null>(null);
   const [paint, setPaint] = useState<"color" | "highlight" | "outline">("color");
@@ -971,6 +975,7 @@ export function Composer({
               { backgroundColor: t.surface, borderColor: t.border },
               chat?.vanish && styles.vanishField,
               (capture || preview) && styles.gone,
+              tall && styles.tallField,
             ]}
           >
             <RichTextInput
@@ -991,7 +996,8 @@ export function Composer({
               placeholder={tr.common.message}
               placeholderTextColor={t.muted}
               accessibilityLabel={tr.common.message}
-              style={[styles.input, { color: t.text }]}
+              onLayout={(e) => e.nativeEvent.layout.height > 44 && setTall(true)}
+              style={[styles.input, { color: t.text }, tall && styles.tallInput]}
             />
             {!editing && !parked && !!text.trim() && !commanding && (
               <Pressable onPress={swapDraft} accessibilityLabel={tr.composer.parkDraft} style={styles.round40}>
@@ -1198,6 +1204,8 @@ const styles = StyleSheet.create({
   gone: { display: "none" },
   redDot: { width: 10, height: 10, borderRadius: 5, backgroundColor: "#ef4444" },
   input: { flex: 1, fontSize: 16, lineHeight: 22, maxHeight: 160, paddingTop: 9, paddingBottom: 9, paddingLeft: 16 },
+  tallField: { flexWrap: "wrap", justifyContent: "flex-end" },
+  tallInput: { flexBasis: "100%", paddingRight: 16 },
   round40: { width: 40, height: 40, borderRadius: 20, alignItems: "center", justifyContent: "center" },
   round32: { width: 32, height: 32, borderRadius: 16, alignItems: "center", justifyContent: "center" },
 });

@@ -53,7 +53,7 @@ import {
   VenetianMask,
   X,
 } from "lucide-react";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { editMessage, updateChatSettings } from "@/lib/actions";
 import { useChat } from "@/lib/chats";
@@ -179,6 +179,12 @@ export function Composer({
   const [hasSelection, setHasSelection] = useState(false);
   const [caret, setCaret] = useState(0);
   const [expressions, setExpressions] = useState(false);
+  const field = useRef<HTMLDivElement>(null);
+  const [tall, setTall] = useState(false);
+  useLayoutEffect(() => {
+    if (!text) setTall(false);
+    else if ((field.current?.querySelector<HTMLElement>("[role=textbox]")?.offsetHeight ?? 0) > 44) setTall(true);
+  }, [text]);
   const narrow = useMedia("(width < 48rem)");
   const beside = useMedia("(width >= 80rem)") && !!sidebar;
   const ref = useRef<RichInputHandle>(null);
@@ -865,8 +871,11 @@ export function Composer({
             </>
           )}
           <div
+            ref={field}
             onFocus={() => narrow && setExpressions(false)}
             className={`relative min-h-10 min-w-0 flex-1 items-end rounded-2xl bg-white dark:bg-stone-900 ${
+              tall ? "flex-wrap justify-end [&>:has([role=textbox])]:basis-full [&_[role=textbox]]:pr-4" : ""
+            } ${
               chat?.vanish
                 ? "outline-2 outline-dashed outline-brand"
                 : "ring-1 ring-stone-200 focus-within:ring-2 focus-within:ring-brand dark:ring-stone-800"
