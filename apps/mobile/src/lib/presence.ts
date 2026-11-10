@@ -46,18 +46,24 @@ export const usePresence = (userId: string | undefined) =>
 
 const startOfDay = (d: Date) => new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime();
 
-/** "online", "last seen just now", "last seen 5 min ago", "last seen today at 14:03", … */
+/** "online", "last seen just now on the app", "last seen 5 min ago on the web", "last seen today at 14:03", … */
 export function presenceLabel(p: PresenceDTO | undefined) {
   if (!p) return null;
   const t = getT().time;
   if (p.online) return t.online;
   if (!p.lastSeenAt) return t.lastSeenLongAgo;
-  const at = new Date(p.lastSeenAt);
+  const seen = lastSeen(p.lastSeenAt);
+  return p.lastDevice ? `${seen} ${t.seenOn[p.lastDevice]}` : seen;
+}
+
+function lastSeen(lastSeenAt: string) {
+  const t = getT().time;
+  const at = new Date(lastSeenAt);
   const mins = Math.round((Date.now() - at.getTime()) / 60_000);
   if (mins < 1) return t.lastSeenJustNow;
   if (mins < 60) return t.lastSeenMinAgo(mins);
   const days = Math.round((startOfDay(new Date()) - startOfDay(at)) / 864e5);
-  const time = clockTime(p.lastSeenAt);
+  const time = clockTime(lastSeenAt);
   if (days === 0) return t.lastSeenTodayAt(time);
   if (days === 1) return t.lastSeenYesterdayAt(time);
   if (days < 7) return t.lastSeenDayAt(at.toLocaleDateString(getLocale(), { weekday: "long" }), time);

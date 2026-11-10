@@ -12,6 +12,7 @@ export const PresenceDTO = z.object({
     .array(ClientDevice)
     .describe("What they have it open on right now: the mobile app, a phone browser or a computer. Empty when offline"),
   lastSeenAt: IsoDate.nullable().describe("When they last had the app open; null if never recorded"),
+  lastDevice: ClientDevice.nullable().describe("What they last had it open on, in the past 30 days; null if unknown"),
 });
 export type PresenceDTO = z.infer<typeof PresenceDTO>;
 

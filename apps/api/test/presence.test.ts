@@ -6,7 +6,7 @@ const ctx = useApp();
 const { get, makeFriends } = chatHelpers(ctx);
 
 describe("presence devices", () => {
-  it("lists the devices someone is active on, and drops each as they leave it", async () => {
+  it("lists the devices someone is active on, drops each as they leave it, and keeps the last one", async () => {
     const { host, guest } = await makeFriends();
     const userId = host.user.id;
     const { id: phone } = await prisma.session.findFirstOrThrow({ where: { userId } });
@@ -29,8 +29,9 @@ describe("presence devices", () => {
     await setUserPresence(userId, laptop, "desktop", false);
     expect(await seen()).toMatchObject({ online: true, devices: ["app"] });
 
+    await setUserPresence(userId, phone, "app", true);
     await setUserPresence(userId, phone, "app", false);
-    expect(await seen()).toMatchObject({ online: false, devices: [] });
+    expect(await seen()).toMatchObject({ online: false, devices: [], lastDevice: "app" });
   });
 
   it("keeps someone online without a device when their client is too old to say", async () => {

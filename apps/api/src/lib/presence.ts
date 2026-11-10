@@ -1,4 +1,4 @@
-import { CLIENT_DEVICES, type ClientDevice, type PresenceDTO } from "@six/shared";
+import { CLIENT_DEVICES, ClientDevice, type PresenceDTO } from "@six/shared";
 import type { Redis } from "ioredis";
 import { env } from "../env.js";
 import { prisma } from "./prisma.js";
@@ -11,6 +11,8 @@ const key = (sessionId: string) => `${env.QUEUE_PREFIX}:active:${sessionId}`;
 const onlineKey = (userId: string) => `${env.QUEUE_PREFIX}:online:${userId}`;
 const deviceKey = (userId: string, device: ClientDevice) => `${env.QUEUE_PREFIX}:online:${userId}:${device}`;
 const seenKey = (userId: string) => `${env.QUEUE_PREFIX}:seen:${userId}`;
+const seenDeviceKey = (userId: string) => `${env.QUEUE_PREFIX}:seen-device:${userId}`;
+const SEEN_TTL = 30 * 24 * 60 * 60;
 
 let client: Redis | null = null;
 const redis = () => (client ??= redisConnection());
@@ -65,8 +67,9 @@ export async function setUserPresence(userId: string, sessionId: string, device:
   if (active) {
     const [previous, , previousDevice] = await Promise.all([
       redis().set(onlineKey(userId), "1", "EX", TTL_SECONDS, "GET"),
-      redis().set(seenKey(userId), now.toISOString(), "EX", 30 * 24 * 60 * 60),
+      redis().set(seenKey(userId), now.toISOString(), "EX", SEEN_TTL),
       device ? redis().set(deviceKey(userId, device), "1", "EX", TTL_SECONDS, "GET") : "",
+      device && redis().set(seenDeviceKey(userId), device, "EX", SEEN_TTL),
     ]);
     if (previous === null || previousDevice === null) await announce(userId);
     return;
@@ -90,9 +93,10 @@ export async function setUserPresence(userId: string, sessionId: string, device:
 
 export async function presenceOf(userIds: string[]): Promise<PresenceDTO[]> {
   if (!userIds.length) return [];
-  const [online, seen, devices, users] = await Promise.all([
+  const [online, seen, seenDevice, devices, users] = await Promise.all([
     redis().mget(userIds.map(onlineKey)),
     redis().mget(userIds.map(seenKey)),
+    redis().mget(userIds.map(seenDeviceKey)),
     redis().mget(userIds.flatMap((id) => CLIENT_DEVICES.map((d) => deviceKey(id, d)))),
     prisma.user.findMany({ where: { id: { in: userIds } }, select: { id: true, lastSeenAt: true } }),
   ]);
@@ -103,6 +107,7 @@ export async function presenceOf(userIds: string[]): Promise<PresenceDTO[]> {
       online: online[i] !== null,
       devices: online[i] === null ? [] : CLIENT_DEVICES.filter((_, d) => devices[i * CLIENT_DEVICES.length + d] !== null),
       lastSeenAt: seen[i] ?? stored.get(id) ?? null,
+      lastDevice: ClientDevice.safeParse(seenDevice[i]).data ?? null,
     }))
     .filter((p) => stored.has(p.userId));
 }
