@@ -81,6 +81,7 @@ export const invitePlacesLeft = (q: InviteQuota) =>
 
 export const AcceptInviteResult = z.object({
   referrer: PublicUser,
+  chatId: Id.nullable().describe("The chat with whoever invited you; null while you wait for them to have room"),
 });
 export type AcceptInviteResult = z.infer<typeof AcceptInviteResult>;
 

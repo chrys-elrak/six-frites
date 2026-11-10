@@ -74,7 +74,7 @@ import { NewGroup } from "./groups";
 import { Avatar } from "./avatar";
 import { ChatMenu } from "./chat-menu";
 import { BackupPinBanner } from "./encryption-settings";
-import { TipCard } from "./tip-card";
+import { InviteNudge, TipCard } from "./tip-card";
 import { NewInvite } from "./invites";
 import { FindMe, Invites } from "./settings-panel";
 import { StoriesBar, StoryAvatar } from "./stories";
@@ -352,6 +352,12 @@ function ContactRow({ contact, sort }: { contact: ContactDTO; sort: ContactSort 
 
 const SORT_KEY = "six:contact-sort";
 
+const contactsQuery = {
+  queryKey: ["contacts"],
+  staleTime: 0,
+  queryFn: async () => unwrap(await six.api.GET("/v1/contacts", { params: { query: { limit: 200 } } })).items,
+};
+
 /**
  * Everyone I share a direct chat with, A to Z, by last active or by newest, even the chats I deleted for me, and
  * opens our chat. Below them, my contact codes and invite links, for adding more.
@@ -370,11 +376,7 @@ function ContactList({ needle, query }: { needle: string; query: string }) {
     setSort(next);
     void AsyncStorage.setItem(SORT_KEY, next).catch(() => null);
   }
-  const contacts = useQuery({
-    queryKey: ["contacts"],
-    staleTime: 0,
-    queryFn: async () => unwrap(await six.api.GET("/v1/contacts", { params: { query: { limit: 200 } } })).items,
-  });
+  const contacts = useQuery(contactsQuery);
   const hidden = useHiddenByArchive().chatIds;
   const matching = contacts.data?.filter((c) => !hidden.has(c.chatId) && c.user.displayName.toLowerCase().includes(needle)) ?? [];
   useWatchPresence(matching.map((c) => c.user.id));
@@ -467,6 +469,10 @@ export function ChatList({ archived = false, contacts = false }: { archived?: bo
 
   const [query, setQuery] = useState("");
   const [dialog, setDialog] = useState<"add" | "invite" | "findMe" | "group" | null>(null);
+  const lonely = useQuery({ ...contactsQuery, enabled: !archived }).data?.length === 0;
+  useEffect(() => {
+    if (lonely) void qc.invalidateQueries({ queryKey: ["contacts"] });
+  }, [chats.data?.length]);
   const [pulled, setPulled] = useState(false);
   useFocusEffect(useCallback(() => () => setPulled(false), []));
   const needle = query.trim().toLowerCase();
@@ -523,7 +529,7 @@ export function ChatList({ archived = false, contacts = false }: { archived?: bo
     <>
       {!archived && <UpdateBanner />}
       {!archived && <BackupPinBanner />}
-      {!archived && <TipCard />}
+      {!archived && (lonely ? <InviteNudge onInvite={() => setDialog("invite")} /> : <TipCard />)}
       {pulled && view === "chats" && !needle && archivedCount > 0 && (
         <Pressable
           onPress={() => router.push("/archived")}

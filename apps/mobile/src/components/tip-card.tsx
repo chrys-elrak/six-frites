@@ -1,5 +1,5 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { ChevronLeft, ChevronRight, Lightbulb } from "lucide-react-native";
+import { ChevronLeft, ChevronRight, Lightbulb, UserPlus } from "lucide-react-native";
 import { router } from "expo-router";
 import { useEffect, useState } from "react";
 import { Pressable, ScrollView, StyleSheet, View } from "react-native";
@@ -50,6 +50,26 @@ export function TipCard() {
       <Pressable onPress={close} hitSlop={6} style={styles.button}>
         <Text style={{ color: brandInk, fontWeight: "700", fontSize: 14 }}>{tips.next}</Text>
       </Pressable>
+    </View>
+  );
+}
+
+/** Takes the tip's place while there's nobody to chat with, as for someone an admin let in, until a friend joins. */
+export function InviteNudge({ onInvite }: { onInvite: () => void }) {
+  const t = useTheme();
+  const tr = useT();
+  return (
+    <View style={[styles.card, { alignItems: "flex-start", marginBottom: 8, borderColor: "rgba(235,138,0,0.25)" }]}>
+      <View style={styles.icon}>
+        <UserPlus size={20} color={brand} />
+      </View>
+      <View style={{ flex: 1, gap: 2 }}>
+        <Text style={{ color: brand, fontSize: 14, fontWeight: "700" }}>{tr.contacts.nobodyYet}</Text>
+        <Text style={{ color: t.textSoft, fontSize: 14, lineHeight: 20 }}>{tr.contacts.nobodyYetHint}</Text>
+        <Pressable onPress={onInvite} hitSlop={6} style={[styles.button, { alignSelf: "flex-start", marginTop: 8 }]}>
+          <Text style={{ color: brandInk, fontWeight: "700", fontSize: 14 }}>{tr.contacts.inviteFriend}</Text>
+        </Pressable>
+      </View>
     </View>
   );
 }

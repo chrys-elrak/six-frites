@@ -7900,10 +7900,17 @@
                       ],
                       "additionalProperties": false,
                       "description": "Their alias and no photo, unless they share their profile with you"
+                    },
+                    "chatId": {
+                      "nullable": true,
+                      "description": "The chat with whoever invited you; null while you wait for them to have room",
+                      "type": "string",
+                      "minLength": 1
                     }
                   },
                   "required": [
-                    "referrer"
+                    "referrer",
+                    "chatId"
                   ],
                   "additionalProperties": false
                 }

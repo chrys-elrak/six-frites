@@ -23,8 +23,9 @@ export default function InviteScreen() {
 
   const accept = useMutation({
     mutationFn: async () => unwrap(await six.api.POST("/v1/invites/{code}/accept", { params: { path: { code } } })),
-    onSuccess: async () => {
+    onSuccess: async ({ chatId }) => {
       if (user?.guest) setUser(unwrap(await six.api.GET("/v1/me")));
+      if (chatId) router.replace(`/chats/${chatId}`);
     },
   });
 

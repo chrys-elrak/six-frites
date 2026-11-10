@@ -4001,6 +4001,8 @@ export interface paths {
                                 /** @description Their alias, when you gave them a name of your own: without a photo, their picture still comes from it */
                                 alias?: string;
                             };
+                            /** @description The chat with whoever invited you; null while you wait for them to have room */
+                            chatId: string | null;
                         };
                     };
                 };

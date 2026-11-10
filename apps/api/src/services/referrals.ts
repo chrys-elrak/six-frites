@@ -213,6 +213,10 @@ export async function admitQueued(referrerId: string) {
   });
 }
 
+/** Our chat, or null while there's none yet, as when the inviter has no room and the invitee waits in line. */
+const directChatId = async (db: Tx, a: string, b: string) =>
+  (await db.chat.findUnique({ where: { directKey: [a, b].sort().join(":") }, select: { id: true } }))?.id ?? null;
+
 /**
  * Connects someone who already has an account with the link's owner. It doesn't take one of the link's places,
  * unless they are a guest from the support page, who joins with it as a new account would.
@@ -223,7 +227,10 @@ export async function acceptInvite(userId: string, code: string) {
     include: { referrer: true, invite: { select: { code: true } } },
   });
   if (existing?.invite.code === normalizeCode(code)) {
-    return { referrer: (await profilesFor(prisma, userId, [existing.referrerId]))(existing.referrer) };
+    return {
+      referrer: (await profilesFor(prisma, userId, [existing.referrerId]))(existing.referrer),
+      chatId: await directChatId(prisma, userId, existing.referrerId),
+    };
   }
 
   return withEvents(async (tx, emit) => {
@@ -231,7 +238,10 @@ export async function acceptInvite(userId: string, code: string) {
     const user = await tx.user.findUniqueOrThrow({ where: { id: userId } });
     if (user.guest && !user.queuedAt) await applyInvite(tx, emit, user, code);
     else await ensureDirectChat(tx, emit, invite.creatorId, userId, { to: invite.creatorId, kind: "added" });
-    return { referrer: (await profilesFor(tx, userId, [invite.creatorId]))(invite.creator) };
+    return {
+      referrer: (await profilesFor(tx, userId, [invite.creatorId]))(invite.creator),
+      chatId: await directChatId(tx, userId, invite.creatorId),
+    };
   });
 }
 

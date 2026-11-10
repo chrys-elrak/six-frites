@@ -34,7 +34,11 @@ export default function InvitePage({ params }: { params: Promise<{ code: string 
 
   const accept = useMutation({
     mutationFn: async () => unwrap(await six.api.POST("/v1/invites/{code}/accept", { params: { path: { code } } })),
-    onSuccess: () => user?.guest && window.location.replace("/"),
+    onSuccess: ({ chatId }) => {
+      const chat = chatId && `/chats/${chatId}`;
+      if (user?.guest) window.location.replace(chat || "/");
+      else if (chat) router.replace(chat);
+    },
   });
 
   useEffect(() => {

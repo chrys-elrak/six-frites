@@ -1,6 +1,6 @@
 "use client";
 
-import { ChevronLeft, ChevronRight, Lightbulb } from "lucide-react";
+import { ChevronLeft, ChevronRight, Lightbulb, UserPlus } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { BackLink } from "@/lib/back";
@@ -53,6 +53,29 @@ export function TipCard() {
       >
         {t.next}
       </button>
+    </div>
+  );
+}
+
+/** Takes the tip's place while there's nobody to chat with, as for someone an admin let in, until a friend joins. */
+export function InviteNudge({ onInvite }: { onInvite: () => void }) {
+  const tr = useT();
+  return (
+    <div className="flex items-start gap-3 rounded-2xl bg-brand/10 p-3 ring-1 ring-brand/20">
+      <span className="grid size-9 shrink-0 place-items-center rounded-full bg-brand/20 text-brand">
+        <UserPlus className="size-5" />
+      </span>
+      <div className="min-w-0 flex-1 text-sm">
+        <p className="font-semibold text-brand">{tr.contacts.nobodyYet}</p>
+        <p className="text-stone-700 dark:text-stone-300">{tr.contacts.nobodyYetHint}</p>
+        <button
+          type="button"
+          onClick={onInvite}
+          className="mt-2.5 rounded-full bg-brand px-3 py-1.5 text-sm font-semibold text-brand-ink hover:brightness-105"
+        >
+          {tr.contacts.inviteFriend}
+        </button>
+      </div>
     </div>
   );
 }

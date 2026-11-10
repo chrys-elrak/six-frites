@@ -58,8 +58,10 @@ describe("invites", () => {
 
     const accept = (who: { accessToken: string }) =>
       ctx.app.inject({ method: "POST", url: `/v1/invites/${code}/accept`, headers: bearer(who.accessToken) });
-    expect((await accept(existing)).json()).toMatchObject({ referrer: { id: host.user.id } });
-    expect((await get(existing, "/v1/contacts")).items.map((c: { user: { id: string } }) => c.user.id)).toContain(host.user.id);
+    const accepted = (await accept(existing)).json();
+    expect(accepted).toMatchObject({ referrer: { id: host.user.id }, chatId: expect.any(String) });
+    const contacts = (await get(existing, "/v1/contacts")).items as { user: { id: string }; chatId: string }[];
+    expect(contacts.find((c) => c.user.id === host.user.id)?.chatId).toBe(accepted.chatId);
     expect((await preview(code)).status).toBe("valid");
 
     const newcomer = await signUp("newcomer", { inviteCode: code });

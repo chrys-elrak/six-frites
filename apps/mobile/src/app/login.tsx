@@ -61,10 +61,11 @@ export default function Login() {
       }
       unlock();
       await six.auth.loginWithGoogle(idToken, { inviteCode, guest: true, deviceName: deviceName(), deviceId: await deviceId() });
-      if (inviteCode) {
-        await six.api.POST("/v1/invites/{code}/accept", { params: { path: { code: inviteCode } } }).catch(() => null);
-      }
-      if (next?.startsWith("/")) router.replace(next as Href);
+      const accepted = inviteCode
+        ? await six.api.POST("/v1/invites/{code}/accept", { params: { path: { code: inviteCode } } }).catch(() => null)
+        : null;
+      if (accepted?.data?.chatId) router.replace(`/chats/${accepted.data.chatId}`);
+      else if (next?.startsWith("/")) router.replace(next as Href);
     } catch (err) {
       const code = err instanceof SixApiError || isErrorWithCode(err) ? err.code : null;
       const known = code && signInMessage(getLocale(), code, err instanceof SixApiError ? err.details : undefined);

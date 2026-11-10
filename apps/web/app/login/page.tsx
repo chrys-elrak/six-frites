@@ -52,10 +52,10 @@ function LoginForm() {
     try {
       unlock();
       await six.auth.loginWithGoogle(idToken, { inviteCode, guest: true, deviceName: deviceName(), deviceId: deviceId() });
-      if (inviteCode) {
-        await six.api.POST("/v1/invites/{code}/accept", { params: { path: { code: inviteCode } } }).catch(() => null);
-      }
-      router.replace(home);
+      const accepted = inviteCode
+        ? await six.api.POST("/v1/invites/{code}/accept", { params: { path: { code: inviteCode } } }).catch(() => null)
+        : null;
+      router.replace(accepted?.data?.chatId ? `/chats/${accepted.data.chatId}` : home);
     } catch (err) {
       signingIn.current = false;
       setError({

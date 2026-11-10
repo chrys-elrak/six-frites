@@ -78,7 +78,7 @@ import { StoriesBar, StoryAvatar } from "./stories";
 import { ChatMenu, PokeDialog } from "./chat-menu";
 import { BackupPinBanner } from "./encryption-settings";
 import { InstallCard } from "./install-card";
-import { TipCard } from "./tip-card";
+import { InviteNudge, TipCard } from "./tip-card";
 import { FindMe } from "./find-me";
 import { Invites, NewInviteDialog } from "./invites";
 import { MediaLabel } from "./message-list";
@@ -405,6 +405,12 @@ function ContactRow({ contact, active, sort }: { contact: ContactDTO; active: bo
 
 const SORT_KEY = "six:contact-sort";
 
+const contactsQuery = {
+  queryKey: ["contacts"],
+  staleTime: 0,
+  queryFn: async () => unwrap(await six.api.GET("/v1/contacts", { params: { query: { limit: 200 } } })).items,
+};
+
 /**
  * Everyone I share a direct chat with, A to Z, by last active or by newest, even the chats I deleted for me, and
  * opens our chat. Below them, my contact codes and invite links, for adding more.
@@ -426,11 +432,7 @@ function ContactRows({ needle, query }: { needle: string; query: string }) {
       localStorage.setItem(SORT_KEY, next);
     } catch {}
   }
-  const contacts = useQuery({
-    queryKey: ["contacts"],
-    staleTime: 0,
-    queryFn: async () => unwrap(await six.api.GET("/v1/contacts", { params: { query: { limit: 200 } } })).items,
-  });
+  const contacts = useQuery(contactsQuery);
   const hidden = useHiddenByArchive().chatIds;
   const matching = contacts.data?.filter((c) => !hidden.has(c.chatId) && c.user.displayName.toLowerCase().includes(needle)) ?? [];
   useWatchPresence(matching.map((c) => c.user.id));
@@ -523,6 +525,10 @@ export function ChatList({
 
   const [query, setQuery] = useState("");
   const [dialog, setDialog] = useState<"add" | "invite" | "findMe" | "group" | null>(null);
+  const lonely = useQuery({ ...contactsQuery, enabled: !archived && !rail }).data?.length === 0;
+  useEffect(() => {
+    if (lonely) void qc.invalidateQueries({ queryKey: ["contacts"] });
+  }, [chats.data?.length]);
   const needle = rail ? "" : query.trim().toLowerCase();
   const [picked, setPicked] = useState<ChatFilter>("all");
   const [viewPicked, setView] = useState<ListView>("chats");
@@ -561,7 +567,7 @@ export function ChatList({
   }
 
   const top = !rail && (
-    <div className="flex flex-col gap-2 px-4 pb-2">
+    <div className="flex flex-col gap-2 px-4 pt-3 pb-2">
       {filtering && view === "chats" && !needle && <StoriesBar />}
       <label
         className="flex w-full items-center gap-2 rounded-xl bg-black/5 px-3 py-2 text-stone-500 focus-within:ring-2 focus-within:ring-brand dark:bg-white/10"
@@ -682,7 +688,7 @@ export function ChatList({
       )}
       {!archived && !rail && (
         <div className="mx-3 mt-3 empty:hidden">
-          <TipCard />
+          {lonely ? <InviteNudge onInvite={() => setDialog("invite")} /> : <TipCard />}
         </div>
       )}
 
