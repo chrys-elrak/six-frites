@@ -29,7 +29,7 @@ import { admitQueued, grantFullAccess, invitesOf } from "./referrals.js";
 import { toUserRef } from "./reports.js";
 import { revokeSession } from "./sessions.js";
 import { SEEDED_PREFIX, attachSticker, isSeededPack, toStickerDTO } from "./stickers.js";
-import { finishUpload, uploadKeys } from "./uploads.js";
+import { finishUpload, storageOf, uploadKeys } from "./uploads.js";
 import { toUserDTO } from "./users.js";
 
 const DAY_MS = 24 * 60 * 60 * 1000;
@@ -89,16 +89,8 @@ function toAdminUser(u: UserRow, storageBytes: number, invites: { invited: numbe
     inviteLimit: u.inviteLimit,
     ...invites,
     ads: !u.adsDisabled,
+    storageLimitMb: u.storageLimitMb,
   };
-}
-
-/** Bytes each user's uploads take in storage, processed copies included. Shared GIF copies are left out. */
-async function storageOf(userIds: string[]) {
-  if (!userIds.length) return new Map<string, number>();
-  const rows = await prisma.$queryRaw<{ ownerId: string; bytes: bigint }[]>`
-    SELECT "ownerId", SUM(COALESCE("storedBytes", "size"))::bigint AS bytes
-    FROM "Upload" WHERE "kind" <> 'gif' AND "ownerId" = ANY(${userIds}::text[]) GROUP BY 1`;
-  return new Map(rows.map((r) => [r.ownerId, Number(r.bytes)]));
 }
 
 async function withTotals(rows: UserRow[]) {
@@ -204,6 +196,13 @@ export async function setInviteLimit(userId: string, limit: number) {
     throw new AppError("USER_NOT_FOUND");
   });
   await admitQueued(userId);
+  return getUser(userId);
+}
+
+export async function setStorageLimit(userId: string, limitMb: number | null) {
+  await prisma.user.update({ where: { id: userId }, data: { storageLimitMb: limitMb } }).catch(() => {
+    throw new AppError("USER_NOT_FOUND");
+  });
   return getUser(userId);
 }
 

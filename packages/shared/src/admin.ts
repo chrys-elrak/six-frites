@@ -85,6 +85,7 @@ export const AdminUserDTO = AdminUserRef.extend({
   invited: z.number().int().describe("People who joined with their links"),
   waiting: z.number().int().describe("People waiting for them to get a higher limit"),
   ads: z.boolean().describe("Whether they see ads"),
+  storageLimitMb: z.number().int().nullable().describe("Space their uploads may take; null means no limit"),
   seenBy: z
     .array(AdminUserRef)
     .optional()
@@ -167,6 +168,11 @@ export type AdminUserQuery = z.infer<typeof AdminUserQuery>;
 
 export const InviteLimitInput = z.object({ limit: z.number().int().min(0).max(100_000) });
 export type InviteLimitInput = z.infer<typeof InviteLimitInput>;
+
+export const StorageLimitInput = z.object({
+  limitMb: z.number().int().min(0).max(10_000_000).nullable().describe("Null lifts the limit"),
+});
+export type StorageLimitInput = z.infer<typeof StorageLimitInput>;
 
 export const SetAdsInput = z.object({ userIds: z.array(Id).min(1).max(100), ads: z.boolean() });
 export type SetAdsInput = z.infer<typeof SetAdsInput>;

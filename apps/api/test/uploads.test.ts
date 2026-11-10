@@ -6,7 +6,7 @@ import { describe, expect, it } from "vitest";
 import { downloadObject, headObject, putObject, uploadObject } from "../src/lib/storage.js";
 import { mediaQueue } from "../src/lib/queue.js";
 import { purgeUploads } from "../src/services/uploads.js";
-import { type Auth, chatHelpers, prisma, useApp } from "./helpers.js";
+import { type Auth, asAdmin, chatHelpers, prisma, useApp } from "./helpers.js";
 
 const ctx = useApp();
 const { get, call, send, makeFriends } = chatHelpers(ctx);
@@ -187,5 +187,29 @@ describe("uploads", () => {
     expect(await headObject(row!.key)).toBeNull();
     expect(await prisma.upload.findUnique({ where: { id: file.id } })).toBeNull();
     expect((await get(host, `/v1/chats/${chatId}/messages`)).items[0]).toMatchObject({ attachment: null, text: null });
+  });
+
+  it("stops uploads past an admin's storage limit until the person deletes their files", async () => {
+    const { host, guest, chatId } = await makeFriends();
+    const boss = await asAdmin(ctx.app);
+    const file = await upload(host, "file", "text/plain", Buffer.alloc(600 * 1024, 1));
+    await send(host, chatId, "big", { attachmentId: file.id });
+
+    const capped = await call(boss, "POST", `/v1/admin/users/${host.user.id}/storage-limit`, { limitMb: 1 });
+    expect(capped.json()).toMatchObject({ storageLimitMb: 1, storageBytes: 600 * 1024 });
+    const presign = (size: number) => call(host, "POST", "/v1/uploads/presign", { kind: "file", mime: "text/plain", size, name: "a" });
+    expect((await presign(300 * 1024)).statusCode).toBe(201);
+    expect((await presign(600 * 1024)).json().error.code).toBe("STORAGE_FULL");
+    expect((await send(host, chatId, "text still works")).statusCode).toBe(201);
+
+    const freed = await call(host, "DELETE", "/v1/me/uploads");
+    expect(freed.json()).toEqual({ removed: 1 });
+    expect(await headObject((await prisma.upload.findUnique({ where: { id: file.id } }))!.key)).toBeNull();
+    const seen = (await get(guest, `/v1/chats/${chatId}/messages`)).items.find((m: { text: string }) => m.text === "big");
+    expect(seen.attachment).toMatchObject({ status: "removed", url: null });
+    expect((await presign(600 * 1024)).statusCode).toBe(201);
+
+    await call(boss, "POST", `/v1/admin/users/${host.user.id}/storage-limit`, { limitMb: null });
+    expect((await presign(5 * 1024 * 1024)).statusCode).toBe(201);
   });
 });

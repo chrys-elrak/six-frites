@@ -6,6 +6,7 @@ import { CallScreen } from "@/components/call-screen";
 import { MiniPlayer, useMiniPlayer } from "@/components/mini-player";
 import { BackupPinPrompt } from "@/components/encryption-settings";
 import { StoryPostBar } from "@/components/story-post-bar";
+import { StorageFullPrompt } from "@/components/storage-full";
 import { Toasts } from "@/components/toasts";
 import { LiveInvites, UnfinishedGame } from "@/components/live";
 import { WhatsNewPrompt } from "@/components/whats-new";
@@ -32,6 +33,7 @@ export default function AppLayout() {
         </SafeAreaInsetsContext.Provider>
         {!locked && <Toasts />}
         {!locked && <StoryPostBar />}
+        {!locked && <StorageFullPrompt />}
         {!locked && <LiveInvites />}
         {!locked && <UnfinishedGame />}
         {!locked && <BackupPinPrompt />}

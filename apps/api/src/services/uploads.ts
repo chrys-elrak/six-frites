@@ -57,11 +57,28 @@ export const uploadKeys = (u: Pick<Upload, "key" | "mainKey" | "thumbKey">) =>
 /** The biggest photo a guest can send to support, the only kind of file they can upload. */
 export const GUEST_UPLOAD_BYTES = 100 * 1024 * 1024;
 
+/** Bytes each user's uploads take in storage, processed copies included. Shared GIF copies are left out. */
+export async function storageOf(userIds: string[]) {
+  if (!userIds.length) return new Map<string, number>();
+  const rows = await prisma.$queryRaw<{ ownerId: string; bytes: bigint }[]>`
+    SELECT "ownerId", SUM(COALESCE("storedBytes", "size"))::bigint AS bytes
+    FROM "Upload" WHERE "kind" <> 'gif' AND "ownerId" = ANY(${userIds}::text[]) GROUP BY 1`;
+  return new Map(rows.map((r) => [r.ownerId, Number(r.bytes)]));
+}
+
 export async function presignUpload(ownerId: string, input: PresignUploadInput) {
-  const owner = await prisma.user.findUniqueOrThrow({ where: { id: ownerId }, select: { guest: true, email: true } });
+  const owner = await prisma.user.findUniqueOrThrow({
+    where: { id: ownerId },
+    select: { guest: true, email: true, storageLimitMb: true },
+  });
   if (input.kind === "sticker_zip" && !isAdminEmail(owner.email)) throw new AppError("FORBIDDEN", "Admins only");
   if (owner.guest && (input.kind !== "image" || input.encrypted || input.size > GUEST_UPLOAD_BYTES)) {
     throw new AppError("FORBIDDEN", "Guests can only send photos up to 100 MB");
+  }
+  if (owner.storageLimitMb !== null) {
+    const used = (await storageOf([ownerId])).get(ownerId) ?? 0;
+    const limit = owner.storageLimitMb * 1024 * 1024;
+    if (used + input.size > limit) throw new AppError("STORAGE_FULL", "Your storage is full", { used, limit });
   }
   const id = createId();
   const key = `u/${ownerId}/${id}/original`;
@@ -155,6 +172,19 @@ export async function finishUpload(uploadId: string, data: Prisma.UploadUpdateIn
   });
   const story = await prisma.story.findUnique({ where: { uploadId }, select: { userId: true } });
   if (story) await (await import("./stories.js")).announceStories(story.userId);
+}
+
+/**
+ * Deletes the files someone sent, to free their storage: the messages and stories that carried them say the file
+ * was removed. Stickers in their packs stay, and so do files still uploading or being processed.
+ */
+export async function removeOwnFiles(ownerId: string) {
+  const uploads = await prisma.upload.findMany({
+    where: { ownerId, kind: { notIn: ["gif", "sticker", "sticker_zip"] }, status: { in: ["ready", "failed"] } },
+  });
+  for (const u of uploads) await finishUpload(u.id, { status: "removed", storedBytes: 0 });
+  await deleteObjects(uploads.flatMap(uploadKeys)).catch(() => null);
+  return uploads.length;
 }
 
 /** Removes uploads and their files; used when the messages holding them are deleted for everyone. */

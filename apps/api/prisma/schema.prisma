@@ -46,6 +46,8 @@ model User {
   backupPinTries  Int       @default(0)
   appLockHash     String?
   inviteLimit     Int       @default(10)
+  /// Space their uploads may take, set by an admin; null means no limit.
+  storageLimitMb  Int?
   queuedAt        DateTime?
   guest           Boolean   @default(false)
   /// The app language last seen for this account, for what Frite Bot says.

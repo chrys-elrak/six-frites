@@ -78,6 +78,86 @@ function LimitDialog({ user, onClose }: { user: AdminUserDTO; onClose: () => voi
   );
 }
 
+function StorageDialog({ user, onClose }: { user: AdminUserDTO; onClose: () => void }) {
+  const qc = useQueryClient();
+  const [limit, setLimit] = useState(user.storageLimitMb === null ? "" : String(user.storageLimitMb));
+  const [error, setError] = useState<string | null>(null);
+
+  async function save(limitMb: number | null) {
+    try {
+      unwrap(
+        await six.api.POST("/v1/admin/users/{id}/storage-limit", {
+          params: { path: { id: user.id } },
+          body: { limitMb },
+        }),
+      );
+      refreshAdmin(qc);
+      onClose();
+    } catch (err) {
+      setError((err as Error).message);
+    }
+  }
+
+  return (
+    <Dialog onClose={onClose}>
+      <form
+        onSubmit={(e) => {
+          e.preventDefault();
+          void save(Number(limit));
+        }}
+        className="space-y-3 p-4"
+      >
+        <h2 className="font-semibold">Storage limit for {user.displayName}</h2>
+        <p className="text-sm text-stone-500">
+          They use {formatBytes(user.storageBytes)}. Once full they can only send text, GIFs and stickers, and are asked
+          to contact support or delete their files.
+        </p>
+        <label className="flex items-center gap-3 text-sm">
+          <input
+            type="number"
+            inputMode="numeric"
+            min={0}
+            max={10000000}
+            required
+            value={limit}
+            onChange={(e) => setLimit(e.target.value)}
+            autoFocus
+            aria-label="Storage limit in MB"
+            className="block w-full rounded-xl bg-stone-100 px-3 py-2.5 text-[16px] dark:bg-stone-800 md:text-sm"
+          />
+          <span className="font-medium">MB</span>
+        </label>
+        {error && (
+          <p role="alert" className="text-sm text-red-600 dark:text-red-400">
+            {error}
+          </p>
+        )}
+        <div className="flex gap-2">
+          {user.storageLimitMb !== null && (
+            <button
+              type="button"
+              onClick={() => void save(null)}
+              className="flex-1 rounded-xl px-4 py-2.5 text-sm font-semibold ring-1 ring-stone-200 hover:bg-stone-100 dark:ring-stone-700 dark:hover:bg-stone-800"
+            >
+              Remove limit
+            </button>
+          )}
+          <button
+            type="button"
+            onClick={onClose}
+            className="flex-1 rounded-xl px-4 py-2.5 text-sm font-semibold hover:bg-stone-100 dark:hover:bg-stone-800"
+          >
+            Cancel
+          </button>
+          <PrimaryButton type="submit" className="flex-1">
+            Save
+          </PrimaryButton>
+        </div>
+      </form>
+    </Dialog>
+  );
+}
+
 function BanDialog({ user, onClose }: { user: AdminUserDTO; onClose: () => void }) {
   const qc = useQueryClient();
   const [reason, setReason] = useState("");
@@ -181,6 +261,7 @@ function UserRow({ u, checked, onCheck }: { u: AdminUserDTO; checked: boolean; o
   const qc = useQueryClient();
   const [banning, setBanning] = useState(false);
   const [limiting, setLimiting] = useState(false);
+  const [capping, setCapping] = useState(false);
   const [signingOut, setSigningOut] = useState(false);
   const [granting, setGranting] = useState(false);
 
@@ -225,7 +306,14 @@ function UserRow({ u, checked, onCheck }: { u: AdminUserDTO; checked: boolean; o
         <p className="truncate text-xs text-stone-500">{u.email}</p>
         <p className="text-xs text-stone-500">
           Joined {timeAgo(u.createdAt)} · {u.lastActiveAt ? `active ${timeAgo(u.lastActiveAt)}` : "signed out"} ·{" "}
-          {u.chats} chats · {u.messages} messages · {formatBytes(u.storageBytes)} stored · invited{" "}
+          {u.chats} chats · {u.messages} messages · {formatBytes(u.storageBytes)}
+          {u.storageLimitMb !== null && (
+            <span className={u.storageBytes >= u.storageLimitMb * 1024 * 1024 ? "text-red-600 dark:text-red-400" : ""}>
+              {" "}
+              of {formatBytes(u.storageLimitMb * 1024 * 1024)}
+            </span>
+          )}{" "}
+          stored · invited{" "}
           {u.admin ? u.invited : `${u.invited}/${u.inviteLimit}`}
           {u.waiting > 0 && <span className="text-amber-600 dark:text-amber-400"> · {u.waiting} waiting</span>}
           {u.openReports > 0 && (
@@ -243,7 +331,7 @@ function UserRow({ u, checked, onCheck }: { u: AdminUserDTO; checked: boolean; o
         )}
       </div>
       {!u.admin && (
-        <div className="ml-auto flex gap-2">
+        <div className="ml-auto flex flex-wrap gap-2">
           {(u.guest || u.queued) && (
             <button
               type="button"
@@ -259,6 +347,13 @@ function UserRow({ u, checked, onCheck }: { u: AdminUserDTO; checked: boolean; o
             className="rounded-lg px-3 py-1.5 text-sm font-medium ring-1 ring-stone-200 hover:bg-stone-100 dark:ring-stone-700 dark:hover:bg-stone-800"
           >
             Invite limit
+          </button>
+          <button
+            type="button"
+            onClick={() => setCapping(true)}
+            className="rounded-lg px-3 py-1.5 text-sm font-medium ring-1 ring-stone-200 hover:bg-stone-100 dark:ring-stone-700 dark:hover:bg-stone-800"
+          >
+            Storage limit
           </button>
           {u.activeSessions > 0 && (
             <button
@@ -290,6 +385,7 @@ function UserRow({ u, checked, onCheck }: { u: AdminUserDTO; checked: boolean; o
       )}
       {banning && <BanDialog user={u} onClose={() => setBanning(false)} />}
       {limiting && <LimitDialog user={u} onClose={() => setLimiting(false)} />}
+      {capping && <StorageDialog user={u} onClose={() => setCapping(false)} />}
       {granting && (
         <Sheet
           title={`Give ${u.displayName} full access? They'll get a notification and an email.`}

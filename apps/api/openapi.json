@@ -1288,6 +1288,13 @@
                             "type": "boolean",
                             "description": "Whether they see ads"
                           },
+                          "storageLimitMb": {
+                            "nullable": true,
+                            "description": "Space their uploads may take; null means no limit",
+                            "type": "integer",
+                            "minimum": -9007199254740991,
+                            "maximum": 9007199254740991
+                          },
                           "seenBy": {
                             "description": "When searching an alias: the people who see this user under it",
                             "type": "array",
@@ -1366,7 +1373,8 @@
                           "inviteLimit",
                           "invited",
                           "waiting",
-                          "ads"
+                          "ads",
+                          "storageLimitMb"
                         ],
                         "additionalProperties": false
                       }
@@ -1528,6 +1536,13 @@
                       "type": "boolean",
                       "description": "Whether they see ads"
                     },
+                    "storageLimitMb": {
+                      "nullable": true,
+                      "description": "Space their uploads may take; null means no limit",
+                      "type": "integer",
+                      "minimum": -9007199254740991,
+                      "maximum": 9007199254740991
+                    },
                     "seenBy": {
                       "description": "When searching an alias: the people who see this user under it",
                       "type": "array",
@@ -1606,7 +1621,8 @@
                     "inviteLimit",
                     "invited",
                     "waiting",
-                    "ads"
+                    "ads",
+                    "storageLimitMb"
                   ],
                   "additionalProperties": false
                 }
@@ -1791,6 +1807,13 @@
                       "type": "boolean",
                       "description": "Whether they see ads"
                     },
+                    "storageLimitMb": {
+                      "nullable": true,
+                      "description": "Space their uploads may take; null means no limit",
+                      "type": "integer",
+                      "minimum": -9007199254740991,
+                      "maximum": 9007199254740991
+                    },
                     "seenBy": {
                       "description": "When searching an alias: the people who see this user under it",
                       "type": "array",
@@ -1869,7 +1892,8 @@
                     "inviteLimit",
                     "invited",
                     "waiting",
-                    "ads"
+                    "ads",
+                    "storageLimitMb"
                   ],
                   "additionalProperties": false
                 }
@@ -2019,6 +2043,13 @@
                       "type": "boolean",
                       "description": "Whether they see ads"
                     },
+                    "storageLimitMb": {
+                      "nullable": true,
+                      "description": "Space their uploads may take; null means no limit",
+                      "type": "integer",
+                      "minimum": -9007199254740991,
+                      "maximum": 9007199254740991
+                    },
                     "seenBy": {
                       "description": "When searching an alias: the people who see this user under it",
                       "type": "array",
@@ -2097,7 +2128,8 @@
                     "inviteLimit",
                     "invited",
                     "waiting",
-                    "ads"
+                    "ads",
+                    "storageLimitMb"
                   ],
                   "additionalProperties": false
                 }
@@ -2268,6 +2300,13 @@
                       "type": "boolean",
                       "description": "Whether they see ads"
                     },
+                    "storageLimitMb": {
+                      "nullable": true,
+                      "description": "Space their uploads may take; null means no limit",
+                      "type": "integer",
+                      "minimum": -9007199254740991,
+                      "maximum": 9007199254740991
+                    },
                     "seenBy": {
                       "description": "When searching an alias: the people who see this user under it",
                       "type": "array",
@@ -2346,7 +2385,267 @@
                     "inviteLimit",
                     "invited",
                     "waiting",
-                    "ads"
+                    "ads",
+                    "storageLimitMb"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/admin/users/{id}/storage-limit": {
+      "post": {
+        "summary": "Cap the space a user's uploads may take, or lift the cap",
+        "tags": [
+          "admin"
+        ],
+        "description": "Once full they can still send text, GIFs and stickers; new uploads fail with STORAGE_FULL.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "limitMb": {
+                    "nullable": true,
+                    "description": "Null lifts the limit",
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 10000000
+                  }
+                },
+                "required": [
+                  "limitMb"
+                ]
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            },
+            "in": "path",
+            "name": "id",
+            "required": true
+          }
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "displayName": {
+                      "type": "string"
+                    },
+                    "email": {
+                      "type": "string"
+                    },
+                    "avatarUrl": {
+                      "nullable": true,
+                      "type": "string",
+                      "format": "uri"
+                    },
+                    "bannedAt": {
+                      "nullable": true,
+                      "type": "string",
+                      "format": "date-time",
+                      "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                    },
+                    "bannedUntil": {
+                      "nullable": true,
+                      "description": "When the ban is lifted on its own; null when it lasts until an admin lifts it",
+                      "type": "string",
+                      "format": "date-time",
+                      "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                    },
+                    "banScope": {
+                      "type": "string",
+                      "enum": [
+                        "full",
+                        "chat"
+                      ],
+                      "description": "What the ban takes away, while bannedAt is set"
+                    },
+                    "banReason": {
+                      "nullable": true,
+                      "type": "string"
+                    },
+                    "admin": {
+                      "type": "boolean"
+                    },
+                    "createdAt": {
+                      "type": "string",
+                      "format": "date-time",
+                      "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                    },
+                    "lastActiveAt": {
+                      "nullable": true,
+                      "type": "string",
+                      "format": "date-time",
+                      "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                    },
+                    "chats": {
+                      "type": "integer",
+                      "minimum": -9007199254740991,
+                      "maximum": 9007199254740991
+                    },
+                    "messages": {
+                      "type": "integer",
+                      "minimum": -9007199254740991,
+                      "maximum": 9007199254740991
+                    },
+                    "activeSessions": {
+                      "type": "integer",
+                      "minimum": -9007199254740991,
+                      "maximum": 9007199254740991
+                    },
+                    "openReports": {
+                      "type": "integer",
+                      "minimum": -9007199254740991,
+                      "maximum": 9007199254740991,
+                      "description": "Open reports against this person"
+                    },
+                    "storageBytes": {
+                      "type": "integer",
+                      "minimum": -9007199254740991,
+                      "maximum": 9007199254740991,
+                      "description": "Space their uploads take, processed copies included; GIFs not counted"
+                    },
+                    "queued": {
+                      "type": "boolean",
+                      "description": "Signed up after their inviter hit the limit and can't sign in yet"
+                    },
+                    "guest": {
+                      "type": "boolean",
+                      "description": "Joined without an invite: anonymous messages and support only"
+                    },
+                    "inviteLimit": {
+                      "type": "integer",
+                      "minimum": -9007199254740991,
+                      "maximum": 9007199254740991
+                    },
+                    "invited": {
+                      "type": "integer",
+                      "minimum": -9007199254740991,
+                      "maximum": 9007199254740991,
+                      "description": "People who joined with their links"
+                    },
+                    "waiting": {
+                      "type": "integer",
+                      "minimum": -9007199254740991,
+                      "maximum": 9007199254740991,
+                      "description": "People waiting for them to get a higher limit"
+                    },
+                    "ads": {
+                      "type": "boolean",
+                      "description": "Whether they see ads"
+                    },
+                    "storageLimitMb": {
+                      "nullable": true,
+                      "description": "Space their uploads may take; null means no limit",
+                      "type": "integer",
+                      "minimum": -9007199254740991,
+                      "maximum": 9007199254740991
+                    },
+                    "seenBy": {
+                      "description": "When searching an alias: the people who see this user under it",
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string",
+                            "minLength": 1
+                          },
+                          "displayName": {
+                            "type": "string"
+                          },
+                          "email": {
+                            "type": "string"
+                          },
+                          "avatarUrl": {
+                            "nullable": true,
+                            "type": "string",
+                            "format": "uri"
+                          },
+                          "bannedAt": {
+                            "nullable": true,
+                            "type": "string",
+                            "format": "date-time",
+                            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                          },
+                          "bannedUntil": {
+                            "nullable": true,
+                            "description": "When the ban is lifted on its own; null when it lasts until an admin lifts it",
+                            "type": "string",
+                            "format": "date-time",
+                            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                          },
+                          "banScope": {
+                            "type": "string",
+                            "enum": [
+                              "full",
+                              "chat"
+                            ],
+                            "description": "What the ban takes away, while bannedAt is set"
+                          }
+                        },
+                        "required": [
+                          "id",
+                          "displayName",
+                          "email",
+                          "avatarUrl",
+                          "bannedAt",
+                          "bannedUntil",
+                          "banScope"
+                        ],
+                        "additionalProperties": false
+                      }
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "displayName",
+                    "email",
+                    "avatarUrl",
+                    "bannedAt",
+                    "bannedUntil",
+                    "banScope",
+                    "banReason",
+                    "admin",
+                    "createdAt",
+                    "lastActiveAt",
+                    "chats",
+                    "messages",
+                    "activeSessions",
+                    "openReports",
+                    "storageBytes",
+                    "queued",
+                    "guest",
+                    "inviteLimit",
+                    "invited",
+                    "waiting",
+                    "ads",
+                    "storageLimitMb"
                   ],
                   "additionalProperties": false
                 }
@@ -2497,6 +2796,13 @@
                       "type": "boolean",
                       "description": "Whether they see ads"
                     },
+                    "storageLimitMb": {
+                      "nullable": true,
+                      "description": "Space their uploads may take; null means no limit",
+                      "type": "integer",
+                      "minimum": -9007199254740991,
+                      "maximum": 9007199254740991
+                    },
                     "seenBy": {
                       "description": "When searching an alias: the people who see this user under it",
                       "type": "array",
@@ -2575,7 +2881,8 @@
                     "inviteLimit",
                     "invited",
                     "waiting",
-                    "ads"
+                    "ads",
+                    "storageLimitMb"
                   ],
                   "additionalProperties": false
                 }
@@ -2782,6 +3089,13 @@
                       "type": "boolean",
                       "description": "Whether they see ads"
                     },
+                    "storageLimitMb": {
+                      "nullable": true,
+                      "description": "Space their uploads may take; null means no limit",
+                      "type": "integer",
+                      "minimum": -9007199254740991,
+                      "maximum": 9007199254740991
+                    },
                     "seenBy": {
                       "description": "When searching an alias: the people who see this user under it",
                       "type": "array",
@@ -2860,7 +3174,8 @@
                     "inviteLimit",
                     "invited",
                     "waiting",
-                    "ads"
+                    "ads",
+                    "storageLimitMb"
                   ],
                   "additionalProperties": false
                 }
@@ -7249,6 +7564,43 @@
                   },
                   "required": [
                     "items"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/me/uploads": {
+      "delete": {
+        "summary": "Delete every file you sent, to free your storage",
+        "tags": [
+          "me"
+        ],
+        "description": "Messages and stories that carried them say the file was removed. Stickers in your packs stay.",
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "removed": {
+                      "type": "integer",
+                      "minimum": -9007199254740991,
+                      "maximum": 9007199254740991
+                    }
+                  },
+                  "required": [
+                    "removed"
                   ],
                   "additionalProperties": false
                 }

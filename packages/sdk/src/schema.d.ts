@@ -692,6 +692,8 @@ export interface paths {
                                 waiting: number;
                                 /** @description Whether they see ads */
                                 ads: boolean;
+                                /** @description Space their uploads may take; null means no limit */
+                                storageLimitMb: number | null;
                                 /** @description When searching an alias: the people who see this user under it */
                                 seenBy?: {
                                     id: string;
@@ -794,6 +796,8 @@ export interface paths {
                             waiting: number;
                             /** @description Whether they see ads */
                             ads: boolean;
+                            /** @description Space their uploads may take; null means no limit */
+                            storageLimitMb: number | null;
                             /** @description When searching an alias: the people who see this user under it */
                             seenBy?: {
                                 id: string;
@@ -912,6 +916,8 @@ export interface paths {
                             waiting: number;
                             /** @description Whether they see ads */
                             ads: boolean;
+                            /** @description Space their uploads may take; null means no limit */
+                            storageLimitMb: number | null;
                             /** @description When searching an alias: the people who see this user under it */
                             seenBy?: {
                                 id: string;
@@ -1012,6 +1018,8 @@ export interface paths {
                             waiting: number;
                             /** @description Whether they see ads */
                             ads: boolean;
+                            /** @description Space their uploads may take; null means no limit */
+                            storageLimitMb: number | null;
                             /** @description When searching an alias: the people who see this user under it */
                             seenBy?: {
                                 id: string;
@@ -1121,6 +1129,120 @@ export interface paths {
                             waiting: number;
                             /** @description Whether they see ads */
                             ads: boolean;
+                            /** @description Space their uploads may take; null means no limit */
+                            storageLimitMb: number | null;
+                            /** @description When searching an alias: the people who see this user under it */
+                            seenBy?: {
+                                id: string;
+                                displayName: string;
+                                email: string;
+                                /** Format: uri */
+                                avatarUrl: string | null;
+                                /** Format: date-time */
+                                bannedAt: string | null;
+                                /**
+                                 * Format: date-time
+                                 * @description When the ban is lifted on its own; null when it lasts until an admin lifts it
+                                 */
+                                bannedUntil: string | null;
+                                /**
+                                 * @description What the ban takes away, while bannedAt is set
+                                 * @enum {string}
+                                 */
+                                banScope: "full" | "chat";
+                            }[];
+                        };
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/admin/users/{id}/storage-limit": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Cap the space a user's uploads may take, or lift the cap
+         * @description Once full they can still send text, GIFs and stickers; new uploads fail with STORAGE_FULL.
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        /** @description Null lifts the limit */
+                        limitMb: number | null;
+                    };
+                };
+            };
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            id: string;
+                            displayName: string;
+                            email: string;
+                            /** Format: uri */
+                            avatarUrl: string | null;
+                            /** Format: date-time */
+                            bannedAt: string | null;
+                            /**
+                             * Format: date-time
+                             * @description When the ban is lifted on its own; null when it lasts until an admin lifts it
+                             */
+                            bannedUntil: string | null;
+                            /**
+                             * @description What the ban takes away, while bannedAt is set
+                             * @enum {string}
+                             */
+                            banScope: "full" | "chat";
+                            banReason: string | null;
+                            admin: boolean;
+                            /** Format: date-time */
+                            createdAt: string;
+                            /** Format: date-time */
+                            lastActiveAt: string | null;
+                            chats: number;
+                            messages: number;
+                            activeSessions: number;
+                            /** @description Open reports against this person */
+                            openReports: number;
+                            /** @description Space their uploads take, processed copies included; GIFs not counted */
+                            storageBytes: number;
+                            /** @description Signed up after their inviter hit the limit and can't sign in yet */
+                            queued: boolean;
+                            /** @description Joined without an invite: anonymous messages and support only */
+                            guest: boolean;
+                            inviteLimit: number;
+                            /** @description People who joined with their links */
+                            invited: number;
+                            /** @description People waiting for them to get a higher limit */
+                            waiting: number;
+                            /** @description Whether they see ads */
+                            ads: boolean;
+                            /** @description Space their uploads may take; null means no limit */
+                            storageLimitMb: number | null;
                             /** @description When searching an alias: the people who see this user under it */
                             seenBy?: {
                                 id: string;
@@ -1224,6 +1346,8 @@ export interface paths {
                             waiting: number;
                             /** @description Whether they see ads */
                             ads: boolean;
+                            /** @description Space their uploads may take; null means no limit */
+                            storageLimitMb: number | null;
                             /** @description When searching an alias: the people who see this user under it */
                             seenBy?: {
                                 id: string;
@@ -1367,6 +1491,8 @@ export interface paths {
                             waiting: number;
                             /** @description Whether they see ads */
                             ads: boolean;
+                            /** @description Space their uploads may take; null means no limit */
+                            storageLimitMb: number | null;
                             /** @description When searching an alias: the people who see this user under it */
                             seenBy?: {
                                 id: string;
@@ -3618,6 +3744,47 @@ export interface paths {
         put?: never;
         post?: never;
         delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/me/uploads": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /**
+         * Delete every file you sent, to free your storage
+         * @description Messages and stories that carried them say the file was removed. Stickers in your packs stay.
+         */
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            removed: number;
+                        };
+                    };
+                };
+            };
+        };
         options?: never;
         head?: never;
         patch?: never;

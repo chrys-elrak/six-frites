@@ -10,6 +10,7 @@ import {
 } from "@six/shared";
 import { z } from "zod";
 import { listBlocked } from "../services/blocks.js";
+import { removeOwnFiles } from "../services/uploads.js";
 import { createContactLink, deleteContactLink, listContactLinks } from "../services/discovery.js";
 import {
   acceptTerms,
@@ -186,6 +187,21 @@ const meRoutes: FastifyPluginAsyncZod = async (app) => {
       },
     },
     (req) => listBlocked(req.auth.userId),
+  );
+
+  app.delete(
+    "/me/uploads",
+    {
+      config: { rateLimit: { max: 5, timeWindow: "1 minute" } },
+      schema: {
+        tags: ["me"],
+        summary: "Delete every file you sent, to free your storage",
+        description: "Messages and stories that carried them say the file was removed. Stickers in your packs stay.",
+        security: [{ bearer: [] }],
+        response: { 200: z.object({ removed: z.number().int() }) },
+      },
+    },
+    async (req) => ({ removed: await removeOwnFiles(req.auth.userId) }),
   );
 
   app.delete(

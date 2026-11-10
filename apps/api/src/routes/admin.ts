@@ -23,6 +23,7 @@ import {
   ReportDTO,
   ResolveReportInput,
   SetAdsInput,
+  StorageLimitInput,
   StickerDTO,
   page,
   AdminMailDTO,
@@ -48,6 +49,7 @@ import {
   newAdminSecret,
   setAds,
   setInviteLimit,
+  setStorageLimit,
   giveFullAccess,
   signOutEverywhere,
   unbanUser,
@@ -202,6 +204,22 @@ const adminRoutes: FastifyPluginAsyncZod = async (app) => {
       },
     },
     (req) => setInviteLimit(req.params.id, req.body.limit),
+  );
+
+  app.post(
+    "/admin/users/:id/storage-limit",
+    {
+      schema: {
+        tags,
+        summary: "Cap the space a user's uploads may take, or lift the cap",
+        description: "Once full they can still send text, GIFs and stickers; new uploads fail with STORAGE_FULL.",
+        security,
+        params: Params,
+        body: StorageLimitInput,
+        response: { 200: AdminUserDTO },
+      },
+    },
+    (req) => setStorageLimit(req.params.id, req.body.limitMb),
   );
 
   app.post(

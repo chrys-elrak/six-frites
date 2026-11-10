@@ -19,6 +19,7 @@ import { primeAudio, useNotifyPrefs } from "@/lib/notify";
 import { relinkPush } from "@/lib/push";
 import { useAppHeight, useMedia } from "@/lib/viewport";
 import { StoryPostBar } from "@/components/story-post-bar";
+import { StorageFullPrompt } from "@/components/storage-full";
 import { Toasts } from "@/components/toasts";
 import { UpdatePrompt } from "@/components/update-prompt";
 import { WhatsNewPrompt } from "@/components/whats-new";
@@ -160,6 +161,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       </div>
       {!locked && <Toasts />}
       {!locked && <StoryPostBar />}
+      {!locked && <StorageFullPrompt />}
       {!locked && <UpdatePrompt />}
       {!locked && <BackupPinPrompt />}
       {!locked && <WhatsNewPrompt />}
