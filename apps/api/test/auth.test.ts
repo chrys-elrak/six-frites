@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { env } from "../src/env.js";
 import { bearer, loginAs, prisma, useApp } from "./helpers.js";
 
 const ctx = useApp();
@@ -6,6 +7,22 @@ const login = (sub: string, platform = "ios", extra: Record<string, unknown> = {
   loginAs(ctx.app, sub, platform, extra);
 
 describe("auth", () => {
+  it("refuses new accounts once the user cap is reached, but still signs in existing users and admins", async () => {
+    const existing = (await login("before-cap")).json();
+    const cap = env.MAX_USERS;
+    env.MAX_USERS = await prisma.user.count({ where: { deletedAt: null } });
+    try {
+      const refused = await login("after-cap");
+      expect(refused.statusCode).toBe(403);
+      expect(refused.json().error.code).toBe("SIGNUPS_CLOSED");
+      expect(await prisma.user.count({ where: { googleSub: "after-cap" } })).toBe(0);
+      expect((await login("before-cap")).json().user.id).toBe(existing.user.id);
+      expect((await login("the-admin")).statusCode).toBe(200);
+    } finally {
+      env.MAX_USERS = cap;
+    }
+  });
+
   it("creates the user and returns tokens for native clients", async () => {
     const res = await login("alice");
     expect(res.statusCode).toBe(200);

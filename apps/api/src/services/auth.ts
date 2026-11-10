@@ -77,6 +77,9 @@ export async function loginWithGoogle(
     if (guest && !input.guest) {
       throw new AppError("INVITE_REQUIRED", "Sign up with an invite link from someone already on Six Frites");
     }
+    if (!existing && !isAdminEmail(identity.email) && (await tx.user.count({ where: { deletedAt: null } })) >= env.MAX_USERS) {
+      throw new AppError("SIGNUPS_CLOSED", "Six Frites is full, new accounts are closed for now");
+    }
     let user =
       existing ??
       (await tx.user.create({

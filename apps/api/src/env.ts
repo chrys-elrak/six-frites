@@ -51,6 +51,8 @@ const Env = z.object({
     .enum(["true", "false"])
     .default("true")
     .transform((v) => v === "true"),
+  /** New sign-ups are refused once this many accounts exist; admins always get in. */
+  MAX_USERS: z.coerce.number().int().default(100),
 });
 
 export const env = Env.parse(process.env);

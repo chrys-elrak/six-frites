@@ -23,6 +23,7 @@ export default defineConfig({
       KLIPY_API_KEY: "test-klipy-key",
       ADMIN_EMAILS: "the-admin@example.com",
       INVITE_ONLY: "false",
+      MAX_USERS: "1000000",
       STORE_URL: "https://store.test",
       STORE_WEBHOOK_SECRET: "test-store-secret",
     },

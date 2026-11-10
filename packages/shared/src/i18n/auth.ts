@@ -14,6 +14,7 @@ const en = {
     INVITE_EXHAUSTED: "That invite link has already been used up.",
     INVITE_REQUIRED: "Six Frites is invite-only. Ask someone who's already on it to send you an invite link.",
     ACCOUNT_QUEUED: "You're on the waiting list and will join Six Frites soon. Try signing in again later.",
+    SIGNUPS_CLOSED: "Six Frites is full for now, so new accounts can't be created. Try again later.",
     INVALID_GOOGLE_TOKEN: "Google sign-in failed. Please try again.",
     DEVELOPER_ERROR:
       "Google sign-in isn't set up for this build yet. Its package name and SHA-1 must be registered in Google Cloud.",
@@ -67,6 +68,7 @@ const fr: typeof en = {
       "Six Frites est accessible sur invitation uniquement. Demandez un lien d'invitation à quelqu'un qui y est déjà.",
     ACCOUNT_QUEUED:
       "Vous êtes sur la liste d'attente et rejoindrez Six Frites bientôt. Réessayez de vous connecter plus tard.",
+    SIGNUPS_CLOSED: "Six Frites est complet pour le moment, aucun nouveau compte ne peut être créé. Réessayez plus tard.",
     INVALID_GOOGLE_TOKEN: "Échec de la connexion Google. Veuillez réessayer.",
     DEVELOPER_ERROR:
       "La connexion Google n'est pas encore configurée pour cette version de l'app. Son nom de package et son SHA-1 doivent être enregistrés dans Google Cloud.",
@@ -118,6 +120,7 @@ const mg: typeof en = {
     INVITE_EXHAUSTED: "Efa lany ny fampiasana io rohy fanasana io.",
     INVITE_REQUIRED: "Amin'ny fanasana ihany no hidirana ao amin'ny Six Frites. Angataho rohy fanasana ny olona efa ao.",
     ACCOUNT_QUEUED: "Ao amin'ny lisitry ny miandry ianao ary hiditra ao amin'ny Six Frites tsy ho ela. Andramo miditra indray any aoriana.",
+    SIGNUPS_CLOSED: "Feno ny Six Frites amin'izao, tsy afaka mamorona kaonty vaovao. Andramo indray any aoriana.",
     INVALID_GOOGLE_TOKEN: "Tsy nahomby ny fidirana amin'ny Google. Andramo indray.",
     DEVELOPER_ERROR:
       "Mbola tsy voalamina ho an'ity kinova ity ny fidirana amin'ny Google. Tsy maintsy soratana ao amin'ny Google Cloud ny anaran'ny package sy ny SHA-1-ny.",
