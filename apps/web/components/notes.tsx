@@ -19,6 +19,8 @@ import {
   countReactions,
   durationLabel,
   inkOn,
+  previewLink,
+  splitLinks,
 } from "@six/shared";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Ban, Eye, SendHorizontal, X } from "lucide-react";
@@ -33,6 +35,7 @@ import { DurationPicker } from "./auto-delete-custom";
 import { Avatar } from "./avatar";
 import { Dialog } from "./dialog";
 import { GifSearch } from "./gif-picker";
+import { LinkCard } from "./message-list";
 import { PrimaryButton } from "./ui";
 
 /** Under the stories key, so `stories:changed` refreshes notes too. */
@@ -327,8 +330,21 @@ export function NoteReader({ user, note, onClose }: { user: PublicUser; note: No
           className={`flex max-w-full flex-col items-center gap-2 rounded-3xl text-center text-base font-medium break-words shadow ${note.background ? "" : plain} ${note.gif ? "p-1.5" : "px-4 py-2.5"}`}
         >
           {note.gif && <Loop src={note.gif.url} className="max-h-48 rounded-[1.25rem]" />}
-          {note.text && <span className={note.gif ? "px-2.5 pb-1" : ""}>{note.text}</span>}
+          {note.text && (
+            <span className={note.gif ? "px-2.5 pb-1" : ""}>
+              {splitLinks(note.text).map((part, i) =>
+                part.href ? (
+                  <a key={i} href={part.href} target="_blank" rel="noopener noreferrer" className="break-all underline underline-offset-2">
+                    {part.text}
+                  </a>
+                ) : (
+                  part.text
+                ),
+              )}
+            </span>
+          )}
         </span>
+        {previewLink(note.text) && <LinkCard url={previewLink(note.text)!} mine={false} />}
         <Avatar user={user} size="lg" />
         <p className="text-center">
           <span className="font-semibold">{user.displayName}</span>

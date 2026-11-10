@@ -17,6 +17,7 @@ import {
   countReactions,
   durationLabel,
   inkOn,
+  previewLink,
 } from "@six/shared";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Image } from "expo-image";
@@ -36,6 +37,7 @@ import { six } from "@/lib/six";
 import { brand, brandInk, stone, useTheme } from "@/lib/theme";
 import { DurationPicker } from "./auto-delete-custom";
 import { Avatar } from "./avatar";
+import { LinkCard, Linked } from "./message-list";
 import { GifSearch } from "./story-composer";
 import { Text, TextInput } from "./text";
 import { PrimaryButton } from "./ui";
@@ -332,10 +334,11 @@ export function NoteReader({ user, note, onClose }: { user: PublicUser; note: No
           {note.gif && <Loop gif={note.gif} height={180} maxWidth={280} radius={18} />}
           {!!note.text && (
             <Text style={[{ color: note.background ? inkOn(note.background) : t.text, fontSize: 16, fontWeight: "500", textAlign: "center" }, note.gif && { padding: 6 }]}>
-              {note.text}
+              <Linked text={note.text} selecting={false} />
             </Text>
           )}
         </View>
+        {previewLink(note.text) && <LinkCard url={previewLink(note.text)!} mine={false} width={280} />}
         <Avatar user={user} size="lg" />
         <Text style={{ color: t.text, fontSize: 15 }}>
           <Text style={{ fontWeight: "700" }}>{user.displayName}</Text>
