@@ -1,5 +1,5 @@
 import { type Dict, type MessageDTO, isGroupAction } from "@six/shared";
-import { Gamepad2, Ghost, Lock, Palette, Phone, PhoneMissed, Timer, Users, Video } from "lucide-react";
+import { Camera, Gamepad2, Ghost, Lock, Palette, Phone, PhoneMissed, Timer, Users, Video } from "lucide-react";
 import { getT } from "@/lib/i18n";
 
 export function ServiceIcon({ action }: Pick<MessageDTO, "action">) {
@@ -10,17 +10,19 @@ export function ServiceIcon({ action }: Pick<MessageDTO, "action">) {
         ? Lock
         : action?.type === "vanish"
           ? Ghost
-          : action?.type === "call"
-            ? action.secs === null
-              ? PhoneMissed
-              : action.video
-                ? Video
-                : Phone
-            : action?.type === "live_invite" || action?.type === "live_result"
-              ? Gamepad2
-              : isGroupAction(action)
-                ? Users
-                : Timer;
+          : action?.type === "screenshot"
+            ? Camera
+            : action?.type === "call"
+              ? action.secs === null
+                ? PhoneMissed
+                : action.video
+                  ? Video
+                  : Phone
+              : action?.type === "live_invite" || action?.type === "live_result"
+                ? Gamepad2
+                : isGroupAction(action)
+                  ? Users
+                  : Timer;
   return <Icon className="size-3.5 shrink-0" />;
 }
 

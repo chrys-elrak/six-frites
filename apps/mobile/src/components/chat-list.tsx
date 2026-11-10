@@ -31,6 +31,7 @@ import {
   EyeOff,
   Flame,
   Ghost,
+  Camera,
   Gamepad2,
   Lock,
   MessageCircle,
@@ -109,6 +110,8 @@ function Preview({ chat, meId, color }: { chat: ChatDTO; meId: string; color: st
         <Lock size={14} color={color} />
       ) : m.action?.type === "vanish" ? (
         <Ghost size={14} color={color} />
+      ) : m.action?.type === "screenshot" ? (
+        <Camera size={14} color={color} />
       ) : m.action?.type === "call" ? (
         m.action.secs === null ? (
           <PhoneMissed size={14} color={color} />

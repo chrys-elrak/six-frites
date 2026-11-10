@@ -36,6 +36,8 @@ const en = {
   turnedOffVanish: (who: string | null) => `${who ?? "You"} turned off vanish mode`,
   pinned: "Pinned a message",
   pinnedMessage: (who: string | null) => `${who ?? "You"} pinned a message`,
+  screenshot: "Took a screenshot",
+  tookScreenshot: (who: string | null) => `${who ?? "You"} took a screenshot`,
   /** `who` is null when it was you. */
   resetBackground: (who: string | null) => `${who ?? "You"} reset the chat background`,
   customBackground: (who: string | null) => `${who ?? "You"} set a custom chat background`,
@@ -96,6 +98,8 @@ const fr: typeof en = {
   turnedOffVanish: (who) => fr3(who, "avez désactivé le mode éphémère", "a désactivé le mode éphémère"),
   pinned: "Message épinglé",
   pinnedMessage: (who) => fr3(who, "avez épinglé un message", "a épinglé un message"),
+  screenshot: "Capture d'écran",
+  tookScreenshot: (who) => fr3(who, "avez fait une capture d'écran", "a fait une capture d'écran"),
   resetBackground: (who) => fr3(who, "avez réinitialisé le fond de la discussion", "a réinitialisé le fond de la discussion"),
   customBackground: (who) => fr3(who, "avez choisi un fond personnalisé", "a choisi un fond personnalisé"),
   changedBackground: (who, theme) =>
@@ -162,6 +166,8 @@ const mg: typeof en = {
   turnedOffVanish: (who) => `Nanajanona ny fomba manjavona ${by(who)}`,
   pinned: "Hafatra napetaka",
   pinnedMessage: (who) => `Nametaka hafatra ${by(who)}`,
+  screenshot: "Naka sary ny efijery",
+  tookScreenshot: (who) => `Naka sary ny efijery ${by(who)}`,
   resetBackground: (who) => `Namerina ho toy ny teo aloha ny sary aorian'ny resaka ${by(who)}`,
   customBackground: (who) => `Nametraka sary aoriana manokana ${by(who)}`,
   changedBackground: (who, theme) => `Nanova ny sary aorian'ny resaka ho ${theme} ${by(who)}`,

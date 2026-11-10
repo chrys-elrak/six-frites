@@ -63,6 +63,7 @@ export function serviceText(m: Pick<MessageDTO, "action">, t: Dict, mine = false
   if (a?.type === "e2ee") return t.summary.encrypted;
   if (a?.type === "vanish") return a.on ? t.summary.vanishOn : t.summary.vanishOff;
   if (a?.type === "pin") return t.summary.pinned;
+  if (a?.type === "screenshot") return t.summary.screenshot;
   if (a?.type === "call") return callText(a, t);
   if (a?.type === "live_invite") return liveText(a, t, mine);
   if (a?.type === "live_result") return resultText(a, t);
@@ -95,6 +96,7 @@ export function serviceSentence(m: Pick<MessageDTO, "action">, who: string | nul
   if (a?.type === "e2ee") return t.summary.turnedOnEncryption(who);
   if (a?.type === "vanish") return a.on ? t.summary.turnedOnVanish(who) : t.summary.turnedOffVanish(who);
   if (a?.type === "pin") return t.summary.pinnedMessage(who);
+  if (a?.type === "screenshot") return t.summary.tookScreenshot(who);
   if (a?.type === "call") return t.summary.called(who, callText(a, t));
   if (a?.type === "live_invite") return liveText(a, t, who === null);
   if (a?.type === "live_result") return resultText(a, t);

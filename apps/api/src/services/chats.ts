@@ -33,6 +33,7 @@ import { profilesFor } from "./contacts.js";
 import { supportCase } from "./users.js";
 import { purgeUploads } from "./uploads.js";
 import { notify } from "./notifications.js";
+import { queuePush } from "./push.js";
 
 const newestFirst = [{ createdAt: "desc" as const }, { id: "desc" as const }];
 
@@ -405,6 +406,14 @@ export async function updateChat(
     for (const m of members) emit(m.userId, "chat.updated", await getChat(m.userId, chatId, tx));
     return getChat(userId, chatId, tx);
   });
+}
+
+/** Tells the others in the chat that this member took a screenshot of it, with a service message and a push. */
+export async function reportScreenshot(userId: string, chatId: string) {
+  const { message, recipients } = await withEvents((tx, emit) =>
+    createMessage(tx, emit, userId, chatId, { clientId: `screenshot-${createId()}`, action: { type: "screenshot" } }),
+  );
+  await queuePush(message.id, recipients).catch((err) => console.error("could not queue push:", err.message));
 }
 
 /**

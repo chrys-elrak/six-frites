@@ -45,7 +45,7 @@ import {
   ViewMessageResult,
   page,
 } from "@six/shared";
-import { closeChat, deleteChat, getChat, listChats, markDelivered, markRead, updateChat } from "../services/chats.js";
+import { closeChat, deleteChat, getChat, listChats, markDelivered, markRead, reportScreenshot, updateChat } from "../services/chats.js";
 import {
   findContact,
   listContacts,
@@ -587,6 +587,24 @@ const chatRoutes: FastifyPluginAsyncZod = async (app) => {
     },
     async (req, reply) => {
       await closeChat(req.auth.userId, req.params.id);
+      return reply.status(204).send(null);
+    },
+  );
+
+  app.post(
+    "/chats/:id/screenshot",
+    {
+      schema: {
+        tags: ["chats"],
+        summary: "Say you took a screenshot of the chat",
+        description: "Posts a `screenshot` service message, so the others see it and get a push.",
+        security,
+        params: ChatParams,
+        response: { 204: z.null() },
+      },
+    },
+    async (req, reply) => {
+      await reportScreenshot(req.auth.userId, req.params.id);
       return reply.status(204).send(null);
     },
   );

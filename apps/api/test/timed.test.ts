@@ -234,3 +234,12 @@ describe("scheduled messages", () => {
     });
   });
 });
+
+describe("screenshots", () => {
+  it("tell the other person with a service message", async () => {
+    const { host, guest, chatId } = await makeFriends();
+    expect((await call(guest, "POST", `/v1/chats/${chatId}/screenshot`)).statusCode).toBe(204);
+    const [notice] = (await get(host, `/v1/chats/${chatId}/messages`)).items;
+    expect(notice).toMatchObject({ type: "service", senderId: guest.user.id, action: { type: "screenshot" } });
+  });
+});

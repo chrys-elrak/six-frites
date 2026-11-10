@@ -51,6 +51,7 @@ import {
   Forward,
   Gamepad2,
   Ghost,
+  Camera,
   ImagePlus,
   Info,
   KeyRound,
@@ -1692,6 +1693,8 @@ export const MessageList = forwardRef<
                       <Lock size={14} color="#fff" />
                     ) : row.message.action?.type === "vanish" ? (
                       <Ghost size={14} color="#fff" />
+                    ) : row.message.action?.type === "screenshot" ? (
+                      <Camera size={14} color="#fff" />
                     ) : row.message.action?.type === "call" ? (
                       row.message.action.secs === null ? (
                         <PhoneMissed size={14} color="#fff" />

@@ -324,6 +324,7 @@ export const ServiceAction = z
     z.object({ type: z.literal("e2ee") }),
     z.object({ type: z.literal("vanish"), on: z.boolean() }),
     z.object({ type: z.literal("pin") }),
+    z.object({ type: z.literal("screenshot") }),
     z.object({ type: z.literal("group_created"), title: z.string() }),
     z.object({ type: z.literal("joined"), name: z.string() }),
     z.object({ type: z.literal("left"), name: z.string() }),
@@ -354,7 +355,7 @@ export const ServiceAction = z
     }),
   ])
   .describe(
-    "What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `pin` means they pinned a message; `call` logs a call the sender made; `live_invite` is posted in your chat when `from` asks you to a live game; `live_result` is how a live game you played alone against Six Frites Game ended, for you; in a group, `group_created`, `joined`, `left`, `removed`, `renamed` and `group_photo` tell what happened to the group and to whom (`name` is how they showed there)",
+    "What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `pin` means they pinned a message; `screenshot` means they took a screenshot of the chat (only detected on the web, and not everywhere); `call` logs a call the sender made; `live_invite` is posted in your chat when `from` asks you to a live game; `live_result` is how a live game you played alone against Six Frites Game ended, for you; in a group, `group_created`, `joined`, `left`, `removed`, `renamed` and `group_photo` tell what happened to the group and to whom (`name` is how they showed there)",
   );
 export type ServiceAction = z.infer<typeof ServiceAction>;
 
