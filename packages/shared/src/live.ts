@@ -145,6 +145,8 @@ export interface LiveRoomDTO {
   mySeat: number | null;
   /** When the current turn, or the word hunt round, runs out. */
   deadline: string | null;
+  /** The seat whose turn ran out: nobody plays for them, the others choose to wait or to end the game. */
+  stalled: number | null;
   winners: number[];
   view: LiveView | null;
   /** What the players said, oldest first. */

@@ -618,7 +618,7 @@ function RoomChat({
 }
 
 type Ask = (
-  event: "live:bot" | "live:start" | "live:move" | "live:say" | "live:react" | "live:giveup",
+  event: "live:bot" | "live:start" | "live:move" | "live:say" | "live:react" | "live:giveup" | "live:wait" | "live:drop",
   extra: { add?: boolean; move?: unknown; lineId?: string; emoji?: string } & Line,
 ) => Promise<boolean>;
 
@@ -816,6 +816,23 @@ export function LiveRoom({ roomId }: { roomId: string }) {
           title={tr.live.giveUpConfirm}
           actions={[{ label: tr.live.giveUp, destructive: true, onSelect: () => void ask("live:giveup", {}) }]}
           onClose={() => setGivingUp(false)}
+        />
+      )}
+      {room?.status === "playing" && room.stalled !== null && room.mySeat !== null && room.stalled !== room.mySeat && (
+        <Sheet
+          title={tr.live.stalled(room.seats[room.stalled]?.user?.displayName ?? "")}
+          actions={[
+            { label: tr.live.wait, onSelect: () => void ask("live:wait", {}) },
+            {
+              label:
+                room.seats.filter((s) => s.user && !s.gaveUp).length > 2
+                  ? tr.live.playOnWithout(room.seats[room.stalled]?.user?.displayName ?? "")
+                  : tr.live.end,
+              destructive: true,
+              onSelect: () => void ask("live:drop", {}),
+            },
+          ]}
+          onClose={() => void ask("live:wait", {})}
         />
       )}
     </div>

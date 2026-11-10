@@ -108,8 +108,6 @@ interface Seat {
   /** null for Frite Bot. */
   userId: string | null;
   left: boolean;
-  /** Ran out of time, so the bot finishes their turn for them. */
-  away: boolean;
   /** Gave up: the bot plays the seat out, but it can't win. */
   gaveUp: boolean;
 }
@@ -125,6 +123,7 @@ interface Room {
   state: GameState | null;
   winners: number[];
   deadline: number | null;
+  stalled: number | null;
   /** Set while nobody is in a game against the bot: the time left on Word Hunt's clock, 0 for the others. */
   paused: number | null;
   turnTimer: NodeJS.Timeout | null;
@@ -156,7 +155,7 @@ setInterval(() => {
 }, 60_000).unref();
 
 const humans = (room: Room) => room.seats.flatMap((s) => (s.userId && !s.left ? [s.userId] : []));
-const playsItself = (seat: Seat) => !seat.userId || seat.left || seat.away || seat.gaveUp;
+const playsItself = (seat: Seat) => !seat.userId || seat.left || seat.gaveUp;
 
 /** Each seat's score, in the games that keep one. */
 function scoresOf(state: GameState) {
@@ -274,6 +273,7 @@ function toDTO(room: Room, viewerId: string): LiveRoomDTO {
     invited: room.invited.map(user),
     mySeat: mySeat < 0 ? null : mySeat,
     deadline: room.deadline ? new Date(room.deadline).toISOString() : null,
+    stalled: room.status === "playing" ? room.stalled : null,
     winners: room.winners,
     view: room.state && viewOf(room.state, mySeat < 0 ? null : mySeat),
     chat: room.chat
@@ -345,8 +345,8 @@ function finish(room: Room, ended: number[]) {
 
 /**
  * After a move: ends the game, or hands the turn on, giving people a time limit and bots a short pause.
- * A Ludo move with nothing to pick is played after the same pause, and whoever ran out of time gets
- * their full time back once their turn is over.
+ * A Ludo move with nothing to pick is played after the same pause. Nobody plays for a person who runs out
+ * of time: the game stalls until they move, or the others wait more or end it.
  */
 function schedule(room: Room) {
   if (room.turnTimer) clearTimeout(room.turnTimer);
@@ -356,15 +356,17 @@ function schedule(room: Room) {
   if (winners) return finish(room, winners);
   const turn = turnOf(state);
   if (turn === null) return broadcast(room);
-  for (const [i, other] of room.seats.entries()) if (i !== turn) other.away = false;
   const seat = room.seats[turn]!;
   const forced = state.game === "ludo" && ludoForced(state.s);
   const quick = playsItself(seat) || forced;
   const wait = quick ? BOT_MS[room.game] : LIVE_TURN_SECONDS * 1000;
   room.deadline = quick ? null : Date.now() + wait;
+  room.stalled = null;
   room.turnTimer = setTimeout(() => {
-    if (!forced) seat.away ||= !!seat.userId;
-    act(room, turn, autoMove(room.state!, turn));
+    if (quick) return void act(room, turn, autoMove(room.state!, turn));
+    room.turnTimer = null;
+    room.stalled = turn;
+    broadcast(room);
   }, wait);
   broadcast(room);
 }
@@ -485,7 +487,9 @@ export async function createRoom(userId: string, input: CreateLiveInput) {
   const chatWith = (id: string) => chats.find((c) => c.directKey === [userId, id].sort().join(":"));
   const known = invite.every((id) => !blocked.has(id) && chatWith(id));
   if (!known || people !== invite.length) throw new AppError("CONTACT_NOT_FOUND", "You can only invite your contacts");
-  const unfinished = myRooms(userId)[0];
+  const unfinished =
+    myRooms(userId)[0] ??
+    [...live.values()].flatMap((r) => (r.status !== "over" && r.invited.includes(userId) && invite.includes(r.hostId) ? [{ roomId: r.id, game: r.game }] : []))[0];
   if (unfinished) throw new AppError("GAME_IN_PROGRESS", "Finish your game first", { roomId: unfinished.roomId, game: unfinished.game });
 
   const room: Room = {
@@ -494,11 +498,12 @@ export async function createRoom(userId: string, input: CreateLiveInput) {
     hostId: userId,
     locale: input.locale,
     status: "lobby",
-    seats: [{ userId, left: false, away: false, gaveUp: false }],
+    seats: [{ userId, left: false, gaveUp: false }],
     invited: invite,
     state: null,
     winners: [],
     deadline: null,
+    stalled: null,
     paused: null,
     turnTimer: null,
     roundTimers: [],
@@ -512,7 +517,7 @@ export async function createRoom(userId: string, input: CreateLiveInput) {
   await refresh(room);
   live.set(room.id, room);
   if (input.bot) {
-    while (room.seats.length < LIVE_SEATS[room.game].min) room.seats.push({ userId: null, left: false, away: false, gaveUp: false });
+    while (room.seats.length < LIVE_SEATS[room.game].min) room.seats.push({ userId: null, left: false, gaveUp: false });
     startRoom(userId, room.id);
   }
   const out = broadcaster();
@@ -536,9 +541,8 @@ export async function joinRoom(userId: string, roomId: string) {
   const room = roomOf(roomId);
   const mine = room.seats.find((s) => s.userId === userId);
   if (mine) {
-    const back = mine.left || mine.away;
+    const back = mine.left;
     mine.left = false;
-    mine.away = false;
     if (back && room.paused !== null) {
       resume(room);
       return toDTO(room, userId);
@@ -555,7 +559,7 @@ export async function joinRoom(userId: string, roomId: string) {
   if (room.status !== "lobby" && !bot) throw new AppError("GAME_STARTED", "This game has already started");
   if (room.status === "lobby" && room.seats.length >= LIVE_SEATS[room.game].max) throw new AppError("ROOM_FULL", "This game is full");
   room.invited = room.invited.filter((id) => id !== userId);
-  const seat = { userId, left: false, away: false, gaveUp: false };
+  const seat = { userId, left: false, gaveUp: false };
   if (bot) Object.assign(bot, seat);
   else room.seats.push(seat);
   const turn = room.status === "playing" && room.state ? turnOf(room.state) : null;
@@ -607,7 +611,7 @@ export function setBot(userId: string, roomId: string, add: boolean) {
   if (room.status !== "lobby") throw new AppError("GAME_STARTED", "This game has already started");
   if (add && room.seats.length >= LIVE_SEATS[room.game].max) throw new AppError("ROOM_FULL", "This game is full");
   const bot = room.seats.map((s) => !s.userId).lastIndexOf(true);
-  if (add) room.seats.push({ userId: null, left: false, away: false, gaveUp: false });
+  if (add) room.seats.push({ userId: null, left: false, gaveUp: false });
   else if (bot >= 0) room.seats.splice(bot, 1);
   broadcast(room);
   return toDTO(room, userId);
@@ -620,7 +624,6 @@ export function startRoom(userId: string, roomId: string) {
   if (room.seats.length < LIVE_SEATS[room.game].min) throw new AppError("VALIDATION_FAILED", "Not enough players");
   clearTimers(room);
   room.seats.forEach((s) => {
-    s.away = false;
     s.gaveUp = false;
   });
   room.status = "playing";
@@ -680,26 +683,57 @@ export function react(userId: string, { roomId, lineId, emoji }: LiveReactInput)
   return null;
 }
 
-/** Gives up my seat: the bot plays it out but it can't win, and the last one still in wins. */
-export function giveUp(userId: string, roomId: string) {
-  const room = roomOf(roomId);
-  const seat = room.seats.findIndex((s) => s.userId === userId && !s.left && !s.gaveUp);
-  if (seat < 0 || room.status !== "playing" || !room.state) throw new AppError("FORBIDDEN", "You're not playing in this game");
+/** Takes a seat out of the game: the bot plays it out but it can't win, and the last one still in wins. */
+function forfeit(room: Room, seat: number) {
   room.seats[seat]!.gaveUp = true;
   const still = room.seats.flatMap((s, i) => (s.gaveUp ? [] : [i]));
   if (still.length <= 1) finish(room, still);
-  else if (turnOf(room.state) === seat) schedule(room);
+  else if (turnOf(room.state!) === seat) schedule(room);
   else broadcast(room);
+}
+
+function playingSeat(room: Room, userId: string) {
+  const seat = room.seats.findIndex((s) => s.userId === userId && !s.left && !s.gaveUp);
+  if (seat < 0 || room.status !== "playing" || !room.state) throw new AppError("FORBIDDEN", "You're not playing in this game");
+  return seat;
+}
+
+/** Gives up my seat. */
+export function giveUp(userId: string, roomId: string) {
+  const room = roomOf(roomId);
+  forfeit(room, playingSeat(room, userId));
+  return null;
+}
+
+/** Someone else's turn ran out and I'd rather wait: their time starts again. */
+export function waitForTurn(userId: string, roomId: string) {
+  const room = roomOf(roomId);
+  const seat = playingSeat(room, userId);
+  if (room.stalled !== null && room.stalled !== seat) schedule(room);
+  return null;
+}
+
+/** Someone else's turn ran out and I'd rather not wait: they're out, which ends a game of two. */
+export function dropStalled(userId: string, roomId: string) {
+  const room = roomOf(roomId);
+  const seat = playingSeat(room, userId);
+  if (room.stalled !== null && room.stalled !== seat) forfeit(room, room.stalled);
   return null;
 }
 
 /**
  * Ends the game for me in one go, even after I left it: gives up my seat and leaves for good. A game
- * nobody else is still in closes right away.
+ * nobody else is still in closes right away. Someone only invited turns the invite down, which closes a
+ * lobby left waiting for nobody.
  */
 export function endRoom(userId: string, roomId: string) {
   const room = live.get(roomId);
   const seat = room?.seats.find((s) => s.userId === userId);
+  if (room && !seat && room.invited.includes(userId)) {
+    room.invited = room.invited.filter((id) => id !== userId);
+    if (room.status === "lobby" && !room.invited.length && humans(room).length <= 1) return close(room);
+    return broadcast(room);
+  }
   if (!room || !seat) return;
   if (room.status === "playing") {
     if (!room.seats.some((s) => s.userId && s !== seat && !s.gaveUp)) return close(room);
@@ -715,7 +749,6 @@ export function playMove(userId: string, roomId: string, move: unknown) {
   if (seat < 0 || room.status !== "playing" || !room.state) throw new AppError("FORBIDDEN", "You're not playing in this game");
   const turn = turnOf(room.state);
   if (turn !== null && turn !== seat) throw new AppError("NOT_YOUR_TURN", "Wait for your turn");
-  room.seats[seat]!.away = false;
   if (!act(room, seat, move)) throw new AppError("INVALID_MOVE", "You can't play that");
   return null;
 }

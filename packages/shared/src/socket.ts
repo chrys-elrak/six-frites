@@ -75,6 +75,10 @@ export interface ClientToServerEvents {
   /** Adds my reaction to a chat line, or takes it back when it's already there. */
   "live:react": (p: { roomId: string; lineId: string; emoji: string }, cb: Ack<null>) => void;
   "live:giveup": (p: { roomId: string }, cb: Ack<null>) => void;
-  /** Gives up and leaves for good, closing a game no one else is in. */
+  /** Gives up and leaves for good, closing a game no one else is in, or turns down the invite to it. */
   "live:end": (p: { roomId: string }, cb?: Ack<null>) => void;
+  /** Gives the player whose turn ran out their time again. */
+  "live:wait": (p: { roomId: string }, cb: Ack<null>) => void;
+  /** Counts the player whose turn ran out as having given up. */
+  "live:drop": (p: { roomId: string }, cb: Ack<null>) => void;
 }

@@ -27,7 +27,7 @@ import { redisConnection } from "../lib/queue.js";
 import { type IO, rooms, setIo, socketKey } from "../lib/realtime.js";
 import { authenticateBearer } from "../plugins/auth.js";
 import { relaySignal } from "../services/calls.js";
-import { createRoom, endRoom, giveUp, hasRoom, joinRoom, leaveRoom, leaveSoloRooms, myRooms, playMove, react, say, setBot, startRoom } from "../services/live.js";
+import { createRoom, endRoom, dropStalled, giveUp, hasRoom, joinRoom, leaveRoom, leaveSoloRooms, myRooms, playMove, react, say, setBot, startRoom, waitForTurn } from "../services/live.js";
 import { markDelivered, markRead } from "../services/chats.js";
 import { assertMember, sendMessage } from "../services/messages.js";
 
@@ -71,6 +71,8 @@ const liveActions = {
   "live:start": async (userId: string, p: unknown) => startRoom(userId, LiveRoomRef.parse(p).roomId),
   "live:giveup": async (userId: string, p: unknown) => giveUp(userId, LiveRoomRef.parse(p).roomId),
   "live:end": async (userId: string, p: unknown) => endRoom(userId, LiveRoomRef.parse(p).roomId) ?? null,
+  "live:wait": async (userId: string, p: unknown) => waitForTurn(userId, LiveRoomRef.parse(p).roomId),
+  "live:drop": async (userId: string, p: unknown) => dropStalled(userId, LiveRoomRef.parse(p).roomId),
   "live:say": (userId: string, p: unknown) => say(userId, LiveSayInput.parse(p)),
   "live:react": async (userId: string, p: unknown) => react(userId, LiveReactInput.parse(p)),
   "live:move": async (userId: string, p: unknown) => {
@@ -168,6 +170,8 @@ export function createSocketServer(http: HttpServer) {
     socket.on("live:start", live("live:start"));
     socket.on("live:giveup", live("live:giveup"));
     socket.on("live:end", live("live:end"));
+    socket.on("live:wait", live("live:wait"));
+    socket.on("live:drop", live("live:drop"));
     socket.on("live:say", live("live:say"));
     socket.on("live:react", live("live:react"));
     socket.on("live:move", live("live:move"));

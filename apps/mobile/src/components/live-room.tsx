@@ -754,6 +754,23 @@ export function LiveRoom({ id }: { id: string }) {
           onClose={() => setGivingUp(false)}
         />
       )}
+      {room?.status === "playing" && room.stalled !== null && room.mySeat !== null && room.stalled !== room.mySeat && (
+        <Sheet
+          title={tr.live.stalled(room.seats[room.stalled]?.user?.displayName ?? "")}
+          actions={[
+            { label: tr.live.wait, onSelect: () => socket?.emit("live:wait", { roomId: id }, noop) },
+            {
+              label:
+                room.seats.filter((s) => s.user && !s.gaveUp).length > 2
+                  ? tr.live.playOnWithout(room.seats[room.stalled]?.user?.displayName ?? "")
+                  : tr.live.end,
+              destructive: true,
+              onSelect: () => socket?.emit("live:drop", { roomId: id }, noop),
+            },
+          ]}
+          onClose={() => socket?.emit("live:wait", { roomId: id }, noop)}
+        />
+      )}
     </View>
   );
 }
