@@ -83,7 +83,7 @@ async function setBlocked(userId: string, otherId: string, blocked: boolean) {
     for (const id of [userId, otherId]) emit(id, "chat.updated", await getChat(id, chatId, tx));
   });
   if (blocked) {
-    const hidden = (userId: string) => ({ userId, online: false, lastSeenAt: null });
+    const hidden = (userId: string) => ({ userId, online: false, devices: [], lastSeenAt: null });
     broadcaster().to(rooms.user(userId)).emit("presence", hidden(otherId));
     broadcaster().to(rooms.user(otherId)).emit("presence", hidden(userId));
   }

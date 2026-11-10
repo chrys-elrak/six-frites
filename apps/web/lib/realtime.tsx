@@ -157,6 +157,7 @@ export function RealtimeProvider({ children }: { children: React.ReactNode }) {
     if (!meId) return;
     let queue: Promise<unknown> = Promise.resolve();
     const rt = six.realtime({
+      device: matchMedia("(pointer: coarse)").matches ? "web" : "desktop",
       onEvent: (e) => {
         queue = queue
           .then(() => hydrateEvent(e))

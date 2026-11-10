@@ -4,6 +4,7 @@ import type {
   CallSignalInput,
   ChangeEventDTO,
   ChatReadDTO,
+  ClientDevice,
   ClientToServerEvents,
   MessageDTO,
   SendMessageInput,
@@ -31,6 +32,8 @@ export interface RealtimeOptions {
   onResyncRequired?: () => void;
   onStatus?: (status: "connecting" | "syncing" | "live" | "offline") => void;
   cursorStore?: CursorStore;
+  /** What this client runs on, shown to contacts while it is online. */
+  device?: ClientDevice;
 }
 
 function memoryCursor(): CursorStore {
@@ -52,7 +55,7 @@ export function createRealtime(baseUrl: string, tokens: TokenManager, api: RestC
     autoConnect: false,
     withCredentials: true,
     transports: ["websocket"],
-    auth: (cb) => void tokens.getAccessToken().then((token) => cb({ token })),
+    auth: (cb) => void tokens.getAccessToken().then((token) => cb({ token, device: opts.device })),
   });
 
   let offset = 0;

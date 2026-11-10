@@ -1,8 +1,8 @@
 "use client";
 
-import { type MessageDTO, chatFace, durationLabel, isFrozen, isMuted, previewText, readOnlyGroup } from "@six/shared";
+import { type ClientDevice, type MessageDTO, chatFace, durationLabel, isFrozen, isMuted, previewText, readOnlyGroup } from "@six/shared";
 import { useQueryClient } from "@tanstack/react-query";
-import { ChevronLeft, ChevronsUpDown, Lock, MoreVertical, Phone, PinOff, ShieldAlert, Trash2, Video, X } from "lucide-react";
+import { ChevronLeft, ChevronsUpDown, Globe, Lock, type LucideIcon, Monitor, MoreVertical, Phone, PinOff, ShieldAlert, Smartphone, Trash2, Video, X } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { BackLink, useCloseOnBack, useGoUp } from "@/lib/back";
@@ -40,6 +40,24 @@ const headerClass =
   "flex items-center gap-1 border-b border-black/5 bg-stone-50/45 px-2 pt-[max(0.5rem,env(safe-area-inset-top))] pb-2 md:h-16 md:py-0 backdrop-blur-xl backdrop-saturate-150 dark:border-white/10 dark:bg-stone-950/40";
 const iconButton =
   "grid size-10 place-items-center rounded-full text-stone-600 hover:bg-stone-200 dark:text-stone-300 dark:hover:bg-stone-800";
+
+const DEVICE_ICONS: Record<ClientDevice, LucideIcon> = { app: Smartphone, web: Globe, desktop: Monitor };
+
+function DeviceBadges({ devices = [] }: { devices: ClientDevice[] }) {
+  const tr = useT();
+  return devices.map((d) => {
+    const Icon = DEVICE_ICONS[d];
+    return (
+      <span
+        key={d}
+        className="ml-1.5 inline-flex items-center gap-1 rounded-full bg-black/5 px-1.5 align-middle text-[10px] font-medium text-stone-600 dark:bg-white/10 dark:text-stone-300"
+      >
+        <Icon className="size-3" />
+        {tr.time.devices[d]}
+      </span>
+    );
+  });
+}
 
 function useHeight() {
   const [el, setEl] = useState<HTMLElement | null>(null);
@@ -271,6 +289,7 @@ function OpenConversation({ chatId }: { chatId: string }) {
                       (shownPresence || muted || c.archived || c.autoDeleteSecs || c.support || c.withSupport || c.group) && (
                         <span className="line-clamp-2 text-xs text-stone-500">
                           {shownPresence?.online && <span className="font-medium text-brand">{tr.time.online}</span>}
+                          {shownPresence?.online && <DeviceBadges devices={shownPresence.devices} />}
                           {shownPresence?.online && (muted || c.archived || c.autoDeleteSecs || c.support) && " · "}
                           {[
                             c.group && tr.groups.members(c.members.length),

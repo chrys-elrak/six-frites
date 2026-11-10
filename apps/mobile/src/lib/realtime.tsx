@@ -160,6 +160,7 @@ export function RealtimeProvider({ children }: { children: React.ReactNode }) {
     if (!meId) return;
     startE2EE(meId);
     const rt = six.realtime({
+      device: "app",
       onEvent: (e) => me.current && applyEvent(qc, me.current, e),
       onTyping: (e) => useTypingStore.getState().set(e.chatId, e.userId, e.typing ? (e.kind ?? "text") : null),
       onStatus: (s) => {

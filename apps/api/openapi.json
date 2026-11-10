@@ -78567,6 +78567,18 @@
                             "type": "boolean",
                             "description": "Has the app open on at least one device right now"
                           },
+                          "devices": {
+                            "type": "array",
+                            "items": {
+                              "type": "string",
+                              "enum": [
+                                "app",
+                                "web",
+                                "desktop"
+                              ]
+                            },
+                            "description": "What they have it open on right now: the mobile app, a phone browser or a computer. Empty when offline"
+                          },
                           "lastSeenAt": {
                             "nullable": true,
                             "description": "When they last had the app open; null if never recorded",
@@ -78578,6 +78590,7 @@
                         "required": [
                           "userId",
                           "online",
+                          "devices",
                           "lastSeenAt"
                         ],
                         "additionalProperties": false

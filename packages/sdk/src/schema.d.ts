@@ -22553,6 +22553,8 @@ export interface paths {
                                 userId: string;
                                 /** @description Has the app open on at least one device right now */
                                 online: boolean;
+                                /** @description What they have it open on right now: the mobile app, a phone browser or a computer. Empty when offline */
+                                devices: ("app" | "web" | "desktop")[];
                                 /**
                                  * Format: date-time
                                  * @description When they last had the app open; null if never recorded

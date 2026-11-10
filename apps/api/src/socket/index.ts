@@ -6,6 +6,7 @@ import {
   type AckResult,
   AppError,
   CallSignalInput,
+  ClientDevice,
   CreateLiveInput,
   LiveBotInput,
   LiveMoveInput,
@@ -34,6 +35,7 @@ declare module "socket.io" {
   interface SocketData {
     userId: string;
     sessionId: string;
+    device: ClientDevice | null;
   }
 }
 
@@ -109,6 +111,7 @@ export function createSocketServer(http: HttpServer) {
       const claims = await authenticateBearer(typeof token === "string" ? `Bearer ${token}` : undefined);
       socket.data.userId = claims.userId;
       socket.data.sessionId = claims.sessionId;
+      socket.data.device = ClientDevice.safeParse(socket.handshake.auth?.device).data ?? null;
       next();
     } catch (err) {
       const e = err instanceof AppError ? err : new AppError("UNAUTHENTICATED");
@@ -124,17 +127,17 @@ export function createSocketServer(http: HttpServer) {
 
   io.on("connection", (socket) => {
 
-    const { userId, sessionId } = socket.data;
+    const { userId, sessionId, device } = socket.data;
     socket.join([rooms.user(userId), rooms.session(sessionId)]);
 
     socket.on("ping", handle(async () => ({ at: new Date().toISOString() })));
 
     socket.on("presence", (p) => {
       const active = typeof p === "object" && p !== null && (p as { active?: unknown }).active === true;
-      void setUserPresence(userId, sessionId, active).catch(() => null);
+      void setUserPresence(userId, sessionId, device, active).catch(() => null);
     });
     socket.on("disconnect", () => {
-      void setUserPresence(userId, sessionId, false).catch(() => null);
+      void setUserPresence(userId, sessionId, device, false).catch(() => null);
       void io
         .in(rooms.user(userId))
         .fetchSockets()

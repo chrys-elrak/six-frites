@@ -1,7 +1,7 @@
-import { type MessageDTO, chatFace, chatTheme, durationLabel, previewText, readOnlyGroup } from "@six/shared";
+import { type ClientDevice, type MessageDTO, chatFace, chatTheme, durationLabel, previewText, readOnlyGroup } from "@six/shared";
 import { useQueryClient } from "@tanstack/react-query";
 import { router, useFocusEffect, useLocalSearchParams } from "expo-router";
-import { ChevronLeft, ChevronsUpDown, MoreVertical, Phone, PinOff, ShieldAlert, Trash2, Video, X } from "lucide-react-native";
+import { ChevronLeft, ChevronsUpDown, Globe, type LucideIcon, Monitor, MoreVertical, Phone, PinOff, ShieldAlert, Smartphone, Trash2, Video, X } from "lucide-react-native";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { AppState, BackHandler, Pressable, StyleSheet, View } from "react-native";
 import { Text } from "./text";
@@ -35,6 +35,22 @@ import { MessageList, type MessageListHandle } from "./message-list";
 import { SharedMedia, type SharedTab } from "./shared-media";
 import { Sheet } from "./sheet";
 import { IconButton, Loading, ScreenHeader, TextButton } from "./ui";
+
+const DEVICE_ICONS: Record<ClientDevice, LucideIcon> = { app: Smartphone, web: Globe, desktop: Monitor };
+
+function DeviceBadges({ devices = [] }: { devices: ClientDevice[] }) {
+  const t = useTheme();
+  const tr = useT();
+  return devices.map((d) => {
+    const Icon = DEVICE_ICONS[d];
+    return (
+      <View key={d} style={[styles.deviceBadge, { backgroundColor: t.chip }]}>
+        <Icon size={11} color={t.textSoft} />
+        <Text style={{ color: t.textSoft, fontSize: 10, fontWeight: "600" }}>{tr.time.devices[d]}</Text>
+      </View>
+    );
+  });
+}
 
 function PinnedBar({
   message,
@@ -261,19 +277,22 @@ function OpenConversation({ chatId }: { chatId: string }) {
                 <Text style={{ color: brand, fontSize: 12, fontWeight: "600" }}>{tr.chats.typing[typing]}</Text>
               ) : (
                 (presence || c.muted || c.archived || !!c.autoDeleteSecs || c.support || c.withSupport || c.group) && (
-                  <Text numberOfLines={2} style={{ color: presence?.online ? brand : t.muted, fontSize: 12 }}>
-                    {[
-                      c.group && tr.groups.members(c.members.length),
-                      c.support && tr.support.title,
-                      c.withSupport && tr.support.team,
-                      presenceLabel(presence),
-                      c.autoDeleteSecs && tr.chat.autoDelete(durationLabel(c.autoDeleteSecs, tr)),
-                      c.muted && tr.common.muted,
-                      c.archived && tr.common.archived,
-                    ]
-                      .filter(Boolean)
-                      .join(" · ")}
-                  </Text>
+                  <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
+                    <Text numberOfLines={2} style={{ color: presence?.online ? brand : t.muted, fontSize: 12, flexShrink: 1 }}>
+                      {[
+                        c.group && tr.groups.members(c.members.length),
+                        c.support && tr.support.title,
+                        c.withSupport && tr.support.team,
+                        presenceLabel(presence),
+                        c.autoDeleteSecs && tr.chat.autoDelete(durationLabel(c.autoDeleteSecs, tr)),
+                        c.muted && tr.common.muted,
+                        c.archived && tr.common.archived,
+                      ]
+                        .filter(Boolean)
+                        .join(" · ")}
+                    </Text>
+                    {presence?.online && <DeviceBadges devices={presence.devices} />}
+                  </View>
                 )
               )}
             </View>
@@ -401,6 +420,7 @@ function OpenConversation({ chatId }: { chatId: string }) {
 }
 
 const styles = StyleSheet.create({
+  deviceBadge: { flexDirection: "row", alignItems: "center", gap: 3, borderRadius: 999, paddingHorizontal: 6, paddingVertical: 1 },
   supportTag: {
     color: brand,
     backgroundColor: "rgba(235,138,0,0.15)",
