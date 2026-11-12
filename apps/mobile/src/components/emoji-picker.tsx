@@ -2,7 +2,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import categories from "@six/shared/emojis.json";
 import { Search, X } from "lucide-react-native";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { FlatList, Pressable, StyleSheet, useWindowDimensions, View } from "react-native";
+import { FlatList, Keyboard, Pressable, StyleSheet, useWindowDimensions, View } from "react-native";
 import { GestureDetector, GestureHandlerRootView, usePanGesture } from "react-native-gesture-handler";
 import Animated, { useAnimatedStyle, useSharedValue, withTiming } from "react-native-reanimated";
 import { Modal } from "./modal";
@@ -28,7 +28,38 @@ const all = (categories as { title: string; data: Emoji[] }[]).flatMap((c) => c.
  * Search, category tabs and the grid of emoji, remembering the recent ones; swiping the grid sideways moves to the next
  * or previous category. With `onClose`, a close button too.
  */
-export function EmojiGrid({ onPick, onClose, height = 300 }: { onPick: (emoji: string) => void; onClose?: () => void; height?: number }) {
+/**
+ * Whether someone is typing in a picker's search field: it has focus and the keyboard is up. Pickers then shrink to the
+ * field and one row of results, so the keyboard doesn't cover them; `onChange` hears about it.
+ */
+export function useSearching(onChange?: (searching: boolean) => void) {
+  const [focused, setFocused] = useState(false);
+  const [shown, setShown] = useState(Keyboard.isVisible());
+  useEffect(() => {
+    const up = Keyboard.addListener("keyboardDidShow", () => setShown(true));
+    const down = Keyboard.addListener("keyboardDidHide", () => setShown(false));
+    return () => {
+      up.remove();
+      down.remove();
+    };
+  }, []);
+  const searching = focused && shown;
+  const report = useLatest(onChange);
+  useEffect(() => report.current?.(searching), [searching, report]);
+  return { searching, field: { onFocus: () => setFocused(true), onBlur: () => setFocused(false) } };
+}
+
+export function EmojiGrid({
+  onPick,
+  onClose,
+  onSearching,
+  height = 300,
+}: {
+  onPick: (emoji: string) => void;
+  onClose?: () => void;
+  onSearching?: (searching: boolean) => void;
+  height?: number;
+}) {
   const t = useTheme();
   const tr = useT();
   const labels: Record<string, string> = tr.composer.emojiCategories;
@@ -37,6 +68,7 @@ export function EmojiGrid({ onPick, onClose, height = 300 }: { onPick: (emoji: s
   const [query, setQuery] = useState("");
   const [recent, setRecent] = useState<string[]>([]);
   const cell = Math.floor((Math.min(width, 520) - 16) / COLUMNS);
+  const { searching, field } = useSearching(onSearching);
 
   useEffect(() => {
     void AsyncStorage.getItem(RECENT_KEY)
@@ -118,13 +150,14 @@ export function EmojiGrid({ onPick, onClose, height = 300 }: { onPick: (emoji: s
             placeholderTextColor={t.muted}
             autoCapitalize="none"
             autoCorrect={false}
+            {...field}
             style={[styles.searchInput, { color: t.text }]}
           />
         </View>
         {onClose && <IconButton Icon={X} label={tr.common.close} onPress={onClose} />}
       </View>
 
-      {!query && (
+      {!query && !searching && (
         <FlatList
           horizontal
           data={tabs}
@@ -147,13 +180,15 @@ export function EmojiGrid({ onPick, onClose, height = 300 }: { onPick: (emoji: s
       <GestureDetector gesture={swipe}>
         <Animated.View style={sliding}>
           <FlatList
-            key={query ? "search" : tab}
+            key={searching ? "row" : query ? "search" : tab}
             data={data}
-            numColumns={COLUMNS}
+            horizontal={searching}
+            numColumns={searching ? undefined : COLUMNS}
+            showsHorizontalScrollIndicator={false}
             keyExtractor={(e, i) => `${e}:${i}`}
             keyboardShouldPersistTaps="handled"
-            initialNumToRender={64}
-            style={{ height }}
+            initialNumToRender={searching ? 16 : 64}
+            style={{ height: searching ? cell + 12 : height }}
             contentContainerStyle={{ paddingHorizontal: 8, paddingTop: 6 }}
             ListEmptyComponent={<Text style={[styles.empty, { color: t.muted }]}>{tr.composer.noEmoji}</Text>}
             renderItem={({ item }) => (

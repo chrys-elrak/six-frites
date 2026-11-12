@@ -1377,8 +1377,22 @@ export const MessageList = forwardRef<
       setHighlight(jumping);
     }, [jumping, rows]);
 
-    useEffect(() => {
-      if (atBottom.current) scrollToBottom();
+    const shownInset = useRef(insetTop + insetBottom);
+    /**
+     * Keeps the last message in view when the header or the footer grows, like when the emoji picker opens: whether we
+     * were at the bottom is worked out from where the list was before the change, since a scroll in between can't be trusted.
+     */
+    useLayoutEffect(() => {
+      const grew = insetTop + insetBottom - shownInset.current;
+      shownInset.current = insetTop + insetBottom;
+      const h = list.current;
+      if (!grew || !h) return;
+      const below = h.scrollSize - h.scrollOffset - h.viewportSize;
+      if (!atBottom.current && below - Math.max(grew, 0) > 80) return;
+      atBottom.current = true;
+      scrollToBottom();
+      const frame = requestAnimationFrame(scrollToBottom);
+      return () => cancelAnimationFrame(frame);
     }, [insetTop, insetBottom]);
 
     useLayoutEffect(() => {

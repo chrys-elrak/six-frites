@@ -5,7 +5,7 @@ import { Image } from "expo-image";
 import { Smile, Sticker } from "lucide-react-native";
 import { useEffect, useState } from "react";
 import { FlatList, Pressable, ScrollView, StyleSheet, View, useWindowDimensions } from "react-native";
-import { EmojiGrid } from "./emoji-picker";
+import { EmojiGrid, useSearching } from "./emoji-picker";
 import { StickerView } from "./sticker";
 import { Text, TextInput } from "./text";
 import { useT } from "@/lib/i18n";
@@ -37,10 +37,21 @@ function useFound(q: string, kind: "gif" | "sticker", enabled = true) {
   });
 }
 
-function Search({ value, onChange, placeholder }: { value: string; onChange: (v: string) => void; placeholder: string }) {
+function Search({
+  value,
+  onChange,
+  placeholder,
+  field,
+}: {
+  value: string;
+  onChange: (v: string) => void;
+  placeholder: string;
+  field: ReturnType<typeof useSearching>["field"];
+}) {
   const t = useTheme();
   return (
     <TextInput
+      {...field}
       value={value}
       onChangeText={onChange}
       placeholder={placeholder}
@@ -52,9 +63,10 @@ function Search({ value, onChange, placeholder }: { value: string; onChange: (v:
   );
 }
 
-function Stickers({ onSticker, cell }: { onSticker: (s: StickerDTO) => void; cell: number }) {
+function Stickers({ onSticker, onSearching, cell }: { onSticker: (s: StickerDTO) => void; onSearching: (on: boolean) => void; cell: number }) {
   const t = useTheme();
   const tr = useT();
+  const { searching, field } = useSearching(onSearching);
   const [input, setInput] = useState("");
   const q = useDebounced(input);
   const packs = useQuery({
@@ -74,9 +86,22 @@ function Stickers({ onSticker, cell }: { onSticker: (s: StickerDTO) => void; cel
     </Pressable>
   );
 
+  if (searching) {
+    const row = q ? (own.data ?? []) : (packs.data ?? []).flatMap((p) => p.stickers);
+    return (
+      <View>
+        <Search value={input} onChange={setInput} placeholder={tr.composer.searchStickers} field={field} />
+        <ScrollView horizontal keyboardShouldPersistTaps="handled" showsHorizontalScrollIndicator={false} style={{ height: cell }} contentContainerStyle={{ paddingHorizontal: 8 }}>
+          {row.map(tile)}
+          {q && own.data?.length === 0 && <Text style={[styles.empty, { color: t.muted, padding: 12 }]}>{tr.composer.noStickersFound}</Text>}
+        </ScrollView>
+      </View>
+    );
+  }
+
   return (
     <View style={{ height: HEIGHT }}>
-      <Search value={input} onChange={setInput} placeholder={tr.composer.searchStickers} />
+      <Search value={input} onChange={setInput} placeholder={tr.composer.searchStickers} field={field} />
       <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={{ paddingHorizontal: 8, paddingBottom: 8 }}>
         {q ? (
           <View style={styles.grid}>
@@ -97,9 +122,20 @@ function Stickers({ onSticker, cell }: { onSticker: (s: StickerDTO) => void; cel
 }
 
 /** GIPHY and KLIPY: GIFs, or their stickers, which go out like a picture and aren't one of our stickers. */
-function Gifs({ onGif, onSticker, width }: { onGif: (g: GifDTO) => void; onSticker: (g: GifDTO) => void; width: number }) {
+function Gifs({
+  onGif,
+  onSticker,
+  onSearching,
+  width,
+}: {
+  onGif: (g: GifDTO) => void;
+  onSticker: (g: GifDTO) => void;
+  onSearching: (on: boolean) => void;
+  width: number;
+}) {
   const t = useTheme();
   const tr = useT();
+  const { searching, field } = useSearching(onSearching);
   const [input, setInput] = useState("");
   const [kind, setKind] = useState<"gif" | "sticker">("gif");
   const q = useDebounced(input);
@@ -108,10 +144,10 @@ function Gifs({ onGif, onSticker, width }: { onGif: (g: GifDTO) => void; onStick
   const columns = kind === "gif" ? 3 : 4;
   const cell = Math.floor((width - 16 - (columns - 1) * 4) / columns);
   return (
-    <View style={{ height: HEIGHT }}>
+    <View style={searching ? undefined : { height: HEIGHT }}>
       <View style={styles.row}>
         <View style={{ flex: 1 }}>
-          <Search value={input} onChange={setInput} placeholder={tr.ask.searchGifs} />
+          <Search value={input} onChange={setInput} placeholder={tr.ask.searchGifs} field={field} />
         </View>
         <View style={[styles.kinds, { backgroundColor: t.field }]}>
           {(["gif", "sticker"] as const).map((k) => (
@@ -127,13 +163,16 @@ function Gifs({ onGif, onSticker, width }: { onGif: (g: GifDTO) => void; onStick
         </View>
       </View>
       <FlatList
-        key={kind}
+        key={searching ? `${kind}-row` : kind}
         data={items}
-        numColumns={columns}
+        horizontal={searching}
+        numColumns={searching ? undefined : columns}
+        showsHorizontalScrollIndicator={false}
         keyExtractor={(g) => g.id}
         keyboardShouldPersistTaps="handled"
+        style={searching ? { height: cell, flexGrow: 0 } : undefined}
         contentContainerStyle={{ paddingHorizontal: 8, gap: 4 }}
-        columnWrapperStyle={{ gap: 4 }}
+        columnWrapperStyle={searching ? undefined : { gap: 4 }}
         onEndReached={() => gifs.hasNextPage && !gifs.isFetchingNextPage && void gifs.fetchNextPage()}
         ListEmptyComponent={
           <Text style={[styles.empty, { color: t.muted }]}>
@@ -149,7 +188,7 @@ function Gifs({ onGif, onSticker, width }: { onGif: (g: GifDTO) => void; onStick
           </Pressable>
         )}
       />
-      <Text style={[styles.powered, { color: t.faint }]}>{tr.composer.poweredByGiphy}</Text>
+      {!searching && <Text style={[styles.powered, { color: t.faint }]}>{tr.composer.poweredByGiphy}</Text>}
     </View>
   );
 }
@@ -170,6 +209,7 @@ export function ExpressionPanel({
   const tr = useT();
   const { width } = useWindowDimensions();
   const [picked, setTab] = useState<Tab>("emoji");
+  const [searching, setSearching] = useState(false);
   const packs = useQuery({ queryKey: ["sticker-packs"], queryFn: async () => unwrap(await six.api.GET("/v1/sticker-packs")).items });
   const hasStickers = !!packs.data?.some((p) => p.stickers.length > 0);
   const tab = picked === "sticker" && !hasStickers ? "emoji" : picked;
@@ -181,7 +221,7 @@ export function ExpressionPanel({
 
   return (
     <View style={{ backgroundColor: t.surface, paddingTop: 6 }}>
-      <View style={[styles.tabs, { backgroundColor: t.field }]}>
+      <View style={[styles.tabs, { backgroundColor: t.field }, searching && { display: "none" }]}>
         {tabs.map((x) => (
           <Pressable
             key={x.id}
@@ -201,9 +241,9 @@ export function ExpressionPanel({
           </Pressable>
         ))}
       </View>
-      {tab === "emoji" && <EmojiGrid onPick={onEmoji} height={HEIGHT - 50} />}
-      {tab === "sticker" && <Stickers onSticker={onSticker} cell={Math.floor((width - 16) / 4)} />}
-      {tab === "gif" && <Gifs onGif={onGif} onSticker={onFoundSticker} width={width} />}
+      {tab === "emoji" && <EmojiGrid onPick={onEmoji} onSearching={setSearching} height={HEIGHT - 50} />}
+      {tab === "sticker" && <Stickers onSticker={onSticker} onSearching={setSearching} cell={Math.floor((width - 16) / 4)} />}
+      {tab === "gif" && <Gifs onGif={onGif} onSticker={onFoundSticker} onSearching={setSearching} width={width} />}
     </View>
   );
 }
