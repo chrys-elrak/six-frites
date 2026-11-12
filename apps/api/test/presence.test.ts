@@ -65,6 +65,18 @@ describe("presence devices", () => {
     expect(await seen()).toMatchObject({ online: false, platforms: [], lastPlatform: "ios", lastDevice: "app" });
   });
 
+  it("tells a browser on a phone by the phone, and gives it to older phone apps as the web", async () => {
+    const { host, guest } = await makeFriends();
+    const userId = host.user.id;
+    const { id: session } = await prisma.session.findFirstOrThrow({ where: { userId } });
+    const seen = async () => (await get(guest, `/v1/presence?ids=${userId}`)).items[0];
+
+    await setUserPresence(userId, session, "web_android", true);
+    expect(await seen()).toMatchObject({ platforms: ["web_android"], devices: ["web"] });
+    await setUserPresence(userId, session, "web_android", false);
+    expect(await seen()).toMatchObject({ online: false, lastPlatform: "web_android", lastDevice: "web" });
+  });
+
   it("works out Android or iOS for a phone app that only says it is the app, from how it signed in", async () => {
     const { host, guest } = await makeFriends();
     const socket = connect(url, { auth: { token: host.accessToken, device: "app" }, transports: ["websocket"], forceNew: true });

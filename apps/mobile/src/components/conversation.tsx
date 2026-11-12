@@ -40,6 +40,8 @@ const DEVICE_ICONS: Record<ClientDevice, LucideIcon> = {
   android: Smartphone,
   ios: Smartphone,
   app: Smartphone,
+  web_android: Globe,
+  web_ios: Globe,
   web: Globe,
   desktop: Monitor,
 };

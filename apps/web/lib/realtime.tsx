@@ -29,6 +29,14 @@ const Ctx = createContext<RealtimeContext>({ realtime: null, status: "connecting
 export const useRealtime = () => useContext(Ctx);
 
 let activeChatId: string | null = null;
+/** Which kind of browser this is, from what it says about itself: on an Android phone, an iPhone or iPad, another touch screen, or a computer. */
+function browserDevice() {
+  const ua = navigator.userAgent;
+  if (/Android/i.test(ua)) return "web_android";
+  if (/iPhone|iPad|iPod/.test(ua) || (/Macintosh/.test(ua) && navigator.maxTouchPoints > 1)) return "web_ios";
+  return matchMedia("(pointer: coarse)").matches ? "web" : "desktop";
+}
+
 export function setActiveChat(id: string | null) {
   activeChatId = id;
 }
@@ -159,7 +167,7 @@ export function RealtimeProvider({ children }: { children: React.ReactNode }) {
     if (!meId) return;
     let queue: Promise<unknown> = Promise.resolve();
     const rt = six.realtime({
-      device: matchMedia("(pointer: coarse)").matches ? "web" : "desktop",
+      device: browserDevice(),
       onEvent: (e) => {
         queue = queue
           .then(() => hydrateEvent(e))

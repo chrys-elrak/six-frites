@@ -375,7 +375,7 @@ function UserRow({ u, checked, onCheck }: { u: AdminUserDTO; checked: boolean; o
             {u.online ? (
               <span className="flex items-center gap-1 font-medium text-green-600 dark:text-green-400">
                 <span className="size-1.5 rounded-full bg-current" />
-                Online on {u.devices.join(", ")}
+                Online on {u.devices.map((d) => d.replace("_", " on ")).join(", ")}
               </span>
             ) : (
               <span>{u.lastActiveAt ? `Active ${timeAgo(u.lastActiveAt)}` : "Signed out"}</span>

@@ -1483,6 +1483,8 @@
                                 "android",
                                 "ios",
                                 "app",
+                                "web_android",
+                                "web_ios",
                                 "web",
                                 "desktop"
                               ]
@@ -1779,6 +1781,8 @@
                           "android",
                           "ios",
                           "app",
+                          "web_android",
+                          "web_ios",
                           "web",
                           "desktop"
                         ]
@@ -2098,6 +2102,8 @@
                           "android",
                           "ios",
                           "app",
+                          "web_android",
+                          "web_ios",
                           "web",
                           "desktop"
                         ]
@@ -2382,6 +2388,8 @@
                           "android",
                           "ios",
                           "app",
+                          "web_android",
+                          "web_ios",
                           "web",
                           "desktop"
                         ]
@@ -2687,6 +2695,8 @@
                           "android",
                           "ios",
                           "app",
+                          "web_android",
+                          "web_ios",
                           "web",
                           "desktop"
                         ]
@@ -2994,6 +3004,8 @@
                           "android",
                           "ios",
                           "app",
+                          "web_android",
+                          "web_ios",
                           "web",
                           "desktop"
                         ]
@@ -3441,6 +3453,8 @@
                           "android",
                           "ios",
                           "app",
+                          "web_android",
+                          "web_ios",
                           "web",
                           "desktop"
                         ]
@@ -3726,6 +3740,8 @@
                           "android",
                           "ios",
                           "app",
+                          "web_android",
+                          "web_ios",
                           "web",
                           "desktop"
                         ]
@@ -4067,6 +4083,8 @@
                           "android",
                           "ios",
                           "app",
+                          "web_android",
+                          "web_ios",
                           "web",
                           "desktop"
                         ]
@@ -82235,11 +82253,13 @@
                                 "android",
                                 "ios",
                                 "app",
+                                "web_android",
+                                "web_ios",
                                 "web",
                                 "desktop"
                               ]
                             },
-                            "description": "What they have it open on right now: the Android or iOS app (just the app when which one is unknown), a phone browser or a computer. Empty when offline"
+                            "description": "What they have it open on right now: the Android or iOS app (just the app when which one is unknown), a browser on an Android phone, an iPhone or iPad or another touch screen, or a computer. Empty when offline"
                           },
                           "lastSeenAt": {
                             "nullable": true,
@@ -82266,6 +82286,8 @@
                               "android",
                               "ios",
                               "app",
+                              "web_android",
+                              "web_ios",
                               "web",
                               "desktop"
                             ]
