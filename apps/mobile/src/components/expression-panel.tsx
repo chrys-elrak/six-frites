@@ -5,9 +5,9 @@ import { Image } from "expo-image";
 import { Smile, Sticker } from "lucide-react-native";
 import { useEffect, useState } from "react";
 import { FlatList, Pressable, ScrollView, StyleSheet, View, useWindowDimensions } from "react-native";
-import { EmojiGrid, SEARCHING_HEIGHT, useSearching } from "./emoji-picker";
+import { EmojiGrid, SEARCHING_HEIGHT, SearchInput, useSearching } from "./emoji-picker";
 import { StickerView } from "./sticker";
-import { Text, TextInput } from "./text";
+import { Text } from "./text";
 import { useT } from "@/lib/i18n";
 import { six } from "@/lib/six";
 import { brand, useTheme } from "@/lib/theme";
@@ -50,16 +50,17 @@ function Search({
 }) {
   const t = useTheme();
   return (
-    <TextInput
-      {...field}
-      value={value}
-      onChangeText={onChange}
-      placeholder={placeholder}
-      placeholderTextColor={t.muted}
-      autoCapitalize="none"
-      autoCorrect={false}
-      style={[styles.search, { backgroundColor: t.field, color: t.text }]}
-    />
+    <View style={[styles.search, { backgroundColor: t.field }]}>
+      <SearchInput
+        {...field}
+        value={value}
+        onChangeText={onChange}
+        placeholder={placeholder}
+        autoCapitalize="none"
+        autoCorrect={false}
+        style={[styles.searchInput, { color: t.text }]}
+      />
+    </View>
   );
 }
 
@@ -235,7 +236,8 @@ export function ExpressionPanel({
 const styles = StyleSheet.create({
   tabs: { flexDirection: "row", marginHorizontal: 12, marginBottom: 6, borderRadius: 999, padding: 3 },
   tab: { flex: 1, alignItems: "center", justifyContent: "center", height: 34, borderRadius: 999 },
-  search: { marginHorizontal: 8, marginBottom: 6, borderRadius: 12, paddingHorizontal: 12, paddingVertical: 8, fontSize: 16 },
+  search: { flexDirection: "row", marginHorizontal: 8, marginBottom: 6, borderRadius: 12, paddingHorizontal: 12, paddingVertical: 8 },
+  searchInput: { fontSize: 16, paddingVertical: 0 },
   grid: { flexDirection: "row", flexWrap: "wrap" },
   row: { flexDirection: "row", alignItems: "flex-start", paddingRight: 8, gap: 0 },
   kinds: { flexDirection: "row", borderRadius: 999, padding: 2, marginTop: 2 },

@@ -1,8 +1,8 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import categories from "@six/shared/emojis.json";
 import { Search, X } from "lucide-react-native";
-import { useEffect, useMemo, useRef, useState } from "react";
-import { FlatList, Keyboard, Pressable, StyleSheet, useWindowDimensions, View } from "react-native";
+import { type ComponentProps, useEffect, useMemo, useRef, useState } from "react";
+import { FlatList, Keyboard, Platform, Pressable, StyleSheet, useWindowDimensions, View } from "react-native";
 import { GestureDetector, GestureHandlerRootView, usePanGesture } from "react-native-gesture-handler";
 import Animated, { useAnimatedStyle, useSharedValue, withTiming } from "react-native-reanimated";
 import { Modal } from "./modal";
@@ -50,6 +50,31 @@ export function useSearching(onChange?: (searching: boolean) => void) {
   const report = useLatest(onChange);
   useEffect(() => report.current?.(searching), [searching, report]);
   return { searching, field: { onFocus: () => setFocused(true), onBlur: () => setFocused(false) } };
+}
+
+/**
+ * A search box's one-line input. On iOS the placeholder is our own text behind it: the emoji, sticker and GIF searches
+ * reuse one native field, and a reused field draws its own placeholder several points too low.
+ */
+export function SearchInput({ placeholder, style, ...props }: ComponentProps<typeof TextInput> & { placeholder: string }) {
+  const t = useTheme();
+  const own = Platform.OS === "ios";
+  return (
+    <View style={{ flex: 1 }}>
+      {own && !props.value && (
+        <Text numberOfLines={1} style={[style, styles.placeholder, { color: t.muted }]}>
+          {placeholder}
+        </Text>
+      )}
+      <TextInput
+        {...props}
+        placeholder={own ? undefined : placeholder}
+        placeholderTextColor={t.muted}
+        accessibilityLabel={placeholder}
+        style={style}
+      />
+    </View>
+  );
 }
 
 export function EmojiGrid({
@@ -146,11 +171,10 @@ export function EmojiGrid({
       <View style={styles.head}>
         <View style={[styles.search, { backgroundColor: t.field }]}>
           <Search size={16} color={t.muted} />
-          <TextInput
+          <SearchInput
             value={query}
             onChangeText={setQuery}
             placeholder={tr.composer.searchEmoji}
-            placeholderTextColor={t.muted}
             autoCapitalize="none"
             autoCorrect={false}
             {...field}
@@ -251,8 +275,9 @@ const styles = StyleSheet.create({
   wrap: { flex: 1, justifyContent: "flex-end", alignItems: "center" },
   panel: { width: "100%", maxWidth: 520, borderTopLeftRadius: 20, borderTopRightRadius: 20, paddingTop: 8 },
   head: { flexDirection: "row", alignItems: "center", gap: 4, paddingLeft: 12, paddingRight: 4 },
-  search: { flex: 1, flexDirection: "row", alignItems: "center", gap: 8, borderRadius: 12, paddingHorizontal: 12 },
-  searchInput: { flex: 1, fontSize: 16, paddingVertical: 8 },
+  search: { flex: 1, flexDirection: "row", alignItems: "center", gap: 8, borderRadius: 12, paddingHorizontal: 12, paddingVertical: 8 },
+  searchInput: { fontSize: 16, paddingVertical: 0 },
+  placeholder: { position: "absolute", left: 0, right: 0 },
   tab: { paddingHorizontal: 8, paddingVertical: 6, borderBottomWidth: 2, borderBottomColor: "transparent" },
   empty: { textAlign: "center", padding: 24, fontSize: 14 },
 });
