@@ -5,6 +5,8 @@ const googleServicesFile = process.env.GOOGLE_SERVICES_FILE;
 const iosGoogleServicesFile = process.env.GOOGLE_SERVICES_FILE_IOS;
 const playStore = process.env.PLAY_STORE === "1";
 const googleMapsKey = process.env.GOOGLE_MAPS_PUBLIC_KEY;
+/** Links to these pages of the website open in the app when it's installed; the site's /.well-known/assetlinks.json vouches for it. */
+const APP_LINK_HOST = "six-frites.koera.mg";
 
 /**
  * Google Sign-In's Swift pods only link statically with modular headers on these. The sign-in plugin adds them itself,
@@ -38,6 +40,17 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     },
     softwareKeyboardLayoutMode: "resize",
     predictiveBackGestureEnabled: false,
+    intentFilters: [
+      {
+        action: "VIEW",
+        autoVerify: true,
+        category: ["BROWSABLE", "DEFAULT"],
+        data: [
+          ...["/", "/inbox", "/contacts", "/notifications", "/settings", "/archived", "/tips"].map((path) => ({ scheme: "https", host: APP_LINK_HOST, path })),
+          ...["/chats/", "/invite/", "/add/", "/g/", "/play/"].map((pathPrefix) => ({ scheme: "https", host: APP_LINK_HOST, pathPrefix })),
+        ],
+      },
+    ],
     ...(googleServicesFile && { googleServicesFile }),
     ...(playStore && {
       blockedPermissions: [

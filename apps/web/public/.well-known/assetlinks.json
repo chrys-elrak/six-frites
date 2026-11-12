@@ -1,0 +1,17 @@
+[
+  {
+    "relation": [
+      "delegate_permission/common.handle_all_urls"
+    ],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "com.sixfrites.app",
+      "sha256_cert_fingerprints": [
+        "AE:8B:C5:07:90:52:D2:F4:75:78:2A:E0:5C:B6:3E:8B:44:0B:ED:C8:3D:8B:8C:02:19:DF:BE:8C:8E:21:03:9F",
+        "C5:0F:A9:C9:E8:11:C5:85:44:EB:5B:9C:E1:DC:AC:76:16:58:95:09:CF:FD:39:09:89:4A:73:BE:7D:7F:C7:95",
+        "AC:68:38:78:B4:CF:2F:E7:92:96:64:F5:01:4F:DF:33:C9:93:72:EF:10:53:3F:06:D8:3E:DD:34:E3:5E:72:63",
+        "FF:DF:1D:44:E8:73:07:6F:6C:71:12:2B:CD:30:B0:32:CE:80:FB:B3:D5:E2:75:B0:59:BD:55:11:D5:4F:3E:4E"
+      ]
+    }
+  }
+]
