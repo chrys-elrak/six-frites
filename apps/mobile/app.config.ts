@@ -5,8 +5,13 @@ const googleServicesFile = process.env.GOOGLE_SERVICES_FILE;
 const iosGoogleServicesFile = process.env.GOOGLE_SERVICES_FILE_IOS;
 const playStore = process.env.PLAY_STORE === "1";
 const googleMapsKey = process.env.GOOGLE_MAPS_PUBLIC_KEY;
-/** Links to these pages of the website open in the app when it's installed; the site's /.well-known/assetlinks.json vouches for it. */
+/**
+ * Links to these pages of the website open in the app when it's installed. The site vouches for it in
+ * /.well-known/assetlinks.json (Android) and /.well-known/apple-app-site-association (iOS), which list the same pages.
+ */
 const APP_LINK_HOST = "six-frites.koera.mg";
+const APP_LINK_PAGES = ["/", "/inbox", "/contacts", "/notifications", "/settings", "/archived", "/tips"];
+const APP_LINK_PREFIXES = ["/chats/", "/invite/", "/add/", "/g/", "/play/"];
 
 /**
  * Google Sign-In's Swift pods only link statically with modular headers on these. The sign-in plugin adds them itself,
@@ -28,6 +33,8 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     bundleIdentifier: "com.sixfrites.app",
     ...(iosGoogleServicesFile && { googleServicesFile: iosGoogleServicesFile }),
     supportsTablet: true,
+    associatedDomains: [`applinks:${APP_LINK_HOST}`],
+    usesAppleSignIn: true,
   },
   android: {
     package: "com.sixfrites.app",
@@ -46,8 +53,8 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
         autoVerify: true,
         category: ["BROWSABLE", "DEFAULT"],
         data: [
-          ...["/", "/inbox", "/contacts", "/notifications", "/settings", "/archived", "/tips"].map((path) => ({ scheme: "https", host: APP_LINK_HOST, path })),
-          ...["/chats/", "/invite/", "/add/", "/g/", "/play/"].map((pathPrefix) => ({ scheme: "https", host: APP_LINK_HOST, pathPrefix })),
+          ...APP_LINK_PAGES.map((path) => ({ scheme: "https", host: APP_LINK_HOST, path })),
+          ...APP_LINK_PREFIXES.map((pathPrefix) => ({ scheme: "https", host: APP_LINK_HOST, pathPrefix })),
         ],
       },
     ],
@@ -64,6 +71,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   plugins: [
     "expo-router",
     "expo-secure-store",
+    "expo-apple-authentication",
     ["expo-local-authentication", { faceIDPermission: "Allow $(PRODUCT_NAME) to unlock with Face ID." }],
     ["expo-location", { locationWhenInUsePermission: "Allow $(PRODUCT_NAME) to send your location when you choose to." }],
     "expo-image",

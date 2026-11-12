@@ -6,7 +6,10 @@
   "expo": {
     "autolinking": {
       "ios": {
-        "buildFromSource": ["ExpoFont", "ExpoMediaLibrary"]
+        "buildFromSource": [
+          "ExpoFont",
+          "ExpoMediaLibrary"
+        ]
       }
     }
   },
@@ -31,6 +34,7 @@
     "@six/shared": "*",
     "@tanstack/react-query": "^5.104.5",
     "expo": "~58.0.19",
+    "expo-apple-authentication": "~58.0.3",
     "expo-audio": "~58.0.10",
     "expo-build-properties": "~58.0.11",
     "expo-camera": "~58.0.12",
@@ -59,6 +63,7 @@
     "expo-store-review": "~58.0.3",
     "expo-system-ui": "~58.0.6",
     "expo-video": "~58.0.12",
+    "expo-web-browser": "~58.0.8",
     "lottie-react-native": "~7.5.0",
     "lucide-react-native": "^1.61.0",
     "react": "19.3.0",

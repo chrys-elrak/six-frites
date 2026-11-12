@@ -5,9 +5,9 @@ import { GoogleButton } from "@/components/google-button";
 import { useT } from "@/lib/i18n";
 
 export type SignInVia = "loginWithGoogle" | "loginWithFirebase";
-type Provider = "apple" | "facebook";
+export type Provider = "apple" | "facebook";
 
-const firebaseConfig = {
+export const firebaseConfig = {
   apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
   authDomain: "akondro.firebaseapp.com",
   projectId: "akondro",
@@ -21,15 +21,21 @@ const MARKS: Record<Provider, string> = {
     "M9.101 23.691v-7.98H6.627v-3.667h2.474v-1.58c0-4.085 1.848-5.978 5.858-5.978.401 0 .955.042 1.468.103a8.68 8.68 0 0 1 1.141.195v3.325a8.623 8.623 0 0 0-.653-.036 26.805 26.805 0 0 0-.733-.009c-.707 0-1.259.096-1.675.309a1.686 1.686 0 0 0-.679.622c-.258.42-.374.995-.374 1.752v1.297h3.919l-.386 2.103-.287 1.564h-3.246v8.245C19.396 23.238 24 18.179 24 12.044c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.628 3.874 10.35 9.101 11.647Z",
 };
 
-/** Opens Apple's or Facebook's sign-in through Firebase and returns its ID token, or null when they closed it. */
-async function firebaseIdToken(provider: Provider) {
-  const { getApps, initializeApp } = await import("firebase/app");
-  const { FacebookAuthProvider, OAuthProvider, getAuth, signInWithPopup, signOut } = await import("firebase/auth");
-  const auth = getAuth(getApps()[0] ?? initializeApp(firebaseConfig));
+/** Firebase's sign-in for Apple or Facebook, asking for the email (and Apple's name). */
+export async function firebaseProvider(provider: Provider) {
+  const { FacebookAuthProvider, OAuthProvider } = await import("firebase/auth");
   const p = provider === "apple" ? new OAuthProvider("apple.com") : new FacebookAuthProvider();
   p.addScope("email");
   if (provider === "apple") p.addScope("name");
-  const signed = await signInWithPopup(auth, p).catch((err: { code?: string }) => {
+  return p;
+}
+
+/** Opens Apple's or Facebook's sign-in through Firebase and returns its ID token, or null when they closed it. */
+async function firebaseIdToken(provider: Provider) {
+  const { getApps, initializeApp } = await import("firebase/app");
+  const { getAuth, signInWithPopup, signOut } = await import("firebase/auth");
+  const auth = getAuth(getApps()[0] ?? initializeApp(firebaseConfig));
+  const signed = await signInWithPopup(auth, await firebaseProvider(provider)).catch((err: { code?: string }) => {
     if (err.code === "auth/popup-closed-by-user" || err.code === "auth/cancelled-popup-request") return null;
     throw err;
   });

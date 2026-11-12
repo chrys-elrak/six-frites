@@ -1,0 +1,49 @@
+{
+  "applinks": {
+    "details": [
+      {
+        "appIDs": [
+          "BDJ7N2QQ43.com.sixfrites.app"
+        ],
+        "components": [
+          {
+            "/": "/"
+          },
+          {
+            "/": "/inbox"
+          },
+          {
+            "/": "/contacts"
+          },
+          {
+            "/": "/notifications"
+          },
+          {
+            "/": "/settings"
+          },
+          {
+            "/": "/archived"
+          },
+          {
+            "/": "/tips"
+          },
+          {
+            "/": "/chats/*"
+          },
+          {
+            "/": "/invite/*"
+          },
+          {
+            "/": "/add/*"
+          },
+          {
+            "/": "/g/*"
+          },
+          {
+            "/": "/play/*"
+          }
+        ]
+      }
+    ]
+  }
+}
