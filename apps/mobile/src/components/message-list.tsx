@@ -151,7 +151,7 @@ import { EphemeralViewer } from "./ephemeral-viewer";
 import { MediaIcon, mediaLabel } from "./media-label";
 import { MessageMenu } from "./message-menu";
 import { ReactionBar, ReactionChips, ReactionPicker, type Anchor, useQuickReactions } from "./reactions";
-import { GradientText, styleFor } from "./rich-text";
+import { GradientText, Spoiler, styleFor } from "./rich-text";
 import { playHref } from "./live";
 import { EffectLayer } from "./message-effects";
 import { MessageTiming } from "./message-timing";
@@ -539,7 +539,6 @@ function Quote({
 }
 
 function MessageText({ row, selecting, color }: { row: MsgRow; selecting: boolean; color: string }) {
-  const t = useTheme();
   const tr = useT();
   const revealed = useSpoilers((s) => !!s.revealed[row.key]);
   const reveal = useSpoilers((s) => s.reveal);
@@ -550,7 +549,6 @@ function MessageText({ row, selecting, color }: { row: MsgRow; selecting: boolea
       : row.entities;
   if (entities.length === 0) return <Linked text={text} selecting={selecting} />;
   const codeBg = row.mine ? "rgba(0,0,0,0.1)" : "rgba(120,113,108,0.18)";
-  const spoilerInk = row.mine ? "#b86c00" : t.dark ? stone[600] : stone[300];
 
   return (
     <>
@@ -564,14 +562,15 @@ function MessageText({ row, selecting, color }: { row: MsgRow; selecting: boolea
           );
         }
         return (
-          <Text
+          <Spoiler
             key={i}
-            accessibilityLabel={tr.messages.revealSpoiler}
+            text={seg.text}
+            style={style}
+            font={styles.text}
+            ink={color}
+            label={tr.messages.revealSpoiler}
             onPress={selecting ? undefined : () => reveal(row.key)}
-            style={[style, { color: spoilerInk, backgroundColor: spoilerInk }]}
-          >
-            {seg.text}
-          </Text>
+          />
         );
       })}
     </>

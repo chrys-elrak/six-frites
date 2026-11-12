@@ -24,7 +24,7 @@ import { Asset, requestPermissionsAsync } from "expo-media-library";
 import * as Sharing from "expo-sharing";
 import { Camera, Check, Copy, Dices, Ellipsis, Globe, Link2, LogOut, Play, Settings2, Share2, ShieldAlert, Trash2, VenetianMask } from "lucide-react-native";
 import { type ComponentRef, useEffect, useRef, useState } from "react";
-import { AppState, FlatList, Image, Linking, Pressable, StyleSheet, View, ScrollView } from "react-native";
+import { AppState, FlatList, Image, Linking, Pressable, StyleSheet, type TextStyle, View, ScrollView } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import Svg, { Circle, Defs, LinearGradient, Rect, Stop } from "react-native-svg";
 import { captureRef } from "react-native-view-shot";
@@ -35,7 +35,7 @@ import { pickAvatar } from "@/lib/media";
 import { receiveAnon } from "@/lib/realtime";
 import { logout, useSession } from "@/lib/session";
 import { six, WEB_URL } from "@/lib/six";
-import { brand, stone, useTheme } from "@/lib/theme";
+import { brand, useTheme } from "@/lib/theme";
 import { AccountCard } from "./account-settings";
 import { GifLoop, VoicePlayer } from "./attachment";
 import { Avatar } from "./avatar";
@@ -45,7 +45,7 @@ import { Modal } from "./modal";
 import { Sheet } from "./sheet";
 import { StoryComposer } from "./story-composer";
 import { Text, TextInput } from "./text";
-import { GradientText, styleFor } from "./rich-text";
+import { GradientText, Spoiler, styleFor } from "./rich-text";
 import { BrandBar } from "./brand-bar";
 import { Card, EmptyState, IconButton, Notice, Popup, PrimaryButton, ScreenHeader, TextButton, Toggle } from "./ui";
 
@@ -370,7 +370,7 @@ function CardArt({
       )}
       {!!text && (
         <Text style={[styles.storyText, { color: t.text, fontSize: size, lineHeight: size * 1.25 }]}>
-          <AnonText m={{ text, entities }} sealed />
+          <AnonText m={{ text, entities }} font={{ fontSize: size }} sealed />
         </Text>
       )}
     </View>
@@ -399,15 +399,16 @@ function AnonText({
   m,
   onLink,
   sealed,
+  font,
 }: {
   m: Pick<AnonMessageDTO, "text" | "entities">;
   onLink?: (href: string) => void;
   sealed?: boolean;
+  font: TextStyle;
 }) {
   const t = useTheme();
   const tr = useT();
   const [revealed, setRevealed] = useState(false);
-  const spoilerInk = t.dark ? stone[600] : stone[300];
   return (
     <>
       {segments(m.text, m.entities).map((seg, i) => {
@@ -415,18 +416,18 @@ function AnonText({
         const style = {
           ...styleFor(seg, t.dark ? "rgba(255,255,255,0.12)" : "rgba(0,0,0,0.08)"),
           ...(seg.styles.has("bold") && { fontWeight: "900" as const }),
-          ...(hidden && { color: spoilerInk, backgroundColor: spoilerInk }),
         };
         if (hidden) {
           return (
-            <Text
+            <Spoiler
               key={i}
+              text={seg.text}
               style={style}
-              accessibilityLabel={sealed ? undefined : tr.messages.revealSpoiler}
+              font={font}
+              ink={t.text}
+              label={sealed ? undefined : tr.messages.revealSpoiler}
               onPress={sealed ? undefined : () => setRevealed(true)}
-            >
-              {seg.text}
-            </Text>
+            />
           );
         }
         return (
@@ -481,7 +482,7 @@ function SentRow({ m, onRemove }: { m: SentAnonDTO; onRemove: () => void }) {
       {m.voice && <AnonVoice voice={m.voice} />}
       {!!m.text && (
         <Text style={{ color: t.text, fontSize: 15 }} selectable>
-          <AnonText m={m} />
+          <AnonText m={m} font={{ fontSize: 15 }} />
         </Text>
       )}
     </Card>
@@ -898,7 +899,7 @@ export function AnonInbox({ guest = false }: { guest?: boolean }) {
               )}
               {!!m.text && (
                 <Text style={[styles.itemText, { color: t.text, fontSize: cardFont(m.text), lineHeight: cardFont(m.text) * 1.3 }]} selectable>
-                  <AnonText m={m} onLink={setOpening} />
+                  <AnonText m={m} font={{ fontSize: cardFont(m.text) }} onLink={setOpening} />
                 </Text>
               )}
               {splitLinks(m.text)
