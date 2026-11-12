@@ -1,7 +1,8 @@
 import { CUSTOM_THEME_COLORS, customTheme, customThemeColors } from "@six/shared";
 import { Check } from "lucide-react-native";
 import { useState } from "react";
-import { Modal, Pressable, StyleSheet, View, ScrollView } from "react-native";
+import { Pressable, StyleSheet, View, ScrollView } from "react-native";
+import { Modal } from "./modal";
 import { Text, TextInput } from "./text";
 import { KeyboardAvoidingView } from "react-native-keyboard-controller";
 import { useSafeAreaInsets } from "react-native-safe-area-context";

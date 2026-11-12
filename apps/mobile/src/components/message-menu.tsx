@@ -1,8 +1,9 @@
 import { placeReactionBar } from "@six/shared";
 import { useState } from "react";
-import { type LayoutChangeEvent, Modal, Pressable, StyleSheet, useWindowDimensions, View } from "react-native";
+import { type LayoutChangeEvent, Pressable, StyleSheet, useWindowDimensions, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useTheme } from "@/lib/theme";
+import { Modal } from "./modal";
 import type { Anchor } from "./reactions";
 import { ActionBar, type SheetAction } from "./sheet";
 

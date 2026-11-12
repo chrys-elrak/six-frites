@@ -1,11 +1,12 @@
 import { type EightsView, type LiveRoomDTO, RANKS, SUITS, cardRank, cardSuit, eightsFits } from "@six/shared";
 import { useState } from "react";
-import { Modal, Pressable, ScrollView, StyleSheet, View } from "react-native";
+import { Pressable, ScrollView, StyleSheet, View } from "react-native";
 import Animated, { type CSSAnimationKeyframes } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useT } from "@/lib/i18n";
 import { brand, useTheme } from "@/lib/theme";
 import type { Play } from "./live";
+import { Modal } from "./modal";
 import { Text } from "./text";
 import { TextButton } from "./ui";
 

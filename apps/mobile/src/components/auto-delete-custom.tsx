@@ -1,6 +1,7 @@
 import { AUTO_DELETE, AUTO_DELETE_UNITS, durationLabel } from "@six/shared";
 import { useState } from "react";
-import { Modal, Pressable, StyleSheet, View, ScrollView } from "react-native";
+import { Pressable, StyleSheet, View, ScrollView } from "react-native";
+import { Modal } from "./modal";
 import { Text, TextInput } from "./text";
 import { KeyboardAvoidingView } from "react-native-keyboard-controller";
 import { useSafeAreaInsets } from "react-native-safe-area-context";

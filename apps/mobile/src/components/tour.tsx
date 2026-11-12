@@ -1,12 +1,13 @@
 import { unwrap } from "@six/sdk";
 import { ChevronRight, Compass } from "lucide-react-native";
 import { type ComponentRef, useRef, useState } from "react";
-import { Modal, Pressable, ScrollView, StyleSheet, View } from "react-native";
+import { Pressable, ScrollView, StyleSheet, View } from "react-native";
 import { useT } from "@/lib/i18n";
 import { useSession } from "@/lib/session";
 import { six } from "@/lib/six";
 import { brand, useTheme } from "@/lib/theme";
 import { Avatar } from "./avatar";
+import { Modal } from "./modal";
 import { Text } from "./text";
 import { Card, PrimaryButton, TextButton } from "./ui";
 

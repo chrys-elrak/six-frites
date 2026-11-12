@@ -3,7 +3,6 @@ import type { Dict } from "@six/shared";
 import type { LucideIcon } from "lucide-react-native";
 import {
   ActivityIndicator,
-  Modal,
   Pressable,
   ScrollView,
   type PressableProps,
@@ -13,6 +12,7 @@ import {
   View,
   type ViewStyle,
 } from "react-native";
+import { Modal } from "./modal";
 import { Text, TextInput } from "./text";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useT } from "@/lib/i18n";

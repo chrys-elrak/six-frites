@@ -1,10 +1,11 @@
 import { GAME_EMOJI, type GameKind, LIVE_EMOJI, LIVE_GAMES, type LiveGame } from "@six/shared";
 import { CircleHelp, X } from "lucide-react-native";
 import { useState } from "react";
-import { Modal, Pressable, ScrollView, StyleSheet, View } from "react-native";
+import { Pressable, ScrollView, StyleSheet, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useT } from "@/lib/i18n";
 import { brand, useTheme } from "@/lib/theme";
+import { Modal } from "./modal";
 import { Text } from "./text";
 import { IconButton } from "./ui";
 

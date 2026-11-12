@@ -1,12 +1,13 @@
 import type { ChatDTO } from "@six/shared";
 import { X } from "lucide-react-native";
-import { FlatList, Modal, Pressable, StyleSheet, View } from "react-native";
+import { FlatList, Pressable, StyleSheet, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { isFrozen, useChats } from "@/lib/chats";
 import { useT } from "@/lib/i18n";
 import { useSession } from "@/lib/session";
 import { useTheme } from "@/lib/theme";
 import { Avatar } from "./avatar";
+import { Modal } from "./modal";
 import { Text } from "./text";
 import { IconButton } from "./ui";
 

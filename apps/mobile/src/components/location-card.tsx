@@ -20,7 +20,6 @@ import { useEffect, useRef, useState } from "react";
 import {
   Image,
   Linking,
-  Modal,
   Pressable,
   ScrollView,
   Share,
@@ -33,6 +32,7 @@ import {
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { create } from "zustand";
 import { EphemeralPicker } from "./ephemeral-picker";
+import { Modal } from "./modal";
 import { Sheet } from "./sheet";
 import { Text } from "./text";
 import { alpha, useBubbleColors } from "@/lib/bubble-colors";

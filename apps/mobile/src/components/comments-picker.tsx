@@ -1,11 +1,12 @@
 import { AUTO_DELETE_UNITS, COMMENT_RULE_RANGE, COMMENT_RULES, type CommentRule, commentRuleLabel } from "@six/shared";
 import { MessageSquareOff } from "lucide-react-native";
 import { useState } from "react";
-import { Modal, Pressable, ScrollView, StyleSheet, View } from "react-native";
+import { Pressable, ScrollView, StyleSheet, View } from "react-native";
 import { KeyboardAvoidingView } from "react-native-keyboard-controller";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useT } from "@/lib/i18n";
 import { brand, brandInk, useTheme } from "@/lib/theme";
+import { Modal } from "./modal";
 import { Sheet } from "./sheet";
 import { Text, TextInput } from "./text";
 import { PrimaryButton, TextButton } from "./ui";

@@ -7,12 +7,12 @@ import {
   FlatList,
   Linking,
   type ListViewToken,
-  Modal,
   Pressable,
   StyleSheet,
   useWindowDimensions,
   View,
 } from "react-native";
+import { Modal } from "./modal";
 import { Text, TextInput } from "./text";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useHydratedMessages } from "@/lib/e2ee";

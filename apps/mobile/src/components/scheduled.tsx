@@ -3,7 +3,8 @@ import { type Dict, SCHEDULE_LIMITS, type ScheduledMessageDTO, dayRange, maskSpo
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { ChevronLeft, ChevronRight, EyeOff, Flame, Minus, Plus, X } from "lucide-react-native";
 import { useState } from "react";
-import { Modal, Pressable, ScrollView, StyleSheet, View } from "react-native";
+import { Pressable, ScrollView, StyleSheet, View } from "react-native";
+import { Modal } from "./modal";
 import { Text } from "./text";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { cancelScheduled, rescheduleMessage, scheduledKey, sendScheduledNow } from "@/lib/actions";

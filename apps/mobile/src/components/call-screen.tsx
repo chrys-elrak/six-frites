@@ -48,7 +48,6 @@ import {
   Dimensions,
   Easing,
   type LayoutRectangle,
-  Modal,
   PanResponder,
   Pressable,
   ScrollView,
@@ -56,6 +55,7 @@ import {
   View,
   useWindowDimensions,
 } from "react-native";
+import { Modal } from "./modal";
 import { Text } from "./text";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { RTCView } from "react-native-webrtc";

@@ -1,10 +1,11 @@
 import { unwrap } from "@six/sdk";
 import { useState } from "react";
-import { Linking, Modal, StyleSheet, View, ScrollView } from "react-native";
+import { Linking, StyleSheet, View, ScrollView } from "react-native";
 import { useT } from "@/lib/i18n";
 import { logout, useSession } from "@/lib/session";
 import { WEB_URL, six } from "@/lib/six";
 import { brand, useTheme } from "@/lib/theme";
+import { Modal } from "./modal";
 import { Text } from "./text";
 import { Notice, PrimaryButton, TextButton } from "./ui";
 

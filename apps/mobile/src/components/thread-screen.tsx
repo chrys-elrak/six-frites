@@ -1,7 +1,7 @@
 import { type ChatDTO, type CommentRule, commentRuleOf, commentsClosedNow } from "@six/shared";
 import { ChevronLeft, Lock, Timer } from "lucide-react-native";
 import { useRef, useState } from "react";
-import { Modal, StyleSheet, View } from "react-native";
+import { StyleSheet, View } from "react-native";
 import { KeyboardAvoidingView } from "react-native-keyboard-controller";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { type BubbleColors, BubbleColorsContext } from "@/lib/bubble-colors";
@@ -14,6 +14,7 @@ import { ChatBackground } from "./chat-background";
 import { CommentRuleMenu } from "./comments-picker";
 import { Composer } from "./composer";
 import { MessageList, type MessageListHandle } from "./message-list";
+import { Modal } from "./modal";
 import { Text } from "./text";
 import { IconButton, ScreenHeader } from "./ui";
 

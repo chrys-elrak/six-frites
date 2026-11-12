@@ -49,10 +49,11 @@ import {
 import { newGameKey, openGuess, sealGuess } from "@six/sdk";
 import { Undo2, X } from "lucide-react-native";
 import { type ComponentRef, type Dispatch, type SetStateAction, useEffect, useMemo, useRef, useState } from "react";
-import { Animated, Modal, PanResponder, Pressable, ScrollView, StyleSheet, View } from "react-native";
+import { Animated, PanResponder, Pressable, ScrollView, StyleSheet, View } from "react-native";
 import Svg, { Path } from "react-native-svg";
 import { KeyboardAvoidingView } from "react-native-keyboard-controller";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { Modal } from "./modal";
 import { Text, TextInput } from "./text";
 import { alpha, useBubbleColors } from "@/lib/bubble-colors";
 import { useT } from "@/lib/i18n";

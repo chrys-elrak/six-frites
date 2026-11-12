@@ -1,7 +1,8 @@
 import { unwrap } from "@six/sdk";
 import { Fingerprint, Lock } from "lucide-react-native";
 import { useEffect, useEffectEvent, useState } from "react";
-import { Modal, StyleSheet, View } from "react-native";
+import { StyleSheet, View } from "react-native";
+import { Modal } from "./modal";
 import { Text } from "./text";
 import { KeyboardAvoidingView } from "react-native-keyboard-controller";
 import { useSafeAreaInsets } from "react-native-safe-area-context";

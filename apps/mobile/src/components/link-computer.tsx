@@ -4,7 +4,7 @@ import type { LinkPreview } from "@six/shared";
 import { useQueryClient } from "@tanstack/react-query";
 import { Monitor, X } from "lucide-react-native";
 import { useState } from "react";
-import { Modal, Pressable, StyleSheet, View, ScrollView } from "react-native";
+import { Pressable, StyleSheet, View, ScrollView } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { e2eeFor } from "@/lib/e2ee";
 import { useT } from "@/lib/i18n";
@@ -12,6 +12,7 @@ import { useSession } from "@/lib/session";
 import { six } from "@/lib/six";
 import { useTheme } from "@/lib/theme";
 import { QrScanner } from "./add-contact";
+import { Modal } from "./modal";
 import { Text } from "./text";
 import { IconButton, PrimaryButton } from "./ui";
 

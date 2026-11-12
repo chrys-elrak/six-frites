@@ -3,7 +3,7 @@ import { useEvent } from "expo";
 import { useVideoPlayer, VideoView } from "expo-video";
 import { Check, Play, X } from "lucide-react-native";
 import { useEffect, useMemo, useState } from "react";
-import { ActivityIndicator, Modal, PanResponder, Pressable, StyleSheet, View } from "react-native";
+import { ActivityIndicator, PanResponder, Pressable, StyleSheet, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { formatDuration } from "@/lib/format";
 import { useLatest } from "@/lib/latest";
@@ -11,6 +11,7 @@ import { useT } from "@/lib/i18n";
 import { readVideoCuts } from "@/lib/media";
 import type { LocalFile } from "@/lib/send";
 import { brand, brandInk } from "@/lib/theme";
+import { Modal } from "./modal";
 import { Text } from "./text";
 
 const MIN_SECONDS = 0.5;

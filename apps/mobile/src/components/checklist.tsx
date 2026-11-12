@@ -1,7 +1,8 @@
 import { CHECKLIST, type Checklist, type ChecklistMark } from "@six/shared";
 import { Square, SquareCheckBig, X } from "lucide-react-native";
 import { type ComponentRef, useRef, useState } from "react";
-import { Modal, Pressable, ScrollView, StyleSheet, View } from "react-native";
+import { Pressable, ScrollView, StyleSheet, View } from "react-native";
+import { Modal } from "./modal";
 import { Text, TextInput } from "./text";
 import { KeyboardAvoidingView } from "react-native-keyboard-controller";
 import { useSafeAreaInsets } from "react-native-safe-area-context";

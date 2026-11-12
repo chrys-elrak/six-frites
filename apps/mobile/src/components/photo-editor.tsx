@@ -31,13 +31,13 @@ import { type Ref, useEffect, useEffectEvent, useMemo, useRef, useState } from "
 import {
   ActivityIndicator,
   type GestureResponderHandlers,
-  Modal,
   PanResponder,
   Pressable,
   ScrollView,
   StyleSheet,
   View,
 } from "react-native";
+import { Modal } from "./modal";
 import { Text, TextInput } from "./text";
 import { KeyboardAvoidingView } from "react-native-keyboard-controller";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
