@@ -1,10 +1,13 @@
 import { unwrap } from "@six/sdk";
-import { type ChatDTO, FRITE_BOT_ID, type MessageDTO } from "@six/shared";
+import { type ChatDTO, FRITE_BOT_ID, type MessageDTO, SIX_FRITES_ID } from "@six/shared";
 import { type InfiniteData, type QueryClient, useInfiniteQuery, useQuery, useQueryClient } from "@tanstack/react-query";
 import { getLocale } from "./i18n";
 import { six } from "./six";
 
 export const isBotChat = (chat: Pick<ChatDTO, "members">) => chat.members.some((m) => m.user.id === FRITE_BOT_ID);
+export const isNewsChat = (chat: Pick<ChatDTO, "members">) => chat.members.some((m) => m.user.id === SIX_FRITES_ID);
+/** A chat with the app's own Six Frites Game or Six Frites News account rather than a person: no calls or presence. */
+export const isAppChat = (chat: Pick<ChatDTO, "members">) => isBotChat(chat) || isNewsChat(chat);
 
 let botChecked = false;
 

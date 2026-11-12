@@ -104,6 +104,9 @@ async function sendToAll(targets: Awaited<ReturnType<typeof targetsFor>>, payloa
   return sent;
 }
 
+/** Push services drop a payload over 4 KB, so a long message only shows its start. */
+const PUSH_BODY_MAX = 1000;
+
 /**
  * Sends one recipient a notification for a message, unless it was sent silently, the chat is muted or
  * archived for them, they already read it, or the device is in active use. Returns how many devices were notified.
@@ -124,9 +127,10 @@ export async function deliverPush(messageId: string, userId: string) {
   const group = await prisma.chat.findFirst({ where: { id: m.chatId, type: "group" }, select: { title: true, photoKey: true } });
   return sendToAll(targets, (t) => ({
     title: group?.title ?? sender.displayName,
-    body: group
+    body: (group
       ? `${sender.displayName}: ${previewText(dto, t) || t.summary.newMessage}`
-      : previewText(dto, t) || t.summary.newMessage,
+      : previewText(dto, t) || t.summary.newMessage
+    ).slice(0, PUSH_BODY_MAX),
     icon: group ? (group.photoKey ? presignGet(group.photoKey) : null) : sender.avatarUrl,
     chatId: m.chatId,
     messageId: m.id,

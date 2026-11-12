@@ -111,7 +111,7 @@ import { type Hydrated, hydrate, messageFile } from "@/lib/e2ee";
 import { RestoreBackupDialog, useHasRecoveryKey } from "@/components/encryption-settings";
 import { EPHEMERAL_OPTIONS, shortRule } from "@/lib/ephemeral";
 import { six } from "@/lib/six";
-import { isBotChat, loadUntil, useMessages } from "@/lib/chats";
+import { isAppChat, isBotChat, loadUntil, useMessages } from "@/lib/chats";
 import { useComposerMode } from "@/lib/composer";
 import { PhotoEditor } from "./photo-editor";
 import { clockTime, dayLabel, formatDuration, sameDay } from "@/lib/format";
@@ -842,7 +842,7 @@ function Bubble({
   /** Safe view is on: the photos and videos in the chat, yours too, stay blurred until tapped. */
   safe: boolean;
   frozen: boolean;
-  /** In the chat with Six Frites Game: just the games, no menu, reactions or replies. */
+  /** In a chat with Six Frites Game or Six Frites News: just the games or news, no menu, reactions or replies. */
   gamesOnly?: boolean;
   autoPlay: boolean;
   onVoiceStop: (finished: boolean) => void;
@@ -1771,7 +1771,7 @@ export const MessageList = forwardRef<
                 onOpenAlbum={(items, start) => setAlbum({ items, start })}
                 safe={chat.safeView}
                 frozen={frozen}
-                gamesOnly={isBotChat(chat)}
+                gamesOnly={isAppChat(chat)}
                 onReactButton={(anchor) => setReactAt({ row, anchor })}
                 autoPlay={autoplay === row.key}
                 onVoiceStop={(finished) => (finished ? playNext(row.key) : setAutoplay((k) => (k === row.key ? null : k)))}

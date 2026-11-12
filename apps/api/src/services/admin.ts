@@ -1,5 +1,5 @@
 import {
-  FRITE_BOT_ID,
+  APP_ACCOUNT_IDS,
   type AddStickerInput,
   type AdminCodeInput,
   type AdminLargeFileDTO,
@@ -146,7 +146,7 @@ export async function listUsers(q: AdminUserQuery) {
   if (alias) return { items: await usersBehind(`#${alias.toUpperCase()}`), nextCursor: null };
   const rows = await prisma.user.findMany({
     where: {
-      id: { not: FRITE_BOT_ID },
+      id: { notIn: APP_ACCOUNT_IDS },
       ...(q.q && {
         OR: [
           { displayName: { contains: q.q, mode: "insensitive" } },
@@ -392,7 +392,7 @@ export async function adminStats(): Promise<AdminStatsDTO> {
     gifCache,
     top,
   ] = await Promise.all([
-    prisma.user.count({ where: { id: { not: FRITE_BOT_ID } } }),
+    prisma.user.count({ where: { id: { notIn: APP_ACCOUNT_IDS } } }),
     prisma.user.count({ where: { bannedAt: { not: null } } }),
     prisma.session.findMany({
       where: { lastUsedAt: { gt: new Date(now - 7 * DAY_MS) } },
@@ -405,7 +405,7 @@ export async function adminStats(): Promise<AdminStatsDTO> {
     prisma.stickerPack.count({ where: { builtin: false, bannedAt: null } }),
     prisma.$queryRaw<{ day: string; count: bigint }[]>`
       SELECT to_char(date_trunc('day', "createdAt"), 'YYYY-MM-DD') AS day, count(*) AS count
-      FROM "User" WHERE "createdAt" > now() - interval '30 days' AND "id" <> ${FRITE_BOT_ID} GROUP BY 1`,
+      FROM "User" WHERE "createdAt" > now() - interval '30 days' AND "id" <> ALL(${APP_ACCOUNT_IDS}) GROUP BY 1`,
     prisma.$queryRaw<{ bytes: bigint | null }[]>`
       SELECT SUM(COALESCE("storedBytes", "size"))::bigint AS bytes FROM "Upload" WHERE "kind" <> 'gif'`,
     prisma.$queryRaw<{ bytes: bigint | null }[]>`

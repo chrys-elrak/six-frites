@@ -13,7 +13,7 @@ import { Segmented } from "./segmented";
 type Kind = AdminMailDTO["kind"];
 type Status = AdminMailDTO["status"];
 
-const KIND_LABELS: Record<Kind, string> = { poke: "👋 Poke", inactive: "🍟 Gone quiet", anon: "🎭 Share your link", access: "🎉 Full access" };
+const KIND_LABELS: Record<Kind, string> = { poke: "👋 Poke", inactive: "🍟 Gone quiet", anon: "🎭 Share your link", access: "🎉 Full access", announcement: "📣 Announcement" };
 const STATUS_STYLES: Record<Status, string> = {
   sent: "bg-green-100 text-green-800 dark:bg-green-950 dark:text-green-300",
   failed: "bg-red-100 text-red-800 dark:bg-red-950 dark:text-red-300",

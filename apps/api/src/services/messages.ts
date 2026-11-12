@@ -31,6 +31,7 @@ import {
   isTurnMove,
   maskSpoilers,
   FRITE_BOT_ID,
+  SIX_FRITES_ID,
   botBoardMove,
 } from "@six/shared";
 import { type Emit, type Tx, withEvents } from "../lib/events.js";
@@ -453,6 +454,9 @@ export async function createMessage(
   const chat = await tx.chat.findUniqueOrThrow({ where: { id: chatId } });
   if (userId !== FRITE_BOT_ID && chat.directKey?.split(":").includes(FRITE_BOT_ID)) {
     throw new AppError("FORBIDDEN", "Six Frites Game only plays the games it starts");
+  }
+  if (userId !== SIX_FRITES_ID && chat.directKey?.split(":").includes(SIX_FRITES_ID)) {
+    throw new AppError("FORBIDDEN", "Six Frites News doesn't read replies");
   }
   if ((content?.game || content?.type === "game") && chat.type === "group") throw new AppError("NOT_IN_GROUPS", "Games aren't available in groups");
   const thread = content?.threadId ? await threadToCommentOn(tx, chat, content.threadId) : null;

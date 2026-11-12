@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { Id, IsoDate, PageQuery } from "./common.js";
-import { MessageEntity, MessageType } from "./chats.js";
+import { Entities, MessageEntity, MessageType, entitiesFit } from "./chats.js";
 import { ClientDevice } from "./presence.js";
 import { StickerDTO } from "./stickers.js";
 import { AttachmentDTO, UploadKind, UploadStatus } from "./uploads.js";
@@ -206,6 +206,29 @@ export type UsageQuery = z.infer<typeof UsageQuery>;
 export const SetAdsInput = z.object({ userIds: z.array(Id).min(1).max(100), ads: z.boolean() });
 export type SetAdsInput = z.infer<typeof SetAdsInput>;
 
+export const AnnounceInput = z
+  .object({
+    text: z.string().trim().min(1).max(4000),
+    entities: Entities.optional(),
+    email: z
+      .object({ subject: z.string().trim().min(1).max(150) })
+      .optional()
+      .describe("Also email it, with this subject, to members who haven't turned emails off"),
+  })
+  .refine((v) => entitiesFit(v.text, v.entities), { message: "Entities fall outside the text", path: ["entities"] });
+export type AnnounceInput = z.infer<typeof AnnounceInput>;
+
+export const AnnounceResult = z.object({
+  sent: z.number().int().describe("Members who got it"),
+  members: z.number().int().describe("Members it was meant for"),
+  emails: z
+    .number()
+    .int()
+    .nullable()
+    .describe("Members the email goes to, one after another once this answers, each showing in the email log; null when not asked for"),
+});
+export type AnnounceResult = z.infer<typeof AnnounceResult>;
+
 export const BanUserInput = z.object({
   reason: z.string().trim().min(1).max(500),
   hours: BanHours,
@@ -259,12 +282,12 @@ export const AdminLargeFileDTO = z.object({
 });
 export type AdminLargeFileDTO = z.infer<typeof AdminLargeFileDTO>;
 
-export const MAIL_KINDS = ["poke", "inactive", "anon", "access"] as const;
+export const MAIL_KINDS = ["poke", "inactive", "anon", "access", "announcement"] as const;
 export const MAIL_STATUSES = ["sent", "failed", "skipped"] as const;
 
 export const AdminMailDTO = z.object({
   id: Id,
-  kind: z.enum(MAIL_KINDS).describe("poke: someone poked them; inactive: away for a day; anon: a guest reminded to share their link; access: an admin gave them full access"),
+  kind: z.enum(MAIL_KINDS).describe("poke: someone poked them; inactive: away for a day; anon: a guest reminded to share their link; access: an admin gave them full access; announcement: an admin's announcement"),
   status: z.enum(MAIL_STATUSES).describe("skipped: mail isn't set up here, or no redirect address outside production"),
   subject: z.string(),
   to: z.string().describe("The person's address"),

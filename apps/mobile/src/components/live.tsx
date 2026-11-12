@@ -9,7 +9,7 @@ import Animated, { FadeInUp, FadeOutUp } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { create } from "zustand";
 import { useCall } from "@/lib/calls";
-import { isBotChat, isFrozen, useChats } from "@/lib/chats";
+import { isAppChat, isFrozen, useChats } from "@/lib/chats";
 import { useLocale, useT } from "@/lib/i18n";
 import { playGameSound } from "@/lib/game-sound";
 import { useRealtime } from "@/lib/realtime";
@@ -113,7 +113,7 @@ export function LiveInviteSheet({ game, onClose }: { game: LiveGame; onClose: ()
   const friends = [
     ...new Map(
       (useChats().data ?? [])
-        .filter((c) => !isFrozen(c) && !c.support && !c.supportDesk && !c.withSupport && !isBotChat(c))
+        .filter((c) => !isFrozen(c) && !c.support && !c.supportDesk && !c.withSupport && !isAppChat(c))
         .flatMap((c) => c.members.filter((m) => m.user.id !== meId).map((m) => [m.user.id, m.user] as const)),
     ).values(),
   ];

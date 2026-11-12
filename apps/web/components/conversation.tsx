@@ -13,7 +13,7 @@ import { useChatShut } from "@/lib/archive-lock";
 import { startCall, useCall } from "@/lib/call";
 import { looking } from "@/lib/notify";
 import { e2ee, useIdentityChanges } from "@/lib/e2ee";
-import { isBotChat, useChat, useMessages } from "@/lib/chats";
+import { isAppChat, isBotChat, isNewsChat, useChat, useMessages } from "@/lib/chats";
 import { setActiveChat, useRealtime } from "@/lib/realtime";
 import { six } from "@/lib/six";
 import { MAX_SELECTED, useSelection } from "@/lib/selection";
@@ -227,7 +227,7 @@ function OpenConversation({ chatId }: { chatId: string }) {
   const peer = chatFace(c, meId);
   const muted = isMuted(c);
   const frozen = isFrozen(c);
-  const app = c.withSupport || isBotChat(c);
+  const app = c.withSupport || isAppChat(c);
   const noContact = app || c.supportDesk;
   const shownPresence = frozen || app || c.group ? undefined : presence;
   const count = selecting ? selectedIds.length : 0;
@@ -336,7 +336,7 @@ function OpenConversation({ chatId }: { chatId: string }) {
                     )}
                   </span>
                 </button>
-                {!frozen && !c.group && !c.support && !c.withSupport && !isBotChat(c) && (
+                {!frozen && !c.group && !c.support && !c.withSupport && !isAppChat(c) && (
                   <>
                     <button
                       onClick={() => void startCall(c, meId, false)}
@@ -439,9 +439,9 @@ function OpenConversation({ chatId }: { chatId: string }) {
                 {c.supportDesk ? tr.support.closedDesk : tr.support.closed}
               </p>
             )}
-            {!selecting && (frozen || readOnlyGroup(c)) && <ChatBlocked chat={c} peerId={peer.id} peerName={peer.displayName} />}
+            {!selecting && (frozen || readOnlyGroup(c) || isNewsChat(c)) && <ChatBlocked chat={c} peerId={peer.id} peerName={peer.displayName} />}
             {!selecting && !frozen && isBotChat(c) && !wide && <BotGames />}
-            {!selecting && !frozen && !readOnlyGroup(c) && !isBotChat(c) && (
+            {!selecting && !frozen && !readOnlyGroup(c) && !isAppChat(c) && (
               <div className="chat-colors contents">
                 <Composer
                   chatId={chatId}

@@ -3,6 +3,7 @@ import { mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import {
+  APP_ACCOUNT_IDS,
   ANON_VOICE_MS,
   type AdminAnonQuery,
   AppError,
@@ -358,7 +359,7 @@ export async function setAnonBot(userId: string, on: boolean) {
  * a line they never got, in the language of their latest device. Once they got every line, it stays quiet.
  */
 export async function sendDueBotAnon(batch = 100) {
-  const reachable = { deletedAt: null, anonBotDisabled: false, OR: [{ bannedAt: null }, { banScope: "chat" }] };
+  const reachable = { deletedAt: null, anonBotDisabled: false, id: { notIn: APP_ACCOUNT_IDS }, OR: [{ bannedAt: null }, { banScope: "chat" }] };
   const fresh = await prisma.user.findMany({ where: { ...reachable, anonBotAt: null }, select: { id: true }, take: 1000 });
   for (const u of fresh) await prisma.user.update({ where: { id: u.id }, data: { anonBotAt: nextBotAt() } });
 

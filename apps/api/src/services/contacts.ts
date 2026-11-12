@@ -1,13 +1,13 @@
 import { randomUUID } from "node:crypto";
 import { Prisma } from "../generated/prisma/client.js";
 import {
+  APP_ACCOUNT_IDS,
   AppError,
   type ContactDTO,
   type ContactLabelInput,
   type ContactListQuery,
   type PublicUser,
   type UpdateContactInput,
-  FRITE_BOT_ID,
   aliasAvatar,
 } from "@six/shared";
 import { type Tx, withEvents } from "../lib/events.js";
@@ -124,7 +124,7 @@ function contactsQuery(userId: string, where: Prisma.Sql, limit: number) {
       JOIN "ChatMember" me ON me."chatId" = cm."chatId" AND me."userId" = ${userId}
       JOIN "User" u ON u.id = cm."userId" AND u."deletedAt" IS NULL
       LEFT JOIN "ContactOverride" o ON o."ownerId" = ${userId} AND o."contactId" = u.id
-      WHERE cm."userId" <> ${userId} AND cm."userId" <> ${FRITE_BOT_ID}
+      WHERE cm."userId" <> ${userId} AND cm."userId" <> ALL(${APP_ACCOUNT_IDS})
     ) contacts
     WHERE ${where}
     ORDER BY name, id

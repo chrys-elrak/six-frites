@@ -1740,6 +1740,71 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/admin/announcements": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Send a message to every member
+         * @description Six Frites News posts the text in each member's chat with it, which comes back for anyone who deleted it, with the usual notification. Nobody can reply there. With `email`, it also goes by email to members who haven't turned emails off, after this answers. Guests, banned and waiting accounts are left out. Sending the same text again the same day only reaches the members it missed, and the same email subject only the members not emailed yet.
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        text: string;
+                        /** @description Ranges in UTF-16 code units of the trimmed text. Different types may overlap (bold inside a spoiler); ranges of the same type may not. */
+                        entities?: {
+                            /** @enum {string} */
+                            type: "bold" | "italic" | "underline" | "strike" | "code" | "spoiler" | "color" | "font" | "size" | "highlight" | "outline";
+                            offset: number;
+                            length: number;
+                            /** @description For color, highlight (a background behind the text) and outline (a line around its letters): a TEXT_COLORS or TEXT_GRADIENTS name, #rrggbb, or #rrggbb-#rrggbb; for font: a TEXT_FONTS name; for size: a whole size in points, 8 to 48 */
+                            value?: string;
+                        }[];
+                        /** @description Also email it, with this subject, to members who haven't turned emails off */
+                        email?: {
+                            subject: string;
+                        };
+                    };
+                };
+            };
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @description Members who got it */
+                            sent: number;
+                            /** @description Members it was meant for */
+                            members: number;
+                            /** @description Members the email goes to, one after another once this answers, each showing in the email log; null when not asked for */
+                            emails: number | null;
+                        };
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/admin/users/ads": {
         parameters: {
             query?: never;
@@ -2022,7 +2087,7 @@ export interface paths {
                 query?: {
                     cursor?: string;
                     limit?: number;
-                    kind?: "poke" | "inactive" | "anon" | "access";
+                    kind?: "poke" | "inactive" | "anon" | "access" | "announcement";
                     status?: "sent" | "failed" | "skipped";
                     /** @description Part of the recipient's name or address */
                     q?: string;
@@ -2043,10 +2108,10 @@ export interface paths {
                             items: {
                                 id: string;
                                 /**
-                                 * @description poke: someone poked them; inactive: away for a day; anon: a guest reminded to share their link; access: an admin gave them full access
+                                 * @description poke: someone poked them; inactive: away for a day; anon: a guest reminded to share their link; access: an admin gave them full access; announcement: an admin's announcement
                                  * @enum {string}
                                  */
-                                kind: "poke" | "inactive" | "anon" | "access";
+                                kind: "poke" | "inactive" | "anon" | "access" | "announcement";
                                 /**
                                  * @description skipped: mail isn't set up here, or no redirect address outside production
                                  * @enum {string}

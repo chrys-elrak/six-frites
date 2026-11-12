@@ -1,5 +1,6 @@
 import { randomBytes, randomUUID } from "node:crypto";
 import {
+  APP_ACCOUNT_IDS,
   AppError,
   type CreateLiveInput,
   DotsMove,
@@ -476,7 +477,7 @@ function hostRoom(userId: string, roomId: string) {
  * it starts right away, with the bot in the seats the game needs.
  */
 export async function createRoom(userId: string, input: CreateLiveInput) {
-  const invite = input.bot ? [] : [...new Set(input.invite)].filter((id) => id !== userId && id !== FRITE_BOT_ID);
+  const invite = input.bot ? [] : [...new Set(input.invite)].filter((id) => id !== userId && !APP_ACCOUNT_IDS.includes(id));
   if (invite.length >= LIVE_SEATS[input.game].max) throw new AppError("ROOM_FULL", "Too many people for this game");
   const blocked = await blockedWith(prisma, userId);
   const chats = await prisma.chat.findMany({

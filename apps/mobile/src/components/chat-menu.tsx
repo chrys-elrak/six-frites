@@ -15,7 +15,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { View } from "react-native";
 import { closeSupportChat, deleteChat, setBlocked, updateChatSettings } from "@/lib/actions";
-import { isBotChat, isFrozen } from "@/lib/chats";
+import { isAppChat, isFrozen, isNewsChat } from "@/lib/chats";
 import { useT } from "@/lib/i18n";
 import { six } from "@/lib/six";
 import { useTheme } from "@/lib/theme";
@@ -220,19 +220,20 @@ export function ChatMenu({
     );
   }
 
-  if (isBotChat(chat)) {
+  const mute = { label: chat.muted ? tr.common.unmute : tr.common.mute, onSelect: () => settings({ muted: !chat.muted }) };
+
+  if (isAppChat(chat)) {
     return (
       <Sheet
         title={chat.title}
         onClose={onClose}
         actions={[
+          ...(isNewsChat(chat) ? [mute] : []),
           { label: tr.chat.deleteChat, destructive: true, onSelect: () => void remove("me") },
         ]}
       />
     );
   }
-
-  const mute = { label: chat.muted ? tr.common.unmute : tr.common.mute, onSelect: () => settings({ muted: !chat.muted }) };
   const closeSupport =
     chat.supportDesk && !chat.supportClosedAt
       ? [{ label: tr.support.close, onSelect: () => void closeSupportChat(qc, chat.id).catch(() => null) }]

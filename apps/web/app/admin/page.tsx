@@ -6,6 +6,7 @@ import { ChevronLeft, ShieldCheck } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
+import { Announce } from "@/components/admin/announce";
 import { AnonMessages } from "@/components/admin/anon";
 import { Emails } from "@/components/admin/emails";
 import { LargeFiles } from "@/components/admin/large-files";
@@ -19,7 +20,7 @@ import { adminKeys, useIsAdmin } from "@/lib/admin";
 import { useSession } from "@/lib/session";
 import { six } from "@/lib/six";
 
-type Tab = "overview" | "reports" | "anon" | "users" | "emails" | "files" | "stickers";
+type Tab = "overview" | "reports" | "anon" | "users" | "announce" | "emails" | "files" | "stickers";
 
 export default function AdminPage() {
   const router = useRouter();
@@ -67,6 +68,7 @@ export default function AdminPage() {
     { id: "reports", label: open ? `Reports (${open})` : "Reports" },
     { id: "anon", label: "Anonymous" },
     { id: "users", label: "People" },
+    { id: "announce", label: "Announce" },
     { id: "emails", label: "Emails" },
     { id: "files", label: "Large files" },
     { id: "stickers", label: "Stickers" },
@@ -108,6 +110,7 @@ export default function AdminPage() {
       {tab === "reports" && <Reports />}
       {tab === "anon" && <AnonMessages />}
       {tab === "users" && <Users />}
+      {tab === "announce" && <Announce />}
       {tab === "emails" && <Emails />}
       {tab === "files" && <LargeFiles />}
       {tab === "stickers" && <OfficialStickers />}

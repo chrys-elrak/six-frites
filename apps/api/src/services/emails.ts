@@ -1,9 +1,9 @@
 import { createHmac, timingSafeEqual } from "node:crypto";
-import { type AdminMailQuery, AppError, FRITE_BOT_ID, MAIL_KINDS, MAIL_STATUSES, POKE_LIMITS, askUrl } from "@six/shared";
+import { APP_ACCOUNT_IDS, type AdminMailQuery, AppError, MAIL_KINDS, MAIL_STATUSES, type MessageEntity, POKE_LIMITS, askUrl, maskSpoilers } from "@six/shared";
 import { env, isProd } from "../env.js";
 import { presenceOf } from "../lib/presence.js";
 import { prisma } from "../lib/prisma.js";
-import { type Layout, layout, mailStrings, plain } from "../mail/templates.js";
+import { type Layout, formatted, layout, mailStrings, plain } from "../mail/templates.js";
 import { pageArgs, toPage } from "../lib/paginate.js";
 import { blockState } from "./blocks.js";
 import { profilesFor } from "./contacts.js";
@@ -99,7 +99,7 @@ export async function mailStats() {
  * to the same person and an hour apart; nobody blocked, gone or who turned emails off can be poked.
  */
 export async function pokeUser(fromId: string, toId: string, message?: string) {
-  if (fromId === toId || toId === FRITE_BOT_ID) throw new AppError("POKE_UNAVAILABLE");
+  if (fromId === toId || APP_ACCOUNT_IDS.includes(toId)) throw new AppError("POKE_UNAVAILABLE");
   const chat = await prisma.chat.findUnique({ where: { directKey: [fromId, toId].sort().join(":") }, select: { id: true } });
   if (!chat) throw new AppError("CONTACT_NOT_FOUND");
   const [target, blocks] = await Promise.all([
@@ -141,7 +141,7 @@ export async function pokeUser(fromId: string, toId: string, message?: string) {
   return { remaining: POKE_LIMITS.perDay - sent - 1 };
 }
 
-const reachable = { deletedAt: null, bannedAt: null, queuedAt: null, mailOptOut: false, id: { not: FRITE_BOT_ID } };
+const reachable = { deletedAt: null, bannedAt: null, queuedAt: null, mailOptOut: false, id: { notIn: APP_ACCOUNT_IDS } };
 
 /** Members who have been away for a day and weren't told since they last came: one email per absence. */
 async function emailInactive() {
@@ -149,7 +149,7 @@ async function emailInactive() {
   const rows = await prisma.$queryRaw<Recipient[]>`
     SELECT "id", "email", "locale" FROM "User"
     WHERE NOT "guest" AND "deletedAt" IS NULL AND "bannedAt" IS NULL AND "queuedAt" IS NULL AND NOT "mailOptOut"
-      AND "id" <> ${FRITE_BOT_ID}
+      AND "id" <> ALL(${APP_ACCOUNT_IDS})
       AND COALESCE("lastSeenAt", "createdAt") < ${cutoff}
       AND ("inactiveMailAt" IS NULL OR "inactiveMailAt" < COALESCE("lastSeenAt", "createdAt"))
     ORDER BY COALESCE("lastSeenAt", "createdAt") DESC
@@ -223,6 +223,48 @@ export async function emailFullAccess(userId: string) {
     t.subject,
     { kind: "access" },
   );
+}
+
+/** Announcement subjects whose emails are still going out. */
+const sending = new Set<string>();
+
+/**
+ * Emails an announcement to the members who get emails and weren't sent one with this subject today, linking to their
+ * chat with Six Frites News where there is one. Returns how many it goes to right away; the emails then go out one
+ * after another, each landing in the email log. While a subject is still going out, sending it again emails nobody.
+ *
+ * ponytail: the in-flight check and the loop live in this process, fine with one API process; a restart midway drops
+ * the rest until the same subject is sent again that day. Claim recipients as "pending" mail log rows if that bites.
+ */
+export async function emailAnnouncement(text: string, entities: MessageEntity[] | undefined, subject: string, chats: Map<string, string>) {
+  if (sending.has(subject)) return 0;
+  sending.add(subject);
+  const today = new Date(new Date().toISOString().slice(0, 10));
+  const users = await prisma.user
+    .findMany({
+      where: { ...reachable, guest: false, mailsReceived: { none: { kind: "announcement", subject, status: "sent", createdAt: { gte: today } } } },
+      select: { id: true, email: true, locale: true },
+    })
+    .catch((err: Error) => {
+      sending.delete(subject);
+      throw err;
+    });
+  const html = formatted(text, entities);
+  const masked = maskSpoilers(text, entities);
+  const preheader = [...masked].slice(0, 140).join("");
+  void (async () => {
+    for (const user of users) {
+      const t = mailStrings(user.locale).announcement;
+      const chatId = chats.get(user.id);
+      const cta = { label: t.cta, href: chatId ? `${webUrl()}/chats/${chatId}` : webUrl() };
+      await deliver(user, { preheader, badge: { emoji: "📣" }, title: subject, paragraphs: [masked], html, cta, why: t.why }, subject, {
+        kind: "announcement",
+      });
+    }
+  })()
+    .catch((err: Error) => console.error("announcement emails stopped:", err.message))
+    .finally(() => sending.delete(subject));
+  return users.length;
 }
 
 /** The worker's hourly round of reminder emails. */

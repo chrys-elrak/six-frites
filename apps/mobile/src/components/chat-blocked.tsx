@@ -6,6 +6,7 @@ import { Pressable, StyleSheet, View } from "react-native";
 import { Text } from "./text";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { setBlocked } from "@/lib/actions";
+import { isNewsChat } from "@/lib/chats";
 import { useT } from "@/lib/i18n";
 import { useTheme } from "@/lib/theme";
 
@@ -23,14 +24,17 @@ export function ChatBlocked({ chat, peerId, peerName }: { chat: ChatDTO; peerId:
     setBusy(false);
   }
 
-  const Icon = chat.group ? Megaphone : chat.peerDeleted ? UserX : Ban;
-  const message = chat.group
-    ? tr.groups.adminsOnly
-    : chat.peerDeleted
-      ? tr.chat.peerDeleted
-      : chat.blockedByMe
-        ? tr.chat.youBlocked(peerName)
-        : tr.chat.blockedYou(peerName);
+  const news = isNewsChat(chat);
+  const Icon = chat.group || news ? Megaphone : chat.peerDeleted ? UserX : Ban;
+  const message = news
+    ? tr.chat.onlySixFrites
+    : chat.group
+      ? tr.groups.adminsOnly
+      : chat.peerDeleted
+        ? tr.chat.peerDeleted
+        : chat.blockedByMe
+          ? tr.chat.youBlocked(peerName)
+          : tr.chat.blockedYou(peerName);
 
   return (
     <View

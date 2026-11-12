@@ -1,4 +1,4 @@
-import { type Locale, isLocale } from "@six/shared";
+import { type Locale, type MessageEntity, isLocale } from "@six/shared";
 
 const strings = {
   en: {
@@ -31,6 +31,10 @@ const strings = {
       body: "An admin just gave you full access. You can now chat with anyone, post stories, join groups and invite your friends.",
       cta: "Open Six Frites",
       why: "You're getting this because your Six Frites account was upgraded.",
+    },
+    announcement: {
+      cta: "Open Six Frites",
+      why: "You're getting this because you have a Six Frites account.",
     },
     stop: "Don't want these emails?",
     unsubscribe: "Unsubscribe",
@@ -70,6 +74,10 @@ const strings = {
       cta: "Ouvrir Six Frites",
       why: "Vous recevez cet e-mail parce que votre compte Six Frites a été mis à niveau.",
     },
+    announcement: {
+      cta: "Ouvrir Six Frites",
+      why: "Vous recevez cet e-mail parce que vous avez un compte Six Frites.",
+    },
     stop: "Vous ne voulez plus ces e-mails ?",
     unsubscribe: "Se désabonner",
     unsubscribeTitle: "Ne plus recevoir d'e-mails de Six Frites ?",
@@ -108,6 +116,10 @@ const strings = {
       cta: "Sokafy ny Six Frites",
       why: "Nahazo ity ianao satria nohatsaraina ny kaontinao Six Frites.",
     },
+    announcement: {
+      cta: "Sokafy ny Six Frites",
+      why: "Nahazo ity ianao satria manana kaonty Six Frites ianao.",
+    },
     stop: "Tsy te hahazo ireo mailaka ireo intsony?",
     unsubscribe: "Ajanony",
     unsubscribeTitle: "Hajanona ve ny mailaka avy amin'ny Six Frites?",
@@ -138,6 +150,8 @@ export interface Layout {
   badge: { emoji: string } | { name: string };
   title: string;
   paragraphs: string[];
+  /** The words as ready HTML, shown instead of the paragraphs, which stay for the plain-text copy. */
+  html?: string;
   /** A quote in a speech bubble, such as the words someone added to a poke. */
   quote?: { label: string; text: string };
   /** A link shown in a box, to copy. */
@@ -192,7 +206,11 @@ export function layout(m: Layout) {
       <div style="padding:36px 32px 32px">
         ${badge}
         <h1 style="margin:20px 0 12px;font:800 26px/1.25 ${FONT};color:${INK};text-align:center;letter-spacing:-0.4px">${esc(m.title)}</h1>
-        ${m.paragraphs.map((p) => `<p style="margin:0 0 12px;font:400 16px/1.6 ${FONT};color:#5C4033;text-align:center">${esc(p)}</p>`).join("")}
+        ${
+          m.html
+            ? `<div style="margin:0 0 12px;font:400 16px/1.6 ${FONT};color:#5C4033;white-space:pre-wrap">${m.html}</div>`
+            : m.paragraphs.map((p) => `<p style="margin:0 0 12px;font:400 16px/1.6 ${FONT};color:#5C4033;text-align:center">${esc(p)}</p>`).join("")
+        }
         ${quote}
         ${box}
         <table role="presentation" cellpadding="0" cellspacing="0" align="center" style="margin:28px auto 4px">
@@ -211,6 +229,37 @@ export function layout(m: Layout) {
 </table>
 </body>
 </html>`;
+}
+
+const TAGS: Partial<Record<MessageEntity["type"], [string, string]>> = {
+  bold: ["<strong>", "</strong>"],
+  italic: ["<em>", "</em>"],
+  underline: ["<u>", "</u>"],
+  strike: ["<s>", "</s>"],
+  code: [`<code style="font-family:Menlo,Consolas,monospace;background:#FFF1DE;padding:1px 5px;border-radius:6px">`, "</code>"],
+};
+
+/**
+ * A message's text as email HTML with its bold, italic, underline, strike and code, line breaks as <br> for Outlook,
+ * and each spoiler as a mask. Cut where any range starts or ends, so overlapping ranges still nest properly in each
+ * piece.
+ *
+ * ponytail: colours, fonts and sizes show as plain text; map them to inline styles if announcements use them.
+ */
+export function formatted(text: string, entities: MessageEntity[] = []) {
+  const cuts = [...new Set([0, text.length, ...entities.flatMap((e) => [e.offset, e.offset + e.length])])].sort((a, b) => a - b);
+  return cuts
+    .slice(0, -1)
+    .map((from, i) => {
+      const to = cuts[i + 1]!;
+      const spoiler = entities.find((e) => e.type === "spoiler" && e.offset <= from && to <= e.offset + e.length);
+      if (spoiler) return spoiler.offset === from ? "••••" : "";
+      return entities.reduce((html, e) => {
+        const tag = TAGS[e.type];
+        return tag && e.offset <= from && to <= e.offset + e.length ? tag[0] + html + tag[1] : html;
+      }, esc(text.slice(from, to)).replace(/\n/g, "<br>"));
+    })
+    .join("");
 }
 
 /** The same email as plain text, for mail apps that don't show HTML. */

@@ -3918,6 +3918,139 @@
         }
       }
     },
+    "/v1/admin/announcements": {
+      "post": {
+        "summary": "Send a message to every member",
+        "tags": [
+          "admin"
+        ],
+        "description": "Six Frites News posts the text in each member's chat with it, which comes back for anyone who deleted it, with the usual notification. Nobody can reply there. With `email`, it also goes by email to members who haven't turned emails off, after this answers. Guests, banned and waiting accounts are left out. Sending the same text again the same day only reaches the members it missed, and the same email subject only the members not emailed yet.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "text": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 4000
+                  },
+                  "entities": {
+                    "maxItems": 100,
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "type": {
+                          "type": "string",
+                          "enum": [
+                            "bold",
+                            "italic",
+                            "underline",
+                            "strike",
+                            "code",
+                            "spoiler",
+                            "color",
+                            "font",
+                            "size",
+                            "highlight",
+                            "outline"
+                          ]
+                        },
+                        "offset": {
+                          "type": "integer",
+                          "minimum": 0,
+                          "maximum": 9007199254740991
+                        },
+                        "length": {
+                          "type": "integer",
+                          "minimum": 1,
+                          "maximum": 9007199254740991
+                        },
+                        "value": {
+                          "description": "For color, highlight (a background behind the text) and outline (a line around its letters): a TEXT_COLORS or TEXT_GRADIENTS name, #rrggbb, or #rrggbb-#rrggbb; for font: a TEXT_FONTS name; for size: a whole size in points, 8 to 48",
+                          "type": "string",
+                          "maxLength": 16
+                        }
+                      },
+                      "required": [
+                        "type",
+                        "offset",
+                        "length"
+                      ]
+                    },
+                    "description": "Ranges in UTF-16 code units of the trimmed text. Different types may overlap (bold inside a spoiler); ranges of the same type may not."
+                  },
+                  "email": {
+                    "description": "Also email it, with this subject, to members who haven't turned emails off",
+                    "type": "object",
+                    "properties": {
+                      "subject": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 150
+                      }
+                    },
+                    "required": [
+                      "subject"
+                    ]
+                  }
+                },
+                "required": [
+                  "text"
+                ]
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "sent": {
+                      "type": "integer",
+                      "minimum": -9007199254740991,
+                      "maximum": 9007199254740991,
+                      "description": "Members who got it"
+                    },
+                    "members": {
+                      "type": "integer",
+                      "minimum": -9007199254740991,
+                      "maximum": 9007199254740991,
+                      "description": "Members it was meant for"
+                    },
+                    "emails": {
+                      "nullable": true,
+                      "description": "Members the email goes to, one after another once this answers, each showing in the email log; null when not asked for",
+                      "type": "integer",
+                      "minimum": -9007199254740991,
+                      "maximum": 9007199254740991
+                    }
+                  },
+                  "required": [
+                    "sent",
+                    "members",
+                    "emails"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/v1/admin/users/ads": {
       "post": {
         "summary": "Turn ads on or off for some users",
@@ -4533,7 +4666,8 @@
                 "poke",
                 "inactive",
                 "anon",
-                "access"
+                "access",
+                "announcement"
               ]
             },
             "in": "query",
@@ -4592,9 +4726,10 @@
                               "poke",
                               "inactive",
                               "anon",
-                              "access"
+                              "access",
+                              "announcement"
                             ],
-                            "description": "poke: someone poked them; inactive: away for a day; anon: a guest reminded to share their link; access: an admin gave them full access"
+                            "description": "poke: someone poked them; inactive: away for a day; anon: a guest reminded to share their link; access: an admin gave them full access; announcement: an admin's announcement"
                           },
                           "status": {
                             "type": "string",

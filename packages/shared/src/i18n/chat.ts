@@ -107,6 +107,7 @@ const en = {
   useColours: "Use these colours",
 
   peerDeleted: "This account was deleted. You can't send messages here any more.",
+  onlySixFrites: "Announcements from Six Frites. Replies can't be sent here. To reach us, write to support.",
   youBlocked: (name: string) => `You blocked ${name}. Neither of you can send messages here.`,
   blockedYou: (name: string) => `${name} blocked you. You can't send messages here.`,
 
@@ -259,6 +260,7 @@ const fr: typeof en = {
   useColours: "Utiliser ces couleurs",
 
   peerDeleted: "Ce compte a été supprimé. Vous ne pouvez plus envoyer de messages ici.",
+  onlySixFrites: "Les annonces de Six Frites. On ne peut pas y répondre ici. Pour nous joindre, écrivez au support.",
   youBlocked: (name) => `Vous avez bloqué ${name}. Aucun de vous deux ne peut envoyer de messages ici.`,
   blockedYou: (name) => `${name} vous a bloqué(e). Vous ne pouvez pas envoyer de messages ici.`,
 
@@ -411,6 +413,7 @@ const mg: typeof en = {
   useColours: "Ampiasao ireo loko ireo",
 
   peerDeleted: "Voafafa ity kaonty ity. Tsy afaka mandefa hafatra eto intsony ianao.",
+  onlySixFrites: "Filazana avy amin'ny Six Frites. Tsy azo valiana eto. Raha te hiresaka aminay, soraty ny support.",
   youBlocked: (name) => `Nosakananao i ${name}. Samy tsy afaka mandefa hafatra eto ianareo roa.`,
   blockedYou: (name) => `Nosakanan'i ${name} ianao. Tsy afaka mandefa hafatra eto ianao.`,
 

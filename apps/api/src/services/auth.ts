@@ -1,10 +1,10 @@
 import { createHash, randomBytes, timingSafeEqual } from "node:crypto";
 import { createId } from "@paralleldrive/cuid2";
 import {
+  APP_ACCOUNT_IDS,
   type ApproveLinkInput,
   AppError,
   type AuthResult,
-  FRITE_BOT_ID,
   type DeviceInfo,
   type GoogleLoginInput,
   type LinkTicket,
@@ -127,7 +127,7 @@ async function signIn(identity: Identity, input: GoogleLoginInput): Promise<Issu
     if (guest && !input.guest) {
       throw new AppError("INVITE_REQUIRED", "Sign up with an invite link from someone already on Six Frites");
     }
-    if (!existing && !isAdminEmail(identity.email) && (await tx.user.count({ where: { deletedAt: null, id: { not: FRITE_BOT_ID } } })) >= env.MAX_USERS) {
+    if (!existing && !isAdminEmail(identity.email) && (await tx.user.count({ where: { deletedAt: null, id: { notIn: APP_ACCOUNT_IDS } } })) >= env.MAX_USERS) {
       throw new AppError("SIGNUPS_CLOSED", "Six Frites is full, new accounts are closed for now");
     }
     let user =

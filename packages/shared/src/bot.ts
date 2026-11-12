@@ -20,6 +20,12 @@ export const BOT_ID = "bot";
 /** Frite Bot's account: everyone has a chat with it, where it starts games and takes its turns. */
 export const FRITE_BOT_ID = "frite-bot";
 
+/** Six Frites News, the account announcements come from, with a megaphone so it isn't taken for support. Nobody writes back. */
+export const SIX_FRITES_ID = "six-frites";
+
+/** The app's own accounts, which aren't people: left out of counts, contacts, emails and invites. */
+export const APP_ACCOUNT_IDS = [FRITE_BOT_ID, SIX_FRITES_ID];
+
 /** The games the bot can start: it can't write statements or riddles, nor read a typed guess. */
 export const BOT_GAMES = ["rps", "dice", "guess", "penalty", "hangman", "ships", "ttt", "four"] as const satisfies GameKind[];
 export type BotGame = (typeof BOT_GAMES)[number];

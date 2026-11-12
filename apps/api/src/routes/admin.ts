@@ -3,6 +3,8 @@ import { z } from "zod";
 import {
   AddStickerInput,
   AdminAnonDTO,
+  AnnounceInput,
+  AnnounceResult,
   AdminAnonQuery,
   AdminCodeInput,
   AdminMeDTO,
@@ -65,6 +67,7 @@ import { cancelStickerImport, dropUnfinishedZip, latestStickerImport, startStick
 import { createReport, listReports, resolveReport } from "../services/reports.js";
 import { listMailLog, mailStats } from "../services/emails.js";
 import { usageOf } from "../services/usage.js";
+import { announce } from "../services/bot.js";
 
 const Params = z.object({ id: Id });
 const security = [{ bearer: [] }];
@@ -273,6 +276,22 @@ const adminRoutes: FastifyPluginAsyncZod = async (app) => {
       },
     },
     (req) => giveFullAccess(req.params.id),
+  );
+
+  app.post(
+    "/admin/announcements",
+    {
+      schema: {
+        tags,
+        summary: "Send a message to every member",
+        description:
+          "Six Frites News posts the text in each member's chat with it, which comes back for anyone who deleted it, with the usual notification. Nobody can reply there. With `email`, it also goes by email to members who haven't turned emails off, after this answers. Guests, banned and waiting accounts are left out. Sending the same text again the same day only reaches the members it missed, and the same email subject only the members not emailed yet.",
+        security,
+        body: AnnounceInput,
+        response: { 200: AnnounceResult },
+      },
+    },
+    async (req) => announce(req.body),
   );
 
   app.post(

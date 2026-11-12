@@ -21,7 +21,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { closeSupportChat, deleteChat, setBlocked, updateChatSettings } from "@/lib/actions";
 import { sendAtLabel, toLocalInput } from "@/lib/format";
-import { isBotChat } from "@/lib/chats";
+import { isAppChat, isNewsChat } from "@/lib/chats";
 import { useT } from "@/lib/i18n";
 import { useSession } from "@/lib/session";
 import { six } from "@/lib/six";
@@ -298,7 +298,14 @@ export function ChatMenu({
     );
   }
 
-  if (isBotChat(chat)) {
+  const mute = isMuted(chat)
+    ? {
+        label: chat.mutedUntil ? tr.chat.unmuteUntil(sendAtLabel(chat.mutedUntil)) : tr.common.unmute,
+        onSelect: () => settings({ muted: false }),
+      }
+    : { label: `${tr.common.mute}…`, keepOpen: true, onSelect: () => setView("mute") };
+
+  if (isAppChat(chat)) {
     return (
       <Sheet
         title={chat.title}
@@ -306,6 +313,7 @@ export function ChatMenu({
         onClose={onClose}
         actions={[
           { label: chat.pinned ? tr.chat.unpin : tr.chat.pin, onSelect: () => settings({ pinned: !chat.pinned }) },
+          ...(isNewsChat(chat) ? [mute] : []),
           { label: chat.archived ? tr.chat.unarchive : tr.chat.archive, onSelect: () => settings({ archived: !chat.archived }) },
           { label: tr.chat.deleteChat, destructive: true, onSelect: () => void remove("me") },
         ]}
@@ -313,12 +321,6 @@ export function ChatMenu({
     );
   }
 
-  const mute = isMuted(chat)
-    ? {
-        label: chat.mutedUntil ? tr.chat.unmuteUntil(sendAtLabel(chat.mutedUntil)) : tr.common.unmute,
-        onSelect: () => settings({ muted: false }),
-      }
-    : { label: `${tr.common.mute}…`, keepOpen: true, onSelect: () => setView("mute") };
   const closeSupport =
     chat.supportDesk && !chat.supportClosedAt
       ? [{ label: tr.support.close, onSelect: () => void closeSupportChat(qc, chat.id).catch(() => null) }]

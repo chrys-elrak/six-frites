@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
-import { layout, plain } from "../src/mail/templates.js";
+import { formatted, layout, plain } from "../src/mail/templates.js";
 import { unsubscribeUrl } from "../src/services/emails.js";
 import { chatHelpers, prisma, useApp } from "./helpers.js";
 
@@ -116,5 +116,19 @@ describe("email templates", () => {
     expect(html).toContain("icon-192.png");
     expect(plain(m)).toContain(`"<script>alert("x")</script>"`);
     expect(plain(m)).toContain("Open the chat: https://six-frites.koera.mg/chats/1");
+  });
+
+  it("turns a message's styles into email HTML, nesting overlaps and escaping the text", () => {
+    const html = formatted("big <news> today", [
+      { type: "bold", offset: 0, length: 10 },
+      { type: "italic", offset: 4, length: 12 },
+      { type: "color", offset: 0, length: 3, value: "red" },
+    ]);
+    expect(html).toBe("<strong>big</strong><strong> </strong><em><strong>&#60;news&#62;</strong></em><em> today</em>");
+    const hidden = formatted("answer:\nforty two!", [
+      { type: "spoiler", offset: 8, length: 9 },
+      { type: "bold", offset: 14, length: 4 },
+    ]);
+    expect(hidden).toBe("answer:<br>••••<strong>!</strong>");
   });
 });

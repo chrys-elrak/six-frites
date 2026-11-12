@@ -8,7 +8,7 @@ import { Text } from "./text";
 import { KeyboardAvoidingView } from "react-native-keyboard-controller";
 import { closeChat, deleteMessages, updateChatSettings } from "@/lib/actions";
 import { useArchiveShut } from "@/lib/archive-lock";
-import { isBotChat, isFrozen, useChat, useMessages } from "@/lib/chats";
+import { isAppChat, isBotChat, isFrozen, isNewsChat, useChat, useMessages } from "@/lib/chats";
 import { useT } from "@/lib/i18n";
 import { clearChatNotifications } from "@/lib/push";
 import { setActiveChat, useRealtime } from "@/lib/realtime";
@@ -137,7 +137,7 @@ function OpenConversation({ chatId }: { chatId: string }) {
   const dismissKeyChange = useKeyChanges((s) => s.dismiss);
   const peerId = chat.data?.group ? undefined : chat.data?.members.find((m) => m.user.id !== meId)?.user.id;
   const frozen = !!chat.data && isFrozen(chat.data);
-  const hidePresence = frozen || !!chat.data?.withSupport || !!chat.data?.group || (!!chat.data && isBotChat(chat.data));
+  const hidePresence = frozen || !!chat.data?.withSupport || !!chat.data?.group || (!!chat.data && isAppChat(chat.data));
   useWatchPresence(peerId && !hidePresence ? [peerId] : []);
   const presence = usePresence(hidePresence ? undefined : peerId);
   const theme = chatTheme(chat.data?.theme);
@@ -217,7 +217,7 @@ function OpenConversation({ chatId }: { chatId: string }) {
 
   const c = chat.data;
   const peer = chatFace(c, meId);
-  const app = c.withSupport || isBotChat(c);
+  const app = c.withSupport || isAppChat(c);
   const noContact = app || c.supportDesk;
   const count = selecting ? selectedIds.length : 0;
   const pins = c.pinnedMessages;
@@ -364,7 +364,7 @@ function OpenConversation({ chatId }: { chatId: string }) {
           </Text>
         )}
         {!selecting &&
-          (frozen || readOnlyGroup(c) ? (
+          (frozen || readOnlyGroup(c) || isNewsChat(c) ? (
             <ChatBlocked chat={c} peerId={peer.id} peerName={peer.displayName} />
           ) : isBotChat(c) ? (
             <BotGames />

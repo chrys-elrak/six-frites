@@ -5,6 +5,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { Ban, Megaphone, UserX } from "lucide-react";
 import { useState } from "react";
 import { setBlocked } from "@/lib/actions";
+import { isNewsChat } from "@/lib/chats";
 import { useT } from "@/lib/i18n";
 
 /** Takes the composer's place when nobody can write in this chat, saying why. */
@@ -19,14 +20,17 @@ export function ChatBlocked({ chat, peerId, peerName }: { chat: ChatDTO; peerId:
     setBusy(false);
   }
 
-  const Icon = chat.group ? Megaphone : chat.peerDeleted ? UserX : Ban;
-  const text = chat.group
-    ? tr.groups.adminsOnly
-    : chat.peerDeleted
-      ? tr.chat.peerDeleted
-      : chat.blockedByMe
-        ? tr.chat.youBlocked(peerName)
-        : tr.chat.blockedYou(peerName);
+  const news = isNewsChat(chat);
+  const Icon = chat.group || news ? Megaphone : chat.peerDeleted ? UserX : Ban;
+  const text = news
+    ? tr.chat.onlySixFrites
+    : chat.group
+      ? tr.groups.adminsOnly
+      : chat.peerDeleted
+        ? tr.chat.peerDeleted
+        : chat.blockedByMe
+          ? tr.chat.youBlocked(peerName)
+          : tr.chat.blockedYou(peerName);
 
   return (
     <div className="flex items-center gap-3 border-t border-black/5 bg-stone-50/45 px-4 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] backdrop-blur-xl backdrop-saturate-150 dark:border-white/10 dark:bg-stone-950/40">

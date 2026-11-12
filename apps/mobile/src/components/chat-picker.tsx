@@ -2,7 +2,7 @@ import type { ChatDTO } from "@six/shared";
 import { X } from "lucide-react-native";
 import { FlatList, Pressable, StyleSheet, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { isFrozen, useChats } from "@/lib/chats";
+import { isAppChat, isFrozen, useChats } from "@/lib/chats";
 import { useT } from "@/lib/i18n";
 import { useSession } from "@/lib/session";
 import { useTheme } from "@/lib/theme";
@@ -35,6 +35,7 @@ export function ChatPicker({
   const chats = (useChats().data ?? []).filter(
     (c) =>
       !isFrozen(c) &&
+      !isAppChat(c) &&
       c.members.some((m) => m.user.id !== meId) &&
       !(noSupport && (c.support || c.supportDesk || c.withSupport)),
   );

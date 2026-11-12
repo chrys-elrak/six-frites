@@ -111,7 +111,7 @@ import {
   updateChatSettings,
 } from "@/lib/actions";
 import { useLatest } from "@/lib/latest";
-import { isBotChat, isFrozen, loadUntil, useMessages } from "@/lib/chats";
+import { isAppChat, isBotChat, isFrozen, loadUntil, useMessages } from "@/lib/chats";
 import { revealNow, useHydratedMessages } from "@/lib/e2ee";
 import { RestoreBackupDialog, useHasRecoveryKey } from "./encryption-settings";
 import { useComposerMode } from "@/lib/composer";
@@ -902,7 +902,7 @@ function Bubble({
   /** Safe view is on: their photos and videos stay blurred until tapped. */
   safe: boolean;
   frozen: boolean;
-  /** In the chat with Six Frites Game: just the games, no menu, reactions or replies. */
+  /** In a chat with Six Frites Game or Six Frites News: just the games or news, no menu, reactions or replies. */
   gamesOnly?: boolean;
   autoPlay: boolean;
   onVoiceStop: (finished: boolean) => void;
@@ -1805,7 +1805,7 @@ export const MessageList = forwardRef<
                   }}
                   safe={chat.safeView}
                   frozen={frozen}
-                  gamesOnly={isBotChat(chat)}
+                  gamesOnly={isAppChat(chat)}
                   autoPlay={autoplay === row.key}
                   onVoiceStop={(finished) =>
                     finished ? playNext(row.key) : setAutoplay((k) => (k === row.key ? null : k))
