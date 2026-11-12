@@ -2,8 +2,15 @@ import type { ConfigContext, ExpoConfig } from "expo/config";
 
 const iosUrlScheme = process.env.GOOGLE_IOS_URL_SCHEME;
 const googleServicesFile = process.env.GOOGLE_SERVICES_FILE;
+const iosGoogleServicesFile = process.env.GOOGLE_SERVICES_FILE_IOS;
 const playStore = process.env.PLAY_STORE === "1";
 const googleMapsKey = process.env.GOOGLE_MAPS_PUBLIC_KEY;
+
+/**
+ * Google Sign-In's Swift pods only link statically with modular headers on these. The sign-in plugin adds them itself,
+ * but it only runs once GOOGLE_IOS_URL_SCHEME is set, so the iOS build needs them from here until then.
+ */
+const googleSignInPods = ["AppCheckCore", "GoogleUtilities", "RecaptchaInterop"].map((name) => ({ name, modular_headers: true }));
 
 export default ({ config }: ConfigContext): ExpoConfig => ({
   ...config,
@@ -17,6 +24,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   backgroundColor: "#fafaf9",
   ios: {
     bundleIdentifier: "com.sixfrites.app",
+    ...(iosGoogleServicesFile && { googleServicesFile: iosGoogleServicesFile }),
     supportsTablet: true,
   },
   android: {
@@ -98,7 +106,13 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
         },
       },
     ],
-    ["expo-build-properties", { android: { minSdkVersion: 26, buildArchs: ["armeabi-v7a", "arm64-v8a"], useLegacyPackaging: true, extraProguardRules: "-keep class org.webrtc.** { *; }\n-dontwarn org.webrtc.**" } }],
+    [
+      "expo-build-properties",
+      {
+        android: { minSdkVersion: 26, buildArchs: ["armeabi-v7a", "arm64-v8a"], useLegacyPackaging: true, extraProguardRules: "-keep class org.webrtc.** { *; }\n-dontwarn org.webrtc.**" },
+        ...(!iosUrlScheme && { ios: { extraPods: googleSignInPods } }),
+      },
+    ],
     ...(iosUrlScheme ? [["react-native-nitro-google-signin", { iosUrlScheme }] as [string, object]] : []),
     ...(googleMapsKey ? [["react-native-maps", { androidGoogleMapsApiKey: googleMapsKey }] as [string, object]] : []),
   ],

@@ -43,3 +43,4 @@ yarn-error.*
 
 # Firebase config, also holds other apps in the same project
 google-services.json
+GoogleService-Info.plist
