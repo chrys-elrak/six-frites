@@ -1453,6 +1453,10 @@
                             },
                             "description": "How they have signed in so far"
                           },
+                          "askCode": {
+                            "type": "string",
+                            "description": "Their anonymous link code, as it is now; for the URL, see askUrl"
+                          },
                           "banReason": {
                             "nullable": true,
                             "type": "string"
@@ -1632,6 +1636,7 @@
                           "bannedUntil",
                           "banScope",
                           "providers",
+                          "askCode",
                           "banReason",
                           "admin",
                           "createdAt",
@@ -1750,6 +1755,10 @@
                         ]
                       },
                       "description": "How they have signed in so far"
+                    },
+                    "askCode": {
+                      "type": "string",
+                      "description": "Their anonymous link code, as it is now; for the URL, see askUrl"
                     },
                     "banReason": {
                       "nullable": true,
@@ -1930,6 +1939,7 @@
                     "bannedUntil",
                     "banScope",
                     "providers",
+                    "askCode",
                     "banReason",
                     "admin",
                     "createdAt",
@@ -2072,6 +2082,10 @@
                       },
                       "description": "How they have signed in so far"
                     },
+                    "askCode": {
+                      "type": "string",
+                      "description": "Their anonymous link code, as it is now; for the URL, see askUrl"
+                    },
                     "banReason": {
                       "nullable": true,
                       "type": "string"
@@ -2251,6 +2265,7 @@
                     "bannedUntil",
                     "banScope",
                     "providers",
+                    "askCode",
                     "banReason",
                     "admin",
                     "createdAt",
@@ -2358,6 +2373,10 @@
                       },
                       "description": "How they have signed in so far"
                     },
+                    "askCode": {
+                      "type": "string",
+                      "description": "Their anonymous link code, as it is now; for the URL, see askUrl"
+                    },
                     "banReason": {
                       "nullable": true,
                       "type": "string"
@@ -2537,6 +2556,7 @@
                     "bannedUntil",
                     "banScope",
                     "providers",
+                    "askCode",
                     "banReason",
                     "admin",
                     "createdAt",
@@ -2665,6 +2685,10 @@
                       },
                       "description": "How they have signed in so far"
                     },
+                    "askCode": {
+                      "type": "string",
+                      "description": "Their anonymous link code, as it is now; for the URL, see askUrl"
+                    },
                     "banReason": {
                       "nullable": true,
                       "type": "string"
@@ -2844,6 +2868,7 @@
                     "bannedUntil",
                     "banScope",
                     "providers",
+                    "askCode",
                     "banReason",
                     "admin",
                     "createdAt",
@@ -2974,6 +2999,10 @@
                       },
                       "description": "How they have signed in so far"
                     },
+                    "askCode": {
+                      "type": "string",
+                      "description": "Their anonymous link code, as it is now; for the URL, see askUrl"
+                    },
                     "banReason": {
                       "nullable": true,
                       "type": "string"
@@ -3153,6 +3182,7 @@
                     "bannedUntil",
                     "banScope",
                     "providers",
+                    "askCode",
                     "banReason",
                     "admin",
                     "createdAt",
@@ -3423,6 +3453,10 @@
                       },
                       "description": "How they have signed in so far"
                     },
+                    "askCode": {
+                      "type": "string",
+                      "description": "Their anonymous link code, as it is now; for the URL, see askUrl"
+                    },
                     "banReason": {
                       "nullable": true,
                       "type": "string"
@@ -3602,6 +3636,7 @@
                     "bannedUntil",
                     "banScope",
                     "providers",
+                    "askCode",
                     "banReason",
                     "admin",
                     "createdAt",
@@ -3710,6 +3745,10 @@
                       },
                       "description": "How they have signed in so far"
                     },
+                    "askCode": {
+                      "type": "string",
+                      "description": "Their anonymous link code, as it is now; for the URL, see askUrl"
+                    },
                     "banReason": {
                       "nullable": true,
                       "type": "string"
@@ -3889,6 +3928,7 @@
                     "bannedUntil",
                     "banScope",
                     "providers",
+                    "askCode",
                     "banReason",
                     "admin",
                     "createdAt",
@@ -4186,6 +4226,10 @@
                       },
                       "description": "How they have signed in so far"
                     },
+                    "askCode": {
+                      "type": "string",
+                      "description": "Their anonymous link code, as it is now; for the URL, see askUrl"
+                    },
                     "banReason": {
                       "nullable": true,
                       "type": "string"
@@ -4365,6 +4409,7 @@
                     "bannedUntil",
                     "banScope",
                     "providers",
+                    "askCode",
                     "banReason",
                     "admin",
                     "createdAt",

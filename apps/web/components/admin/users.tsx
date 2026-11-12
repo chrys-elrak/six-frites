@@ -1,7 +1,7 @@
 "use client";
 
 import { unwrap } from "@six/sdk";
-import type { AdminUserDTO, BanScope } from "@six/shared";
+import { type AdminUserDTO, type BanScope, askUrl } from "@six/shared";
 import { useInfiniteQuery, useQueryClient } from "@tanstack/react-query";
 import { MoreHorizontal, Search } from "lucide-react";
 import { useEffect, useState } from "react";
@@ -382,6 +382,15 @@ function UserRow({ u, checked, onCheck }: { u: AdminUserDTO; checked: boolean; o
             )}
             <span aria-hidden>·</span>
             <span>Joined {timeAgo(u.createdAt)}</span>
+            <span aria-hidden>·</span>
+            <a
+              href={askUrl(window.location.origin, u.askCode)}
+              target="_blank"
+              rel="noreferrer"
+              className="font-medium text-brand hover:underline"
+            >
+              Anonymous link
+            </a>
           </p>
         </div>
         {!u.admin && (

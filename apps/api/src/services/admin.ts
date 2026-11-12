@@ -85,6 +85,7 @@ function toAdminUser(
   return {
     ...toUserRef(u),
     providers: u.providers.filter((p): p is SignInProvider => (SIGN_IN_PROVIDERS as readonly string[]).includes(p)),
+    askCode: u.askCode,
     banReason: u.banReason,
     admin: isAdmin(u),
     createdAt: u.createdAt.toISOString(),

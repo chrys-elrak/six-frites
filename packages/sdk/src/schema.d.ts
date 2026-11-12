@@ -777,6 +777,8 @@ export interface paths {
                                 banScope: "full" | "chat";
                                 /** @description How they have signed in so far */
                                 providers: ("google" | "facebook" | "apple")[];
+                                /** @description Their anonymous link code, as it is now; for the URL, see askUrl */
+                                askCode: string;
                                 banReason: string | null;
                                 admin: boolean;
                                 /** Format: date-time */
@@ -891,6 +893,8 @@ export interface paths {
                             banScope: "full" | "chat";
                             /** @description How they have signed in so far */
                             providers: ("google" | "facebook" | "apple")[];
+                            /** @description Their anonymous link code, as it is now; for the URL, see askUrl */
+                            askCode: string;
                             banReason: string | null;
                             admin: boolean;
                             /** Format: date-time */
@@ -1021,6 +1025,8 @@ export interface paths {
                             banScope: "full" | "chat";
                             /** @description How they have signed in so far */
                             providers: ("google" | "facebook" | "apple")[];
+                            /** @description Their anonymous link code, as it is now; for the URL, see askUrl */
+                            askCode: string;
                             banReason: string | null;
                             admin: boolean;
                             /** Format: date-time */
@@ -1133,6 +1139,8 @@ export interface paths {
                             banScope: "full" | "chat";
                             /** @description How they have signed in so far */
                             providers: ("google" | "facebook" | "apple")[];
+                            /** @description Their anonymous link code, as it is now; for the URL, see askUrl */
+                            askCode: string;
                             banReason: string | null;
                             admin: boolean;
                             /** Format: date-time */
@@ -1254,6 +1262,8 @@ export interface paths {
                             banScope: "full" | "chat";
                             /** @description How they have signed in so far */
                             providers: ("google" | "facebook" | "apple")[];
+                            /** @description Their anonymous link code, as it is now; for the URL, see askUrl */
+                            askCode: string;
                             banReason: string | null;
                             admin: boolean;
                             /** Format: date-time */
@@ -1376,6 +1386,8 @@ export interface paths {
                             banScope: "full" | "chat";
                             /** @description How they have signed in so far */
                             providers: ("google" | "facebook" | "apple")[];
+                            /** @description Their anonymous link code, as it is now; for the URL, see askUrl */
+                            askCode: string;
                             banReason: string | null;
                             admin: boolean;
                             /** Format: date-time */
@@ -1560,6 +1572,8 @@ export interface paths {
                             banScope: "full" | "chat";
                             /** @description How they have signed in so far */
                             providers: ("google" | "facebook" | "apple")[];
+                            /** @description Their anonymous link code, as it is now; for the URL, see askUrl */
+                            askCode: string;
                             banReason: string | null;
                             admin: boolean;
                             /** Format: date-time */
@@ -1675,6 +1689,8 @@ export interface paths {
                             banScope: "full" | "chat";
                             /** @description How they have signed in so far */
                             providers: ("google" | "facebook" | "apple")[];
+                            /** @description Their anonymous link code, as it is now; for the URL, see askUrl */
+                            askCode: string;
                             banReason: string | null;
                             admin: boolean;
                             /** Format: date-time */
@@ -1895,6 +1911,8 @@ export interface paths {
                             banScope: "full" | "chat";
                             /** @description How they have signed in so far */
                             providers: ("google" | "facebook" | "apple")[];
+                            /** @description Their anonymous link code, as it is now; for the URL, see askUrl */
+                            askCode: string;
                             banReason: string | null;
                             admin: boolean;
                             /** Format: date-time */

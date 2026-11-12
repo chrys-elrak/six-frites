@@ -78,6 +78,7 @@ export type SignInProvider = (typeof SIGN_IN_PROVIDERS)[number];
 
 export const AdminUserDTO = AdminUserRef.extend({
   providers: z.array(z.enum(SIGN_IN_PROVIDERS)).describe("How they have signed in so far"),
+  askCode: z.string().describe("Their anonymous link code, as it is now; for the URL, see askUrl"),
   banReason: z.string().nullable(),
   admin: z.boolean(),
   createdAt: IsoDate,
