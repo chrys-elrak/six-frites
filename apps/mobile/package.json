@@ -16,6 +16,7 @@
     "ios": "expo run:ios",
     "typecheck": "tsc --noEmit",
     "build:android": "./scripts/build-android-release.sh",
+    "build:ios": "./scripts/build-ios-release.sh",
     "build:android:play": "./scripts/build-android-play.sh",
     "publish:android": "./scripts/publish-android-release.sh",
     "lint": "expo lint"
