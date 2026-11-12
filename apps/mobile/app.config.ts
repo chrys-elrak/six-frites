@@ -18,7 +18,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   slug: "six-frites",
   scheme: "sixfrites",
   version: "1.5.1",
-  orientation: "portrait",
+  orientation: "default",
   icon: "./assets/icon.png",
   userInterfaceStyle: "automatic",
   backgroundColor: "#fafaf9",

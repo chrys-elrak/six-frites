@@ -50,7 +50,7 @@ import {
   Video,
 } from "lucide-react-native";
 import { useCallback, useEffect, useEffectEvent, useState } from "react";
-import { Alert, FlatList, Pressable, RefreshControl, StyleSheet, View } from "react-native";
+import { Alert, FlatList, Pressable, RefreshControl, StyleSheet, useWindowDimensions, View } from "react-native";
 import { GestureDetector } from "react-native-gesture-handler";
 import Animated from "react-native-reanimated";
 import { removeContact, updateChatSettings } from "@/lib/actions";
@@ -365,7 +365,7 @@ const contactsQuery = {
  * Everyone I share a direct chat with, A to Z, by last active or by newest, even the chats I deleted for me, and
  * opens our chat. Below them, my contact codes and invite links, for adding more.
  */
-function ContactList({ needle, query }: { needle: string; query: string }) {
+function ContactList({ needle, query, top }: { needle: string; query: string; top: React.ReactNode }) {
   const t = useTheme();
   const tr = useT();
   const [sort, setSort] = useState<ContactSort>("active");
@@ -389,21 +389,24 @@ function ContactList({ needle, query }: { needle: string; query: string }) {
     <FlatList
       data={shown}
       ListHeaderComponent={
-        shown.length > 1 ? (
-          <View accessibilityRole="radiogroup" accessibilityLabel={tr.contacts.sortBy} style={[styles.filters, styles.sortRow]}>
-            {CONTACT_SORTS.map((s) => (
-              <Pressable
-                key={s}
-                onPress={() => pickSort(s)}
-                accessibilityRole="radio"
-                accessibilityState={{ checked: sort === s }}
-                style={[styles.filter, { backgroundColor: sort === s ? brand : t.chip }]}
-              >
-                <Text style={{ color: sort === s ? brandInk : t.textSoft, fontSize: 14, fontWeight: "600" }}>{tr.contacts.sorts[s]}</Text>
-              </Pressable>
-            ))}
-          </View>
-        ) : undefined
+        <>
+          {top}
+          {shown.length > 1 && (
+            <View accessibilityRole="radiogroup" accessibilityLabel={tr.contacts.sortBy} style={[styles.filters, styles.sortRow]}>
+              {CONTACT_SORTS.map((s) => (
+                <Pressable
+                  key={s}
+                  onPress={() => pickSort(s)}
+                  accessibilityRole="radio"
+                  accessibilityState={{ checked: sort === s }}
+                  style={[styles.filter, { backgroundColor: sort === s ? brand : t.chip }]}
+                >
+                  <Text style={{ color: sort === s ? brandInk : t.textSoft, fontSize: 14, fontWeight: "600" }}>{tr.contacts.sorts[s]}</Text>
+                </Pressable>
+              ))}
+            </View>
+          )}
+        </>
       }
       keyExtractor={(c) => c.user.id}
       keyboardShouldPersistTaps="handled"
@@ -528,8 +531,11 @@ export function ChatList({ archived = false, contacts = false }: { archived?: bo
     </View>
   );
 
+  const { width, height } = useWindowDimensions();
+  const scrollTools = width > height;
   const header = (
     <>
+      {scrollTools && tools}
       {!archived && <UpdateBanner />}
       {!archived && <BackupPinBanner />}
       {!archived && (lonely ? <InviteNudge onInvite={() => setDialog("invite")} /> : <TipCard />)}
@@ -575,9 +581,9 @@ export function ChatList({ archived = false, contacts = false }: { archived?: bo
           <IconButton Icon={UserPlus} color={brand} label={tr.contacts.addContact} onPress={() => setDialog("add")} />
         </BrandBar>
       )}
-      {tools}
+      {!scrollTools && tools}
       {view === "contacts" ? (
-        <ContactList needle={needle} query={query.trim()} />
+        <ContactList needle={needle} query={query.trim()} top={scrollTools ? tools : null} />
       ) : (
         <FlatList
           data={shown}
