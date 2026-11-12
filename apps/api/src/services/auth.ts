@@ -13,7 +13,7 @@ import {
 } from "@six/shared";
 import { env } from "../env.js";
 import type { User } from "../generated/prisma/client.js";
-import { type Tx, withEvents } from "../lib/events.js";
+import { type Emit, type Tx, withEvents } from "../lib/events.js";
 import { type FirebaseIdentity, type FirebaseVerifier, verifyFirebaseIdToken } from "../lib/firebase.js";
 import { type GoogleVerifier, verifyGoogleIdToken } from "../lib/google.js";
 import { prisma } from "../lib/prisma.js";
@@ -87,18 +87,24 @@ export async function loginWithFirebase(
  * only by its Firebase account: Firebase hands that account to whoever later signs in with Google or Apple on the
  * same address, and a Facebook token from before then still checks out for an hour. When Google or Apple vouch for
  * the address of an account only Facebook has, they take it over the way Firebase does, and everyone else is signed
- * out of it: whoever opened it may have been a stranger sitting on the real owner's address.
+ * out of it, pending device links included: whoever opened it may have been a stranger sitting on the real owner's
+ * address. The row stays locked meanwhile, so a sign-in racing the takeover either lands before it and is signed out,
+ * or after it and is refused.
  */
-async function findAccount(tx: Tx, { uid, googleSub, providers, email, emailVerified }: Identity) {
+async function findAccount(tx: Tx, emit: Emit, { uid, googleSub, providers, email, emailVerified }: Identity) {
   const known =
     (uid && (await tx.user.findUnique({ where: { firebaseUid: uid } }))) ||
     (emailVerified && googleSub && (await tx.user.findUnique({ where: { googleSub } })));
-  const user = known || (await tx.user.findUnique({ where: { email } }));
-  if (!user) return null;
+  const found = known || (await tx.user.findUnique({ where: { email } }));
+  if (!found) return null;
+  await tx.$executeRaw`SELECT 1 FROM "User" WHERE id = ${found.id} FOR UPDATE`;
+  const user = await tx.user.findUniqueOrThrow({ where: { id: found.id } });
   const unclaimed = facebookOnly(user.providers);
   if (emailVerified && unclaimed && !facebookOnly(providers)) {
     const others = await tx.session.findMany({ where: { userId: user.id, revokedAt: null }, select: { id: true } });
-    await Promise.all(others.map((s) => revokeSession(s.id)));
+    await tx.session.updateMany({ where: { id: { in: others.map((s) => s.id) } }, data: { revokedAt: new Date() } });
+    await tx.deviceLink.deleteMany({ where: { userId: user.id } });
+    emit.after(() => void Promise.all(others.map((s) => revokeSession(s.id))).catch(() => null));
     return tx.user.update({ where: { id: user.id }, data: { firebaseUid: uid, googleSub, providers } });
   }
   if (!emailVerified && !(known && unclaimed && facebookOnly(providers))) {
@@ -125,7 +131,7 @@ type Identity = FirebaseIdentity | (Omit<FirebaseIdentity, "uid"> & { uid: null 
  */
 async function signIn(identity: Identity, input: GoogleLoginInput): Promise<IssuedAuth> {
   const signedIn = await withEvents(async (tx, emit) => {
-    const existing = await findAccount(tx, identity);
+    const existing = await findAccount(tx, emit, identity);
     if (!existing && !identity.emailVerified && (!facebookOnly(identity.providers) || isAdminEmail(identity.email))) {
       throw new AppError("EMAIL_REQUIRED", "This account's email isn't verified");
     }

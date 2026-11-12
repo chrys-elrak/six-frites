@@ -70,18 +70,22 @@ describe("signing in through Firebase", () => {
     expect(admin.json().error.code).toMatch(/^EMAIL_(REQUIRED|TAKEN)$/);
   });
 
-  it("hands an account opened with Facebook alone to whoever Google vouches for, signing everyone else out of it", async () => {
+  it("hands an account opened with Facebook alone to whoever Google vouches for, signing everyone else out of it and dropping its device links", async () => {
     const sub = unique("owner");
     const email = `${sub}@example.com`;
     const uid = unique("fb-squatter");
     const squatter = await viaFirebase({ uid, providers: ["facebook"], email, emailVerified: false }, { guest: true });
     expect(squatter.statusCode, squatter.body).toBe(200);
     const id = squatter.json().user.id;
+    const link = await prisma.deviceLink.create({
+      data: { secretHash: "x", platform: "web", userId: id, expiresAt: new Date(Date.now() + 60_000) },
+    });
 
     const owner = await loginAs(ctx.app, sub);
     expect(owner.json().user.id).toBe(id);
     expect(await prisma.user.findUniqueOrThrow({ where: { id } })).toMatchObject({ googleSub: sub, firebaseUid: null, providers: ["google"] });
     expect(await prisma.session.count({ where: { userId: id, revokedAt: null } })).toBe(1);
+    expect(await prisma.deviceLink.findUnique({ where: { id: link.id } })).toBeNull();
     expect((await viaFirebase({ uid, providers: ["facebook"], email, emailVerified: false })).json().error.code).toBe("EMAIL_TAKEN");
   });
 
