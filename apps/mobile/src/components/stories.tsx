@@ -319,8 +319,8 @@ export function StoryAvatar({ userId, name, children }: { userId: string; name: 
   return (
     <>
       <Pressable onPress={() => setOpen(true)} accessibilityRole="button" accessibilityLabel={tr.stories.open(name)} hitSlop={4}>
-        {children}
         <View pointerEvents="none" style={[styles.storyRing, { borderColor: unseen ? brand : t.dark ? stone[600] : stone[300] }]} />
+        {children}
       </Pressable>
       {open && <StoryViewer groups={groups} start={at} onClose={() => setOpen(false)} />}
     </>

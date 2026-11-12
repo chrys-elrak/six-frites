@@ -51,7 +51,7 @@ export function ChatMenu({
   onSharedMedia?: (tab: "search" | "media") => void;
   /**
    * Opened from inside the chat: the menu holds search, media, mute, blur, auto-delete and the background, and leaves
-   * pinning, archiving, blocking and deleting to the chat list's menu.
+   * blocking and deleting to the chat list's menu. Pinning and archiving are a swipe on the chat's row.
    */
   inChat?: boolean;
   /** Opens straight on a sub-menu, like the auto-delete or background choices from the header's icons. */
@@ -226,8 +226,6 @@ export function ChatMenu({
         title={chat.title}
         onClose={onClose}
         actions={[
-          { label: chat.pinned ? tr.chat.unpin : tr.chat.pin, onSelect: () => settings({ pinned: !chat.pinned }) },
-          { label: chat.archived ? tr.chat.unarchive : tr.chat.archive, onSelect: () => settings({ archived: !chat.archived }) },
           { label: tr.chat.deleteChat, destructive: true, onSelect: () => void remove("me") },
         ]}
       />
@@ -276,9 +274,7 @@ export function ChatMenu({
               ...closeSupport,
             ]
           : [
-              { label: chat.pinned ? tr.chat.unpin : tr.chat.pin, onSelect: () => settings({ pinned: !chat.pinned }) },
               ...(isFrozen(chat) ? [] : [mute]),
-              { label: chat.archived ? tr.chat.unarchive : tr.chat.archive, onSelect: () => settings({ archived: !chat.archived }) },
               ...closeSupport,
               ...(chat.withSupport
                 ? []
