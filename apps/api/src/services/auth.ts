@@ -80,12 +80,15 @@ export async function loginWithFirebase(
 
 /**
  * Finds who signed in by their Firebase account, then their Google account (so everyone who joined before
- * Firebase keeps theirs), then their email when the provider vouches for it. Notes the accounts it didn't know yet.
+ * Firebase keeps theirs), then their email, all only when the provider vouches for the email: a Firebase account
+ * sitting on an address nobody verified may be a stranger's, even once the real owner has signed in to it. Notes
+ * the accounts it didn't know yet.
  */
 async function findAccount(tx: Tx, { uid, googleSub, providers, email, emailVerified }: Identity) {
   const known =
-    (uid && (await tx.user.findUnique({ where: { firebaseUid: uid } }))) ||
-    (googleSub && (await tx.user.findUnique({ where: { googleSub } })));
+    emailVerified &&
+    ((uid && (await tx.user.findUnique({ where: { firebaseUid: uid } }))) ||
+      (googleSub && (await tx.user.findUnique({ where: { googleSub } }))));
   const user = known || (await tx.user.findUnique({ where: { email } }));
   if (!user) return null;
   if (!known && !emailVerified) {
@@ -105,9 +108,17 @@ async function findAccount(tx: Tx, { uid, googleSub, providers, email, emailVeri
 
 type Identity = FirebaseIdentity | (Omit<FirebaseIdentity, "uid"> & { uid: null });
 
+/**
+ * A new account only opens on an email its provider verified. Otherwise a stranger could open one on someone
+ * else's address and still be signed in to it once the real owner joins, or claim an admin's address.
+ *
+ * ponytail: the refusal reuses EMAIL_REQUIRED, whose wording is about a missing email. Facebook emails come
+ * unverified, so give this its own message, and Facebook sign-up its own design, before switching Facebook on.
+ */
 async function signIn(identity: Identity, input: GoogleLoginInput): Promise<IssuedAuth> {
   const signedIn = await withEvents(async (tx, emit) => {
     const existing = await findAccount(tx, identity);
+    if (!existing && !identity.emailVerified) throw new AppError("EMAIL_REQUIRED", "This account's email isn't verified");
     if (existing) checkBan(existing);
     await checkDeviceBan(tx, input.device.id, identity.email);
     const guest = existing

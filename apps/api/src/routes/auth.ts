@@ -48,7 +48,7 @@ const authRoutes: FastifyPluginAsyncZod = async (app) => {
         tags: ["auth"],
         summary: "Sign in with a Firebase ID token: Google, Apple or Facebook",
         description:
-          "Like /google. Someone who joined with Google keeps their account. EMAIL_TAKEN when the email has an account and the provider didn't verify it; EMAIL_REQUIRED when it has no email.",
+          "Like /google. Someone who joined with Google keeps their account. EMAIL_TAKEN when the email has an account and the provider didn't verify it; EMAIL_REQUIRED when it has no email, or when the provider didn't verify it and it has no account yet.",
         body: FirebaseLoginInput,
         response: { 200: AuthResult },
       },

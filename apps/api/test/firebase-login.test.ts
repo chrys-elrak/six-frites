@@ -1,4 +1,5 @@
-import { describe, expect, it } from "vitest";
+import { SignJWT, exportJWK, generateKeyPair } from "jose";
+import { describe, expect, it, vi } from "vitest";
 import { loginAs, prisma, useApp } from "./helpers.js";
 
 const ctx = useApp();
@@ -49,6 +50,31 @@ describe("signing in through Firebase", () => {
     expect((await prisma.user.findUniqueOrThrow({ where: { firebaseUid: uid } })).googleSub).toBeNull();
   });
 
+  it("opens no account on an email the provider didn't verify, so nobody can sit on someone else's address", async () => {
+    const email = `${unique("squatted")}@example.com`;
+    const res = await viaFirebase({ uid: unique("stranger"), email, emailVerified: false }, { guest: true });
+    expect(res.json().error.code).toBe("EMAIL_REQUIRED");
+    expect(await prisma.user.findUnique({ where: { email } })).toBeNull();
+
+    const admin = await viaFirebase({ uid: unique("stranger"), email: "the-admin@example.com", emailVerified: false });
+    expect(admin.json().error.code).toMatch(/^EMAIL_(REQUIRED|TAKEN)$/);
+  });
+
+  it("doesn't let an unverified Firebase account into any account, its own Google one or one it already holds", async () => {
+    const sub = unique("stranger");
+    const own = (await loginAs(ctx.app, sub)).json();
+    const squatted = unique("squatted-uid");
+    const email = `${unique("victim")}@example.com`;
+    const bound = await viaFirebase({ uid: squatted, googleSub: sub, providers: ["google"], email, emailVerified: false });
+    expect(bound.json().error.code).toBe("EMAIL_REQUIRED");
+    expect((await prisma.user.findUniqueOrThrow({ where: { id: own.user.id } })).firebaseUid).toBeNull();
+
+    const uid = unique("owner-uid");
+    const owner = `${unique("owner")}@example.com`;
+    expect((await viaFirebase({ uid, email: owner }, { guest: true })).statusCode).toBe(200);
+    expect((await viaFirebase({ uid, email: owner, emailVerified: false })).json().error.code).toBe("EMAIL_TAKEN");
+  });
+
   it("rejects a bad token", async () => {
     const res = await ctx.app.inject({
       method: "POST",
@@ -74,5 +100,31 @@ describe("hidden Apple emails", () => {
     const left = await prisma.user.findMany({ where: { id: { in: [idle, recent, shared] } }, select: { id: true, deletedAt: true } });
     const gone = Object.fromEntries(left.map((u) => [u.id, u.deletedAt !== null]));
     expect(gone).toEqual({ [idle]: true, [recent]: false, [shared]: false });
+  });
+});
+
+describe("the Firebase token check", () => {
+  it("only takes a token from Google, Apple or Facebook, not from another sign-in method of the shared project", async () => {
+    const { publicKey, privateKey } = await generateKeyPair("RS256");
+    const jwk = { ...(await exportJWK(publicKey)), kid: "test", alg: "RS256", use: "sig" };
+    vi.stubGlobal("fetch", async () => Response.json({ keys: [jwk] }));
+    const { verifyFirebaseIdToken } = await vi.importActual<typeof import("../src/lib/firebase.js")>("../src/lib/firebase.js");
+    const token = (provider: string) =>
+      new SignJWT({ email: "Someone@Example.com", email_verified: false, firebase: { sign_in_provider: provider, identities: {} } })
+        .setProtectedHeader({ alg: "RS256", kid: "test" })
+        .setIssuer("https://securetoken.google.com/akondro")
+        .setAudience("akondro")
+        .setSubject("uid")
+        .setExpirationTime("5m")
+        .sign(privateKey);
+
+    try {
+      expect(await verifyFirebaseIdToken(await token("apple.com"))).toMatchObject({ uid: "uid", email: "someone@example.com", emailVerified: false });
+      for (const provider of ["password", "anonymous", "phone", "custom", "github.com"]) {
+        await expect(verifyFirebaseIdToken(await token(provider))).rejects.toMatchObject({ code: "INVALID_LOGIN_TOKEN" });
+      }
+    } finally {
+      vi.unstubAllGlobals();
+    }
   });
 });
