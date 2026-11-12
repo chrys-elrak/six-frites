@@ -13,6 +13,39 @@ export interface Release {
  */
 export const CHANGELOG: Release[] = [
   {
+    version: "1.6.0",
+    date: "2026-11-12",
+    notes: {
+      en: [
+        "Group chats: start one and bring people in with its link. Admins can open a message to comments, and close them whenever they like.",
+        "Notes get a GIF and a colour, your contacts can react to them, and any chat message can go to your story or become your note.",
+        "Share a place: search for it or drop a pin, and your contact gets the map with directions and how far it is.",
+        "New Contacts and Notifications tabs: sort your contacts by name, last active or newest, and catch up on everything that happened.",
+        "Pick a light or dark look in Settings, or follow your phone's.",
+        "News from Six Frites now arrives in its own chat, Six Frites News. You can mute it but not reply there; write to support instead.",
+        "On Android, six-frites.koera.mg links open straight in the app, and an empty chat offers a hello GIF to send with one tap.",
+      ],
+      fr: [
+        "Discussions de groupe : créez-en une et faites entrer les gens avec son lien. Les admins peuvent ouvrir un message aux commentaires, et les fermer quand ils veulent.",
+        "Les notes ont un GIF et une couleur, vos contacts peuvent y réagir, et n'importe quel message peut aller dans votre story ou devenir votre note.",
+        "Partagez un lieu : cherchez-le ou placez une épingle, et votre contact reçoit la carte avec l'itinéraire et la distance.",
+        "Nouveaux onglets Contacts et Notifications : triez vos contacts par nom, dernière activité ou ajout récent, et retrouvez tout ce qui s'est passé.",
+        "Choisissez un thème clair ou sombre dans les Paramètres, ou suivez celui du téléphone.",
+        "Les nouvelles de Six Frites arrivent maintenant dans leur propre discussion, Six Frites News. Vous pouvez la mettre en sourdine, mais pas y répondre : écrivez plutôt au support.",
+        "Sur Android, les liens six-frites.koera.mg s'ouvrent directement dans l'app, et une discussion vide propose un GIF pour dire bonjour en un geste.",
+      ],
+      mg: [
+        "Resaka vondrona: mamorona iray ary ampidiro amin'ny rohiny ny olona. Afaka manokatra hafatra iray ho an'ny fanehoan-kevitra ny admin, ary manakatona azy rehefa tiany.",
+        "Manana GIF sy loko ny fanamarihana, afaka maneho fihetseham-po aminy ny mpifandray aminao, ary afaka alefa ao amin'ny story-nao na ho fanamarihanao ny hafatra rehetra.",
+        "Mizara toerana: tadiavo na tsindrio eo amin'ny sarintany, dia mahazo ny sarintany miaraka amin'ny lalana sy ny halavirany ny mpifandray aminao.",
+        "Tabilao vaovao Mpifandray sy Fampandrenesana: alaharo araka ny anarana, ny fotoana nisy azy farany na ny vao nampiana ny mpifandray aminao, ary jereo izay rehetra nitranga.",
+        "Misafidiana endrika Mazava na Maizina ao amin'ny Fikirana, na araho ny an'ny findainao.",
+        "Tonga ao amin'ny resaka manokana, Six Frites News, ny vaovao avy amin'ny Six Frites. Azonao ampanginina izy fa tsy azo valiana eo; soraty ny support raha te hiresaka aminay.",
+        "Amin'ny Android, misokatra mivantana ao amin'ny app ny rohy six-frites.koera.mg, ary manolotra GIF fiarahabana alefa amin'ny tsindry iray ny resaka mbola tsy misy hafatra.",
+      ],
+    },
+  },
+  {
     version: "1.5.2",
     date: "2026-11-06",
     notes: {

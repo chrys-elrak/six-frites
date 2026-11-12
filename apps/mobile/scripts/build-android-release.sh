@@ -6,6 +6,7 @@ cd "$(dirname "$0")/.."
 
 export EXPO_PUBLIC_API_URL=https://six-frites.koera.mg
 export EXPO_PUBLIC_WEB_URL=https://six-frites.koera.mg
+export EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID=684066038623-kr1jp4al0hcoegsufvcmm1oi3e370op0.apps.googleusercontent.com
 
 CI=1 npx expo prebuild -p android
 (cd android && ./gradlew assembleRelease)

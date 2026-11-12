@@ -19,7 +19,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   name: "Six Frites",
   slug: "six-frites",
   scheme: "sixfrites",
-  version: "1.5.1",
+  version: "1.6.0",
   orientation: "default",
   icon: "./assets/icon.png",
   userInterfaceStyle: "automatic",
@@ -31,7 +31,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   },
   android: {
     package: "com.sixfrites.app",
-    versionCode: 8,
+    versionCode: 9,
     adaptiveIcon: {
       backgroundColor: "#F2711C",
       foregroundImage: "./assets/android-icon-foreground.png",

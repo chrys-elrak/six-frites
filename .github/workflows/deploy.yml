@@ -77,10 +77,18 @@ jobs:
         env:
           KEYSTORE: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
       - if: steps.check.outputs.new
+        name: Firebase config, without which the app gets no push notifications
+        run: |
+          [ -n "$GOOGLE_SERVICES_JSON" ] || { echo "Set the GOOGLE_SERVICES_JSON secret to apps/mobile/google-services.json"; exit 1; }
+          printf '%s' "$GOOGLE_SERVICES_JSON" > apps/mobile/google-services.json
+        env:
+          GOOGLE_SERVICES_JSON: ${{ secrets.GOOGLE_SERVICES_JSON }}
+      - if: steps.check.outputs.new
         run: npm run build:android
         env:
           SIX_KEYSTORE_PASSWORD: ${{ secrets.SIX_KEYSTORE_PASSWORD }}
           GOOGLE_MAPS_PUBLIC_KEY: ${{ secrets.GOOGLE_MAPS_PUBLIC_KEY }}
+          GOOGLE_SERVICES_FILE: ./google-services.json
       - if: steps.check.outputs.new
         run: npm run publish:android
         env:
