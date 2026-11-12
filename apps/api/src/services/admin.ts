@@ -13,6 +13,8 @@ import {
   type CreateStickerPackInput,
   ENCRYPT_MAX_BYTES,
   type PageQuery,
+  SIGN_IN_PROVIDERS,
+  type SignInProvider,
   type UploadKind,
   type UploadStatus,
 } from "@six/shared";
@@ -82,6 +84,7 @@ function toAdminUser(
   const lastActive = u.sessions.map((s) => s.lastUsedAt).sort((a, b) => +b - +a)[0];
   return {
     ...toUserRef(u),
+    providers: u.providers.filter((p): p is SignInProvider => (SIGN_IN_PROVIDERS as readonly string[]).includes(p)),
     banReason: u.banReason,
     admin: isAdminEmail(u.email),
     createdAt: u.createdAt.toISOString(),
