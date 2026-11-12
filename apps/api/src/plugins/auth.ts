@@ -1,7 +1,7 @@
 import type { FastifyRequest } from "fastify";
 import fp from "fastify-plugin";
 import { AppError } from "@six/shared";
-import { env } from "../env.js";
+import { env, isProd } from "../env.js";
 import { prisma } from "../lib/prisma.js";
 import { type AccessClaims, verifyAccessToken } from "../lib/tokens.js";
 import { assertSessionActive, chatBanned } from "../services/sessions.js";
@@ -36,6 +36,7 @@ const ADMIN_2FA_MS = 12 * 60 * 60 * 1000;
 
 /** Where an admin's session stands with their authenticator: none set up yet, a code due, or open. */
 export async function adminTwoFactor(sessionId: string) {
+  if (env.ADMIN_SKIP_2FA === "true" && !isProd) return "ok" as const;
   const session = await prisma.session.findUniqueOrThrow({
     where: { id: sessionId },
     select: { adminVerifiedAt: true, user: { select: { totpSecret: true } } },

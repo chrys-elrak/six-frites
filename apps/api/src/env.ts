@@ -47,6 +47,8 @@ const Env = z.object({
     .string()
     .default("")
     .transform((s) => s.split(",").map((x) => x.trim().toLowerCase()).filter(Boolean)),
+  /** "true" lets admins in without an authenticator code; ignored in production. */
+  ADMIN_SKIP_2FA: z.enum(["true", "false"]).default("false"),
   SMTP_HOST: z.string().optional(),
   SMTP_PORT: z.coerce.number().default(587),
   SMTP_USER: z.string().optional(),
