@@ -1,5 +1,5 @@
 import { type UploadOptions, unwrap } from "@six/sdk";
-import type { CreateStoryInput, SetNoteInput } from "@six/shared";
+import type { CreateStoryInput } from "@six/shared";
 import type { QueryClient } from "@tanstack/react-query";
 import * as Notifications from "expo-notifications";
 import { create } from "zustand";
@@ -7,14 +7,13 @@ import { getT } from "./i18n";
 import { six } from "./six";
 
 interface StoryPost {
-  kind: "story" | "note";
   state: "posting" | "done" | "failed" | null;
   progress: number;
   retry: (() => void) | null;
 }
 
 /** The story being shared in the background, for the bar that follows it. */
-export const useStoryPost = create<StoryPost>(() => ({ kind: "story", state: null, progress: 0, retry: null }));
+export const useStoryPost = create<StoryPost>(() => ({ state: null, progress: 0, retry: null }));
 
 const ID = "story-post";
 let hide: ReturnType<typeof setTimeout> | undefined;
@@ -39,7 +38,7 @@ export async function postStory(qc: QueryClient, body: CreateStoryInput, file?: 
   const tr = getT();
   const set = useStoryPost.setState;
   clearTimeout(hide);
-  set({ kind: "story", state: "posting", progress: 0, retry: null });
+  set({ state: "posting", progress: 0, retry: null });
   let shown = -1;
   const step = (p: number) => {
     set({ progress: p });
@@ -61,20 +60,5 @@ export async function postStory(qc: QueryClient, body: CreateStoryInput, file?: 
   } catch {
     set({ state: "failed", retry: () => void postStory(qc, body, file) });
     void notify(tr.stories.couldNotPostShort, tr.stories.couldNotPost, "in-app").catch(() => null);
-  }
-}
-
-/** Puts up a chat message as a note right away, following it in the same bar as a story. */
-export async function postNote(qc: QueryClient, body: SetNoteInput) {
-  const set = useStoryPost.setState;
-  clearTimeout(hide);
-  set({ kind: "note", state: "posting", progress: 0, retry: null });
-  try {
-    unwrap(await six.api.PUT("/v1/notes", { body }));
-    void qc.invalidateQueries({ queryKey: ["stories"] });
-    set({ state: "done", progress: 1 });
-    hide = setTimeout(() => set({ state: null }), 3000);
-  } catch {
-    set({ state: "failed", retry: () => void postNote(qc, body) });
   }
 }

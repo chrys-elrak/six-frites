@@ -1,6 +1,7 @@
 import { describe, expect, it, vi } from "vitest";
 import { deleteExpiredStories } from "../src/services/stories.js";
-import { chatHelpers, prisma, useApp } from "./helpers.js";
+import { pairAlias } from "../src/services/users.js";
+import { type Auth, chatHelpers, prisma, useApp } from "./helpers.js";
 
 const ctx = useApp();
 const { signUp, get, call, send, makeFriends } = chatHelpers(ctx);
@@ -297,12 +298,58 @@ describe("stories", () => {
     expect(res.json().error.code).toBe("MESSAGE_NOT_FOUND");
   });
 
-  it("shows who sent a message made into a note", async () => {
+  it("puts a place on a note, even a note that is only a place, for contacts to see", async () => {
+    const { host, guest } = await makeFriends();
+    const location = { lat: -18.9137, lng: 47.5361, name: "Analakely" };
+    expect((await call(host, "PUT", "/v1/notes", { text: "", location })).json()).toMatchObject({ text: "", location });
+    const seen = (await get(guest, "/v1/notes")).items.find((n: { user: { id: string } }) => n.user.id === host.user.id);
+    expect(seen.note.location).toEqual(location);
+    expect((await call(host, "PUT", "/v1/notes", { text: "" })).statusCode).toBe(400);
+  });
+
+  it("tells the sender in the chat when their message is shared to a story or as a note, but not your own", async () => {
+    const { host, guest, chatId } = await makeFriends();
+    const sent = (await send(guest, chatId, "on arrive")).json();
+    const latest = async () => (await get(guest, `/v1/chats/${chatId}/messages`)).items[0];
+    await call(host, "POST", "/v1/stories", { text: "on arrive", fromChat: true, messageId: sent.id });
+    expect(await latest()).toMatchObject({ type: "service", senderId: host.user.id, action: { type: "shared_to", to: "story" } });
+    await call(host, "PUT", "/v1/notes", { text: "on arrive", fromChat: true, messageId: sent.id });
+    expect(await latest()).toMatchObject({ type: "service", senderId: host.user.id, action: { type: "shared_to", to: "note" } });
+
+    const mine = (await send(host, chatId, "mine")).json();
+    await call(host, "POST", "/v1/stories", { text: "mine", fromChat: true, messageId: mine.id });
+    expect((await latest()).id).toBe(mine.id);
+  });
+
+  it("shows the sender of a shared message to each viewer as they would see them, not as the poster does", async () => {
+    const { host, guest, chatId } = await makeFriends();
+    await prisma.chatMember.update({ where: { chatId_userId: { chatId, userId: guest.user.id } }, data: { showProfile: true } });
+    const sent = (await send(guest, chatId, "on arrive")).json();
+    await call(host, "POST", "/v1/stories", { text: "on arrive", fromChat: true, messageId: sent.id });
+    const third = await signUp("third", { inviteCode: (await call(host, "POST", "/v1/invites", {})).json().code });
+
+    const quoteSeenBy = async (who: Auth) =>
+      (await get(who, "/v1/stories")).items.find((g: { user: { id: string } }) => g.user.id === host.user.id).stories[0].quote;
+    expect((await quoteSeenBy(third)).from).toEqual({ id: guest.user.id, displayName: pairAlias(third.user.id, guest.user.id), avatarUrl: null });
+    const real = (await prisma.user.findUniqueOrThrow({ where: { id: guest.user.id } })).displayName;
+    expect((await quoteSeenBy(host)).from.displayName).toBe(real);
+    expect(real).not.toBe(pairAlias(third.user.id, guest.user.id));
+  });
+
+  it("shows who sent a message made into a note, and keeps it when only its colour changes", async () => {
     const { host, guest, chatId } = await makeFriends();
     const sent = (await send(guest, chatId, "see you")).json();
     const note = (await call(host, "PUT", "/v1/notes", { text: "see you", fromChat: true, messageId: sent.id })).json();
     expect(note.quote).toEqual({ from: expect.objectContaining({ id: sent.senderId }), sentAt: sent.createdAt });
+    const recoloured = (await call(host, "PUT", "/v1/notes", { text: "see you", fromChat: true, background: "#e11d48" })).json();
+    expect(recoloured).toMatchObject({ background: "#e11d48", quote: note.quote });
     expect((await call(host, "PUT", "/v1/notes", { text: "changed" })).json().quote).toBeNull();
   });
-});
 
+  it("writes a note in the font picked, and in the app's own for classic", async () => {
+    const { host } = await makeFriends();
+    expect((await call(host, "PUT", "/v1/notes", { text: "bonjour", font: "script" })).json()).toMatchObject({ font: "script" });
+    expect((await call(host, "PUT", "/v1/notes", { text: "bonjour", font: "classic" })).json()).toMatchObject({ font: null });
+    expect((await call(host, "PUT", "/v1/notes", { text: "bonjour", font: "comic" })).statusCode).toBe(400);
+  });
+});

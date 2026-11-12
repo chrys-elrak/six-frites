@@ -87,7 +87,7 @@ async function say(from: App, chatId: string, members: string[], text: string) {
 }
 
 const latest = async (a: App, chatId: string): Promise<MessageDTO> =>
-  (await get(a.auth, `/v1/chats/${chatId}/messages`)).items[0];
+  (await get(a.auth, `/v1/chats/${chatId}/messages`)).items.find((m: MessageDTO) => m.type !== "service");
 
 const textOf = async (a: App, m: MessageDTO) => {
   const opened = await a.e2ee.open(m);
@@ -303,6 +303,11 @@ describe("E2EE client", () => {
     const path = { id: missed.id };
     const ask = async () => unwrap(await tablet.api.POST("/v1/messages/{id}/reseal-request", { params: { path } }));
     expect((await ask()).encryption?.reseal).toEqual({ state: "requested", by: guest.auth.user.id });
+    expect((await get(phone.auth, `/v1/chats/${chatId}/messages`)).items[0]).toMatchObject({
+      type: "service",
+      action: { type: "resend_request" },
+      senderId: guest.auth.user.id,
+    });
     await expect(
       guest.api.PUT("/v1/messages/{id}/envelopes", { params: { path }, body: { envelopes: [] } }).then(unwrap),
     ).rejects.toMatchObject({ code: "NOT_MESSAGE_SENDER" });

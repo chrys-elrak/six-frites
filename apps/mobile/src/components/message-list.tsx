@@ -52,6 +52,8 @@ import {
   Flame,
   Forward,
   CircleFadingPlus,
+  RefreshCw,
+  Share2,
   StickyNote,
   Gamepad2,
   Ghost,
@@ -141,7 +143,7 @@ import {
 } from "./attachment";
 import { ChatPicker } from "./chat-picker";
 import { StoryComposer } from "./story-composer";
-import { postNote } from "@/lib/story-post";
+import { NoteEditor } from "./notes";
 import { ChecklistView } from "./checklist";
 import { GameView } from "./game";
 import { LocationCard } from "./location-card";
@@ -439,8 +441,10 @@ function StoryQuote({ story, mine, color, reaction }: { story: StoryReply; mine:
     return (
       <View style={[styles.storyQuote, { alignItems: "flex-start" }]}>
         <Text style={{ color, fontSize: 12, opacity: 0.75 }}>{mine ? t.youRepliedToNote : t.repliedToNote}</Text>
-        <View style={{ borderRadius: 16, backgroundColor: story.background ?? "rgba(0,0,0,0.1)", paddingHorizontal: 12, paddingVertical: 6 }}>
-          <Text style={{ color: story.background ? inkOn(story.background) : color, fontSize: 14 }}>{story.text ?? t.gif}</Text>
+        <View style={{ maxWidth: "100%", borderRadius: 16, backgroundColor: story.background ?? "rgba(0,0,0,0.1)", paddingHorizontal: 12, paddingVertical: 6 }}>
+          <Text numberOfLines={4} style={{ color: story.background ? inkOn(story.background) : color, fontSize: 14 }}>
+            {story.text ?? t.gif}
+          </Text>
         </View>
       </View>
     );
@@ -1307,6 +1311,7 @@ export const MessageList = forwardRef<
     const [anchor, setAnchor] = useState<Anchor | null>(null);
     const [confirmDelete, setConfirmDelete] = useState<MessageDTO[] | null>(null);
     const [sharing, setSharing] = useState<{ text: string; message: MessageDTO } | null>(null);
+    const [noting, setNoting] = useState<{ text: string; message: MessageDTO } | null>(null);
     const look = chatTheme(chat.theme).light;
     const quoteOf = (msg: MessageDTO) => {
       const from = chat.members.find((x) => x.user.id === msg.senderId)?.user;
@@ -1572,7 +1577,7 @@ export const MessageList = forwardRef<
           : [{ label: tr.messages.shareToStory, icon: CircleFadingPlus, onSelect: () => setSharing({ text: shareTargets(m.text).text, message: m }) }]),
         ...(m.type !== "text" || m.ephemeral || row.locked || !shareTargets(m.text).note
           ? []
-          : [{ label: tr.messages.setAsNote, icon: StickyNote, onSelect: () => void postNote(qc, { text: shareTargets(m.text).text, fromChat: true, messageId: m.id }) }]),
+          : [{ label: tr.messages.setAsNote, icon: StickyNote, onSelect: () => setNoting({ text: shareTargets(m.text).text, message: m }) }]),
         ...(threadId ? [] : [{ label: tr.common.select, icon: CheckCircle2, onSelect: () => startSelection(chat.id, m.id) }]),
         ...(frozen || m.ephemeral || m.type === "service"
           ? []
@@ -1713,6 +1718,10 @@ export const MessageList = forwardRef<
                       <Ghost size={14} color="#fff" />
                     ) : row.message.action?.type === "screenshot" ? (
                       <Camera size={14} color="#fff" />
+                    ) : row.message.action?.type === "resend_request" ? (
+                      <RefreshCw size={14} color="#fff" />
+                    ) : row.message.action?.type === "shared_to" ? (
+                      <Share2 size={14} color="#fff" />
                     ) : row.message.action?.type === "call" ? (
                       row.message.action.secs === null ? (
                         <PhoneMissed size={14} color="#fff" />
@@ -1839,6 +1848,13 @@ export const MessageList = forwardRef<
               setMode(slot, { kind: "edit", message: markingUp.message, photo: file });
               setMarkingUp(null);
             }}
+          />
+        )}
+        {noting && (
+          <NoteEditor
+            note={null}
+            fromMessage={{ text: noting.text, messageId: noting.message.id, quote: quoteOf(noting.message) ?? null }}
+            onClose={() => setNoting(null)}
           />
         )}
         {sharing && <StoryComposer initialText={sharing.text} bubble={`${look.bubble},${look.bubbleInk}`} quote={quoteOf(sharing.message)} onClose={() => setSharing(null)} />}

@@ -1022,22 +1022,31 @@ async function resealable(tx: Tx, userId: string, messageId: string) {
 }
 
 /**
- * Asks the sender to seal an encrypted message again, for someone whose device has no way to open it,
- * and tells the sender's devices they aren't using. Asking after it failed asks again.
+ * Asks the sender to seal an encrypted message again, for someone whose device has no way to open it, with a
+ * notice in the chat that is pushed like a message. Asking after it failed asks again.
  */
 export async function requestReseal(userId: string, messageId: string): Promise<MessageDTO> {
-  const { dto, asked } = await withEvents(async (tx, emit) => {
+  const { dto, notice } = await withEvents(async (tx, emit) => {
     const m = await resealable(tx, userId, messageId);
-    if (m.resealRequestedBy && !m.resealFailedAt) return { dto: toMessageDTO(m, userId), asked: null };
+    if (m.resealRequestedBy && !m.resealFailedAt) return { dto: toMessageDTO(m, userId), notice: null };
     await tx.message.update({
       where: { id: messageId },
       data: { resealRequestedAt: new Date(), resealRequestedBy: userId, resealFailedAt: null },
     });
     await notifyMembers(tx, emit, messageId);
     const fresh = await tx.message.findUniqueOrThrow({ where: { id: messageId }, include: messageInclude });
-    return { dto: toMessageDTO(fresh, userId), asked: fresh };
+    const notice =
+      fresh.senderId === userId
+        ? null
+        : await createMessage(tx, emit, userId, fresh.chatId, {
+            clientId: `resend-${messageId}-${Date.now()}`,
+            action: { type: "resend_request" },
+          });
+    return { dto: toMessageDTO(fresh, userId), notice };
   });
-  if (asked && asked.senderId !== userId) void deliverResealPush(asked, asked.senderId, userId, "requested").catch(() => null);
+  if (notice) {
+    await queuePush(notice.message.id, notice.recipients).catch((err) => console.error("could not queue push:", err.message));
+  }
   return dto;
 }
 
@@ -1056,7 +1065,7 @@ export async function failReseal(userId: string, messageId: string): Promise<Mes
     return { dto: toMessageDTO(fresh, userId), failed: fresh };
   });
   if (failed?.resealRequestedBy && failed.resealRequestedBy !== userId) {
-    void deliverResealPush(failed, failed.resealRequestedBy, userId, "failed").catch(() => null);
+    void deliverResealPush(failed, failed.resealRequestedBy, userId).catch(() => null);
   }
   return dto;
 }

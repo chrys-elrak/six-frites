@@ -59,6 +59,17 @@ export const useToasts = create<{ toasts: Toast[]; push: (t: Toast) => void; dis
   }),
 );
 
+/** A small popup saying a story or note reply went to `to`; tapping it opens the chat. */
+export function toastSent(chatId: string, to: { displayName: string; avatarUrl: string | null }, what: string) {
+  useToasts.getState().push({
+    id: `sent-${Date.now()}`,
+    href: `/chats/${chatId}`,
+    title: getT().stories.sent,
+    body: `${to.displayName} · ${what}`,
+    avatar: { displayName: to.displayName, avatarUrl: to.avatarUrl },
+  });
+}
+
 const TONE_FILES: Record<Tone, number> = {
   frites: require("../../assets/tones/frites.wav"),
   chime: require("../../assets/tones/chime.wav"),

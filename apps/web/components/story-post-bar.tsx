@@ -8,7 +8,7 @@ import { Portal } from "./portal";
 /** Follows a story being shared in the background: its progress, then that it's up, or a retry if it failed. */
 export function StoryPostBar() {
   const tr = useT();
-  const { kind, state, progress, retry } = useStoryPost();
+  const { state, progress, retry } = useStoryPost();
   if (!state) return null;
 
   return (
@@ -24,13 +24,9 @@ export function StoryPostBar() {
             {state === "failed" && <TriangleAlert className="size-5 shrink-0 text-red-600" />}
             <span className="min-w-0 flex-1 truncate font-medium">
               {state === "posting"
-                ? kind === "note"
-                  ? tr.stories.postingNote
-                  : `${tr.stories.postingStory} ${Math.round(progress * 100)}%`
+                ? `${tr.stories.postingStory} ${Math.round(progress * 100)}%`
                 : state === "done"
-                  ? kind === "note"
-                    ? tr.stories.notePosted
-                    : tr.stories.posted
+                  ? tr.stories.posted
                   : tr.stories.couldNotPostShort}
             </span>
             {state === "failed" && (

@@ -10312,6 +10312,44 @@
                                 "type": {
                                   "type": "string",
                                   "enum": [
+                                    "resend_request"
+                                  ]
+                                }
+                              },
+                              "required": [
+                                "type"
+                              ],
+                              "additionalProperties": false
+                            },
+                            {
+                              "type": "object",
+                              "properties": {
+                                "type": {
+                                  "type": "string",
+                                  "enum": [
+                                    "shared_to"
+                                  ]
+                                },
+                                "to": {
+                                  "type": "string",
+                                  "enum": [
+                                    "story",
+                                    "note"
+                                  ]
+                                }
+                              },
+                              "required": [
+                                "type",
+                                "to"
+                              ],
+                              "additionalProperties": false
+                            },
+                            {
+                              "type": "object",
+                              "properties": {
+                                "type": {
+                                  "type": "string",
+                                  "enum": [
                                     "group_created"
                                   ]
                                 },
@@ -10536,7 +10574,7 @@
                               "additionalProperties": false
                             }
                           ],
-                          "description": "What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `pin` means they pinned a message; `screenshot` means they took a screenshot of the chat (only detected on the web, and not everywhere); `call` logs a call the sender made; `live_invite` is posted in your chat when `from` asks you to a live game; `live_result` is how a live game you played alone against Six Frites Game ended, for you; in a group, `group_created`, `joined`, `left`, `removed`, `renamed` and `group_photo` tell what happened to the group and to whom (`name` is how they showed there)"
+                          "description": "What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `pin` means they pinned a message; `shared_to` means they shared a message from this chat to their story or as their note; `resend_request` means they couldn't open an encrypted message and asked the sender for it again; `screenshot` means they took a screenshot of the chat (only detected on the web, and not everywhere); `call` logs a call the sender made; `live_invite` is posted in your chat when `from` asks you to a live game; `live_result` is how a live game you played alone against Six Frites Game ended, for you; in a group, `group_created`, `joined`, `left`, `removed`, `renamed` and `group_photo` tell what happened to the group and to whom (`name` is how they showed there)"
                         },
                         "location": {
                           "nullable": true,
@@ -12195,6 +12233,44 @@
                                   "type": {
                                     "type": "string",
                                     "enum": [
+                                      "resend_request"
+                                    ]
+                                  }
+                                },
+                                "required": [
+                                  "type"
+                                ],
+                                "additionalProperties": false
+                              },
+                              {
+                                "type": "object",
+                                "properties": {
+                                  "type": {
+                                    "type": "string",
+                                    "enum": [
+                                      "shared_to"
+                                    ]
+                                  },
+                                  "to": {
+                                    "type": "string",
+                                    "enum": [
+                                      "story",
+                                      "note"
+                                    ]
+                                  }
+                                },
+                                "required": [
+                                  "type",
+                                  "to"
+                                ],
+                                "additionalProperties": false
+                              },
+                              {
+                                "type": "object",
+                                "properties": {
+                                  "type": {
+                                    "type": "string",
+                                    "enum": [
                                       "group_created"
                                     ]
                                   },
@@ -12419,7 +12495,7 @@
                                 "additionalProperties": false
                               }
                             ],
-                            "description": "What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `pin` means they pinned a message; `screenshot` means they took a screenshot of the chat (only detected on the web, and not everywhere); `call` logs a call the sender made; `live_invite` is posted in your chat when `from` asks you to a live game; `live_result` is how a live game you played alone against Six Frites Game ended, for you; in a group, `group_created`, `joined`, `left`, `removed`, `renamed` and `group_photo` tell what happened to the group and to whom (`name` is how they showed there)"
+                            "description": "What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `pin` means they pinned a message; `shared_to` means they shared a message from this chat to their story or as their note; `resend_request` means they couldn't open an encrypted message and asked the sender for it again; `screenshot` means they took a screenshot of the chat (only detected on the web, and not everywhere); `call` logs a call the sender made; `live_invite` is posted in your chat when `from` asks you to a live game; `live_result` is how a live game you played alone against Six Frites Game ended, for you; in a group, `group_created`, `joined`, `left`, `removed`, `renamed` and `group_photo` tell what happened to the group and to whom (`name` is how they showed there)"
                           },
                           "location": {
                             "nullable": true,
@@ -14203,6 +14279,44 @@
                             "type": {
                               "type": "string",
                               "enum": [
+                                "resend_request"
+                              ]
+                            }
+                          },
+                          "required": [
+                            "type"
+                          ],
+                          "additionalProperties": false
+                        },
+                        {
+                          "type": "object",
+                          "properties": {
+                            "type": {
+                              "type": "string",
+                              "enum": [
+                                "shared_to"
+                              ]
+                            },
+                            "to": {
+                              "type": "string",
+                              "enum": [
+                                "story",
+                                "note"
+                              ]
+                            }
+                          },
+                          "required": [
+                            "type",
+                            "to"
+                          ],
+                          "additionalProperties": false
+                        },
+                        {
+                          "type": "object",
+                          "properties": {
+                            "type": {
+                              "type": "string",
+                              "enum": [
                                 "group_created"
                               ]
                             },
@@ -14427,7 +14541,7 @@
                           "additionalProperties": false
                         }
                       ],
-                      "description": "What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `pin` means they pinned a message; `screenshot` means they took a screenshot of the chat (only detected on the web, and not everywhere); `call` logs a call the sender made; `live_invite` is posted in your chat when `from` asks you to a live game; `live_result` is how a live game you played alone against Six Frites Game ended, for you; in a group, `group_created`, `joined`, `left`, `removed`, `renamed` and `group_photo` tell what happened to the group and to whom (`name` is how they showed there)"
+                      "description": "What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `pin` means they pinned a message; `shared_to` means they shared a message from this chat to their story or as their note; `resend_request` means they couldn't open an encrypted message and asked the sender for it again; `screenshot` means they took a screenshot of the chat (only detected on the web, and not everywhere); `call` logs a call the sender made; `live_invite` is posted in your chat when `from` asks you to a live game; `live_result` is how a live game you played alone against Six Frites Game ended, for you; in a group, `group_created`, `joined`, `left`, `removed`, `renamed` and `group_photo` tell what happened to the group and to whom (`name` is how they showed there)"
                     },
                     "location": {
                       "nullable": true,
@@ -16205,6 +16319,44 @@
                                 "type": {
                                   "type": "string",
                                   "enum": [
+                                    "resend_request"
+                                  ]
+                                }
+                              },
+                              "required": [
+                                "type"
+                              ],
+                              "additionalProperties": false
+                            },
+                            {
+                              "type": "object",
+                              "properties": {
+                                "type": {
+                                  "type": "string",
+                                  "enum": [
+                                    "shared_to"
+                                  ]
+                                },
+                                "to": {
+                                  "type": "string",
+                                  "enum": [
+                                    "story",
+                                    "note"
+                                  ]
+                                }
+                              },
+                              "required": [
+                                "type",
+                                "to"
+                              ],
+                              "additionalProperties": false
+                            },
+                            {
+                              "type": "object",
+                              "properties": {
+                                "type": {
+                                  "type": "string",
+                                  "enum": [
                                     "group_created"
                                   ]
                                 },
@@ -16429,7 +16581,7 @@
                               "additionalProperties": false
                             }
                           ],
-                          "description": "What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `pin` means they pinned a message; `screenshot` means they took a screenshot of the chat (only detected on the web, and not everywhere); `call` logs a call the sender made; `live_invite` is posted in your chat when `from` asks you to a live game; `live_result` is how a live game you played alone against Six Frites Game ended, for you; in a group, `group_created`, `joined`, `left`, `removed`, `renamed` and `group_photo` tell what happened to the group and to whom (`name` is how they showed there)"
+                          "description": "What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `pin` means they pinned a message; `shared_to` means they shared a message from this chat to their story or as their note; `resend_request` means they couldn't open an encrypted message and asked the sender for it again; `screenshot` means they took a screenshot of the chat (only detected on the web, and not everywhere); `call` logs a call the sender made; `live_invite` is posted in your chat when `from` asks you to a live game; `live_result` is how a live game you played alone against Six Frites Game ended, for you; in a group, `group_created`, `joined`, `left`, `removed`, `renamed` and `group_photo` tell what happened to the group and to whom (`name` is how they showed there)"
                         },
                         "location": {
                           "nullable": true,
@@ -18088,6 +18240,44 @@
                                   "type": {
                                     "type": "string",
                                     "enum": [
+                                      "resend_request"
+                                    ]
+                                  }
+                                },
+                                "required": [
+                                  "type"
+                                ],
+                                "additionalProperties": false
+                              },
+                              {
+                                "type": "object",
+                                "properties": {
+                                  "type": {
+                                    "type": "string",
+                                    "enum": [
+                                      "shared_to"
+                                    ]
+                                  },
+                                  "to": {
+                                    "type": "string",
+                                    "enum": [
+                                      "story",
+                                      "note"
+                                    ]
+                                  }
+                                },
+                                "required": [
+                                  "type",
+                                  "to"
+                                ],
+                                "additionalProperties": false
+                              },
+                              {
+                                "type": "object",
+                                "properties": {
+                                  "type": {
+                                    "type": "string",
+                                    "enum": [
                                       "group_created"
                                     ]
                                   },
@@ -18312,7 +18502,7 @@
                                 "additionalProperties": false
                               }
                             ],
-                            "description": "What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `pin` means they pinned a message; `screenshot` means they took a screenshot of the chat (only detected on the web, and not everywhere); `call` logs a call the sender made; `live_invite` is posted in your chat when `from` asks you to a live game; `live_result` is how a live game you played alone against Six Frites Game ended, for you; in a group, `group_created`, `joined`, `left`, `removed`, `renamed` and `group_photo` tell what happened to the group and to whom (`name` is how they showed there)"
+                            "description": "What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `pin` means they pinned a message; `shared_to` means they shared a message from this chat to their story or as their note; `resend_request` means they couldn't open an encrypted message and asked the sender for it again; `screenshot` means they took a screenshot of the chat (only detected on the web, and not everywhere); `call` logs a call the sender made; `live_invite` is posted in your chat when `from` asks you to a live game; `live_result` is how a live game you played alone against Six Frites Game ended, for you; in a group, `group_created`, `joined`, `left`, `removed`, `renamed` and `group_photo` tell what happened to the group and to whom (`name` is how they showed there)"
                           },
                           "location": {
                             "nullable": true,
@@ -20216,6 +20406,44 @@
                                 "type": {
                                   "type": "string",
                                   "enum": [
+                                    "resend_request"
+                                  ]
+                                }
+                              },
+                              "required": [
+                                "type"
+                              ],
+                              "additionalProperties": false
+                            },
+                            {
+                              "type": "object",
+                              "properties": {
+                                "type": {
+                                  "type": "string",
+                                  "enum": [
+                                    "shared_to"
+                                  ]
+                                },
+                                "to": {
+                                  "type": "string",
+                                  "enum": [
+                                    "story",
+                                    "note"
+                                  ]
+                                }
+                              },
+                              "required": [
+                                "type",
+                                "to"
+                              ],
+                              "additionalProperties": false
+                            },
+                            {
+                              "type": "object",
+                              "properties": {
+                                "type": {
+                                  "type": "string",
+                                  "enum": [
                                     "group_created"
                                   ]
                                 },
@@ -20440,7 +20668,7 @@
                               "additionalProperties": false
                             }
                           ],
-                          "description": "What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `pin` means they pinned a message; `screenshot` means they took a screenshot of the chat (only detected on the web, and not everywhere); `call` logs a call the sender made; `live_invite` is posted in your chat when `from` asks you to a live game; `live_result` is how a live game you played alone against Six Frites Game ended, for you; in a group, `group_created`, `joined`, `left`, `removed`, `renamed` and `group_photo` tell what happened to the group and to whom (`name` is how they showed there)"
+                          "description": "What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `pin` means they pinned a message; `shared_to` means they shared a message from this chat to their story or as their note; `resend_request` means they couldn't open an encrypted message and asked the sender for it again; `screenshot` means they took a screenshot of the chat (only detected on the web, and not everywhere); `call` logs a call the sender made; `live_invite` is posted in your chat when `from` asks you to a live game; `live_result` is how a live game you played alone against Six Frites Game ended, for you; in a group, `group_created`, `joined`, `left`, `removed`, `renamed` and `group_photo` tell what happened to the group and to whom (`name` is how they showed there)"
                         },
                         "location": {
                           "nullable": true,
@@ -22099,6 +22327,44 @@
                                   "type": {
                                     "type": "string",
                                     "enum": [
+                                      "resend_request"
+                                    ]
+                                  }
+                                },
+                                "required": [
+                                  "type"
+                                ],
+                                "additionalProperties": false
+                              },
+                              {
+                                "type": "object",
+                                "properties": {
+                                  "type": {
+                                    "type": "string",
+                                    "enum": [
+                                      "shared_to"
+                                    ]
+                                  },
+                                  "to": {
+                                    "type": "string",
+                                    "enum": [
+                                      "story",
+                                      "note"
+                                    ]
+                                  }
+                                },
+                                "required": [
+                                  "type",
+                                  "to"
+                                ],
+                                "additionalProperties": false
+                              },
+                              {
+                                "type": "object",
+                                "properties": {
+                                  "type": {
+                                    "type": "string",
+                                    "enum": [
                                       "group_created"
                                     ]
                                   },
@@ -22323,7 +22589,7 @@
                                 "additionalProperties": false
                               }
                             ],
-                            "description": "What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `pin` means they pinned a message; `screenshot` means they took a screenshot of the chat (only detected on the web, and not everywhere); `call` logs a call the sender made; `live_invite` is posted in your chat when `from` asks you to a live game; `live_result` is how a live game you played alone against Six Frites Game ended, for you; in a group, `group_created`, `joined`, `left`, `removed`, `renamed` and `group_photo` tell what happened to the group and to whom (`name` is how they showed there)"
+                            "description": "What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `pin` means they pinned a message; `shared_to` means they shared a message from this chat to their story or as their note; `resend_request` means they couldn't open an encrypted message and asked the sender for it again; `screenshot` means they took a screenshot of the chat (only detected on the web, and not everywhere); `call` logs a call the sender made; `live_invite` is posted in your chat when `from` asks you to a live game; `live_result` is how a live game you played alone against Six Frites Game ended, for you; in a group, `group_created`, `joined`, `left`, `removed`, `renamed` and `group_photo` tell what happened to the group and to whom (`name` is how they showed there)"
                           },
                           "location": {
                             "nullable": true,
@@ -24254,6 +24520,44 @@
                                       "type": {
                                         "type": "string",
                                         "enum": [
+                                          "resend_request"
+                                        ]
+                                      }
+                                    },
+                                    "required": [
+                                      "type"
+                                    ],
+                                    "additionalProperties": false
+                                  },
+                                  {
+                                    "type": "object",
+                                    "properties": {
+                                      "type": {
+                                        "type": "string",
+                                        "enum": [
+                                          "shared_to"
+                                        ]
+                                      },
+                                      "to": {
+                                        "type": "string",
+                                        "enum": [
+                                          "story",
+                                          "note"
+                                        ]
+                                      }
+                                    },
+                                    "required": [
+                                      "type",
+                                      "to"
+                                    ],
+                                    "additionalProperties": false
+                                  },
+                                  {
+                                    "type": "object",
+                                    "properties": {
+                                      "type": {
+                                        "type": "string",
+                                        "enum": [
                                           "group_created"
                                         ]
                                       },
@@ -24478,7 +24782,7 @@
                                     "additionalProperties": false
                                   }
                                 ],
-                                "description": "What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `pin` means they pinned a message; `screenshot` means they took a screenshot of the chat (only detected on the web, and not everywhere); `call` logs a call the sender made; `live_invite` is posted in your chat when `from` asks you to a live game; `live_result` is how a live game you played alone against Six Frites Game ended, for you; in a group, `group_created`, `joined`, `left`, `removed`, `renamed` and `group_photo` tell what happened to the group and to whom (`name` is how they showed there)"
+                                "description": "What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `pin` means they pinned a message; `shared_to` means they shared a message from this chat to their story or as their note; `resend_request` means they couldn't open an encrypted message and asked the sender for it again; `screenshot` means they took a screenshot of the chat (only detected on the web, and not everywhere); `call` logs a call the sender made; `live_invite` is posted in your chat when `from` asks you to a live game; `live_result` is how a live game you played alone against Six Frites Game ended, for you; in a group, `group_created`, `joined`, `left`, `removed`, `renamed` and `group_photo` tell what happened to the group and to whom (`name` is how they showed there)"
                               },
                               "location": {
                                 "nullable": true,
@@ -26137,6 +26441,44 @@
                                         "type": {
                                           "type": "string",
                                           "enum": [
+                                            "resend_request"
+                                          ]
+                                        }
+                                      },
+                                      "required": [
+                                        "type"
+                                      ],
+                                      "additionalProperties": false
+                                    },
+                                    {
+                                      "type": "object",
+                                      "properties": {
+                                        "type": {
+                                          "type": "string",
+                                          "enum": [
+                                            "shared_to"
+                                          ]
+                                        },
+                                        "to": {
+                                          "type": "string",
+                                          "enum": [
+                                            "story",
+                                            "note"
+                                          ]
+                                        }
+                                      },
+                                      "required": [
+                                        "type",
+                                        "to"
+                                      ],
+                                      "additionalProperties": false
+                                    },
+                                    {
+                                      "type": "object",
+                                      "properties": {
+                                        "type": {
+                                          "type": "string",
+                                          "enum": [
                                             "group_created"
                                           ]
                                         },
@@ -26361,7 +26703,7 @@
                                       "additionalProperties": false
                                     }
                                   ],
-                                  "description": "What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `pin` means they pinned a message; `screenshot` means they took a screenshot of the chat (only detected on the web, and not everywhere); `call` logs a call the sender made; `live_invite` is posted in your chat when `from` asks you to a live game; `live_result` is how a live game you played alone against Six Frites Game ended, for you; in a group, `group_created`, `joined`, `left`, `removed`, `renamed` and `group_photo` tell what happened to the group and to whom (`name` is how they showed there)"
+                                  "description": "What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `pin` means they pinned a message; `shared_to` means they shared a message from this chat to their story or as their note; `resend_request` means they couldn't open an encrypted message and asked the sender for it again; `screenshot` means they took a screenshot of the chat (only detected on the web, and not everywhere); `call` logs a call the sender made; `live_invite` is posted in your chat when `from` asks you to a live game; `live_result` is how a live game you played alone against Six Frites Game ended, for you; in a group, `group_created`, `joined`, `left`, `removed`, `renamed` and `group_photo` tell what happened to the group and to whom (`name` is how they showed there)"
                                 },
                                 "location": {
                                   "nullable": true,
@@ -28276,6 +28618,44 @@
                                 "type": {
                                   "type": "string",
                                   "enum": [
+                                    "resend_request"
+                                  ]
+                                }
+                              },
+                              "required": [
+                                "type"
+                              ],
+                              "additionalProperties": false
+                            },
+                            {
+                              "type": "object",
+                              "properties": {
+                                "type": {
+                                  "type": "string",
+                                  "enum": [
+                                    "shared_to"
+                                  ]
+                                },
+                                "to": {
+                                  "type": "string",
+                                  "enum": [
+                                    "story",
+                                    "note"
+                                  ]
+                                }
+                              },
+                              "required": [
+                                "type",
+                                "to"
+                              ],
+                              "additionalProperties": false
+                            },
+                            {
+                              "type": "object",
+                              "properties": {
+                                "type": {
+                                  "type": "string",
+                                  "enum": [
                                     "group_created"
                                   ]
                                 },
@@ -28500,7 +28880,7 @@
                               "additionalProperties": false
                             }
                           ],
-                          "description": "What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `pin` means they pinned a message; `screenshot` means they took a screenshot of the chat (only detected on the web, and not everywhere); `call` logs a call the sender made; `live_invite` is posted in your chat when `from` asks you to a live game; `live_result` is how a live game you played alone against Six Frites Game ended, for you; in a group, `group_created`, `joined`, `left`, `removed`, `renamed` and `group_photo` tell what happened to the group and to whom (`name` is how they showed there)"
+                          "description": "What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `pin` means they pinned a message; `shared_to` means they shared a message from this chat to their story or as their note; `resend_request` means they couldn't open an encrypted message and asked the sender for it again; `screenshot` means they took a screenshot of the chat (only detected on the web, and not everywhere); `call` logs a call the sender made; `live_invite` is posted in your chat when `from` asks you to a live game; `live_result` is how a live game you played alone against Six Frites Game ended, for you; in a group, `group_created`, `joined`, `left`, `removed`, `renamed` and `group_photo` tell what happened to the group and to whom (`name` is how they showed there)"
                         },
                         "location": {
                           "nullable": true,
@@ -30159,6 +30539,44 @@
                                   "type": {
                                     "type": "string",
                                     "enum": [
+                                      "resend_request"
+                                    ]
+                                  }
+                                },
+                                "required": [
+                                  "type"
+                                ],
+                                "additionalProperties": false
+                              },
+                              {
+                                "type": "object",
+                                "properties": {
+                                  "type": {
+                                    "type": "string",
+                                    "enum": [
+                                      "shared_to"
+                                    ]
+                                  },
+                                  "to": {
+                                    "type": "string",
+                                    "enum": [
+                                      "story",
+                                      "note"
+                                    ]
+                                  }
+                                },
+                                "required": [
+                                  "type",
+                                  "to"
+                                ],
+                                "additionalProperties": false
+                              },
+                              {
+                                "type": "object",
+                                "properties": {
+                                  "type": {
+                                    "type": "string",
+                                    "enum": [
                                       "group_created"
                                     ]
                                   },
@@ -30383,7 +30801,7 @@
                                 "additionalProperties": false
                               }
                             ],
-                            "description": "What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `pin` means they pinned a message; `screenshot` means they took a screenshot of the chat (only detected on the web, and not everywhere); `call` logs a call the sender made; `live_invite` is posted in your chat when `from` asks you to a live game; `live_result` is how a live game you played alone against Six Frites Game ended, for you; in a group, `group_created`, `joined`, `left`, `removed`, `renamed` and `group_photo` tell what happened to the group and to whom (`name` is how they showed there)"
+                            "description": "What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `pin` means they pinned a message; `shared_to` means they shared a message from this chat to their story or as their note; `resend_request` means they couldn't open an encrypted message and asked the sender for it again; `screenshot` means they took a screenshot of the chat (only detected on the web, and not everywhere); `call` logs a call the sender made; `live_invite` is posted in your chat when `from` asks you to a live game; `live_result` is how a live game you played alone against Six Frites Game ended, for you; in a group, `group_created`, `joined`, `left`, `removed`, `renamed` and `group_photo` tell what happened to the group and to whom (`name` is how they showed there)"
                           },
                           "location": {
                             "nullable": true,
@@ -32373,6 +32791,44 @@
                                 "type": {
                                   "type": "string",
                                   "enum": [
+                                    "resend_request"
+                                  ]
+                                }
+                              },
+                              "required": [
+                                "type"
+                              ],
+                              "additionalProperties": false
+                            },
+                            {
+                              "type": "object",
+                              "properties": {
+                                "type": {
+                                  "type": "string",
+                                  "enum": [
+                                    "shared_to"
+                                  ]
+                                },
+                                "to": {
+                                  "type": "string",
+                                  "enum": [
+                                    "story",
+                                    "note"
+                                  ]
+                                }
+                              },
+                              "required": [
+                                "type",
+                                "to"
+                              ],
+                              "additionalProperties": false
+                            },
+                            {
+                              "type": "object",
+                              "properties": {
+                                "type": {
+                                  "type": "string",
+                                  "enum": [
                                     "group_created"
                                   ]
                                 },
@@ -32597,7 +33053,7 @@
                               "additionalProperties": false
                             }
                           ],
-                          "description": "What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `pin` means they pinned a message; `screenshot` means they took a screenshot of the chat (only detected on the web, and not everywhere); `call` logs a call the sender made; `live_invite` is posted in your chat when `from` asks you to a live game; `live_result` is how a live game you played alone against Six Frites Game ended, for you; in a group, `group_created`, `joined`, `left`, `removed`, `renamed` and `group_photo` tell what happened to the group and to whom (`name` is how they showed there)"
+                          "description": "What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `pin` means they pinned a message; `shared_to` means they shared a message from this chat to their story or as their note; `resend_request` means they couldn't open an encrypted message and asked the sender for it again; `screenshot` means they took a screenshot of the chat (only detected on the web, and not everywhere); `call` logs a call the sender made; `live_invite` is posted in your chat when `from` asks you to a live game; `live_result` is how a live game you played alone against Six Frites Game ended, for you; in a group, `group_created`, `joined`, `left`, `removed`, `renamed` and `group_photo` tell what happened to the group and to whom (`name` is how they showed there)"
                         },
                         "location": {
                           "nullable": true,
@@ -34256,6 +34712,44 @@
                                   "type": {
                                     "type": "string",
                                     "enum": [
+                                      "resend_request"
+                                    ]
+                                  }
+                                },
+                                "required": [
+                                  "type"
+                                ],
+                                "additionalProperties": false
+                              },
+                              {
+                                "type": "object",
+                                "properties": {
+                                  "type": {
+                                    "type": "string",
+                                    "enum": [
+                                      "shared_to"
+                                    ]
+                                  },
+                                  "to": {
+                                    "type": "string",
+                                    "enum": [
+                                      "story",
+                                      "note"
+                                    ]
+                                  }
+                                },
+                                "required": [
+                                  "type",
+                                  "to"
+                                ],
+                                "additionalProperties": false
+                              },
+                              {
+                                "type": "object",
+                                "properties": {
+                                  "type": {
+                                    "type": "string",
+                                    "enum": [
                                       "group_created"
                                     ]
                                   },
@@ -34480,7 +34974,7 @@
                                 "additionalProperties": false
                               }
                             ],
-                            "description": "What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `pin` means they pinned a message; `screenshot` means they took a screenshot of the chat (only detected on the web, and not everywhere); `call` logs a call the sender made; `live_invite` is posted in your chat when `from` asks you to a live game; `live_result` is how a live game you played alone against Six Frites Game ended, for you; in a group, `group_created`, `joined`, `left`, `removed`, `renamed` and `group_photo` tell what happened to the group and to whom (`name` is how they showed there)"
+                            "description": "What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `pin` means they pinned a message; `shared_to` means they shared a message from this chat to their story or as their note; `resend_request` means they couldn't open an encrypted message and asked the sender for it again; `screenshot` means they took a screenshot of the chat (only detected on the web, and not everywhere); `call` logs a call the sender made; `live_invite` is posted in your chat when `from` asks you to a live game; `live_result` is how a live game you played alone against Six Frites Game ended, for you; in a group, `group_created`, `joined`, `left`, `removed`, `renamed` and `group_photo` tell what happened to the group and to whom (`name` is how they showed there)"
                           },
                           "location": {
                             "nullable": true,
@@ -36564,6 +37058,44 @@
                             "type": {
                               "type": "string",
                               "enum": [
+                                "resend_request"
+                              ]
+                            }
+                          },
+                          "required": [
+                            "type"
+                          ],
+                          "additionalProperties": false
+                        },
+                        {
+                          "type": "object",
+                          "properties": {
+                            "type": {
+                              "type": "string",
+                              "enum": [
+                                "shared_to"
+                              ]
+                            },
+                            "to": {
+                              "type": "string",
+                              "enum": [
+                                "story",
+                                "note"
+                              ]
+                            }
+                          },
+                          "required": [
+                            "type",
+                            "to"
+                          ],
+                          "additionalProperties": false
+                        },
+                        {
+                          "type": "object",
+                          "properties": {
+                            "type": {
+                              "type": "string",
+                              "enum": [
                                 "group_created"
                               ]
                             },
@@ -36788,7 +37320,7 @@
                           "additionalProperties": false
                         }
                       ],
-                      "description": "What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `pin` means they pinned a message; `screenshot` means they took a screenshot of the chat (only detected on the web, and not everywhere); `call` logs a call the sender made; `live_invite` is posted in your chat when `from` asks you to a live game; `live_result` is how a live game you played alone against Six Frites Game ended, for you; in a group, `group_created`, `joined`, `left`, `removed`, `renamed` and `group_photo` tell what happened to the group and to whom (`name` is how they showed there)"
+                      "description": "What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `pin` means they pinned a message; `shared_to` means they shared a message from this chat to their story or as their note; `resend_request` means they couldn't open an encrypted message and asked the sender for it again; `screenshot` means they took a screenshot of the chat (only detected on the web, and not everywhere); `call` logs a call the sender made; `live_invite` is posted in your chat when `from` asks you to a live game; `live_result` is how a live game you played alone against Six Frites Game ended, for you; in a group, `group_created`, `joined`, `left`, `removed`, `renamed` and `group_photo` tell what happened to the group and to whom (`name` is how they showed there)"
                     },
                     "location": {
                       "nullable": true,
@@ -38462,6 +38994,44 @@
                             "type": {
                               "type": "string",
                               "enum": [
+                                "resend_request"
+                              ]
+                            }
+                          },
+                          "required": [
+                            "type"
+                          ],
+                          "additionalProperties": false
+                        },
+                        {
+                          "type": "object",
+                          "properties": {
+                            "type": {
+                              "type": "string",
+                              "enum": [
+                                "shared_to"
+                              ]
+                            },
+                            "to": {
+                              "type": "string",
+                              "enum": [
+                                "story",
+                                "note"
+                              ]
+                            }
+                          },
+                          "required": [
+                            "type",
+                            "to"
+                          ],
+                          "additionalProperties": false
+                        },
+                        {
+                          "type": "object",
+                          "properties": {
+                            "type": {
+                              "type": "string",
+                              "enum": [
                                 "group_created"
                               ]
                             },
@@ -38686,7 +39256,7 @@
                           "additionalProperties": false
                         }
                       ],
-                      "description": "What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `pin` means they pinned a message; `screenshot` means they took a screenshot of the chat (only detected on the web, and not everywhere); `call` logs a call the sender made; `live_invite` is posted in your chat when `from` asks you to a live game; `live_result` is how a live game you played alone against Six Frites Game ended, for you; in a group, `group_created`, `joined`, `left`, `removed`, `renamed` and `group_photo` tell what happened to the group and to whom (`name` is how they showed there)"
+                      "description": "What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `pin` means they pinned a message; `shared_to` means they shared a message from this chat to their story or as their note; `resend_request` means they couldn't open an encrypted message and asked the sender for it again; `screenshot` means they took a screenshot of the chat (only detected on the web, and not everywhere); `call` logs a call the sender made; `live_invite` is posted in your chat when `from` asks you to a live game; `live_result` is how a live game you played alone against Six Frites Game ended, for you; in a group, `group_created`, `joined`, `left`, `removed`, `renamed` and `group_photo` tell what happened to the group and to whom (`name` is how they showed there)"
                     },
                     "location": {
                       "nullable": true,
@@ -40356,6 +40926,44 @@
                             "type": {
                               "type": "string",
                               "enum": [
+                                "resend_request"
+                              ]
+                            }
+                          },
+                          "required": [
+                            "type"
+                          ],
+                          "additionalProperties": false
+                        },
+                        {
+                          "type": "object",
+                          "properties": {
+                            "type": {
+                              "type": "string",
+                              "enum": [
+                                "shared_to"
+                              ]
+                            },
+                            "to": {
+                              "type": "string",
+                              "enum": [
+                                "story",
+                                "note"
+                              ]
+                            }
+                          },
+                          "required": [
+                            "type",
+                            "to"
+                          ],
+                          "additionalProperties": false
+                        },
+                        {
+                          "type": "object",
+                          "properties": {
+                            "type": {
+                              "type": "string",
+                              "enum": [
                                 "group_created"
                               ]
                             },
@@ -40580,7 +41188,7 @@
                           "additionalProperties": false
                         }
                       ],
-                      "description": "What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `pin` means they pinned a message; `screenshot` means they took a screenshot of the chat (only detected on the web, and not everywhere); `call` logs a call the sender made; `live_invite` is posted in your chat when `from` asks you to a live game; `live_result` is how a live game you played alone against Six Frites Game ended, for you; in a group, `group_created`, `joined`, `left`, `removed`, `renamed` and `group_photo` tell what happened to the group and to whom (`name` is how they showed there)"
+                      "description": "What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `pin` means they pinned a message; `shared_to` means they shared a message from this chat to their story or as their note; `resend_request` means they couldn't open an encrypted message and asked the sender for it again; `screenshot` means they took a screenshot of the chat (only detected on the web, and not everywhere); `call` logs a call the sender made; `live_invite` is posted in your chat when `from` asks you to a live game; `live_result` is how a live game you played alone against Six Frites Game ended, for you; in a group, `group_created`, `joined`, `left`, `removed`, `renamed` and `group_photo` tell what happened to the group and to whom (`name` is how they showed there)"
                     },
                     "location": {
                       "nullable": true,
@@ -42241,6 +42849,44 @@
                             "type": {
                               "type": "string",
                               "enum": [
+                                "resend_request"
+                              ]
+                            }
+                          },
+                          "required": [
+                            "type"
+                          ],
+                          "additionalProperties": false
+                        },
+                        {
+                          "type": "object",
+                          "properties": {
+                            "type": {
+                              "type": "string",
+                              "enum": [
+                                "shared_to"
+                              ]
+                            },
+                            "to": {
+                              "type": "string",
+                              "enum": [
+                                "story",
+                                "note"
+                              ]
+                            }
+                          },
+                          "required": [
+                            "type",
+                            "to"
+                          ],
+                          "additionalProperties": false
+                        },
+                        {
+                          "type": "object",
+                          "properties": {
+                            "type": {
+                              "type": "string",
+                              "enum": [
                                 "group_created"
                               ]
                             },
@@ -42465,7 +43111,7 @@
                           "additionalProperties": false
                         }
                       ],
-                      "description": "What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `pin` means they pinned a message; `screenshot` means they took a screenshot of the chat (only detected on the web, and not everywhere); `call` logs a call the sender made; `live_invite` is posted in your chat when `from` asks you to a live game; `live_result` is how a live game you played alone against Six Frites Game ended, for you; in a group, `group_created`, `joined`, `left`, `removed`, `renamed` and `group_photo` tell what happened to the group and to whom (`name` is how they showed there)"
+                      "description": "What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `pin` means they pinned a message; `shared_to` means they shared a message from this chat to their story or as their note; `resend_request` means they couldn't open an encrypted message and asked the sender for it again; `screenshot` means they took a screenshot of the chat (only detected on the web, and not everywhere); `call` logs a call the sender made; `live_invite` is posted in your chat when `from` asks you to a live game; `live_result` is how a live game you played alone against Six Frites Game ended, for you; in a group, `group_created`, `joined`, `left`, `removed`, `renamed` and `group_photo` tell what happened to the group and to whom (`name` is how they showed there)"
                     },
                     "location": {
                       "nullable": true,
@@ -44136,6 +44782,44 @@
                             "type": {
                               "type": "string",
                               "enum": [
+                                "resend_request"
+                              ]
+                            }
+                          },
+                          "required": [
+                            "type"
+                          ],
+                          "additionalProperties": false
+                        },
+                        {
+                          "type": "object",
+                          "properties": {
+                            "type": {
+                              "type": "string",
+                              "enum": [
+                                "shared_to"
+                              ]
+                            },
+                            "to": {
+                              "type": "string",
+                              "enum": [
+                                "story",
+                                "note"
+                              ]
+                            }
+                          },
+                          "required": [
+                            "type",
+                            "to"
+                          ],
+                          "additionalProperties": false
+                        },
+                        {
+                          "type": "object",
+                          "properties": {
+                            "type": {
+                              "type": "string",
+                              "enum": [
                                 "group_created"
                               ]
                             },
@@ -44360,7 +45044,7 @@
                           "additionalProperties": false
                         }
                       ],
-                      "description": "What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `pin` means they pinned a message; `screenshot` means they took a screenshot of the chat (only detected on the web, and not everywhere); `call` logs a call the sender made; `live_invite` is posted in your chat when `from` asks you to a live game; `live_result` is how a live game you played alone against Six Frites Game ended, for you; in a group, `group_created`, `joined`, `left`, `removed`, `renamed` and `group_photo` tell what happened to the group and to whom (`name` is how they showed there)"
+                      "description": "What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `pin` means they pinned a message; `shared_to` means they shared a message from this chat to their story or as their note; `resend_request` means they couldn't open an encrypted message and asked the sender for it again; `screenshot` means they took a screenshot of the chat (only detected on the web, and not everywhere); `call` logs a call the sender made; `live_invite` is posted in your chat when `from` asks you to a live game; `live_result` is how a live game you played alone against Six Frites Game ended, for you; in a group, `group_created`, `joined`, `left`, `removed`, `renamed` and `group_photo` tell what happened to the group and to whom (`name` is how they showed there)"
                     },
                     "location": {
                       "nullable": true,
@@ -46174,6 +46858,44 @@
                             "type": {
                               "type": "string",
                               "enum": [
+                                "resend_request"
+                              ]
+                            }
+                          },
+                          "required": [
+                            "type"
+                          ],
+                          "additionalProperties": false
+                        },
+                        {
+                          "type": "object",
+                          "properties": {
+                            "type": {
+                              "type": "string",
+                              "enum": [
+                                "shared_to"
+                              ]
+                            },
+                            "to": {
+                              "type": "string",
+                              "enum": [
+                                "story",
+                                "note"
+                              ]
+                            }
+                          },
+                          "required": [
+                            "type",
+                            "to"
+                          ],
+                          "additionalProperties": false
+                        },
+                        {
+                          "type": "object",
+                          "properties": {
+                            "type": {
+                              "type": "string",
+                              "enum": [
                                 "group_created"
                               ]
                             },
@@ -46398,7 +47120,7 @@
                           "additionalProperties": false
                         }
                       ],
-                      "description": "What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `pin` means they pinned a message; `screenshot` means they took a screenshot of the chat (only detected on the web, and not everywhere); `call` logs a call the sender made; `live_invite` is posted in your chat when `from` asks you to a live game; `live_result` is how a live game you played alone against Six Frites Game ended, for you; in a group, `group_created`, `joined`, `left`, `removed`, `renamed` and `group_photo` tell what happened to the group and to whom (`name` is how they showed there)"
+                      "description": "What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `pin` means they pinned a message; `shared_to` means they shared a message from this chat to their story or as their note; `resend_request` means they couldn't open an encrypted message and asked the sender for it again; `screenshot` means they took a screenshot of the chat (only detected on the web, and not everywhere); `call` logs a call the sender made; `live_invite` is posted in your chat when `from` asks you to a live game; `live_result` is how a live game you played alone against Six Frites Game ended, for you; in a group, `group_created`, `joined`, `left`, `removed`, `renamed` and `group_photo` tell what happened to the group and to whom (`name` is how they showed there)"
                     },
                     "location": {
                       "nullable": true,
@@ -48044,6 +48766,44 @@
                                 "type": {
                                   "type": "string",
                                   "enum": [
+                                    "resend_request"
+                                  ]
+                                }
+                              },
+                              "required": [
+                                "type"
+                              ],
+                              "additionalProperties": false
+                            },
+                            {
+                              "type": "object",
+                              "properties": {
+                                "type": {
+                                  "type": "string",
+                                  "enum": [
+                                    "shared_to"
+                                  ]
+                                },
+                                "to": {
+                                  "type": "string",
+                                  "enum": [
+                                    "story",
+                                    "note"
+                                  ]
+                                }
+                              },
+                              "required": [
+                                "type",
+                                "to"
+                              ],
+                              "additionalProperties": false
+                            },
+                            {
+                              "type": "object",
+                              "properties": {
+                                "type": {
+                                  "type": "string",
+                                  "enum": [
                                     "group_created"
                                   ]
                                 },
@@ -48268,7 +49028,7 @@
                               "additionalProperties": false
                             }
                           ],
-                          "description": "What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `pin` means they pinned a message; `screenshot` means they took a screenshot of the chat (only detected on the web, and not everywhere); `call` logs a call the sender made; `live_invite` is posted in your chat when `from` asks you to a live game; `live_result` is how a live game you played alone against Six Frites Game ended, for you; in a group, `group_created`, `joined`, `left`, `removed`, `renamed` and `group_photo` tell what happened to the group and to whom (`name` is how they showed there)"
+                          "description": "What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `pin` means they pinned a message; `shared_to` means they shared a message from this chat to their story or as their note; `resend_request` means they couldn't open an encrypted message and asked the sender for it again; `screenshot` means they took a screenshot of the chat (only detected on the web, and not everywhere); `call` logs a call the sender made; `live_invite` is posted in your chat when `from` asks you to a live game; `live_result` is how a live game you played alone against Six Frites Game ended, for you; in a group, `group_created`, `joined`, `left`, `removed`, `renamed` and `group_photo` tell what happened to the group and to whom (`name` is how they showed there)"
                         },
                         "location": {
                           "nullable": true,
@@ -49925,6 +50685,44 @@
                             "type": {
                               "type": "string",
                               "enum": [
+                                "resend_request"
+                              ]
+                            }
+                          },
+                          "required": [
+                            "type"
+                          ],
+                          "additionalProperties": false
+                        },
+                        {
+                          "type": "object",
+                          "properties": {
+                            "type": {
+                              "type": "string",
+                              "enum": [
+                                "shared_to"
+                              ]
+                            },
+                            "to": {
+                              "type": "string",
+                              "enum": [
+                                "story",
+                                "note"
+                              ]
+                            }
+                          },
+                          "required": [
+                            "type",
+                            "to"
+                          ],
+                          "additionalProperties": false
+                        },
+                        {
+                          "type": "object",
+                          "properties": {
+                            "type": {
+                              "type": "string",
+                              "enum": [
                                 "group_created"
                               ]
                             },
@@ -50149,7 +50947,7 @@
                           "additionalProperties": false
                         }
                       ],
-                      "description": "What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `pin` means they pinned a message; `screenshot` means they took a screenshot of the chat (only detected on the web, and not everywhere); `call` logs a call the sender made; `live_invite` is posted in your chat when `from` asks you to a live game; `live_result` is how a live game you played alone against Six Frites Game ended, for you; in a group, `group_created`, `joined`, `left`, `removed`, `renamed` and `group_photo` tell what happened to the group and to whom (`name` is how they showed there)"
+                      "description": "What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `pin` means they pinned a message; `shared_to` means they shared a message from this chat to their story or as their note; `resend_request` means they couldn't open an encrypted message and asked the sender for it again; `screenshot` means they took a screenshot of the chat (only detected on the web, and not everywhere); `call` logs a call the sender made; `live_invite` is posted in your chat when `from` asks you to a live game; `live_result` is how a live game you played alone against Six Frites Game ended, for you; in a group, `group_created`, `joined`, `left`, `removed`, `renamed` and `group_photo` tell what happened to the group and to whom (`name` is how they showed there)"
                     },
                     "location": {
                       "nullable": true,
@@ -51792,6 +52590,44 @@
                             "type": {
                               "type": "string",
                               "enum": [
+                                "resend_request"
+                              ]
+                            }
+                          },
+                          "required": [
+                            "type"
+                          ],
+                          "additionalProperties": false
+                        },
+                        {
+                          "type": "object",
+                          "properties": {
+                            "type": {
+                              "type": "string",
+                              "enum": [
+                                "shared_to"
+                              ]
+                            },
+                            "to": {
+                              "type": "string",
+                              "enum": [
+                                "story",
+                                "note"
+                              ]
+                            }
+                          },
+                          "required": [
+                            "type",
+                            "to"
+                          ],
+                          "additionalProperties": false
+                        },
+                        {
+                          "type": "object",
+                          "properties": {
+                            "type": {
+                              "type": "string",
+                              "enum": [
                                 "group_created"
                               ]
                             },
@@ -52016,7 +52852,7 @@
                           "additionalProperties": false
                         }
                       ],
-                      "description": "What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `pin` means they pinned a message; `screenshot` means they took a screenshot of the chat (only detected on the web, and not everywhere); `call` logs a call the sender made; `live_invite` is posted in your chat when `from` asks you to a live game; `live_result` is how a live game you played alone against Six Frites Game ended, for you; in a group, `group_created`, `joined`, `left`, `removed`, `renamed` and `group_photo` tell what happened to the group and to whom (`name` is how they showed there)"
+                      "description": "What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `pin` means they pinned a message; `shared_to` means they shared a message from this chat to their story or as their note; `resend_request` means they couldn't open an encrypted message and asked the sender for it again; `screenshot` means they took a screenshot of the chat (only detected on the web, and not everywhere); `call` logs a call the sender made; `live_invite` is posted in your chat when `from` asks you to a live game; `live_result` is how a live game you played alone against Six Frites Game ended, for you; in a group, `group_created`, `joined`, `left`, `removed`, `renamed` and `group_photo` tell what happened to the group and to whom (`name` is how they showed there)"
                     },
                     "location": {
                       "nullable": true,
@@ -53659,6 +54495,44 @@
                             "type": {
                               "type": "string",
                               "enum": [
+                                "resend_request"
+                              ]
+                            }
+                          },
+                          "required": [
+                            "type"
+                          ],
+                          "additionalProperties": false
+                        },
+                        {
+                          "type": "object",
+                          "properties": {
+                            "type": {
+                              "type": "string",
+                              "enum": [
+                                "shared_to"
+                              ]
+                            },
+                            "to": {
+                              "type": "string",
+                              "enum": [
+                                "story",
+                                "note"
+                              ]
+                            }
+                          },
+                          "required": [
+                            "type",
+                            "to"
+                          ],
+                          "additionalProperties": false
+                        },
+                        {
+                          "type": "object",
+                          "properties": {
+                            "type": {
+                              "type": "string",
+                              "enum": [
                                 "group_created"
                               ]
                             },
@@ -53883,7 +54757,7 @@
                           "additionalProperties": false
                         }
                       ],
-                      "description": "What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `pin` means they pinned a message; `screenshot` means they took a screenshot of the chat (only detected on the web, and not everywhere); `call` logs a call the sender made; `live_invite` is posted in your chat when `from` asks you to a live game; `live_result` is how a live game you played alone against Six Frites Game ended, for you; in a group, `group_created`, `joined`, `left`, `removed`, `renamed` and `group_photo` tell what happened to the group and to whom (`name` is how they showed there)"
+                      "description": "What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `pin` means they pinned a message; `shared_to` means they shared a message from this chat to their story or as their note; `resend_request` means they couldn't open an encrypted message and asked the sender for it again; `screenshot` means they took a screenshot of the chat (only detected on the web, and not everywhere); `call` logs a call the sender made; `live_invite` is posted in your chat when `from` asks you to a live game; `live_result` is how a live game you played alone against Six Frites Game ended, for you; in a group, `group_created`, `joined`, `left`, `removed`, `renamed` and `group_photo` tell what happened to the group and to whom (`name` is how they showed there)"
                     },
                     "location": {
                       "nullable": true,
@@ -55645,6 +56519,44 @@
                             "type": {
                               "type": "string",
                               "enum": [
+                                "resend_request"
+                              ]
+                            }
+                          },
+                          "required": [
+                            "type"
+                          ],
+                          "additionalProperties": false
+                        },
+                        {
+                          "type": "object",
+                          "properties": {
+                            "type": {
+                              "type": "string",
+                              "enum": [
+                                "shared_to"
+                              ]
+                            },
+                            "to": {
+                              "type": "string",
+                              "enum": [
+                                "story",
+                                "note"
+                              ]
+                            }
+                          },
+                          "required": [
+                            "type",
+                            "to"
+                          ],
+                          "additionalProperties": false
+                        },
+                        {
+                          "type": "object",
+                          "properties": {
+                            "type": {
+                              "type": "string",
+                              "enum": [
                                 "group_created"
                               ]
                             },
@@ -55869,7 +56781,7 @@
                           "additionalProperties": false
                         }
                       ],
-                      "description": "What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `pin` means they pinned a message; `screenshot` means they took a screenshot of the chat (only detected on the web, and not everywhere); `call` logs a call the sender made; `live_invite` is posted in your chat when `from` asks you to a live game; `live_result` is how a live game you played alone against Six Frites Game ended, for you; in a group, `group_created`, `joined`, `left`, `removed`, `renamed` and `group_photo` tell what happened to the group and to whom (`name` is how they showed there)"
+                      "description": "What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `pin` means they pinned a message; `shared_to` means they shared a message from this chat to their story or as their note; `resend_request` means they couldn't open an encrypted message and asked the sender for it again; `screenshot` means they took a screenshot of the chat (only detected on the web, and not everywhere); `call` logs a call the sender made; `live_invite` is posted in your chat when `from` asks you to a live game; `live_result` is how a live game you played alone against Six Frites Game ended, for you; in a group, `group_created`, `joined`, `left`, `removed`, `renamed` and `group_photo` tell what happened to the group and to whom (`name` is how they showed there)"
                     },
                     "location": {
                       "nullable": true,
@@ -57536,6 +58448,44 @@
                             "type": {
                               "type": "string",
                               "enum": [
+                                "resend_request"
+                              ]
+                            }
+                          },
+                          "required": [
+                            "type"
+                          ],
+                          "additionalProperties": false
+                        },
+                        {
+                          "type": "object",
+                          "properties": {
+                            "type": {
+                              "type": "string",
+                              "enum": [
+                                "shared_to"
+                              ]
+                            },
+                            "to": {
+                              "type": "string",
+                              "enum": [
+                                "story",
+                                "note"
+                              ]
+                            }
+                          },
+                          "required": [
+                            "type",
+                            "to"
+                          ],
+                          "additionalProperties": false
+                        },
+                        {
+                          "type": "object",
+                          "properties": {
+                            "type": {
+                              "type": "string",
+                              "enum": [
                                 "group_created"
                               ]
                             },
@@ -57760,7 +58710,7 @@
                           "additionalProperties": false
                         }
                       ],
-                      "description": "What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `pin` means they pinned a message; `screenshot` means they took a screenshot of the chat (only detected on the web, and not everywhere); `call` logs a call the sender made; `live_invite` is posted in your chat when `from` asks you to a live game; `live_result` is how a live game you played alone against Six Frites Game ended, for you; in a group, `group_created`, `joined`, `left`, `removed`, `renamed` and `group_photo` tell what happened to the group and to whom (`name` is how they showed there)"
+                      "description": "What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `pin` means they pinned a message; `shared_to` means they shared a message from this chat to their story or as their note; `resend_request` means they couldn't open an encrypted message and asked the sender for it again; `screenshot` means they took a screenshot of the chat (only detected on the web, and not everywhere); `call` logs a call the sender made; `live_invite` is posted in your chat when `from` asks you to a live game; `live_result` is how a live game you played alone against Six Frites Game ended, for you; in a group, `group_created`, `joined`, `left`, `removed`, `renamed` and `group_photo` tell what happened to the group and to whom (`name` is how they showed there)"
                     },
                     "location": {
                       "nullable": true,
@@ -59538,6 +60488,44 @@
                                   "type": {
                                     "type": "string",
                                     "enum": [
+                                      "resend_request"
+                                    ]
+                                  }
+                                },
+                                "required": [
+                                  "type"
+                                ],
+                                "additionalProperties": false
+                              },
+                              {
+                                "type": "object",
+                                "properties": {
+                                  "type": {
+                                    "type": "string",
+                                    "enum": [
+                                      "shared_to"
+                                    ]
+                                  },
+                                  "to": {
+                                    "type": "string",
+                                    "enum": [
+                                      "story",
+                                      "note"
+                                    ]
+                                  }
+                                },
+                                "required": [
+                                  "type",
+                                  "to"
+                                ],
+                                "additionalProperties": false
+                              },
+                              {
+                                "type": "object",
+                                "properties": {
+                                  "type": {
+                                    "type": "string",
+                                    "enum": [
                                       "group_created"
                                     ]
                                   },
@@ -59762,7 +60750,7 @@
                                 "additionalProperties": false
                               }
                             ],
-                            "description": "What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `pin` means they pinned a message; `screenshot` means they took a screenshot of the chat (only detected on the web, and not everywhere); `call` logs a call the sender made; `live_invite` is posted in your chat when `from` asks you to a live game; `live_result` is how a live game you played alone against Six Frites Game ended, for you; in a group, `group_created`, `joined`, `left`, `removed`, `renamed` and `group_photo` tell what happened to the group and to whom (`name` is how they showed there)"
+                            "description": "What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `pin` means they pinned a message; `shared_to` means they shared a message from this chat to their story or as their note; `resend_request` means they couldn't open an encrypted message and asked the sender for it again; `screenshot` means they took a screenshot of the chat (only detected on the web, and not everywhere); `call` logs a call the sender made; `live_invite` is posted in your chat when `from` asks you to a live game; `live_result` is how a live game you played alone against Six Frites Game ended, for you; in a group, `group_created`, `joined`, `left`, `removed`, `renamed` and `group_photo` tell what happened to the group and to whom (`name` is how they showed there)"
                           },
                           "location": {
                             "nullable": true,
@@ -62111,6 +63099,44 @@
                             "type": {
                               "type": "string",
                               "enum": [
+                                "resend_request"
+                              ]
+                            }
+                          },
+                          "required": [
+                            "type"
+                          ],
+                          "additionalProperties": false
+                        },
+                        {
+                          "type": "object",
+                          "properties": {
+                            "type": {
+                              "type": "string",
+                              "enum": [
+                                "shared_to"
+                              ]
+                            },
+                            "to": {
+                              "type": "string",
+                              "enum": [
+                                "story",
+                                "note"
+                              ]
+                            }
+                          },
+                          "required": [
+                            "type",
+                            "to"
+                          ],
+                          "additionalProperties": false
+                        },
+                        {
+                          "type": "object",
+                          "properties": {
+                            "type": {
+                              "type": "string",
+                              "enum": [
                                 "group_created"
                               ]
                             },
@@ -62335,7 +63361,7 @@
                           "additionalProperties": false
                         }
                       ],
-                      "description": "What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `pin` means they pinned a message; `screenshot` means they took a screenshot of the chat (only detected on the web, and not everywhere); `call` logs a call the sender made; `live_invite` is posted in your chat when `from` asks you to a live game; `live_result` is how a live game you played alone against Six Frites Game ended, for you; in a group, `group_created`, `joined`, `left`, `removed`, `renamed` and `group_photo` tell what happened to the group and to whom (`name` is how they showed there)"
+                      "description": "What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `pin` means they pinned a message; `shared_to` means they shared a message from this chat to their story or as their note; `resend_request` means they couldn't open an encrypted message and asked the sender for it again; `screenshot` means they took a screenshot of the chat (only detected on the web, and not everywhere); `call` logs a call the sender made; `live_invite` is posted in your chat when `from` asks you to a live game; `live_result` is how a live game you played alone against Six Frites Game ended, for you; in a group, `group_created`, `joined`, `left`, `removed`, `renamed` and `group_photo` tell what happened to the group and to whom (`name` is how they showed there)"
                     },
                     "location": {
                       "nullable": true,
@@ -66372,6 +67398,44 @@
                             "type": {
                               "type": "string",
                               "enum": [
+                                "resend_request"
+                              ]
+                            }
+                          },
+                          "required": [
+                            "type"
+                          ],
+                          "additionalProperties": false
+                        },
+                        {
+                          "type": "object",
+                          "properties": {
+                            "type": {
+                              "type": "string",
+                              "enum": [
+                                "shared_to"
+                              ]
+                            },
+                            "to": {
+                              "type": "string",
+                              "enum": [
+                                "story",
+                                "note"
+                              ]
+                            }
+                          },
+                          "required": [
+                            "type",
+                            "to"
+                          ],
+                          "additionalProperties": false
+                        },
+                        {
+                          "type": "object",
+                          "properties": {
+                            "type": {
+                              "type": "string",
+                              "enum": [
                                 "group_created"
                               ]
                             },
@@ -66596,7 +67660,7 @@
                           "additionalProperties": false
                         }
                       ],
-                      "description": "What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `pin` means they pinned a message; `screenshot` means they took a screenshot of the chat (only detected on the web, and not everywhere); `call` logs a call the sender made; `live_invite` is posted in your chat when `from` asks you to a live game; `live_result` is how a live game you played alone against Six Frites Game ended, for you; in a group, `group_created`, `joined`, `left`, `removed`, `renamed` and `group_photo` tell what happened to the group and to whom (`name` is how they showed there)"
+                      "description": "What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `pin` means they pinned a message; `shared_to` means they shared a message from this chat to their story or as their note; `resend_request` means they couldn't open an encrypted message and asked the sender for it again; `screenshot` means they took a screenshot of the chat (only detected on the web, and not everywhere); `call` logs a call the sender made; `live_invite` is posted in your chat when `from` asks you to a live game; `live_result` is how a live game you played alone against Six Frites Game ended, for you; in a group, `group_created`, `joined`, `left`, `removed`, `renamed` and `group_photo` tell what happened to the group and to whom (`name` is how they showed there)"
                     },
                     "location": {
                       "nullable": true,
@@ -69305,6 +70369,44 @@
                                           "type": {
                                             "type": "string",
                                             "enum": [
+                                              "resend_request"
+                                            ]
+                                          }
+                                        },
+                                        "required": [
+                                          "type"
+                                        ],
+                                        "additionalProperties": false
+                                      },
+                                      {
+                                        "type": "object",
+                                        "properties": {
+                                          "type": {
+                                            "type": "string",
+                                            "enum": [
+                                              "shared_to"
+                                            ]
+                                          },
+                                          "to": {
+                                            "type": "string",
+                                            "enum": [
+                                              "story",
+                                              "note"
+                                            ]
+                                          }
+                                        },
+                                        "required": [
+                                          "type",
+                                          "to"
+                                        ],
+                                        "additionalProperties": false
+                                      },
+                                      {
+                                        "type": "object",
+                                        "properties": {
+                                          "type": {
+                                            "type": "string",
+                                            "enum": [
                                               "group_created"
                                             ]
                                           },
@@ -69529,7 +70631,7 @@
                                         "additionalProperties": false
                                       }
                                     ],
-                                    "description": "What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `pin` means they pinned a message; `screenshot` means they took a screenshot of the chat (only detected on the web, and not everywhere); `call` logs a call the sender made; `live_invite` is posted in your chat when `from` asks you to a live game; `live_result` is how a live game you played alone against Six Frites Game ended, for you; in a group, `group_created`, `joined`, `left`, `removed`, `renamed` and `group_photo` tell what happened to the group and to whom (`name` is how they showed there)"
+                                    "description": "What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `pin` means they pinned a message; `shared_to` means they shared a message from this chat to their story or as their note; `resend_request` means they couldn't open an encrypted message and asked the sender for it again; `screenshot` means they took a screenshot of the chat (only detected on the web, and not everywhere); `call` logs a call the sender made; `live_invite` is posted in your chat when `from` asks you to a live game; `live_result` is how a live game you played alone against Six Frites Game ended, for you; in a group, `group_created`, `joined`, `left`, `removed`, `renamed` and `group_photo` tell what happened to the group and to whom (`name` is how they showed there)"
                                   },
                                   "location": {
                                     "nullable": true,
@@ -71162,6 +72264,44 @@
                                           "type": {
                                             "type": "string",
                                             "enum": [
+                                              "resend_request"
+                                            ]
+                                          }
+                                        },
+                                        "required": [
+                                          "type"
+                                        ],
+                                        "additionalProperties": false
+                                      },
+                                      {
+                                        "type": "object",
+                                        "properties": {
+                                          "type": {
+                                            "type": "string",
+                                            "enum": [
+                                              "shared_to"
+                                            ]
+                                          },
+                                          "to": {
+                                            "type": "string",
+                                            "enum": [
+                                              "story",
+                                              "note"
+                                            ]
+                                          }
+                                        },
+                                        "required": [
+                                          "type",
+                                          "to"
+                                        ],
+                                        "additionalProperties": false
+                                      },
+                                      {
+                                        "type": "object",
+                                        "properties": {
+                                          "type": {
+                                            "type": "string",
+                                            "enum": [
                                               "group_created"
                                             ]
                                           },
@@ -71386,7 +72526,7 @@
                                         "additionalProperties": false
                                       }
                                     ],
-                                    "description": "What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `pin` means they pinned a message; `screenshot` means they took a screenshot of the chat (only detected on the web, and not everywhere); `call` logs a call the sender made; `live_invite` is posted in your chat when `from` asks you to a live game; `live_result` is how a live game you played alone against Six Frites Game ended, for you; in a group, `group_created`, `joined`, `left`, `removed`, `renamed` and `group_photo` tell what happened to the group and to whom (`name` is how they showed there)"
+                                    "description": "What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `pin` means they pinned a message; `shared_to` means they shared a message from this chat to their story or as their note; `resend_request` means they couldn't open an encrypted message and asked the sender for it again; `screenshot` means they took a screenshot of the chat (only detected on the web, and not everywhere); `call` logs a call the sender made; `live_invite` is posted in your chat when `from` asks you to a live game; `live_result` is how a live game you played alone against Six Frites Game ended, for you; in a group, `group_created`, `joined`, `left`, `removed`, `renamed` and `group_photo` tell what happened to the group and to whom (`name` is how they showed there)"
                                   },
                                   "location": {
                                     "nullable": true,
@@ -73277,6 +74417,44 @@
                                               "type": {
                                                 "type": "string",
                                                 "enum": [
+                                                  "resend_request"
+                                                ]
+                                              }
+                                            },
+                                            "required": [
+                                              "type"
+                                            ],
+                                            "additionalProperties": false
+                                          },
+                                          {
+                                            "type": "object",
+                                            "properties": {
+                                              "type": {
+                                                "type": "string",
+                                                "enum": [
+                                                  "shared_to"
+                                                ]
+                                              },
+                                              "to": {
+                                                "type": "string",
+                                                "enum": [
+                                                  "story",
+                                                  "note"
+                                                ]
+                                              }
+                                            },
+                                            "required": [
+                                              "type",
+                                              "to"
+                                            ],
+                                            "additionalProperties": false
+                                          },
+                                          {
+                                            "type": "object",
+                                            "properties": {
+                                              "type": {
+                                                "type": "string",
+                                                "enum": [
                                                   "group_created"
                                                 ]
                                               },
@@ -73501,7 +74679,7 @@
                                             "additionalProperties": false
                                           }
                                         ],
-                                        "description": "What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `pin` means they pinned a message; `screenshot` means they took a screenshot of the chat (only detected on the web, and not everywhere); `call` logs a call the sender made; `live_invite` is posted in your chat when `from` asks you to a live game; `live_result` is how a live game you played alone against Six Frites Game ended, for you; in a group, `group_created`, `joined`, `left`, `removed`, `renamed` and `group_photo` tell what happened to the group and to whom (`name` is how they showed there)"
+                                        "description": "What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `pin` means they pinned a message; `shared_to` means they shared a message from this chat to their story or as their note; `resend_request` means they couldn't open an encrypted message and asked the sender for it again; `screenshot` means they took a screenshot of the chat (only detected on the web, and not everywhere); `call` logs a call the sender made; `live_invite` is posted in your chat when `from` asks you to a live game; `live_result` is how a live game you played alone against Six Frites Game ended, for you; in a group, `group_created`, `joined`, `left`, `removed`, `renamed` and `group_photo` tell what happened to the group and to whom (`name` is how they showed there)"
                                       },
                                       "location": {
                                         "nullable": true,
@@ -75160,6 +76338,44 @@
                                                 "type": {
                                                   "type": "string",
                                                   "enum": [
+                                                    "resend_request"
+                                                  ]
+                                                }
+                                              },
+                                              "required": [
+                                                "type"
+                                              ],
+                                              "additionalProperties": false
+                                            },
+                                            {
+                                              "type": "object",
+                                              "properties": {
+                                                "type": {
+                                                  "type": "string",
+                                                  "enum": [
+                                                    "shared_to"
+                                                  ]
+                                                },
+                                                "to": {
+                                                  "type": "string",
+                                                  "enum": [
+                                                    "story",
+                                                    "note"
+                                                  ]
+                                                }
+                                              },
+                                              "required": [
+                                                "type",
+                                                "to"
+                                              ],
+                                              "additionalProperties": false
+                                            },
+                                            {
+                                              "type": "object",
+                                              "properties": {
+                                                "type": {
+                                                  "type": "string",
+                                                  "enum": [
                                                     "group_created"
                                                   ]
                                                 },
@@ -75384,7 +76600,7 @@
                                               "additionalProperties": false
                                             }
                                           ],
-                                          "description": "What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `pin` means they pinned a message; `screenshot` means they took a screenshot of the chat (only detected on the web, and not everywhere); `call` logs a call the sender made; `live_invite` is posted in your chat when `from` asks you to a live game; `live_result` is how a live game you played alone against Six Frites Game ended, for you; in a group, `group_created`, `joined`, `left`, `removed`, `renamed` and `group_photo` tell what happened to the group and to whom (`name` is how they showed there)"
+                                          "description": "What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `pin` means they pinned a message; `shared_to` means they shared a message from this chat to their story or as their note; `resend_request` means they couldn't open an encrypted message and asked the sender for it again; `screenshot` means they took a screenshot of the chat (only detected on the web, and not everywhere); `call` logs a call the sender made; `live_invite` is posted in your chat when `from` asks you to a live game; `live_result` is how a live game you played alone against Six Frites Game ended, for you; in a group, `group_created`, `joined`, `left`, `removed`, `renamed` and `group_photo` tell what happened to the group and to whom (`name` is how they showed there)"
                                         },
                                         "location": {
                                           "nullable": true,
@@ -79065,6 +80281,44 @@
                             "type": {
                               "type": "string",
                               "enum": [
+                                "resend_request"
+                              ]
+                            }
+                          },
+                          "required": [
+                            "type"
+                          ],
+                          "additionalProperties": false
+                        },
+                        {
+                          "type": "object",
+                          "properties": {
+                            "type": {
+                              "type": "string",
+                              "enum": [
+                                "shared_to"
+                              ]
+                            },
+                            "to": {
+                              "type": "string",
+                              "enum": [
+                                "story",
+                                "note"
+                              ]
+                            }
+                          },
+                          "required": [
+                            "type",
+                            "to"
+                          ],
+                          "additionalProperties": false
+                        },
+                        {
+                          "type": "object",
+                          "properties": {
+                            "type": {
+                              "type": "string",
+                              "enum": [
                                 "group_created"
                               ]
                             },
@@ -79289,7 +80543,7 @@
                           "additionalProperties": false
                         }
                       ],
-                      "description": "What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `pin` means they pinned a message; `screenshot` means they took a screenshot of the chat (only detected on the web, and not everywhere); `call` logs a call the sender made; `live_invite` is posted in your chat when `from` asks you to a live game; `live_result` is how a live game you played alone against Six Frites Game ended, for you; in a group, `group_created`, `joined`, `left`, `removed`, `renamed` and `group_photo` tell what happened to the group and to whom (`name` is how they showed there)"
+                      "description": "What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `pin` means they pinned a message; `shared_to` means they shared a message from this chat to their story or as their note; `resend_request` means they couldn't open an encrypted message and asked the sender for it again; `screenshot` means they took a screenshot of the chat (only detected on the web, and not everywhere); `call` logs a call the sender made; `live_invite` is posted in your chat when `from` asks you to a live game; `live_result` is how a live game you played alone against Six Frites Game ended, for you; in a group, `group_created`, `joined`, `left`, `removed`, `renamed` and `group_photo` tell what happened to the group and to whom (`name` is how they showed there)"
                     },
                     "location": {
                       "nullable": true,
@@ -83570,10 +84824,27 @@
                         },
                         "text": {
                           "type": "string",
-                          "description": "Empty when the note is only a GIF"
+                          "description": "Empty when the note is only a GIF or a place"
                         },
                         "fromChat": {
                           "type": "boolean"
+                        },
+                        "font": {
+                          "nullable": true,
+                          "type": "string",
+                          "enum": [
+                            "classic",
+                            "serif",
+                            "marker",
+                            "script",
+                            "typewriter",
+                            "handwriting",
+                            "lobster",
+                            "tall",
+                            "rounded",
+                            "pixel",
+                            "elegant"
+                          ]
                         },
                         "quote": {
                           "nullable": true,
@@ -83658,6 +84929,40 @@
                           ],
                           "additionalProperties": false
                         },
+                        "location": {
+                          "nullable": true,
+                          "type": "object",
+                          "properties": {
+                            "lat": {
+                              "type": "number",
+                              "minimum": -90,
+                              "maximum": 90
+                            },
+                            "lng": {
+                              "type": "number",
+                              "minimum": -180,
+                              "maximum": 180
+                            },
+                            "accuracy": {
+                              "description": "How far off it may be, in meters",
+                              "nullable": true,
+                              "type": "number",
+                              "minimum": 0,
+                              "maximum": 100000
+                            },
+                            "name": {
+                              "description": "What the place is called, as the poster typed it",
+                              "type": "string",
+                              "minLength": 1,
+                              "maxLength": 80
+                            }
+                          },
+                          "required": [
+                            "lat",
+                            "lng"
+                          ],
+                          "additionalProperties": false
+                        },
                         "viewCount": {
                           "nullable": true,
                           "description": "How many contacts opened it; only on yours",
@@ -83680,9 +84985,11 @@
                         "id",
                         "text",
                         "fromChat",
+                        "font",
                         "quote",
                         "background",
                         "gif",
+                        "location",
                         "viewCount",
                         "createdAt",
                         "expiresAt"
@@ -83731,10 +85038,27 @@
                               },
                               "text": {
                                 "type": "string",
-                                "description": "Empty when the note is only a GIF"
+                                "description": "Empty when the note is only a GIF or a place"
                               },
                               "fromChat": {
                                 "type": "boolean"
+                              },
+                              "font": {
+                                "nullable": true,
+                                "type": "string",
+                                "enum": [
+                                  "classic",
+                                  "serif",
+                                  "marker",
+                                  "script",
+                                  "typewriter",
+                                  "handwriting",
+                                  "lobster",
+                                  "tall",
+                                  "rounded",
+                                  "pixel",
+                                  "elegant"
+                                ]
                               },
                               "quote": {
                                 "nullable": true,
@@ -83819,6 +85143,40 @@
                                 ],
                                 "additionalProperties": false
                               },
+                              "location": {
+                                "nullable": true,
+                                "type": "object",
+                                "properties": {
+                                  "lat": {
+                                    "type": "number",
+                                    "minimum": -90,
+                                    "maximum": 90
+                                  },
+                                  "lng": {
+                                    "type": "number",
+                                    "minimum": -180,
+                                    "maximum": 180
+                                  },
+                                  "accuracy": {
+                                    "description": "How far off it may be, in meters",
+                                    "nullable": true,
+                                    "type": "number",
+                                    "minimum": 0,
+                                    "maximum": 100000
+                                  },
+                                  "name": {
+                                    "description": "What the place is called, as the poster typed it",
+                                    "type": "string",
+                                    "minLength": 1,
+                                    "maxLength": 80
+                                  }
+                                },
+                                "required": [
+                                  "lat",
+                                  "lng"
+                                ],
+                                "additionalProperties": false
+                              },
                               "viewCount": {
                                 "nullable": true,
                                 "description": "How many contacts opened it; only on yours",
@@ -83841,9 +85199,11 @@
                               "id",
                               "text",
                               "fromChat",
+                              "font",
                               "quote",
                               "background",
                               "gif",
+                              "location",
                               "viewCount",
                               "createdAt",
                               "expiresAt"
@@ -83893,6 +85253,23 @@
                     "description": "The text is a chat message shared as it was, shown in quotes",
                     "type": "boolean"
                   },
+                  "font": {
+                    "description": "The font the text is written in; the app's own when left out",
+                    "type": "string",
+                    "enum": [
+                      "classic",
+                      "serif",
+                      "marker",
+                      "script",
+                      "typewriter",
+                      "handwriting",
+                      "lobster",
+                      "tall",
+                      "rounded",
+                      "pixel",
+                      "elegant"
+                    ]
+                  },
                   "messageId": {
                     "description": "With fromChat: the message it is, so the note shows who sent it, as you see them, and when",
                     "type": "string",
@@ -83902,6 +85279,39 @@
                     "description": "A GIF from GET /v1/gifs shown in the note",
                     "type": "string",
                     "pattern": "^[\\w-]{1,128}$"
+                  },
+                  "location": {
+                    "description": "A place shown under the note, which opens in maps",
+                    "type": "object",
+                    "properties": {
+                      "lat": {
+                        "type": "number",
+                        "minimum": -90,
+                        "maximum": 90
+                      },
+                      "lng": {
+                        "type": "number",
+                        "minimum": -180,
+                        "maximum": 180
+                      },
+                      "accuracy": {
+                        "description": "How far off it may be, in meters",
+                        "nullable": true,
+                        "type": "number",
+                        "minimum": 0,
+                        "maximum": 100000
+                      },
+                      "name": {
+                        "description": "What the place is called, as the poster typed it",
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 80
+                      }
+                    },
+                    "required": [
+                      "lat",
+                      "lng"
+                    ]
                   },
                   "background": {
                     "description": "The bubble's colour, like #e11d48; without it the bubble follows the reader's theme",
@@ -83939,10 +85349,27 @@
                     },
                     "text": {
                       "type": "string",
-                      "description": "Empty when the note is only a GIF"
+                      "description": "Empty when the note is only a GIF or a place"
                     },
                     "fromChat": {
                       "type": "boolean"
+                    },
+                    "font": {
+                      "nullable": true,
+                      "type": "string",
+                      "enum": [
+                        "classic",
+                        "serif",
+                        "marker",
+                        "script",
+                        "typewriter",
+                        "handwriting",
+                        "lobster",
+                        "tall",
+                        "rounded",
+                        "pixel",
+                        "elegant"
+                      ]
                     },
                     "quote": {
                       "nullable": true,
@@ -84027,6 +85454,40 @@
                       ],
                       "additionalProperties": false
                     },
+                    "location": {
+                      "nullable": true,
+                      "type": "object",
+                      "properties": {
+                        "lat": {
+                          "type": "number",
+                          "minimum": -90,
+                          "maximum": 90
+                        },
+                        "lng": {
+                          "type": "number",
+                          "minimum": -180,
+                          "maximum": 180
+                        },
+                        "accuracy": {
+                          "description": "How far off it may be, in meters",
+                          "nullable": true,
+                          "type": "number",
+                          "minimum": 0,
+                          "maximum": 100000
+                        },
+                        "name": {
+                          "description": "What the place is called, as the poster typed it",
+                          "type": "string",
+                          "minLength": 1,
+                          "maxLength": 80
+                        }
+                      },
+                      "required": [
+                        "lat",
+                        "lng"
+                      ],
+                      "additionalProperties": false
+                    },
                     "viewCount": {
                       "nullable": true,
                       "description": "How many contacts opened it; only on yours",
@@ -84049,9 +85510,11 @@
                     "id",
                     "text",
                     "fromChat",
+                    "font",
                     "quote",
                     "background",
                     "gif",
+                    "location",
                     "viewCount",
                     "createdAt",
                     "expiresAt"
@@ -87548,6 +89011,44 @@
                                 "type": {
                                   "type": "string",
                                   "enum": [
+                                    "resend_request"
+                                  ]
+                                }
+                              },
+                              "required": [
+                                "type"
+                              ],
+                              "additionalProperties": false
+                            },
+                            {
+                              "type": "object",
+                              "properties": {
+                                "type": {
+                                  "type": "string",
+                                  "enum": [
+                                    "shared_to"
+                                  ]
+                                },
+                                "to": {
+                                  "type": "string",
+                                  "enum": [
+                                    "story",
+                                    "note"
+                                  ]
+                                }
+                              },
+                              "required": [
+                                "type",
+                                "to"
+                              ],
+                              "additionalProperties": false
+                            },
+                            {
+                              "type": "object",
+                              "properties": {
+                                "type": {
+                                  "type": "string",
+                                  "enum": [
                                     "group_created"
                                   ]
                                 },
@@ -87772,7 +89273,7 @@
                               "additionalProperties": false
                             }
                           ],
-                          "description": "What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `pin` means they pinned a message; `screenshot` means they took a screenshot of the chat (only detected on the web, and not everywhere); `call` logs a call the sender made; `live_invite` is posted in your chat when `from` asks you to a live game; `live_result` is how a live game you played alone against Six Frites Game ended, for you; in a group, `group_created`, `joined`, `left`, `removed`, `renamed` and `group_photo` tell what happened to the group and to whom (`name` is how they showed there)"
+                          "description": "What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `pin` means they pinned a message; `shared_to` means they shared a message from this chat to their story or as their note; `resend_request` means they couldn't open an encrypted message and asked the sender for it again; `screenshot` means they took a screenshot of the chat (only detected on the web, and not everywhere); `call` logs a call the sender made; `live_invite` is posted in your chat when `from` asks you to a live game; `live_result` is how a live game you played alone against Six Frites Game ended, for you; in a group, `group_created`, `joined`, `left`, `removed`, `renamed` and `group_photo` tell what happened to the group and to whom (`name` is how they showed there)"
                         },
                         "location": {
                           "nullable": true,
@@ -89431,6 +90932,44 @@
                                   "type": {
                                     "type": "string",
                                     "enum": [
+                                      "resend_request"
+                                    ]
+                                  }
+                                },
+                                "required": [
+                                  "type"
+                                ],
+                                "additionalProperties": false
+                              },
+                              {
+                                "type": "object",
+                                "properties": {
+                                  "type": {
+                                    "type": "string",
+                                    "enum": [
+                                      "shared_to"
+                                    ]
+                                  },
+                                  "to": {
+                                    "type": "string",
+                                    "enum": [
+                                      "story",
+                                      "note"
+                                    ]
+                                  }
+                                },
+                                "required": [
+                                  "type",
+                                  "to"
+                                ],
+                                "additionalProperties": false
+                              },
+                              {
+                                "type": "object",
+                                "properties": {
+                                  "type": {
+                                    "type": "string",
+                                    "enum": [
                                       "group_created"
                                     ]
                                   },
@@ -89655,7 +91194,7 @@
                                 "additionalProperties": false
                               }
                             ],
-                            "description": "What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `pin` means they pinned a message; `screenshot` means they took a screenshot of the chat (only detected on the web, and not everywhere); `call` logs a call the sender made; `live_invite` is posted in your chat when `from` asks you to a live game; `live_result` is how a live game you played alone against Six Frites Game ended, for you; in a group, `group_created`, `joined`, `left`, `removed`, `renamed` and `group_photo` tell what happened to the group and to whom (`name` is how they showed there)"
+                            "description": "What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `pin` means they pinned a message; `shared_to` means they shared a message from this chat to their story or as their note; `resend_request` means they couldn't open an encrypted message and asked the sender for it again; `screenshot` means they took a screenshot of the chat (only detected on the web, and not everywhere); `call` logs a call the sender made; `live_invite` is posted in your chat when `from` asks you to a live game; `live_result` is how a live game you played alone against Six Frites Game ended, for you; in a group, `group_created`, `joined`, `left`, `removed`, `renamed` and `group_photo` tell what happened to the group and to whom (`name` is how they showed there)"
                           },
                           "location": {
                             "nullable": true,
@@ -91664,6 +93203,44 @@
                                 "type": {
                                   "type": "string",
                                   "enum": [
+                                    "resend_request"
+                                  ]
+                                }
+                              },
+                              "required": [
+                                "type"
+                              ],
+                              "additionalProperties": false
+                            },
+                            {
+                              "type": "object",
+                              "properties": {
+                                "type": {
+                                  "type": "string",
+                                  "enum": [
+                                    "shared_to"
+                                  ]
+                                },
+                                "to": {
+                                  "type": "string",
+                                  "enum": [
+                                    "story",
+                                    "note"
+                                  ]
+                                }
+                              },
+                              "required": [
+                                "type",
+                                "to"
+                              ],
+                              "additionalProperties": false
+                            },
+                            {
+                              "type": "object",
+                              "properties": {
+                                "type": {
+                                  "type": "string",
+                                  "enum": [
                                     "group_created"
                                   ]
                                 },
@@ -91888,7 +93465,7 @@
                               "additionalProperties": false
                             }
                           ],
-                          "description": "What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `pin` means they pinned a message; `screenshot` means they took a screenshot of the chat (only detected on the web, and not everywhere); `call` logs a call the sender made; `live_invite` is posted in your chat when `from` asks you to a live game; `live_result` is how a live game you played alone against Six Frites Game ended, for you; in a group, `group_created`, `joined`, `left`, `removed`, `renamed` and `group_photo` tell what happened to the group and to whom (`name` is how they showed there)"
+                          "description": "What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `pin` means they pinned a message; `shared_to` means they shared a message from this chat to their story or as their note; `resend_request` means they couldn't open an encrypted message and asked the sender for it again; `screenshot` means they took a screenshot of the chat (only detected on the web, and not everywhere); `call` logs a call the sender made; `live_invite` is posted in your chat when `from` asks you to a live game; `live_result` is how a live game you played alone against Six Frites Game ended, for you; in a group, `group_created`, `joined`, `left`, `removed`, `renamed` and `group_photo` tell what happened to the group and to whom (`name` is how they showed there)"
                         },
                         "location": {
                           "nullable": true,
@@ -93547,6 +95124,44 @@
                                   "type": {
                                     "type": "string",
                                     "enum": [
+                                      "resend_request"
+                                    ]
+                                  }
+                                },
+                                "required": [
+                                  "type"
+                                ],
+                                "additionalProperties": false
+                              },
+                              {
+                                "type": "object",
+                                "properties": {
+                                  "type": {
+                                    "type": "string",
+                                    "enum": [
+                                      "shared_to"
+                                    ]
+                                  },
+                                  "to": {
+                                    "type": "string",
+                                    "enum": [
+                                      "story",
+                                      "note"
+                                    ]
+                                  }
+                                },
+                                "required": [
+                                  "type",
+                                  "to"
+                                ],
+                                "additionalProperties": false
+                              },
+                              {
+                                "type": "object",
+                                "properties": {
+                                  "type": {
+                                    "type": "string",
+                                    "enum": [
                                       "group_created"
                                     ]
                                   },
@@ -93771,7 +95386,7 @@
                                 "additionalProperties": false
                               }
                             ],
-                            "description": "What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `pin` means they pinned a message; `screenshot` means they took a screenshot of the chat (only detected on the web, and not everywhere); `call` logs a call the sender made; `live_invite` is posted in your chat when `from` asks you to a live game; `live_result` is how a live game you played alone against Six Frites Game ended, for you; in a group, `group_created`, `joined`, `left`, `removed`, `renamed` and `group_photo` tell what happened to the group and to whom (`name` is how they showed there)"
+                            "description": "What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `pin` means they pinned a message; `shared_to` means they shared a message from this chat to their story or as their note; `resend_request` means they couldn't open an encrypted message and asked the sender for it again; `screenshot` means they took a screenshot of the chat (only detected on the web, and not everywhere); `call` logs a call the sender made; `live_invite` is posted in your chat when `from` asks you to a live game; `live_result` is how a live game you played alone against Six Frites Game ended, for you; in a group, `group_created`, `joined`, `left`, `removed`, `renamed` and `group_photo` tell what happened to the group and to whom (`name` is how they showed there)"
                           },
                           "location": {
                             "nullable": true,
@@ -95716,6 +97331,44 @@
                                 "type": {
                                   "type": "string",
                                   "enum": [
+                                    "resend_request"
+                                  ]
+                                }
+                              },
+                              "required": [
+                                "type"
+                              ],
+                              "additionalProperties": false
+                            },
+                            {
+                              "type": "object",
+                              "properties": {
+                                "type": {
+                                  "type": "string",
+                                  "enum": [
+                                    "shared_to"
+                                  ]
+                                },
+                                "to": {
+                                  "type": "string",
+                                  "enum": [
+                                    "story",
+                                    "note"
+                                  ]
+                                }
+                              },
+                              "required": [
+                                "type",
+                                "to"
+                              ],
+                              "additionalProperties": false
+                            },
+                            {
+                              "type": "object",
+                              "properties": {
+                                "type": {
+                                  "type": "string",
+                                  "enum": [
                                     "group_created"
                                   ]
                                 },
@@ -95940,7 +97593,7 @@
                               "additionalProperties": false
                             }
                           ],
-                          "description": "What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `pin` means they pinned a message; `screenshot` means they took a screenshot of the chat (only detected on the web, and not everywhere); `call` logs a call the sender made; `live_invite` is posted in your chat when `from` asks you to a live game; `live_result` is how a live game you played alone against Six Frites Game ended, for you; in a group, `group_created`, `joined`, `left`, `removed`, `renamed` and `group_photo` tell what happened to the group and to whom (`name` is how they showed there)"
+                          "description": "What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `pin` means they pinned a message; `shared_to` means they shared a message from this chat to their story or as their note; `resend_request` means they couldn't open an encrypted message and asked the sender for it again; `screenshot` means they took a screenshot of the chat (only detected on the web, and not everywhere); `call` logs a call the sender made; `live_invite` is posted in your chat when `from` asks you to a live game; `live_result` is how a live game you played alone against Six Frites Game ended, for you; in a group, `group_created`, `joined`, `left`, `removed`, `renamed` and `group_photo` tell what happened to the group and to whom (`name` is how they showed there)"
                         },
                         "location": {
                           "nullable": true,
@@ -97599,6 +99252,44 @@
                                   "type": {
                                     "type": "string",
                                     "enum": [
+                                      "resend_request"
+                                    ]
+                                  }
+                                },
+                                "required": [
+                                  "type"
+                                ],
+                                "additionalProperties": false
+                              },
+                              {
+                                "type": "object",
+                                "properties": {
+                                  "type": {
+                                    "type": "string",
+                                    "enum": [
+                                      "shared_to"
+                                    ]
+                                  },
+                                  "to": {
+                                    "type": "string",
+                                    "enum": [
+                                      "story",
+                                      "note"
+                                    ]
+                                  }
+                                },
+                                "required": [
+                                  "type",
+                                  "to"
+                                ],
+                                "additionalProperties": false
+                              },
+                              {
+                                "type": "object",
+                                "properties": {
+                                  "type": {
+                                    "type": "string",
+                                    "enum": [
                                       "group_created"
                                     ]
                                   },
@@ -97823,7 +99514,7 @@
                                 "additionalProperties": false
                               }
                             ],
-                            "description": "What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `pin` means they pinned a message; `screenshot` means they took a screenshot of the chat (only detected on the web, and not everywhere); `call` logs a call the sender made; `live_invite` is posted in your chat when `from` asks you to a live game; `live_result` is how a live game you played alone against Six Frites Game ended, for you; in a group, `group_created`, `joined`, `left`, `removed`, `renamed` and `group_photo` tell what happened to the group and to whom (`name` is how they showed there)"
+                            "description": "What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `pin` means they pinned a message; `shared_to` means they shared a message from this chat to their story or as their note; `resend_request` means they couldn't open an encrypted message and asked the sender for it again; `screenshot` means they took a screenshot of the chat (only detected on the web, and not everywhere); `call` logs a call the sender made; `live_invite` is posted in your chat when `from` asks you to a live game; `live_result` is how a live game you played alone against Six Frites Game ended, for you; in a group, `group_created`, `joined`, `left`, `removed`, `renamed` and `group_photo` tell what happened to the group and to whom (`name` is how they showed there)"
                           },
                           "location": {
                             "nullable": true,
@@ -99727,6 +101418,44 @@
                                 "type": {
                                   "type": "string",
                                   "enum": [
+                                    "resend_request"
+                                  ]
+                                }
+                              },
+                              "required": [
+                                "type"
+                              ],
+                              "additionalProperties": false
+                            },
+                            {
+                              "type": "object",
+                              "properties": {
+                                "type": {
+                                  "type": "string",
+                                  "enum": [
+                                    "shared_to"
+                                  ]
+                                },
+                                "to": {
+                                  "type": "string",
+                                  "enum": [
+                                    "story",
+                                    "note"
+                                  ]
+                                }
+                              },
+                              "required": [
+                                "type",
+                                "to"
+                              ],
+                              "additionalProperties": false
+                            },
+                            {
+                              "type": "object",
+                              "properties": {
+                                "type": {
+                                  "type": "string",
+                                  "enum": [
                                     "group_created"
                                   ]
                                 },
@@ -99951,7 +101680,7 @@
                               "additionalProperties": false
                             }
                           ],
-                          "description": "What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `pin` means they pinned a message; `screenshot` means they took a screenshot of the chat (only detected on the web, and not everywhere); `call` logs a call the sender made; `live_invite` is posted in your chat when `from` asks you to a live game; `live_result` is how a live game you played alone against Six Frites Game ended, for you; in a group, `group_created`, `joined`, `left`, `removed`, `renamed` and `group_photo` tell what happened to the group and to whom (`name` is how they showed there)"
+                          "description": "What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `pin` means they pinned a message; `shared_to` means they shared a message from this chat to their story or as their note; `resend_request` means they couldn't open an encrypted message and asked the sender for it again; `screenshot` means they took a screenshot of the chat (only detected on the web, and not everywhere); `call` logs a call the sender made; `live_invite` is posted in your chat when `from` asks you to a live game; `live_result` is how a live game you played alone against Six Frites Game ended, for you; in a group, `group_created`, `joined`, `left`, `removed`, `renamed` and `group_photo` tell what happened to the group and to whom (`name` is how they showed there)"
                         },
                         "location": {
                           "nullable": true,
@@ -101610,6 +103339,44 @@
                                   "type": {
                                     "type": "string",
                                     "enum": [
+                                      "resend_request"
+                                    ]
+                                  }
+                                },
+                                "required": [
+                                  "type"
+                                ],
+                                "additionalProperties": false
+                              },
+                              {
+                                "type": "object",
+                                "properties": {
+                                  "type": {
+                                    "type": "string",
+                                    "enum": [
+                                      "shared_to"
+                                    ]
+                                  },
+                                  "to": {
+                                    "type": "string",
+                                    "enum": [
+                                      "story",
+                                      "note"
+                                    ]
+                                  }
+                                },
+                                "required": [
+                                  "type",
+                                  "to"
+                                ],
+                                "additionalProperties": false
+                              },
+                              {
+                                "type": "object",
+                                "properties": {
+                                  "type": {
+                                    "type": "string",
+                                    "enum": [
                                       "group_created"
                                     ]
                                   },
@@ -101834,7 +103601,7 @@
                                 "additionalProperties": false
                               }
                             ],
-                            "description": "What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `pin` means they pinned a message; `screenshot` means they took a screenshot of the chat (only detected on the web, and not everywhere); `call` logs a call the sender made; `live_invite` is posted in your chat when `from` asks you to a live game; `live_result` is how a live game you played alone against Six Frites Game ended, for you; in a group, `group_created`, `joined`, `left`, `removed`, `renamed` and `group_photo` tell what happened to the group and to whom (`name` is how they showed there)"
+                            "description": "What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `pin` means they pinned a message; `shared_to` means they shared a message from this chat to their story or as their note; `resend_request` means they couldn't open an encrypted message and asked the sender for it again; `screenshot` means they took a screenshot of the chat (only detected on the web, and not everywhere); `call` logs a call the sender made; `live_invite` is posted in your chat when `from` asks you to a live game; `live_result` is how a live game you played alone against Six Frites Game ended, for you; in a group, `group_created`, `joined`, `left`, `removed`, `renamed` and `group_photo` tell what happened to the group and to whom (`name` is how they showed there)"
                           },
                           "location": {
                             "nullable": true,
@@ -103759,6 +105526,44 @@
                                 "type": {
                                   "type": "string",
                                   "enum": [
+                                    "resend_request"
+                                  ]
+                                }
+                              },
+                              "required": [
+                                "type"
+                              ],
+                              "additionalProperties": false
+                            },
+                            {
+                              "type": "object",
+                              "properties": {
+                                "type": {
+                                  "type": "string",
+                                  "enum": [
+                                    "shared_to"
+                                  ]
+                                },
+                                "to": {
+                                  "type": "string",
+                                  "enum": [
+                                    "story",
+                                    "note"
+                                  ]
+                                }
+                              },
+                              "required": [
+                                "type",
+                                "to"
+                              ],
+                              "additionalProperties": false
+                            },
+                            {
+                              "type": "object",
+                              "properties": {
+                                "type": {
+                                  "type": "string",
+                                  "enum": [
                                     "group_created"
                                   ]
                                 },
@@ -103983,7 +105788,7 @@
                               "additionalProperties": false
                             }
                           ],
-                          "description": "What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `pin` means they pinned a message; `screenshot` means they took a screenshot of the chat (only detected on the web, and not everywhere); `call` logs a call the sender made; `live_invite` is posted in your chat when `from` asks you to a live game; `live_result` is how a live game you played alone against Six Frites Game ended, for you; in a group, `group_created`, `joined`, `left`, `removed`, `renamed` and `group_photo` tell what happened to the group and to whom (`name` is how they showed there)"
+                          "description": "What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `pin` means they pinned a message; `shared_to` means they shared a message from this chat to their story or as their note; `resend_request` means they couldn't open an encrypted message and asked the sender for it again; `screenshot` means they took a screenshot of the chat (only detected on the web, and not everywhere); `call` logs a call the sender made; `live_invite` is posted in your chat when `from` asks you to a live game; `live_result` is how a live game you played alone against Six Frites Game ended, for you; in a group, `group_created`, `joined`, `left`, `removed`, `renamed` and `group_photo` tell what happened to the group and to whom (`name` is how they showed there)"
                         },
                         "location": {
                           "nullable": true,
@@ -105642,6 +107447,44 @@
                                   "type": {
                                     "type": "string",
                                     "enum": [
+                                      "resend_request"
+                                    ]
+                                  }
+                                },
+                                "required": [
+                                  "type"
+                                ],
+                                "additionalProperties": false
+                              },
+                              {
+                                "type": "object",
+                                "properties": {
+                                  "type": {
+                                    "type": "string",
+                                    "enum": [
+                                      "shared_to"
+                                    ]
+                                  },
+                                  "to": {
+                                    "type": "string",
+                                    "enum": [
+                                      "story",
+                                      "note"
+                                    ]
+                                  }
+                                },
+                                "required": [
+                                  "type",
+                                  "to"
+                                ],
+                                "additionalProperties": false
+                              },
+                              {
+                                "type": "object",
+                                "properties": {
+                                  "type": {
+                                    "type": "string",
+                                    "enum": [
                                       "group_created"
                                     ]
                                   },
@@ -105866,7 +107709,7 @@
                                 "additionalProperties": false
                               }
                             ],
-                            "description": "What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `pin` means they pinned a message; `screenshot` means they took a screenshot of the chat (only detected on the web, and not everywhere); `call` logs a call the sender made; `live_invite` is posted in your chat when `from` asks you to a live game; `live_result` is how a live game you played alone against Six Frites Game ended, for you; in a group, `group_created`, `joined`, `left`, `removed`, `renamed` and `group_photo` tell what happened to the group and to whom (`name` is how they showed there)"
+                            "description": "What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `pin` means they pinned a message; `shared_to` means they shared a message from this chat to their story or as their note; `resend_request` means they couldn't open an encrypted message and asked the sender for it again; `screenshot` means they took a screenshot of the chat (only detected on the web, and not everywhere); `call` logs a call the sender made; `live_invite` is posted in your chat when `from` asks you to a live game; `live_result` is how a live game you played alone against Six Frites Game ended, for you; in a group, `group_created`, `joined`, `left`, `removed`, `renamed` and `group_photo` tell what happened to the group and to whom (`name` is how they showed there)"
                           },
                           "location": {
                             "nullable": true,
@@ -107801,6 +109644,44 @@
                                 "type": {
                                   "type": "string",
                                   "enum": [
+                                    "resend_request"
+                                  ]
+                                }
+                              },
+                              "required": [
+                                "type"
+                              ],
+                              "additionalProperties": false
+                            },
+                            {
+                              "type": "object",
+                              "properties": {
+                                "type": {
+                                  "type": "string",
+                                  "enum": [
+                                    "shared_to"
+                                  ]
+                                },
+                                "to": {
+                                  "type": "string",
+                                  "enum": [
+                                    "story",
+                                    "note"
+                                  ]
+                                }
+                              },
+                              "required": [
+                                "type",
+                                "to"
+                              ],
+                              "additionalProperties": false
+                            },
+                            {
+                              "type": "object",
+                              "properties": {
+                                "type": {
+                                  "type": "string",
+                                  "enum": [
                                     "group_created"
                                   ]
                                 },
@@ -108025,7 +109906,7 @@
                               "additionalProperties": false
                             }
                           ],
-                          "description": "What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `pin` means they pinned a message; `screenshot` means they took a screenshot of the chat (only detected on the web, and not everywhere); `call` logs a call the sender made; `live_invite` is posted in your chat when `from` asks you to a live game; `live_result` is how a live game you played alone against Six Frites Game ended, for you; in a group, `group_created`, `joined`, `left`, `removed`, `renamed` and `group_photo` tell what happened to the group and to whom (`name` is how they showed there)"
+                          "description": "What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `pin` means they pinned a message; `shared_to` means they shared a message from this chat to their story or as their note; `resend_request` means they couldn't open an encrypted message and asked the sender for it again; `screenshot` means they took a screenshot of the chat (only detected on the web, and not everywhere); `call` logs a call the sender made; `live_invite` is posted in your chat when `from` asks you to a live game; `live_result` is how a live game you played alone against Six Frites Game ended, for you; in a group, `group_created`, `joined`, `left`, `removed`, `renamed` and `group_photo` tell what happened to the group and to whom (`name` is how they showed there)"
                         },
                         "location": {
                           "nullable": true,
@@ -109684,6 +111565,44 @@
                                   "type": {
                                     "type": "string",
                                     "enum": [
+                                      "resend_request"
+                                    ]
+                                  }
+                                },
+                                "required": [
+                                  "type"
+                                ],
+                                "additionalProperties": false
+                              },
+                              {
+                                "type": "object",
+                                "properties": {
+                                  "type": {
+                                    "type": "string",
+                                    "enum": [
+                                      "shared_to"
+                                    ]
+                                  },
+                                  "to": {
+                                    "type": "string",
+                                    "enum": [
+                                      "story",
+                                      "note"
+                                    ]
+                                  }
+                                },
+                                "required": [
+                                  "type",
+                                  "to"
+                                ],
+                                "additionalProperties": false
+                              },
+                              {
+                                "type": "object",
+                                "properties": {
+                                  "type": {
+                                    "type": "string",
+                                    "enum": [
                                       "group_created"
                                     ]
                                   },
@@ -109908,7 +111827,7 @@
                                 "additionalProperties": false
                               }
                             ],
-                            "description": "What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `pin` means they pinned a message; `screenshot` means they took a screenshot of the chat (only detected on the web, and not everywhere); `call` logs a call the sender made; `live_invite` is posted in your chat when `from` asks you to a live game; `live_result` is how a live game you played alone against Six Frites Game ended, for you; in a group, `group_created`, `joined`, `left`, `removed`, `renamed` and `group_photo` tell what happened to the group and to whom (`name` is how they showed there)"
+                            "description": "What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `pin` means they pinned a message; `shared_to` means they shared a message from this chat to their story or as their note; `resend_request` means they couldn't open an encrypted message and asked the sender for it again; `screenshot` means they took a screenshot of the chat (only detected on the web, and not everywhere); `call` logs a call the sender made; `live_invite` is posted in your chat when `from` asks you to a live game; `live_result` is how a live game you played alone against Six Frites Game ended, for you; in a group, `group_created`, `joined`, `left`, `removed`, `renamed` and `group_photo` tell what happened to the group and to whom (`name` is how they showed there)"
                           },
                           "location": {
                             "nullable": true,

@@ -7,39 +7,46 @@ import {
   NOTE_SECS,
   noteChanged,
   noteSecs,
+  type GifDTO,
+  type LabelFont,
   type NoteDTO,
   type PublicUser,
   STORY_DURATIONS,
   STORY_DURATION_UNITS,
   STORY_LIMITS,
   STORY_REACTIONS,
+  type StoryLocation,
   type StoryReaction,
+  coordsLabel,
   countReactions,
   durationLabel,
   inkOn,
+  mapsUrl,
   previewLink,
 } from "@six/shared";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Image } from "expo-image";
 import { useVideoPlayer, VideoView } from "expo-video";
 import { useFonts } from "expo-font";
-import { Ban, CheckCheck, Eye, MessageCircle, SendHorizontal, X } from "lucide-react-native";
+import { Ban, CheckCheck, Eye, MapPin, MessageCircle, SendHorizontal, X } from "lucide-react-native";
 import { useEffect, useState } from "react";
-import { Pressable, ScrollView, StyleSheet, View } from "react-native";
+import { ActivityIndicator, Linking, Pressable, ScrollView, StyleSheet, View } from "react-native";
 import Animated, { BounceIn } from "react-native-reanimated";
 import { KeyboardAvoidingView } from "react-native-keyboard-controller";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { FloatingReactions, useFloaters } from "./floating-reactions";
-import { FONT_FILES } from "./photo-editor";
+import { FONT_FILES, Fonts, familyOf } from "./photo-editor";
 import { useChats } from "@/lib/chats";
 import { clockTime, shortDate, timeAgo } from "@/lib/format";
-import { useT } from "@/lib/i18n";
+import { getLocale, useT } from "@/lib/i18n";
+import { toastSent } from "@/lib/notify";
 import { useRealtime } from "@/lib/realtime";
 import { queueMessage } from "@/lib/send";
 import { six } from "@/lib/six";
 import { brand, brandInk, stone, useTheme } from "@/lib/theme";
 import { DurationPicker } from "./auto-delete-custom";
 import { Avatar } from "./avatar";
+import { currentPosition } from "./location-card";
 import { LinkCard, Linked } from "./message-list";
 import { Modal } from "./modal";
 import { GifSearch } from "./story-composer";
@@ -71,10 +78,12 @@ function Loop({ gif, height, maxWidth, radius }: { gif: NonNullable<NoteDTO["gif
   return <VideoView player={player} style={{ width, height, borderRadius: radius, overflow: "hidden" }} contentFit="cover" nativeControls={false} />;
 }
 
+const placeName = (l: StoryLocation) => l.name ?? coordsLabel(l);
+
 /** The thought bubble above someone's picture in the stories row: their GIF, or their words, on their colour. Without a note it shows `placeholder` greyed, as an invitation. */
 export function NoteBubble({ note, placeholder, label, onPress }: { note: NoteDTO | null; placeholder?: string; label: string; onPress: () => void }) {
   const t = useTheme();
-  useFonts(QUOTE_FONT);
+  useFonts(FONT_FILES);
   const bg = note?.background;
   return (
     <Pressable
@@ -91,10 +100,10 @@ export function NoteBubble({ note, placeholder, label, onPress }: { note: NoteDT
           numberOfLines={2}
           style={[
             { fontSize: 11, lineHeight: 13, textAlign: "center", color: bg ? inkOn(bg) : note ? t.text : stone[400], fontWeight: note ? "500" : "400" },
-            note?.fromChat && styles.quoteSmall,
+            !!note?.font && { fontFamily: familyOf(note.font), fontWeight: "normal" },
           ]}
         >
-          {note?.fromChat ? `“${note.text}”` : (note?.text ?? placeholder)}
+          {note?.fromChat ? `“${note.text}”` : (note?.text || (note?.location && `📍 ${placeName(note.location)}`) || placeholder)}
         </Text>
       )}
     </Pressable>
@@ -177,21 +186,40 @@ function NoteViewers({ count }: { count: number }) {
 }
 
 /** Writes, changes or takes down my note. */
-export function NoteEditor({ note, onClose }: { note: NoteDTO | null; onClose: () => void }) {
+/**
+ * Writes or changes your note. Given `fromMessage`, or opened on a note made from one, the text is that message's and
+ * can't be changed: only its colour and a GIF can.
+ */
+export function NoteEditor({
+  note,
+  fromMessage,
+  onClose,
+}: {
+  note: NoteDTO | null;
+  fromMessage?: { text: string; messageId: string; quote: NoteDTO["quote"] };
+  onClose: () => void;
+}) {
   const t = useTheme();
   const tr = useT();
   const qc = useQueryClient();
-  const [text, setText] = useState(note?.text ?? "");
-  const [background, setBackground] = useState(note?.background ?? null);
+  const locked = fromMessage?.text ?? (note?.fromChat ? note.text : null);
+  const start = fromMessage ? null : note;
+  const [text, setText] = useState(locked ?? note?.text ?? "");
+  const [background, setBackground] = useState(start?.background ?? null);
   const [gif, setGif] = useState<{ id: string; video: NoteDTO["gif"]; preview: string | null } | null>(
-    note?.gif ? { id: note.gif.id, video: note.gif, preview: null } : null,
+    start?.gif ? { id: start.gif.id, video: start.gif, preview: null } : null,
   );
+  const [font, setFont] = useState<LabelFont>(start?.font ?? "classic");
   const [pickingGif, setPickingGif] = useState(false);
+  const [location, setLocation] = useState<StoryLocation | null>(start?.location ?? null);
+  const [locating, setLocating] = useState(false);
+  const [locateError, setLocateError] = useState<string | null>(null);
   const [durationSecs, setDurationSecs] = useState(note ? noteSecs(note) : NOTE_SECS);
   const [custom, setCustom] = useState(false);
   const [busy, setBusy] = useState(false);
   const [failed, setFailed] = useState(false);
-  const changed = noteChanged(note, { text: emojifyEnd(text).trim(), background, gifId: gif?.id, durationSecs });
+  const changed = !!fromMessage || noteChanged(note, { text: emojifyEnd(text).trim(), background, gifId: gif?.id, location, durationSecs, font });
+  const filled = !!text.trim() || !!gif || !!location;
   const preset = (STORY_DURATIONS as readonly number[]).includes(durationSecs);
   const chip = (on: boolean, label: string, onPress: () => void) => (
     <Pressable
@@ -205,6 +233,24 @@ export function NoteEditor({ note, onClose }: { note: NoteDTO | null; onClose: (
     </Pressable>
   );
 
+  async function locate() {
+    if (location) return setLocation(null);
+    setLocating(true);
+    setLocateError(null);
+    try {
+      const spot = await currentPosition();
+      setLocation(spot);
+      void six.api
+        .GET("/v1/place-name", { params: { query: { lat: spot.lat, lng: spot.lng, locale: getLocale() } } })
+        .then(({ data }) => data?.name && setLocation((l) => (l && !l.name ? { ...l, name: data.name! } : l)))
+        .catch(() => null);
+    } catch (err) {
+      setLocateError((err as Error).message === "denied" ? tr.composer.locationDenied : tr.composer.locationFailed);
+    } finally {
+      setLocating(false);
+    }
+  }
+
   async function run(call: () => Promise<unknown>) {
     setBusy(true);
     setFailed(false);
@@ -217,28 +263,14 @@ export function NoteEditor({ note, onClose }: { note: NoteDTO | null; onClose: (
       setBusy(false);
     }
   }
+  const place = location ? { ...location, name: location.name?.trim() || undefined } : undefined;
   const share = () =>
     changed &&
-    (text.trim() || gif) &&
+    filled &&
     void run(async () =>
-      unwrap(await six.api.PUT("/v1/notes", { body: { text: emojifyEnd(text).trim(), gifId: gif?.id, background: background ?? undefined, durationSecs } })),
+      unwrap(await six.api.PUT("/v1/notes", { body: { text: emojifyEnd(text).trim(), fromChat: !!locked, messageId: fromMessage?.messageId, font, gifId: gif?.id, location: place, background: background ?? undefined, durationSecs } })),
     );
   const ink = background ? inkOn(background) : t.text;
-
-  if (note?.fromChat && note.text)
-    return (
-      <Popup onClose={onClose}>
-        <Text style={{ color: t.text, fontSize: 18, fontWeight: "700" }}>{tr.stories.yourNote}</Text>
-        <View style={{ alignItems: "center" }}>
-          <ChatNote note={note} onOpen={() => null} />
-        </View>
-        <NoteViewers count={note.viewCount ?? 0} />
-        {failed && <Text style={{ color: "#dc2626", fontSize: 14 }}>{tr.common.somethingWrongRetry}</Text>}
-        <Pressable onPress={() => void run(() => six.api.DELETE("/v1/notes"))} disabled={busy} accessibilityRole="button" hitSlop={6}>
-          <Text style={{ color: "#dc2626", fontSize: 15, fontWeight: "600" }}>{tr.stories.deleteNote}</Text>
-        </Pressable>
-      </Popup>
-    );
 
   return (
     <Popup onClose={onClose}>
@@ -255,21 +287,28 @@ export function NoteEditor({ note, onClose }: { note: NoteDTO | null; onClose: (
           </Pressable>
         </View>
       )}
-      <View>
-        <TextInput
-          autoFocus
-          value={text}
-          onChangeText={(v) => setText(emojifyTyped(text, v)?.text ?? v)}
-          maxLength={NOTE_LIMIT}
-          placeholder={tr.stories.notePlaceholder}
-          placeholderTextColor={t.muted}
-          accessibilityLabel={tr.stories.note}
-          returnKeyType="done"
-          onSubmitEditing={share}
-          style={[styles.field, { color: ink, backgroundColor: background ?? t.field, paddingRight: 48 }]}
-        />
-        <Text style={[styles.count, { color: background ? ink : t.muted, opacity: background ? 0.7 : 1 }]}>{NOTE_LIMIT - text.length}</Text>
-      </View>
+      {locked ? (
+        <View style={{ alignItems: "center" }}>
+          <ChatNote note={{ text: locked, background, font: font === "classic" ? null : font, gif: null, quote: fromMessage?.quote ?? note?.quote ?? null }} onOpen={() => null} />
+        </View>
+      ) : (
+        <View>
+          <TextInput
+            autoFocus
+            value={text}
+            onChangeText={(v) => setText(emojifyTyped(text, v)?.text ?? v)}
+            maxLength={NOTE_LIMIT}
+            placeholder={tr.stories.notePlaceholder}
+            placeholderTextColor={t.muted}
+            accessibilityLabel={tr.stories.note}
+            returnKeyType="done"
+            onSubmitEditing={share}
+            style={[styles.field, { color: ink, backgroundColor: background ?? t.field, paddingRight: 48 }, font !== "classic" && { fontFamily: familyOf(font), fontWeight: "normal" }]}
+          />
+          <Text style={[styles.count, { color: background ? ink : t.muted, opacity: background ? 0.7 : 1 }]}>{NOTE_LIMIT - text.length}</Text>
+        </View>
+      )}
+      <Fonts light value={font} onChange={setFont} />
       <View style={styles.actions}>
         <ScrollView horizontal showsHorizontalScrollIndicator={false} keyboardShouldPersistTaps="always" style={{ flex: 1 }} contentContainerStyle={[styles.actions, { padding: 3 }]}>
           <Pressable
@@ -293,7 +332,34 @@ export function NoteEditor({ note, onClose }: { note: NoteDTO | null; onClose: (
           ))}
         </ScrollView>
         {chip(pickingGif, tr.stories.gif, () => setPickingGif(!pickingGif))}
+        <Pressable
+          onPress={() => void locate()}
+          accessibilityRole="button"
+          accessibilityState={{ selected: !!location }}
+          accessibilityLabel={tr.stories.location}
+          style={[styles.chip, { backgroundColor: location ? brand : t.field }]}
+        >
+          {locating ? <ActivityIndicator size="small" color={location ? brandInk : t.text} /> : <MapPin size={16} color={location ? brandInk : t.text} />}
+        </Pressable>
       </View>
+      {location && (
+        <View style={[styles.place, { backgroundColor: t.field }]}>
+          <MapPin size={16} color="#e11d48" />
+          <TextInput
+            value={location.name ?? ""}
+            onChangeText={(name) => setLocation({ ...location, name })}
+            maxLength={STORY_LIMITS.place}
+            placeholder={coordsLabel(location)}
+            placeholderTextColor={t.muted}
+            accessibilityLabel={tr.stories.location}
+            style={{ flex: 1, color: t.text, fontSize: 16, paddingVertical: 0 }}
+          />
+          <Pressable onPress={() => setLocation(null)} accessibilityRole="button" accessibilityLabel={tr.common.remove} hitSlop={8}>
+            <X size={16} color={t.muted} />
+          </Pressable>
+        </View>
+      )}
+      {locateError && <Text style={{ color: "#dc2626", fontSize: 14 }}>{locateError}</Text>}
       {pickingGif && (
         <View style={styles.gifs}>
           <GifSearch
@@ -304,11 +370,13 @@ export function NoteEditor({ note, onClose }: { note: NoteDTO | null; onClose: (
           />
         </View>
       )}
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} keyboardShouldPersistTaps="always" contentContainerStyle={styles.actions}>
-        <Text style={{ color: t.muted, fontSize: 14 }}>{tr.stories.lasts}</Text>
-        {STORY_DURATIONS.map((secs) => chip(durationSecs === secs, durationLabel(secs, tr), () => setDurationSecs(secs)))}
-        {chip(!preset, preset ? tr.stories.custom : durationLabel(durationSecs, tr), () => setCustom(true))}
-      </ScrollView>
+      {!locked && (
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} keyboardShouldPersistTaps="always" contentContainerStyle={styles.actions}>
+          <Text style={{ color: t.muted, fontSize: 14 }}>{tr.stories.lasts}</Text>
+          {STORY_DURATIONS.map((secs) => chip(durationSecs === secs, durationLabel(secs, tr), () => setDurationSecs(secs)))}
+          {chip(!preset, preset ? tr.stories.custom : durationLabel(durationSecs, tr), () => setCustom(true))}
+        </ScrollView>
+      )}
       <Text style={{ color: t.muted, fontSize: 14 }}>{tr.stories.noteHint}</Text>
       {note && <NoteViewers count={note.viewCount ?? 0} />}
       {custom && <LastsPicker value={durationSecs} onSet={setDurationSecs} onClose={() => setCustom(false)} />}
@@ -319,7 +387,7 @@ export function NoteEditor({ note, onClose }: { note: NoteDTO | null; onClose: (
             <Text style={{ color: "#dc2626", fontSize: 15, fontWeight: "600" }}>{tr.stories.deleteNote}</Text>
           </Pressable>
         )}
-        {changed && <PrimaryButton title={tr.stories.post} onPress={share} disabled={busy || (!text.trim() && !gif)} busy={busy} style={{ marginLeft: "auto" }} />}
+        {changed && <PrimaryButton title={tr.stories.post} onPress={share} disabled={busy || !filled} busy={busy} style={{ marginLeft: "auto" }} />}
       </View>
     </Popup>
   );
@@ -328,13 +396,14 @@ export function NoteEditor({ note, onClose }: { note: NoteDTO | null; onClose: (
 /** A contact's note, with quick reactions only they see and a box to answer it in your chat with them. */
 export function NoteReader({ user, note, onClose }: { user: PublicUser; note: NoteDTO; onClose: () => void }) {
   const t = useTheme();
-  useFonts(QUOTE_FONT);
+  useFonts(FONT_FILES);
   const tr = useT();
   const qc = useQueryClient();
   const { realtime } = useRealtime();
   const chats = [...(useChats().data ?? []), ...(useChats(true).data ?? [])];
   const chat = chats.find((c) => c.type === "direct" && c.members.some((m) => m.user.id === user.id));
   const [text, setText] = useState("");
+  const [pickingGif, setPickingGif] = useState(false);
   const [popped, setPopped] = useState({ emoji: "", n: 0 });
   const [floaters, float] = useFloaters();
   useEffect(() => {
@@ -348,10 +417,12 @@ export function NoteReader({ user, note, onClose }: { user: PublicUser; note: No
     float(emoji);
   };
 
-  function send() {
-    if (!text.trim() || !chat || !realtime) return;
-    const story = { id: note.id, ownerId: user.id, kind: "note" as const, text: note.text || null, background: note.background, imageUrl: null };
-    void queueMessage(qc, realtime, chat.id, { text: emojifyEnd(text).trim(), story });
+  function send(gif?: GifDTO) {
+    if ((!text.trim() && !gif) || !chat || !realtime) return;
+    const story = { id: note.id, ownerId: user.id, kind: "note" as const, text: note.text || (note.location && `📍 ${placeName(note.location)}`) || null, background: note.background, imageUrl: null };
+    if (text.trim()) void queueMessage(qc, realtime, chat.id, { text: emojifyEnd(text).trim(), story });
+    if (gif) void queueMessage(qc, realtime, chat.id, { text: "", gif, story });
+    toastSent(chat.id, user, text.trim() || tr.stories.gif);
     onClose();
   }
 
@@ -359,17 +430,37 @@ export function NoteReader({ user, note, onClose }: { user: PublicUser; note: No
     <Popup onClose={onClose}>
       <FloatingReactions reactions={floaters} />
       <View style={{ alignItems: "center", gap: 12 }}>
-        {note.fromChat && !!note.text && !note.gif ? (
+        {note.fromChat && !!note.text ? (
           <ChatNote note={note} onOpen={clicked} />
         ) : (
-          <View style={[styles.bigBubble, { backgroundColor: note.background ?? t.surfaceAlt }, note.gif && { padding: 6 }]}>
-            {note.gif && <Loop gif={note.gif} height={180} maxWidth={280} radius={18} />}
-            {!!note.text && (
-              <Text style={[{ color: note.background ? inkOn(note.background) : t.text, fontSize: 16, fontWeight: "500", textAlign: "center" }, note.gif && { padding: 6 }]}>
-                <Linked text={note.text} selecting={false} onOpen={clicked} />
-              </Text>
-            )}
-          </View>
+          (!!note.text || !!note.gif) && (
+            <View style={[styles.bigBubble, { backgroundColor: note.background ?? t.surfaceAlt }, note.gif && { padding: 6 }]}>
+              {note.gif && <Loop gif={note.gif} height={180} maxWidth={280} radius={18} />}
+              {!!note.text && (
+                <Text
+                  style={[
+                    { color: note.background ? inkOn(note.background) : t.text, fontSize: 16, fontWeight: "500", textAlign: "center" },
+                    note.gif && { padding: 6 },
+                    !!note.font && { fontFamily: familyOf(note.font), fontWeight: "normal" },
+                  ]}
+                >
+                  <Linked text={note.text} selecting={false} onOpen={clicked} />
+                </Text>
+              )}
+            </View>
+          )
+        )}
+        {note.location && (
+          <Pressable
+            onPress={() => void Linking.openURL(mapsUrl(note.location!))}
+            accessibilityRole="link"
+            style={[styles.place, { backgroundColor: t.field, maxWidth: "100%" }]}
+          >
+            <MapPin size={16} color="#e11d48" />
+            <Text numberOfLines={1} style={{ color: t.text, fontSize: 14, fontWeight: "600", flexShrink: 1 }}>
+              {placeName(note.location)}
+            </Text>
+          </Pressable>
         )}
         {previewLink(note.text) && <LinkCard url={previewLink(note.text)!} mine={false} width={280} onOpen={clicked} />}
         {!note.fromChat && (
@@ -391,6 +482,7 @@ export function NoteReader({ user, note, onClose }: { user: PublicUser; note: No
           ))}
         </View>
       </View>
+      {chat && realtime && pickingGif && <GifSearch onPick={(g) => send(g)} />}
       {chat && realtime && (
         <View style={styles.actions}>
           <TextInput
@@ -402,11 +494,19 @@ export function NoteReader({ user, note, onClose }: { user: PublicUser; note: No
             placeholderTextColor={t.muted}
             accessibilityLabel={tr.stories.replyTo(user.displayName)}
             returnKeyType="send"
-            onSubmitEditing={send}
+            onSubmitEditing={() => send()}
             style={[styles.field, { flex: 1, color: t.text, backgroundColor: t.field }]}
           />
           <Pressable
-            onPress={send}
+            onPress={() => setPickingGif(!pickingGif)}
+            accessibilityRole="button"
+            accessibilityState={{ selected: pickingGif }}
+            style={[styles.chip, { backgroundColor: pickingGif ? brand : t.field }]}
+          >
+            <Text style={{ color: pickingGif ? brandInk : t.text, fontSize: 14, fontWeight: "700" }}>{tr.stories.gif}</Text>
+          </Pressable>
+          <Pressable
+            onPress={() => send()}
             disabled={!text.trim()}
             accessibilityRole="button"
             accessibilityLabel={tr.common.send}
@@ -420,15 +520,12 @@ export function NoteReader({ user, note, onClose }: { user: PublicUser; note: No
   );
 }
 
-const QUOTE_FONT = { Caveat: FONT_FILES.Caveat };
-
 const styles = StyleSheet.create({
   chatNote: { flexDirection: "row", alignItems: "flex-end", gap: 8, maxWidth: "100%" },
   chatNoteColumn: { flexShrink: 1, alignItems: "flex-start", gap: 4 },
   chatNoteBubble: { flexDirection: "row", alignItems: "flex-end", gap: 8, borderRadius: 22, paddingHorizontal: 16, paddingVertical: 8, maxWidth: "100%" },
-  chatNoteText: { flexShrink: 1, fontFamily: "Caveat", fontSize: 26, lineHeight: 30, transform: [{ skewX: "-10deg" }] },
+  chatNoteText: { flexShrink: 1, fontSize: 19, lineHeight: 25 },
   chatNoteTime: { flexDirection: "row", alignItems: "center", gap: 3, paddingBottom: 3 },
-  quoteSmall: { fontFamily: "Caveat", fontWeight: "normal", fontSize: 14, lineHeight: 15, transform: [{ skewX: "-10deg" }] },
   bubble: { zIndex: 1, marginBottom: -8, maxWidth: 72, borderRadius: 16, borderWidth: StyleSheet.hairlineWidth, paddingHorizontal: 8, paddingVertical: 4 },
   backdrop: { backgroundColor: "rgba(0,0,0,0.4)" },
   card: { marginHorizontal: 12, borderRadius: 24, padding: 20, gap: 12 },
@@ -436,6 +533,7 @@ const styles = StyleSheet.create({
   count: { position: "absolute", right: 16, top: 0, bottom: 0, textAlignVertical: "center", fontSize: 12, lineHeight: 44 },
   actions: { flexDirection: "row", alignItems: "center", gap: 8 },
   chip: { borderRadius: 999, paddingHorizontal: 12, paddingVertical: 7 },
+  place: { flexDirection: "row", alignItems: "center", gap: 8, borderRadius: 999, paddingHorizontal: 14, paddingVertical: 8 },
   send: { width: 44, height: 44, borderRadius: 22, alignItems: "center", justifyContent: "center", backgroundColor: brand },
   bigBubble: { borderRadius: 24, paddingHorizontal: 16, paddingVertical: 10, maxWidth: "90%", alignItems: "center", gap: 4 },
   swatch: { width: 28, height: 28, borderRadius: 14 },
@@ -456,7 +554,7 @@ const styles = StyleSheet.create({
 });
 
 /** A note made from a chat message, drawn as that message: a sent bubble next to who wrote it, with when. */
-function ChatNote({ note, onOpen }: { note: NoteDTO; onOpen: () => void }) {
+function ChatNote({ note, onOpen }: { note: Pick<NoteDTO, "text" | "background" | "font" | "gif" | "quote">; onOpen: () => void }) {
   const t = useTheme();
   const tr = useT();
   const { quote } = note;
@@ -464,6 +562,7 @@ function ChatNote({ note, onOpen }: { note: NoteDTO; onOpen: () => void }) {
   const ink = note.background ? inkOn(note.background) : brandInk;
   return (
     <View style={{ alignItems: "center", gap: 12, maxWidth: "100%" }}>
+      {note.gif && <Loop gif={note.gif} height={180} maxWidth={280} radius={18} />}
       <View style={styles.chatNote}>
         {quote && <Avatar user={quote.from} size="sm" />}
         <View style={styles.chatNoteColumn}>
@@ -473,7 +572,7 @@ function ChatNote({ note, onOpen }: { note: NoteDTO; onOpen: () => void }) {
             </Text>
           )}
           <View style={[styles.chatNoteBubble, { backgroundColor: bg }]}>
-            <Text style={[styles.chatNoteText, { color: ink }]}>
+            <Text style={[styles.chatNoteText, { color: ink }, !!note.font && { fontFamily: familyOf(note.font), fontWeight: "normal" }]}>
               <Linked text={note.text} selecting={false} onOpen={onOpen} />
             </Text>
             {quote && (

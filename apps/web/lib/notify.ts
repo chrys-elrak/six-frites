@@ -50,18 +50,42 @@ export interface Toast {
   title: string;
   body: string;
   avatar: { displayName: string; avatarUrl: string | null };
+  /** The chat a reply typed right in the popup goes to; only message popups have one. */
+  replyChatId?: string;
 }
 
-export const useToasts = create<{ toasts: Toast[]; push: (t: Toast) => void; dismiss: (id: string) => void }>(
+const timers = new Map<string, ReturnType<typeof setTimeout>>();
+const stopTimer = (id: string) => {
+  clearTimeout(timers.get(id));
+  timers.delete(id);
+};
+
+/** The popups on screen; each goes away after five seconds, unless `hold` keeps it while a reply is typed in it. */
+export const useToasts = create<{ toasts: Toast[]; push: (t: Toast) => void; dismiss: (id: string) => void; hold: (id: string) => void }>(
   (set, get) => ({
     toasts: [],
     push(t) {
       set((s) => ({ toasts: [...s.toasts.filter((x) => x.href !== t.href), t].slice(-3) }));
-      setTimeout(() => get().dismiss(t.id), 5000);
+      timers.set(t.id, setTimeout(() => get().dismiss(t.id), 5000));
     },
-    dismiss: (id) => set((s) => ({ toasts: s.toasts.filter((t) => t.id !== id) })),
+    dismiss(id) {
+      stopTimer(id);
+      set((s) => ({ toasts: s.toasts.filter((t) => t.id !== id) }));
+    },
+    hold: stopTimer,
   }),
 );
+
+/** A small popup saying a story or note reply went to `to`; tapping it opens the chat. */
+export function toastSent(chatId: string, to: { displayName: string; avatarUrl: string | null }, what: string) {
+  useToasts.getState().push({
+    id: `sent-${Date.now()}`,
+    href: `/chats/${chatId}`,
+    title: getT().stories.sent,
+    body: `${to.displayName} · ${what}`,
+    avatar: { displayName: to.displayName, avatarUrl: to.avatarUrl },
+  });
+}
 
 let audio: AudioContext | null = null;
 
@@ -151,6 +175,7 @@ export function notifyIncoming(
       href: `/chats/${m.chatId}`,
       title: sender?.displayName ?? chat?.title ?? t.summary.newMessage,
       body: previewText(m, t) || t.summary.newMessage,
+      replyChatId: m.chatId,
     },
     sender?.avatarUrl ?? null,
     open,
@@ -213,7 +238,7 @@ export function notifyStoryReaction(e: StoryReactedDTO, open: (href: string) => 
 }
 
 function alertUser(
-  n: { id: string; href: string; title: string; body: string },
+  n: { id: string; href: string; title: string; body: string; replyChatId?: string },
   avatarUrl: string | null,
   open: (href: string) => void,
   sound?: string,

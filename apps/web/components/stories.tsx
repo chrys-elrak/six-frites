@@ -3,6 +3,7 @@
 import { unwrap } from "@six/sdk";
 import {
   type NoteDTO,
+  type GifDTO,
   type PublicUser,
   STORY_BACKGROUNDS,
   STORY_REACTIONS,
@@ -30,12 +31,14 @@ import { clockTime, shortDate, timeAgo } from "@/lib/format";
 import { useChats } from "@/lib/chats";
 import { dragAndPinch } from "@/lib/drag-pinch";
 import { useT } from "@/lib/i18n";
+import { toastSent } from "@/lib/notify";
 import { useRealtime } from "@/lib/realtime";
 import { queueMessage } from "@/lib/send";
 import { useHiddenByArchive } from "@/lib/archive-lock";
 import { useSession } from "@/lib/session";
 import { six } from "@/lib/six";
 import { Avatar } from "./avatar";
+import { GifSearch } from "./gif-picker";
 import { FloatingReactions, useFloaters } from "./floating-reactions";
 import { NoteBubble, NoteEditor, NoteReader, useNotes } from "./notes";
 import { Portal } from "./portal";
@@ -454,6 +457,7 @@ function ReplyBar({ story, owner, onTyping }: { story: StoryDTO; owner: PublicUs
   const chat = chats.find((c) => c.type === "direct" && c.members.some((m) => m.user.id === owner.id));
   const [text, setText] = useState("");
   const [sent, setSent] = useState(false);
+  const [pickingGif, setPickingGif] = useState(false);
   const [popped, setPopped] = useState({ emoji: "", n: 0 });
   const [floaters, float] = useFloaters();
   if (!chat || !realtime) return null;
@@ -467,8 +471,12 @@ function ReplyBar({ story, owner, onTyping }: { story: StoryDTO; owner: PublicUs
     setPopped((p) => ({ emoji, n: p.n + 1 }));
     float(emoji);
   };
-  const send = (reply: string) => {
-    if (!reply.trim()) return;
+  const pickGif = (on: boolean) => {
+    setPickingGif(on);
+    onTyping(on);
+  };
+  const send = (reply: string, gif?: GifDTO) => {
+    if (!reply.trim() && !gif) return;
     const reference = {
       id: story.id,
       ownerId: owner.id,
@@ -477,8 +485,11 @@ function ReplyBar({ story, owner, onTyping }: { story: StoryDTO; owner: PublicUs
       background: story.background,
       imageUrl: story.media?.thumbUrl ?? (story.type === "image" ? story.media?.url : null) ?? null,
     };
-    void queueMessage(qc, realtime, chat.id, { text: reply.trim(), story: reference });
+    if (reply.trim()) void queueMessage(qc, realtime, chat.id, { text: reply.trim(), story: reference });
+    if (gif) void queueMessage(qc, realtime, chat.id, { text: "", gif, story: reference });
+    toastSent(chat.id, owner, reply.trim() || tr.stories.gif);
     setText("");
+    pickGif(false);
     done();
   };
 
@@ -504,6 +515,11 @@ function ReplyBar({ story, owner, onTyping }: { story: StoryDTO; owner: PublicUs
           ))
         )}
       </div>
+      {pickingGif && (
+        <div className="max-h-[45vh] overflow-y-auto rounded-2xl bg-white p-2 text-stone-900 dark:bg-stone-900 dark:text-stone-100">
+          <GifSearch onPick={(g) => send(text, g)} />
+        </div>
+      )}
       <form
         onSubmit={(e) => {
           e.preventDefault();
@@ -521,6 +537,14 @@ function ReplyBar({ story, owner, onTyping }: { story: StoryDTO; owner: PublicUs
           aria-label={tr.stories.replyTo(owner.displayName)}
           className="min-w-0 flex-1 rounded-full border border-white/60 bg-black/20 px-4 py-2.5 text-[16px] text-white outline-none backdrop-blur placeholder:text-white/70 focus:border-white"
         />
+        <button
+          type="button"
+          aria-pressed={pickingGif}
+          onClick={() => pickGif(!pickingGif)}
+          className={`shrink-0 rounded-full px-3 py-2.5 text-sm font-bold backdrop-blur ${pickingGif ? "bg-white text-stone-900" : "border border-white/60 bg-black/20 text-white"}`}
+        >
+          {tr.stories.gif}
+        </button>
         {text.trim() && (
           <button type="submit" aria-label={tr.common.send} className="grid size-11 shrink-0 place-items-center rounded-full bg-brand text-brand-ink">
             <SendHorizontal className="size-5" />
@@ -705,10 +729,7 @@ export function StoryViewer({ groups, start, onClose }: { groups: StoryGroupDTO[
               </div>
             )}
             {!media && story.text && story.fromChat && (
-              <>
-                <ChatBubbleCard text={story.text} bubble={story.bubble} quote={story.quote} />
-                <FromChatLabel />
-              </>
+              <ChatBubbleCard text={story.text} bubble={story.bubble} quote={story.quote} />
             )}
             {!media && story.text && !story.fromChat && (
               <p className="px-8 text-center text-2xl leading-snug font-semibold break-words whitespace-pre-wrap select-none">{story.text}</p>
@@ -803,10 +824,10 @@ export function StoryViewer({ groups, start, onClose }: { groups: StoryGroupDTO[
   );
 }
 
-export function FromChatLabel() {
+function FromChatLabel() {
   const tr = useT();
   return (
-    <p className="absolute inset-x-0 bottom-24 flex items-center justify-center gap-1.5 text-sm font-medium text-white/85 drop-shadow select-none">
+    <p className="flex items-center gap-1.5 px-3 text-sm font-medium text-white/85 drop-shadow">
       <MessageCircle className="size-4" aria-hidden />
       {tr.stories.fromChat}
     </p>
@@ -837,6 +858,7 @@ export function ChatBubbleCard({ text, bubble, quote }: { text: string; bubble: 
           </p>
         )}
       </div>
+      <FromChatLabel />
     </div>
   );
 }

@@ -46,7 +46,7 @@ import { useT } from "@/lib/i18n";
 import { useLatest } from "@/lib/latest";
 import { editPhoto, editedFromPng } from "@/lib/media";
 import type { LocalFile } from "@/lib/send";
-import { brand, brandInk } from "@/lib/theme";
+import { brand, brandInk, useTheme } from "@/lib/theme";
 import { EmojiPicker } from "./emoji-picker";
 
 type Tool = "crop" | "draw" | "blur";
@@ -185,8 +185,12 @@ export function Sizes({ value, onChange }: { value: number; onChange: (i: number
   );
 }
 
-export function Fonts({ value, onChange }: { value: LabelFont; onChange: (f: LabelFont) => void }) {
+/** The label fonts as chips, each written in itself; `light` fits them on a themed card instead of over a photo. */
+export function Fonts({ value, onChange, light = false }: { value: LabelFont; onChange: (f: LabelFont) => void; light?: boolean }) {
   const tr = useT();
+  const t = useTheme();
+  const on = light ? { bg: brand, ink: brandInk } : { bg: "#fff", ink: "#000" };
+  const off = light ? { bg: t.field, ink: t.text } : { bg: "rgba(255,255,255,0.15)", ink: "#fff" };
   return (
     <ScrollView horizontal showsHorizontalScrollIndicator={false} keyboardShouldPersistTaps="always" contentContainerStyle={styles.row}>
       {FONT_NAMES.map((f) => (
@@ -194,9 +198,9 @@ export function Fonts({ value, onChange }: { value: LabelFont; onChange: (f: Lab
           key={f}
           onPress={() => onChange(f)}
           accessibilityState={{ selected: value === f }}
-          style={[styles.font, { backgroundColor: value === f ? "#fff" : "rgba(255,255,255,0.15)" }]}
+          style={[styles.font, { backgroundColor: value === f ? on.bg : off.bg }]}
         >
-          <Text style={{ color: value === f ? "#000" : "#fff", fontSize: 15, fontFamily: familyOf(f), fontWeight: familyOf(f) ? "400" : "700" }}>
+          <Text style={{ color: value === f ? on.ink : off.ink, fontSize: 15, fontFamily: familyOf(f), fontWeight: familyOf(f) ? "400" : "700" }}>
             {tr.composer.fonts[f]}
           </Text>
         </Pressable>

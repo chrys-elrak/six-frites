@@ -1,18 +1,17 @@
 import { type UploadOptions, unwrap } from "@six/sdk";
-import type { CreateStoryInput, SetNoteInput } from "@six/shared";
+import type { CreateStoryInput } from "@six/shared";
 import type { QueryClient } from "@tanstack/react-query";
 import { create } from "zustand";
 import { six } from "./six";
 
 interface StoryPost {
-  kind: "story" | "note";
   state: "posting" | "done" | "failed" | null;
   progress: number;
   retry: (() => void) | null;
 }
 
 /** The story being shared in the background, for the bar that follows it. */
-export const useStoryPost = create<StoryPost>(() => ({ kind: "story", state: null, progress: 0, retry: null }));
+export const useStoryPost = create<StoryPost>(() => ({ state: null, progress: 0, retry: null }));
 
 let hide: ReturnType<typeof setTimeout> | undefined;
 
@@ -24,7 +23,7 @@ let hide: ReturnType<typeof setTimeout> | undefined;
 export async function postStory(qc: QueryClient, body: CreateStoryInput, file?: { blob: Blob } & Omit<UploadOptions, "onProgress">) {
   const set = useStoryPost.setState;
   clearTimeout(hide);
-  set({ kind: "story", state: "posting", progress: 0, retry: null });
+  set({ state: "posting", progress: 0, retry: null });
   try {
     const upload = file ? await six.upload(file.blob, { ...file, onProgress: (progress) => set({ progress }) }) : null;
     unwrap(await six.api.POST("/v1/stories", { body: { ...body, uploadId: upload?.id, background: upload ? undefined : body.background } }));
@@ -33,20 +32,5 @@ export async function postStory(qc: QueryClient, body: CreateStoryInput, file?: 
     hide = setTimeout(() => set({ state: null }), 3000);
   } catch {
     set({ state: "failed", retry: () => void postStory(qc, body, file) });
-  }
-}
-
-/** Puts up a chat message as a note right away, following it in the same bar as a story. */
-export async function postNote(qc: QueryClient, body: SetNoteInput) {
-  const set = useStoryPost.setState;
-  clearTimeout(hide);
-  set({ kind: "note", state: "posting", progress: 0, retry: null });
-  try {
-    unwrap(await six.api.PUT("/v1/notes", { body }));
-    void qc.invalidateQueries({ queryKey: ["stories"] });
-    set({ state: "done", progress: 1 });
-    hide = setTimeout(() => set({ state: null }), 3000);
-  } catch {
-    set({ state: "failed", retry: () => void postNote(qc, body) });
   }
 }

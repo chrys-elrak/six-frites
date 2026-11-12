@@ -781,6 +781,10 @@ model Note {
   fromChat   Boolean  @default(false)
   /// Who sent that message, as the owner saw them, and when: { from, sentAt }.
   quote      Json?
+  /// The font the text is written in, one of the label fonts; the app's own when null.
+  font       String?
+  /// A place shown under the note: { lat, lng, name? }.
+  location   Json?
   createdAt  DateTime @default(now())
   expiresAt  DateTime
 

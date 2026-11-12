@@ -190,22 +190,14 @@ export async function deliverLiveInvitePush(userId: string, from: PublicUser, ga
   }));
 }
 
-/**
- * Tells the sender that `fromId` can't read their message and asks for it again, or tells whoever asked
- * that the sender can't send it again, on the devices they aren't using.
- */
-export async function deliverResealPush(
-  m: { id: string; chatId: string },
-  userId: string,
-  fromId: string,
-  kind: "requested" | "failed",
-) {
+/** Tells whoever asked for a message again that the sender can't send it, on the devices they aren't using. */
+export async function deliverResealPush(m: { id: string; chatId: string }, userId: string, fromId: string) {
   const targets = await targetsFor(userId);
   if (!targets.length) return 0;
   const from = await seenIn(m.chatId, userId, await prisma.user.findUniqueOrThrow({ where: { id: fromId } }));
   return sendToAll(targets, (t) => ({
     title: from.displayName,
-    body: kind === "requested" ? t.messages.resendRequestedPush : t.messages.resendFailedPush,
+    body: t.messages.resendFailedPush,
     icon: from.avatarUrl,
     chatId: m.chatId,
     messageId: m.id,

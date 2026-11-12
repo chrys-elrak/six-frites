@@ -36,7 +36,7 @@ import { brand, brandInk } from "@/lib/theme";
 import { currentPosition } from "./location-card";
 import { Modal } from "./modal";
 import { Sheet } from "./sheet";
-import { ChatBubbleCard, FromChatLabel, StoryStickers, backgroundAround, storyFill } from "./stories";
+import { ChatBubbleCard, StoryStickers, backgroundAround, storyFill } from "./stories";
 import { LastsPicker } from "./notes";
 import { DrawBar, type Pen, StoryDrawingLayer, TextWriter, type Writing } from "./story-drawing";
 import { Text, TextInput } from "./text";
@@ -365,10 +365,7 @@ export function StoryComposer({
           {file?.kind === "image" && <Image source={{ uri: file.uri }} style={StyleSheet.absoluteFill} contentFit="contain" />}
           {file?.kind === "video" && <PreviewVideo uri={file.uri} />}
           {fromChat && (
-            <>
-              <ChatBubbleCard text={text} bubble={bubble ?? null} quote={quote ?? null} />
-              <FromChatLabel />
-            </>
+            <ChatBubbleCard text={text} bubble={bubble ?? null} quote={quote ?? null} />
           )}
           {!file && !fromChat && (
             <TextInput

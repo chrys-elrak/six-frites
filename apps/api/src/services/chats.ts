@@ -408,13 +408,15 @@ export async function updateChat(
   });
 }
 
-/** Tells the others in the chat that this member took a screenshot of it, with a service message and a push. */
-export async function reportScreenshot(userId: string, chatId: string) {
+/** Tells the others in the chat something this member did, like taking a screenshot, with a service message and a push. */
+export async function postNotice(userId: string, chatId: string, action: ServiceAction) {
   const { message, recipients } = await withEvents((tx, emit) =>
-    createMessage(tx, emit, userId, chatId, { clientId: `screenshot-${createId()}`, action: { type: "screenshot" } }),
+    createMessage(tx, emit, userId, chatId, { clientId: `${action.type}-${createId()}`, action }),
   );
   await queuePush(message.id, recipients).catch((err) => console.error("could not queue push:", err.message));
 }
+
+export const reportScreenshot = (userId: string, chatId: string) => postNotice(userId, chatId, { type: "screenshot" });
 
 /**
  * Someone left the chat: the vanish-mode messages they have read from the other person are deleted for

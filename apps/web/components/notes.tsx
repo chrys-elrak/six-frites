@@ -9,25 +9,32 @@ import {
   NOTE_SECS,
   noteChanged,
   noteSecs,
+  type GifDTO,
+  LABEL_FONTS,
+  type LabelFont,
   type NoteDTO,
   type PublicUser,
   STORY_DURATIONS,
   STORY_DURATION_UNITS,
   STORY_LIMITS,
   STORY_REACTIONS,
+  type StoryLocation,
   type StoryReaction,
+  coordsLabel,
   countReactions,
   durationLabel,
   inkOn,
+  mapsUrl,
   previewLink,
   splitLinks,
 } from "@six/shared";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { Ban, CheckCheck, Eye, MessageCircle, SendHorizontal, X } from "lucide-react";
+import { Ban, CheckCheck, Eye, Loader2, MapPin, MessageCircle, SendHorizontal, X } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useChats } from "@/lib/chats";
 import { clockTime, shortDate, timeAgo } from "@/lib/format";
-import { useT } from "@/lib/i18n";
+import { getLocale, useT } from "@/lib/i18n";
+import { toastSent } from "@/lib/notify";
 import { useRealtime } from "@/lib/realtime";
 import { queueMessage } from "@/lib/send";
 import { six } from "@/lib/six";
@@ -35,6 +42,8 @@ import { DurationPicker } from "./auto-delete-custom";
 import { Avatar } from "./avatar";
 import { Dialog } from "./dialog";
 import { GifSearch } from "./gif-picker";
+import { Fonts } from "./photo-editor";
+import { currentPosition } from "./location-card";
 import { LinkCard } from "./message-list";
 import { PrimaryButton } from "./ui";
 import { FloatingReactions, useFloaters } from "./floating-reactions";
@@ -53,6 +62,8 @@ export function useNotes() {
   });
 }
 
+const placeName = (l: StoryLocation) => l.name ?? coordsLabel(l);
+const fontOf = (font: LabelFont | null | undefined) => (font && LABEL_FONTS[font]) || undefined;
 const tint = (background: string | null | undefined) => (background ? { background, color: inkOn(background) } : undefined);
 const plain = "bg-white ring-1 ring-black/5 dark:bg-stone-800 dark:ring-white/10";
 const Loop = ({ src, className }: { src: string; className: string }) => <video src={src} autoPlay loop muted playsInline className={className} />;
@@ -70,8 +81,8 @@ export function NoteBubble({ note, placeholder, label, onClick }: { note: NoteDT
         note?.gif ? "p-0.5" : `px-2 py-1 text-center text-[11px] leading-tight break-words ${note ? "font-medium" : "text-stone-400"}`
       }`}
     >
-      {note?.gif ? <Loop src={note.gif.url} className="h-8 rounded-[14px] object-cover" /> : <span className={note?.fromChat ? "line-clamp-2 font-[family-name:Caveat] text-[13px] italic" : "line-clamp-2"}>
-          {note?.fromChat ? `“${note.text}”` : (note?.text ?? placeholder)}
+      {note?.gif ? <Loop src={note.gif.url} className="h-8 rounded-[14px] object-cover" /> : <span className="line-clamp-2" style={{ fontFamily: fontOf(note?.font) }}>
+          {note?.fromChat ? `“${note.text}”` : (note?.text || (note?.location && `📍 ${placeName(note.location)}`) || placeholder)}
         </span>}
     </button>
   );
@@ -144,21 +155,58 @@ function NoteViewers({ count }: { count: number }) {
 }
 
 /** Writes, changes or takes down my note. */
-export function NoteEditor({ note, onClose }: { note: NoteDTO | null; onClose: () => void }) {
+/**
+ * Writes or changes your note. Given `fromMessage`, or opened on a note made from one, the text is that message's and
+ * can't be changed: only its colour and a GIF can.
+ */
+export function NoteEditor({
+  note,
+  fromMessage,
+  onClose,
+}: {
+  note: NoteDTO | null;
+  fromMessage?: { text: string; messageId: string; quote: NoteDTO["quote"] };
+  onClose: () => void;
+}) {
   const tr = useT();
   const qc = useQueryClient();
-  const [text, setText] = useState(note?.text ?? "");
-  const [background, setBackground] = useState(note?.background ?? null);
-  const [gif, setGif] = useState(note?.gif ? { id: note.gif.id, src: note.gif.url, video: true } : null);
+  const locked = fromMessage?.text ?? (note?.fromChat ? note.text : null);
+  const start = fromMessage ? null : note;
+  const [text, setText] = useState(locked ?? note?.text ?? "");
+  const [background, setBackground] = useState(start?.background ?? null);
+  const [gif, setGif] = useState(start?.gif ? { id: start.gif.id, src: start.gif.url, video: true } : null);
+  const [font, setFont] = useState<LabelFont>(start?.font ?? "classic");
   const [pickingGif, setPickingGif] = useState(false);
+  const [location, setLocation] = useState<StoryLocation | null>(start?.location ?? null);
+  const [locating, setLocating] = useState(false);
+  const [locateError, setLocateError] = useState<string | null>(null);
   const [durationSecs, setDurationSecs] = useState(note ? noteSecs(note) : NOTE_SECS);
   const [custom, setCustom] = useState(false);
   const [busy, setBusy] = useState(false);
   const [failed, setFailed] = useState(false);
-  const changed = noteChanged(note, { text: emojifyEnd(text).trim(), background, gifId: gif?.id, durationSecs });
+  const changed = !!fromMessage || noteChanged(note, { text: emojifyEnd(text).trim(), background, gifId: gif?.id, location, durationSecs, font });
+  const filled = !!text.trim() || !!gif || !!location;
   const chip = (on: boolean) =>
     `shrink-0 rounded-full px-3 py-1.5 text-sm font-medium ${on ? "bg-brand text-brand-ink" : "bg-stone-100 hover:bg-stone-200 dark:bg-stone-800 dark:hover:bg-stone-700"}`;
   const preset = (STORY_DURATIONS as readonly number[]).includes(durationSecs);
+
+  async function locate() {
+    if (location) return setLocation(null);
+    setLocating(true);
+    setLocateError(null);
+    try {
+      const spot = await currentPosition();
+      setLocation(spot);
+      void six.api
+        .GET("/v1/place-name", { params: { query: { lat: spot.lat, lng: spot.lng, locale: getLocale() } } })
+        .then(({ data }) => data?.name && setLocation((l) => (l && !l.name ? { ...l, name: data.name! } : l)))
+        .catch(() => null);
+    } catch (err) {
+      setLocateError((err as Error).message === "denied" ? tr.composer.locationDenied : tr.composer.locationFailed);
+    } finally {
+      setLocating(false);
+    }
+  }
 
   async function run(call: () => Promise<unknown>) {
     setBusy(true);
@@ -173,40 +221,15 @@ export function NoteEditor({ note, onClose }: { note: NoteDTO | null; onClose: (
     }
   }
 
-  if (note?.fromChat && note.text)
-    return (
-      <Dialog onClose={onClose}>
-        <div className="flex flex-col gap-4 p-5">
-          <h2 className="text-lg font-semibold">{tr.stories.yourNote}</h2>
-          <div className="self-center">
-            <ChatNote note={note} />
-          </div>
-          <NoteViewers count={note.viewCount ?? 0} />
-          {failed && (
-            <p role="alert" className="text-sm text-red-600 dark:text-red-400">
-              {tr.common.somethingWrongRetry}
-            </p>
-          )}
-          <button
-            type="button"
-            disabled={busy}
-            onClick={() => void run(() => six.api.DELETE("/v1/notes"))}
-            className="self-start rounded-full px-4 py-2.5 text-sm font-semibold text-red-600 hover:bg-red-50 disabled:opacity-50 dark:text-red-400 dark:hover:bg-red-950/40"
-          >
-            {tr.stories.deleteNote}
-          </button>
-        </div>
-      </Dialog>
-    );
-
   return (
     <Dialog onClose={onClose}>
       <form
         onSubmit={(e) => {
           e.preventDefault();
-          if (changed && (text.trim() || gif))
+          const place = location ? { ...location, name: location.name?.trim() || undefined } : undefined;
+          if (changed && filled)
             void run(async () =>
-              unwrap(await six.api.PUT("/v1/notes", { body: { text: emojifyEnd(text).trim(), gifId: gif?.id, background: background ?? undefined, durationSecs } })),
+              unwrap(await six.api.PUT("/v1/notes", { body: { text: emojifyEnd(text).trim(), fromChat: !!locked, messageId: fromMessage?.messageId, font, gifId: gif?.id, location: place, background: background ?? undefined, durationSecs } })),
             );
         }}
         className="flex flex-col gap-3 p-5"
@@ -229,23 +252,30 @@ export function NoteEditor({ note, onClose }: { note: NoteDTO | null; onClose: (
             </button>
           </div>
         )}
-        <div className="relative">
-          <input
-            autoFocus
-            value={text}
-            onChange={(e) => setText(emojifyTyped(text, e.target.value)?.text ?? e.target.value)}
-            maxLength={NOTE_LIMIT}
-            placeholder={tr.stories.notePlaceholder}
-            aria-label={tr.stories.note}
-            style={tint(background)}
-            className={`w-full rounded-2xl border px-4 py-3 pr-14 text-[16px] outline-none ${
-              background ? "border-transparent placeholder:text-current placeholder:opacity-60" : "border-stone-200 bg-white focus:border-brand dark:border-stone-700 dark:bg-stone-900"
-            }`}
-          />
-          <span className="absolute top-1/2 right-4 -translate-y-1/2 text-xs opacity-60" style={background ? { color: inkOn(background) } : undefined}>
-            {NOTE_LIMIT - text.length}
-          </span>
-        </div>
+        {locked ? (
+          <div className="self-center">
+            <ChatNote note={{ text: locked, background, font: font === "classic" ? null : font, gif: null, quote: fromMessage?.quote ?? note?.quote ?? null }} />
+          </div>
+        ) : (
+          <div className="relative">
+            <input
+              autoFocus
+              value={text}
+              onChange={(e) => setText(emojifyTyped(text, e.target.value)?.text ?? e.target.value)}
+              maxLength={NOTE_LIMIT}
+              placeholder={tr.stories.notePlaceholder}
+              aria-label={tr.stories.note}
+              style={{ ...tint(background), fontFamily: fontOf(font) }}
+              className={`w-full rounded-2xl border px-4 py-3 pr-14 text-[16px] outline-none ${
+                background ? "border-transparent placeholder:text-current placeholder:opacity-60" : "border-stone-200 bg-white focus:border-brand dark:border-stone-700 dark:bg-stone-900"
+              }`}
+            />
+            <span className="absolute top-1/2 right-4 -translate-y-1/2 text-xs opacity-60" style={background ? { color: inkOn(background) } : undefined}>
+              {NOTE_LIMIT - text.length}
+            </span>
+          </div>
+        )}
+        <Fonts light value={font} onChange={setFont} />
         <div className="flex items-center gap-2">
           <div role="radiogroup" aria-label={tr.stories.background} className="flex min-w-0 flex-1 items-center gap-2 overflow-x-auto p-1">
             <button
@@ -279,7 +309,34 @@ export function NoteEditor({ note, onClose }: { note: NoteDTO | null; onClose: (
           >
             {tr.stories.gif}
           </button>
+          <button
+            type="button"
+            aria-pressed={!!location}
+            aria-label={tr.stories.location}
+            title={tr.stories.location}
+            onClick={() => void locate()}
+            className={`grid size-8 shrink-0 place-items-center rounded-full ${location ? "bg-brand text-brand-ink" : "bg-stone-100 hover:bg-stone-200 dark:bg-stone-800 dark:hover:bg-stone-700"}`}
+          >
+            {locating ? <Loader2 className="size-4 animate-spin" /> : <MapPin className="size-4" />}
+          </button>
         </div>
+        {location && (
+          <div className="flex items-center gap-2 rounded-2xl bg-stone-100 px-3 py-2 dark:bg-stone-800">
+            <MapPin className="size-4 shrink-0 text-rose-600" />
+            <input
+              value={location.name ?? ""}
+              onChange={(e) => setLocation({ ...location, name: e.target.value })}
+              maxLength={STORY_LIMITS.place}
+              placeholder={coordsLabel(location)}
+              aria-label={tr.stories.location}
+              className="min-w-0 flex-1 bg-transparent text-[16px] outline-none"
+            />
+            <button type="button" onClick={() => setLocation(null)} aria-label={tr.common.remove} className="shrink-0 text-stone-500">
+              <X className="size-4" />
+            </button>
+          </div>
+        )}
+        {locateError && <p className="text-sm text-red-600 dark:text-red-400">{locateError}</p>}
         {pickingGif && (
           <div className="-mx-3">
             <GifSearch
@@ -290,17 +347,19 @@ export function NoteEditor({ note, onClose }: { note: NoteDTO | null; onClose: (
             />
           </div>
         )}
-        <div role="radiogroup" aria-label={tr.stories.lasts} className="flex flex-wrap items-center gap-2">
-          <span className="text-sm text-stone-500">{tr.stories.lasts}</span>
-          {STORY_DURATIONS.map((secs) => (
-            <button key={secs} type="button" role="radio" aria-checked={durationSecs === secs} onClick={() => setDurationSecs(secs)} className={chip(durationSecs === secs)}>
-              {durationLabel(secs, tr)}
+        {!locked && (
+          <div role="radiogroup" aria-label={tr.stories.lasts} className="flex flex-wrap items-center gap-2">
+            <span className="text-sm text-stone-500">{tr.stories.lasts}</span>
+            {STORY_DURATIONS.map((secs) => (
+              <button key={secs} type="button" role="radio" aria-checked={durationSecs === secs} onClick={() => setDurationSecs(secs)} className={chip(durationSecs === secs)}>
+                {durationLabel(secs, tr)}
+              </button>
+            ))}
+            <button type="button" role="radio" aria-checked={!preset} onClick={() => setCustom(true)} className={chip(!preset)}>
+              {preset ? tr.stories.custom : durationLabel(durationSecs, tr)}
             </button>
-          ))}
-          <button type="button" role="radio" aria-checked={!preset} onClick={() => setCustom(true)} className={chip(!preset)}>
-            {preset ? tr.stories.custom : durationLabel(durationSecs, tr)}
-          </button>
-        </div>
+          </div>
+        )}
         <p className="text-sm text-stone-500">{tr.stories.noteHint}</p>
         {note && <NoteViewers count={note.viewCount ?? 0} />}
         {failed && (
@@ -320,7 +379,7 @@ export function NoteEditor({ note, onClose }: { note: NoteDTO | null; onClose: (
             </button>
           )}
           {changed && (
-            <PrimaryButton type="submit" disabled={busy || (!text.trim() && !gif)} className="ml-auto">
+            <PrimaryButton type="submit" disabled={busy || !filled} className="ml-auto">
               {tr.stories.post}
             </PrimaryButton>
           )}
@@ -339,6 +398,7 @@ export function NoteReader({ user, note, onClose }: { user: PublicUser; note: No
   const chats = [...(useChats().data ?? []), ...(useChats(true).data ?? [])];
   const chat = chats.find((c) => c.type === "direct" && c.members.some((m) => m.user.id === user.id));
   const [text, setText] = useState("");
+  const [pickingGif, setPickingGif] = useState(false);
   const [popped, setPopped] = useState({ emoji: "", n: 0 });
   const [floaters, float] = useFloaters();
   useEffect(() => {
@@ -351,10 +411,12 @@ export function NoteReader({ user, note, onClose }: { user: PublicUser; note: No
     float(emoji);
   };
 
-  function send() {
-    if (!text.trim() || !chat || !realtime) return;
-    const story = { id: note.id, ownerId: user.id, kind: "note" as const, text: note.text || null, background: note.background, imageUrl: null };
-    void queueMessage(qc, realtime, chat.id, { text: emojifyEnd(text).trim(), story });
+  function send(gif?: GifDTO) {
+    if ((!text.trim() && !gif) || !chat || !realtime) return;
+    const story = { id: note.id, ownerId: user.id, kind: "note" as const, text: note.text || (note.location && `📍 ${placeName(note.location)}`) || null, background: note.background, imageUrl: null };
+    if (text.trim()) void queueMessage(qc, realtime, chat.id, { text: emojifyEnd(text).trim(), story });
+    if (gif) void queueMessage(qc, realtime, chat.id, { text: "", gif, story });
+    toastSent(chat.id, user, text.trim() || tr.stories.gif);
     onClose();
   }
 
@@ -367,20 +429,33 @@ export function NoteReader({ user, note, onClose }: { user: PublicUser; note: No
           if ((e.target as Element).closest("a[href]")) void six.api.POST("/v1/notes/{id}/click", { params: { path: { id: note.id } } });
         }}
       >
-        {note.fromChat && note.text && !note.gif ? (
+        {note.fromChat && note.text ? (
           <ChatNote note={note} />
         ) : (
-          <span
-            style={tint(note.background)}
-            className={`flex max-w-full flex-col items-center gap-2 rounded-3xl text-center text-base font-medium break-words shadow ${note.background ? "" : plain} ${note.gif ? "p-1.5" : "px-4 py-2.5"}`}
+          (note.text || note.gif) && (
+            <span
+              style={tint(note.background)}
+              className={`flex max-w-full flex-col items-center gap-2 rounded-3xl text-center text-base font-medium break-words shadow ${note.background ? "" : plain} ${note.gif ? "p-1.5" : "px-4 py-2.5"}`}
+            >
+              {note.gif && <Loop src={note.gif.url} className="max-h-48 rounded-[1.25rem]" />}
+              {note.text && (
+                <span className={note.gif ? "px-2.5 pb-1" : ""} style={{ fontFamily: fontOf(note.font) }}>
+                  <Linked text={note.text} />
+                </span>
+              )}
+            </span>
+          )
+        )}
+        {note.location && (
+          <a
+            href={mapsUrl(note.location)}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex max-w-full items-center gap-1.5 rounded-full bg-stone-100 px-3 py-1.5 text-sm font-medium hover:bg-stone-200 dark:bg-stone-800 dark:hover:bg-stone-700"
           >
-            {note.gif && <Loop src={note.gif.url} className="max-h-48 rounded-[1.25rem]" />}
-            {note.text && (
-              <span className={note.gif ? "px-2.5 pb-1" : ""}>
-                <Linked text={note.text} />
-              </span>
-            )}
-          </span>
+            <MapPin className="size-4 shrink-0 text-rose-600" />
+            <span className="truncate">{placeName(note.location)}</span>
+          </a>
         )}
         {previewLink(note.text) && <LinkCard url={previewLink(note.text)!} mine={false} />}
         {!note.fromChat && (
@@ -407,6 +482,11 @@ export function NoteReader({ user, note, onClose }: { user: PublicUser; note: No
             </button>
           ))}
         </div>
+        {chat && realtime && pickingGif && (
+          <div className="-mx-2 max-h-[40vh] w-full overflow-y-auto">
+            <GifSearch onPick={(g) => send(g)} />
+          </div>
+        )}
         {chat && realtime && (
           <form
             onSubmit={(e) => {
@@ -424,6 +504,14 @@ export function NoteReader({ user, note, onClose }: { user: PublicUser; note: No
               aria-label={tr.stories.replyTo(user.displayName)}
               className="min-w-0 flex-1 rounded-full border border-stone-200 bg-white px-4 py-2.5 text-[16px] outline-none focus:border-brand dark:border-stone-700 dark:bg-stone-900"
             />
+            <button
+              type="button"
+              aria-pressed={pickingGif}
+              onClick={() => setPickingGif(!pickingGif)}
+              className={`shrink-0 rounded-full px-3 py-2.5 text-sm font-bold ${pickingGif ? "bg-brand text-brand-ink" : "bg-stone-100 hover:bg-stone-200 dark:bg-stone-800 dark:hover:bg-stone-700"}`}
+            >
+              {tr.stories.gif}
+            </button>
             <button
               type="submit"
               disabled={!text.trim()}
@@ -452,11 +540,12 @@ function Linked({ text }: { text: string }) {
 }
 
 /** A note made from a chat message, drawn as that message: a sent bubble next to who wrote it, with when. */
-function ChatNote({ note }: { note: NoteDTO }) {
+function ChatNote({ note }: { note: Pick<NoteDTO, "text" | "background" | "font" | "gif" | "quote"> }) {
   const tr = useT();
   const { quote } = note;
   return (
     <div className="flex max-w-full flex-col items-center gap-3">
+      {note.gif && <Loop src={note.gif.url} className="max-h-48 rounded-[1.25rem]" />}
       <div className="flex max-w-full items-end gap-2">
         {quote && <Avatar user={quote.from} size="sm" />}
         <div className="flex min-w-0 flex-col items-start gap-1">
@@ -469,7 +558,7 @@ function ChatNote({ note }: { note: NoteDTO }) {
             style={tint(note.background)}
             className={`flex max-w-full items-end gap-2 rounded-[1.4rem] px-4 py-2 shadow ${note.background ? "" : "bg-brand text-brand-ink"}`}
           >
-            <span className="min-w-0 font-[family-name:Caveat] text-2xl leading-tight break-words italic">
+            <span className="min-w-0 text-lg leading-snug break-words" style={{ fontFamily: fontOf(note.font) }}>
               <Linked text={note.text} />
             </span>
             {quote && (

@@ -6,6 +6,7 @@ import {
   NOTE_SECS,
   type NoteDTO,
   type NoteViewerDTO,
+  type LabelFont,
   type NotesDTO,
   type PublicUser,
   STORY_LIMITS,
@@ -22,7 +23,9 @@ import { prisma } from "../lib/prisma.js";
 import { broadcaster, rooms } from "../lib/realtime.js";
 import { presignGet } from "../lib/storage.js";
 import { blockedWith } from "./blocks.js";
+import { postNotice } from "./chats.js";
 import { profilesFor } from "./contacts.js";
+import { pairAlias } from "./users.js";
 import { seenIn } from "./push.js";
 import { deliverStoryReactionPush } from "./push.js";
 import { notify } from "./notifications.js";
@@ -71,7 +74,7 @@ const tooLong = (s: StoryRow) =>
 /** Others only see a story once its photo or video is ready, and never a video over 30 seconds. */
 const showable = (s: StoryRow) => !s.uploadId || (s.upload?.status === "ready" && !tooLong(s));
 
-function toStoryDTO(s: StoryRow, viewerId: string): StoryDTO {
+function toStoryDTO(s: StoryRow, viewerId: string, senders: Senders = new Map()): StoryDTO {
   const mine = s.userId === viewerId;
   return {
     id: s.id,
@@ -79,7 +82,7 @@ function toStoryDTO(s: StoryRow, viewerId: string): StoryDTO {
     text: s.text,
     fromChat: s.fromChat,
     bubble: s.bubble,
-    quote: s.fromChat ? ((s.quote as StoryDTO["quote"]) ?? null) : null,
+    quote: quoteFor(s, viewerId, senders),
     background: s.background,
     media: s.upload ? toAttachmentDTO(s.upload) : null,
     gif: s.gifKey ? { url: presignGet(s.gifKey), width: s.gifWidth, height: s.gifHeight } : null,
@@ -106,12 +109,13 @@ export async function listStories(viewerId: string): Promise<{ items: StoryGroup
   });
   const visible = rows.filter((s) => s.userId === viewerId || showable(s));
   const userIds = [...new Set(visible.map((s) => s.userId))];
-  const [users, profile] = await Promise.all([
+  const [users, profile, senders] = await Promise.all([
     prisma.user.findMany({ where: { id: { in: userIds } } }),
     profilesFor(prisma, viewerId, userIds),
+    quoteSenders(viewerId, visible),
   ]);
   const groups = users.map((u) => {
-    const stories = visible.filter((s) => s.userId === u.id).map((s) => toStoryDTO(s, viewerId));
+    const stories = visible.filter((s) => s.userId === u.id).map((s) => toStoryDTO(s, viewerId, senders));
     return { user: profile(u), stories };
   });
   const rank = (g: StoryGroupDTO) => (g.user.id === viewerId ? 0 : g.stories.some((s) => !s.seen) ? 1 : 2);
@@ -167,6 +171,25 @@ async function claimUpload(userId: string, uploadId: string) {
   }
 }
 
+type Quote = NonNullable<StoryDTO["quote"]>;
+type Senders = Map<string, PublicUser>;
+
+/** The people behind the chat messages on these stories or notes, as `viewerId` sees them, not as the poster did. */
+async function quoteSenders(viewerId: string, rows: { userId: string; fromChat: boolean; quote: Prisma.JsonValue }[]): Promise<Senders> {
+  const ids = [...new Set(rows.flatMap((r) => (r.fromChat && r.quote && r.userId !== viewerId ? [(r.quote as Quote).from.id] : [])))];
+  if (!ids.length) return new Map();
+  const [users, profile] = await Promise.all([prisma.user.findMany({ where: { id: { in: ids } } }), profilesFor(prisma, viewerId, ids)]);
+  return new Map(users.map((u) => [u.id, profile(u)]));
+}
+
+/** The poster sees who sent the message as they did when sharing it; anyone else sees that person as they themselves would. */
+function quoteFor(r: { userId: string; fromChat: boolean; quote: Prisma.JsonValue }, viewerId: string, senders: Senders): Quote | null {
+  if (!r.fromChat || !r.quote) return null;
+  const q = r.quote as Quote;
+  if (r.userId === viewerId) return q;
+  return { from: senders.get(q.from.id) ?? { id: q.from.id, displayName: pairAlias(viewerId, q.from.id), avatarUrl: null }, sentAt: q.sentAt };
+}
+
 /** Who sent a message in one of `userId`'s chats, as they see them there, and when. */
 async function quoteOf(userId: string, messageId: string): Promise<NonNullable<StoryDTO["quote"]>> {
   const m = await prisma.message.findFirst({
@@ -176,6 +199,13 @@ async function quoteOf(userId: string, messageId: string): Promise<NonNullable<S
   if (!m) throw new AppError("MESSAGE_NOT_FOUND");
   const p: PublicUser = await seenIn(m.chatId, userId, m.sender);
   return { from: { id: p.id, displayName: p.displayName, avatarUrl: p.avatarUrl, ...(p.alias && { alias: p.alias }) }, sentAt: m.createdAt.toISOString() };
+}
+
+/** Tells the chat a shared message came from that `userId` put it up as their story or note, unless they wrote it. */
+async function announceShare(userId: string, messageId: string, to: "story" | "note") {
+  const m = await prisma.message.findUnique({ where: { id: messageId }, select: { chatId: true, senderId: true } });
+  if (!m || m.senderId === userId) return;
+  await postNotice(userId, m.chatId, { type: "shared_to", to }).catch((err) => console.error("could not announce a share:", err.message));
 }
 
 export async function createStory(userId: string, input: CreateStoryInput): Promise<StoryDTO> {
@@ -209,6 +239,7 @@ export async function createStory(userId: string, input: CreateStoryInput): Prom
     include: storyInclude(userId),
   });
   await announceStories(userId);
+  if (quote && input.messageId) await announceShare(userId, input.messageId, "story");
   return toStoryDTO(story, userId);
 }
 
@@ -286,9 +317,12 @@ export async function deleteStory(userId: string, storyId: string) {
 
 type NoteRow = {
   id: string;
+  userId: string;
   text: string;
   fromChat: boolean;
   quote: Prisma.JsonValue;
+  font: string | null;
+  location: Prisma.JsonValue;
   background: string | null;
   gifKey: string | null;
   gifWidth: number | null;
@@ -297,15 +331,17 @@ type NoteRow = {
   expiresAt: Date;
 };
 
-const toNoteDTO = (n: NoteRow, viewCount: number | null = null): NoteDTO => ({
+const toNoteDTO = (n: NoteRow, viewCount: number | null, quote: NoteDTO["quote"]): NoteDTO => ({
   id: n.id,
   text: n.text,
   fromChat: n.fromChat,
-  quote: n.fromChat ? ((n.quote as NoteDTO["quote"]) ?? null) : null,
+  font: n.font as LabelFont | null,
+  quote,
   background: n.background,
   gif: n.gifKey
     ? { id: n.gifKey.slice(SHARED_PREFIX.length, -".mp4".length), url: presignGet(n.gifKey), width: n.gifWidth, height: n.gifHeight }
     : null,
+  location: n.location as StoryLocation | null,
   viewCount,
   createdAt: n.createdAt.toISOString(),
   expiresAt: n.expiresAt.toISOString(),
@@ -319,11 +355,11 @@ export async function listNotes(userId: string): Promise<NotesDTO> {
     include: { user: true, _count: { select: { views: true } } },
     orderBy: { createdAt: "desc" },
   });
-  const profile = await profilesFor(prisma, userId, ids);
+  const [profile, senders] = await Promise.all([profilesFor(prisma, userId, ids), quoteSenders(userId, rows)]);
   const mine = rows.find((n) => n.userId === userId);
   return {
-    mine: mine ? toNoteDTO(mine, mine._count.views) : null,
-    items: rows.filter((n) => n !== mine).map((n) => ({ user: profile(n.user), note: toNoteDTO(n) })),
+    mine: mine ? toNoteDTO(mine, mine._count.views, quoteFor(mine, userId, senders)) : null,
+    items: rows.filter((n) => n !== mine).map((n) => ({ user: profile(n.user), note: toNoteDTO(n, null, quoteFor(n, userId, senders)) })),
   };
 }
 
@@ -334,21 +370,36 @@ export async function setNote(
     text,
     fromChat,
     messageId,
+    font,
     gifId,
+    location,
     background,
     durationSecs = NOTE_SECS,
-  }: { text: string; fromChat?: boolean; messageId?: string; gifId?: string; background?: string; durationSecs?: number },
+  }: {
+    text: string;
+    fromChat?: boolean;
+    messageId?: string;
+    font?: LabelFont;
+    gifId?: string;
+    location?: StoryLocation;
+    background?: string;
+    durationSecs?: number;
+  },
 ): Promise<NoteDTO> {
   const gif = gifId ? await sharedGif(gifId) : null;
   const clean = await cleanLinksIn(text, [], followShareLink);
-  const quote = fromChat && messageId && clean.text ? await quoteOf(userId, messageId) : null;
+  const previous = await prisma.note.findUnique({ where: { userId }, select: { text: true, fromChat: true, quote: true } });
+  const kept = previous?.fromChat && previous.text === clean.text ? previous.quote : null;
+  const quote = fromChat && clean.text ? (messageId ? await quoteOf(userId, messageId) : kept) : null;
   await prisma.note.deleteMany({ where: { userId } });
   const note = await prisma.note.create({
     data: {
       userId,
       text: clean.text,
       fromChat: !!clean.text && (fromChat ?? false),
-      ...(quote && { quote }),
+      ...(quote && { quote: quote as Prisma.InputJsonValue }),
+      ...(location && { location }),
+      font: font === "classic" ? null : (font ?? null),
       background,
       gifKey: gif?.key,
       gifWidth: gif?.width,
@@ -357,7 +408,8 @@ export async function setNote(
     },
   });
   await announceStories(userId);
-  return toNoteDTO(note, 0);
+  if (fromChat && clean.text && messageId) await announceShare(userId, messageId, "note");
+  return toNoteDTO(note, 0, quoteFor(note, userId, new Map()));
 }
 
 /** Counts a contact opening a note, or the link in it; opening your own doesn't count. */

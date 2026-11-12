@@ -1,5 +1,5 @@
 import { type Dict, type MessageDTO, isGroupAction } from "@six/shared";
-import { Camera, Gamepad2, Ghost, Lock, Palette, Phone, PhoneMissed, Timer, Users, Video } from "lucide-react";
+import { Camera, Gamepad2, Ghost, Lock, Palette, Phone, PhoneMissed, RefreshCw, Share2, Timer, Users, Video } from "lucide-react";
 import { getT } from "@/lib/i18n";
 
 export function ServiceIcon({ action }: Pick<MessageDTO, "action">) {
@@ -12,6 +12,10 @@ export function ServiceIcon({ action }: Pick<MessageDTO, "action">) {
           ? Ghost
           : action?.type === "screenshot"
             ? Camera
+            : action?.type === "resend_request"
+            ? RefreshCw
+            : action?.type === "shared_to"
+            ? Share2
             : action?.type === "call"
               ? action.secs === null
                 ? PhoneMissed

@@ -41,6 +41,7 @@ import {
   Pin,
   PinOff,
   QrCode,
+  RefreshCw,
   Search,
   Headset,
   Share2,
@@ -112,6 +113,10 @@ function Preview({ chat, meId, color }: { chat: ChatDTO; meId: string; color: st
         <Ghost size={14} color={color} />
       ) : m.action?.type === "screenshot" ? (
         <Camera size={14} color={color} />
+      ) : m.action?.type === "resend_request" ? (
+        <RefreshCw size={14} color={color} />
+      ) : m.action?.type === "shared_to" ? (
+        <Share2 size={14} color={color} />
       ) : m.action?.type === "call" ? (
         m.action.secs === null ? (
           <PhoneMissed size={14} color={color} />

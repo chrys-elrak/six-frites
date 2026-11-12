@@ -130,7 +130,7 @@ import { AnimatedEmoji } from "./animated-emoji";
 import { AlbumViewer, AttachmentView, Lightbox, type LightboxItem, type ShownAttachment } from "./attachment";
 import { ChatPicker } from "./chat-picker";
 import { StoryComposer } from "./story-composer";
-import { postNote } from "@/lib/story-post";
+import { NoteEditor } from "./notes";
 import { ChecklistView } from "./checklist";
 import { GameView } from "./game";
 import { LocationCard } from "./location-card";
@@ -419,11 +419,11 @@ function StoryQuote({ story, mine, reaction }: { story: StoryReply; mine: boolea
   const picture = story.imageUrl && !broken ? story.imageUrl : null;
   if (story.kind === "note") {
     return (
-      <span className="mb-1.5 flex flex-col items-start gap-1">
+      <span className="mb-1.5 flex min-w-0 flex-col items-start gap-1">
         <span className="text-xs opacity-75">{mine ? t.youRepliedToNote : t.repliedToNote}</span>
         <span
           style={story.background ? { background: story.background, color: inkOn(story.background) } : undefined}
-          className={`rounded-2xl px-3 py-1.5 text-sm break-words ${story.background ? "" : "bg-black/10 dark:bg-white/10"}`}
+          className={`line-clamp-4 max-w-full rounded-2xl px-3 py-1.5 text-sm break-words ${story.background ? "" : "bg-black/10 dark:bg-white/10"}`}
         >
           {story.text ?? t.gif}
         </span>
@@ -1259,6 +1259,7 @@ export const MessageList = forwardRef<
     const [markingUp, setMarkingUp] = useState<{ message: MessageDTO; file: File } | null>(null);
     const [confirmDelete, setConfirmDelete] = useState<MessageDTO[] | null>(null);
     const [sharing, setSharing] = useState<{ text: string; message: MessageDTO } | null>(null);
+    const [noting, setNoting] = useState<{ text: string; message: MessageDTO } | null>(null);
     const look = chatTheme(chat.theme).light;
     const quoteOf = (msg: MessageDTO) => {
       const from = chat.members.find((x) => x.user.id === msg.senderId)?.user;
@@ -1542,7 +1543,7 @@ export const MessageList = forwardRef<
           : [{ label: tr.messages.shareToStory, icon: CircleFadingPlus, onSelect: () => setSharing({ text: shareTargets(m.text).text, message: m }) }]),
         ...(m.type !== "text" || m.ephemeral || m.undecryptable || !shareTargets(m.text).note
           ? []
-          : [{ label: tr.messages.setAsNote, icon: StickyNote, onSelect: () => void postNote(qc, { text: shareTargets(m.text).text, fromChat: true, messageId: m.id }) }]),
+          : [{ label: tr.messages.setAsNote, icon: StickyNote, onSelect: () => setNoting({ text: shareTargets(m.text).text, message: m }) }]),
         ...(threadId ? [] : [{ label: tr.common.select, icon: CheckCircle2, onSelect: () => startSelection(chat.id, m.id) }]),
         ...(frozen || m.ephemeral || m.undecryptable || m.type === "service"
           ? []
@@ -1852,6 +1853,13 @@ export const MessageList = forwardRef<
               setMode(slot, { kind: "edit", message: markingUp.message, photo: file });
               setMarkingUp(null);
             }}
+          />
+        )}
+        {noting && (
+          <NoteEditor
+            note={null}
+            fromMessage={{ text: noting.text, messageId: noting.message.id, quote: quoteOf(noting.message) ?? null }}
+            onClose={() => setNoting(null)}
           />
         )}
         {sharing && <StoryComposer initialText={sharing.text} bubble={`${look.bubble},${look.bubbleInk}`} quote={quoteOf(sharing.message)} onClose={() => setSharing(null)} />}

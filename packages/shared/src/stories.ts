@@ -270,12 +270,14 @@ export const SetNoteInput = z
   .object({
     text: z.string().trim().max(NOTE_LIMIT).default(""),
     fromChat: z.boolean().optional().describe("The text is a chat message shared as it was, shown in quotes"),
+    font: z.enum(Object.keys(LABEL_FONTS) as [LabelFont, ...LabelFont[]]).optional().describe("The font the text is written in; the app's own when left out"),
     messageId: Id.optional().describe("With fromChat: the message it is, so the note shows who sent it, as you see them, and when"),
     gifId: z
       .string()
       .regex(/^[\w-]{1,128}$/)
       .optional()
       .describe("A GIF from GET /v1/gifs shown in the note"),
+    location: StoryLocation.optional().describe("A place shown under the note, which opens in maps"),
     background: z
       .string()
       .regex(/^#[0-9a-f]{6}$/i)
@@ -290,13 +292,13 @@ export const SetNoteInput = z
       .default(NOTE_SECS)
       .describe("How long it stays up, from one hour to a day"),
   })
-  .refine((v) => !!v.text || !!v.gifId, { message: "A note needs text or a GIF", path: ["text"] });
-export type SetNoteInput = z.input<typeof SetNoteInput>;
+  .refine((v) => !!v.text || !!v.gifId || !!v.location, { message: "A note needs text, a GIF or a place", path: ["text"] });
 
 export const NoteDTO = z.object({
   id: Id,
-  text: z.string().describe("Empty when the note is only a GIF"),
+  text: z.string().describe("Empty when the note is only a GIF or a place"),
   fromChat: z.boolean(),
+  font: z.enum(Object.keys(LABEL_FONTS) as [LabelFont, ...LabelFont[]]).nullable(),
   quote: z
     .object({ from: PublicUser.describe("Who sent the message, as the note's owner sees them"), sentAt: IsoDate })
     .nullable()
@@ -311,6 +313,7 @@ export const NoteDTO = z.object({
     })
     .nullable()
     .describe("As an MP4 to play muted on a loop"),
+  location: StoryLocation.nullable(),
   viewCount: z.number().int().nullable().describe("How many contacts opened it; only on yours"),
   createdAt: IsoDate,
   expiresAt: IsoDate,
@@ -323,9 +326,11 @@ export const noteSecs = (note: Pick<NoteDTO, "createdAt" | "expiresAt">) =>
 
 export const noteChanged = (
   note: NoteDTO | null,
-  draft: { text: string; background: string | null; gifId?: string; durationSecs: number },
+  draft: { text: string; background: string | null; gifId?: string; location: StoryLocation | null; durationSecs: number; font: LabelFont },
 ) =>
   !note ||
+  (draft.font === "classic" ? null : draft.font) !== note.font ||
+  JSON.stringify(draft.location) !== JSON.stringify(note.location) ||
   draft.text !== note.text ||
   draft.background !== note.background ||
   draft.gifId !== note.gif?.id ||

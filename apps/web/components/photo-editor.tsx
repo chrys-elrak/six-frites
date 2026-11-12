@@ -150,7 +150,8 @@ export function Sizes({ value, onChange }: { value: number; onChange: (i: number
   );
 }
 
-export function Fonts({ value, onChange }: { value: LabelFont; onChange: (f: LabelFont) => void }) {
+/** The label fonts as chips, each written in itself; `light` fits them on a light card instead of over a photo. */
+export function Fonts({ value, onChange, light = false }: { value: LabelFont; onChange: (f: LabelFont) => void; light?: boolean }) {
   const tr = useT();
   return (
     <div className="flex max-w-full gap-2 overflow-x-auto px-1 py-1">
@@ -160,7 +161,15 @@ export function Fonts({ value, onChange }: { value: LabelFont; onChange: (f: Lab
           type="button"
           onClick={() => onChange(f)}
           aria-pressed={value === f}
-          className={`shrink-0 rounded-full px-3.5 py-1.5 text-[15px] ${value === f ? "bg-white text-black" : "bg-white/15 hover:bg-white/25"}`}
+          className={`shrink-0 rounded-full px-3.5 py-1.5 text-[15px] ${
+            light
+              ? value === f
+                ? "bg-brand text-brand-ink"
+                : "bg-stone-100 hover:bg-stone-200 dark:bg-stone-800 dark:hover:bg-stone-700"
+              : value === f
+                ? "bg-white text-black"
+                : "bg-white/15 hover:bg-white/25"
+          }`}
           style={{ fontFamily: familyOf(f) ?? undefined, fontWeight: familyOf(f) ? 400 : 700 }}
         >
           {tr.composer.fonts[f]}

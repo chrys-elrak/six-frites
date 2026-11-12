@@ -12,6 +12,7 @@ import {
   countReactions,
   mapsUrl,
   storyBackground,
+  type GifDTO,
   type PublicUser,
   STORY_STICKERS,
   STORY_STICKER_SCALE,
@@ -33,6 +34,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { clockTime, shortDate, timeAgo } from "@/lib/format";
 import { useChats } from "@/lib/chats";
 import { useT } from "@/lib/i18n";
+import { toastSent } from "@/lib/notify";
 import { useRealtime } from "@/lib/realtime";
 import { queueMessage } from "@/lib/send";
 import { fingers } from "@/lib/fingers";
@@ -45,7 +47,7 @@ import { FloatingReactions, useFloaters } from "./floating-reactions";
 import { Modal } from "./modal";
 import { NoteBubble, NoteEditor, NoteReader, useNotes } from "./notes";
 import { Sheet } from "./sheet";
-import { StoryComposer } from "./story-composer";
+import { GifSearch, StoryComposer } from "./story-composer";
 import { StoryDrawingLayer } from "./story-drawing";
 import { Text, TextInput } from "./text";
 
@@ -527,6 +529,7 @@ function ReplyBar({ story, owner, onTyping }: { story: StoryDTO; owner: PublicUs
   const chat = chats.find((c) => c.type === "direct" && c.members.some((m) => m.user.id === owner.id));
   const [text, setText] = useState("");
   const [sent, setSent] = useState(false);
+  const [pickingGif, setPickingGif] = useState(false);
   const [popped, setPopped] = useState({ emoji: "", n: 0 });
   const [floaters, float] = useFloaters();
   if (!chat || !realtime) return null;
@@ -535,13 +538,17 @@ function ReplyBar({ story, owner, onTyping }: { story: StoryDTO; owner: PublicUs
     setSent(true);
     setTimeout(() => setSent(false), 1500);
   };
+  const pickGif = (on: boolean) => {
+    setPickingGif(on);
+    onTyping(on);
+  };
   const react = (emoji: StoryReaction) => {
     void six.api.POST("/v1/stories/{id}/react", { params: { path: { id: story.id } }, body: { emoji } });
     setPopped((p) => ({ emoji, n: p.n + 1 }));
     float(emoji);
   };
-  const send = (reply: string) => {
-    if (!reply.trim()) return;
+  const send = (reply: string, gif?: GifDTO) => {
+    if (!reply.trim() && !gif) return;
     const reference = {
       id: story.id,
       ownerId: owner.id,
@@ -550,8 +557,11 @@ function ReplyBar({ story, owner, onTyping }: { story: StoryDTO; owner: PublicUs
       background: story.background,
       imageUrl: story.media?.thumbUrl ?? (story.type === "image" ? story.media?.url : null) ?? null,
     };
-    queueMessage(qc, realtime, chat.id, { text: reply.trim(), story: reference });
+    if (reply.trim()) queueMessage(qc, realtime, chat.id, { text: reply.trim(), story: reference });
+    if (gif) queueMessage(qc, realtime, chat.id, { text: "", gif, story: reference });
+    toastSent(chat.id, owner, reply.trim() || tr.stories.gif);
     setText("");
+    pickGif(false);
     done();
     Keyboard.dismiss();
   };
@@ -572,6 +582,11 @@ function ReplyBar({ story, owner, onTyping }: { story: StoryDTO; owner: PublicUs
           ))
         )}
       </View>
+      {pickingGif && (
+        <View style={styles.replyGifs}>
+          <GifSearch onPick={(g) => send(text, g)} />
+        </View>
+      )}
       <View style={styles.replyRow}>
         <TextInput
           value={text}
@@ -586,6 +601,14 @@ function ReplyBar({ story, owner, onTyping }: { story: StoryDTO; owner: PublicUs
           accessibilityLabel={tr.stories.replyTo(owner.displayName)}
           style={styles.replyInput}
         />
+        <Pressable
+          onPress={() => pickGif(!pickingGif)}
+          accessibilityRole="button"
+          accessibilityState={{ selected: pickingGif }}
+          style={[styles.replyGif, pickingGif && { backgroundColor: "#fff" }]}
+        >
+          <Text style={{ color: pickingGif ? "#1c1917" : "#fff", fontSize: 14, fontWeight: "700" }}>{tr.stories.gif}</Text>
+        </Pressable>
         {!!text.trim() && (
           <Pressable onPress={() => send(text)} accessibilityLabel={tr.common.send} style={styles.replySend}>
             <SendHorizontal size={20} color={brandInk} />
@@ -726,10 +749,7 @@ export function StoryViewer({ groups, start, onClose }: { groups: StoryGroupDTO[
           )}
           {!media && !!story.text && !story.fromChat && <Text style={styles.bigText}>{story.text}</Text>}
           {!media && !!story.text && story.fromChat && (
-            <>
-              <ChatBubbleCard text={story.text} bubble={story.bubble} quote={story.quote} />
-              <FromChatLabel />
-            </>
+            <ChatBubbleCard text={story.text} bubble={story.bubble} quote={story.quote} />
           )}
         </Pressable>
         {!loading && (
@@ -827,7 +847,7 @@ const styles = StyleSheet.create({
   chatBubble: { maxWidth: "100%", borderRadius: 28, paddingHorizontal: 20, paddingVertical: 12, elevation: 6 },
   chatBubbleText: { fontSize: 20, lineHeight: 27 },
   chatTime: { marginTop: 4, alignSelf: "flex-end", fontSize: 12, opacity: 0.7 },
-  fromChat: { position: "absolute", left: 0, right: 0, bottom: 110, flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 6 },
+  fromChat: { flexDirection: "row", alignItems: "center", gap: 6, paddingHorizontal: 12 },
   fromChatText: { color: "rgba(255,255,255,0.85)", fontSize: 14, fontWeight: "600" },
   cover: { width: 56, height: 56, borderRadius: 28 },
   askCard: { width: 256, borderRadius: 16, overflow: "hidden", backgroundColor: "#fff", elevation: 4 },
@@ -852,6 +872,8 @@ const styles = StyleSheet.create({
   reaction: { width: 44, height: 44, alignItems: "center", justifyContent: "center" },
   sent: { color: "#1c1917", backgroundColor: "rgba(255,255,255,0.9)", fontSize: 14, fontWeight: "700", borderRadius: 999, overflow: "hidden", paddingHorizontal: 12, paddingVertical: 6 },
   replyRow: { flexDirection: "row", alignItems: "center", gap: 8 },
+  replyGif: { height: 44, borderRadius: 22, borderWidth: 1, borderColor: "rgba(255,255,255,0.6)", backgroundColor: "rgba(0,0,0,0.2)", paddingHorizontal: 14, justifyContent: "center" },
+  replyGifs: { borderRadius: 16, backgroundColor: "rgba(0,0,0,0.6)", padding: 8 },
   replyInput: { flex: 1, color: "#fff", fontSize: 16, borderRadius: 999, borderWidth: 1, borderColor: "rgba(255,255,255,0.6)", backgroundColor: "rgba(0,0,0,0.2)", paddingHorizontal: 16, paddingVertical: 10 },
   replySend: { width: 44, height: 44, borderRadius: 22, backgroundColor: brand, alignItems: "center", justifyContent: "center" },
   bar: { gap: 16, paddingVertical: 4 },
@@ -927,7 +949,7 @@ const styles = StyleSheet.create({
   reactionCount: { color: "rgba(255,255,255,0.7)", fontSize: 12, fontWeight: "700" },
 });
 
-export function FromChatLabel() {
+function FromChatLabel() {
   const tr = useT();
   return (
     <View pointerEvents="none" style={styles.fromChat}>
@@ -965,6 +987,7 @@ export function ChatBubbleCard({ text, bubble, quote }: { text: string; bubble: 
           </Text>
         )}
       </View>
+      <FromChatLabel />
     </View>
   );
 }

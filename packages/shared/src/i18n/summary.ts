@@ -38,6 +38,11 @@ const en = {
   pinnedMessage: (who: string | null) => `${who ?? "You"} pinned a message`,
   screenshot: "Took a screenshot",
   tookScreenshot: (who: string | null) => `${who ?? "You"} took a screenshot`,
+  resendRequest: "Asked for a message again",
+  sharedTo: { story: "Shared a message to their story", note: "Shared a message as their note" },
+  sharedMessage: (who: string | null, to: "story" | "note") =>
+    `${who ?? "You"} shared a message from this chat ${to === "story" ? "to" : "as"} ${who ? "their" : "your"} ${to}`,
+  askedResend: (who: string | null) => `${who ?? "You"} couldn't open a message and asked for it again`,
   /** `who` is null when it was you. */
   resetBackground: (who: string | null) => `${who ?? "You"} reset the chat background`,
   customBackground: (who: string | null) => `${who ?? "You"} set a custom chat background`,
@@ -100,6 +105,10 @@ const fr: typeof en = {
   pinnedMessage: (who) => fr3(who, "avez épinglé un message", "a épinglé un message"),
   screenshot: "Capture d'écran",
   tookScreenshot: (who) => fr3(who, "avez fait une capture d'écran", "a fait une capture d'écran"),
+  resendRequest: "Message redemandé",
+  sharedTo: { story: "Message partagé en story", note: "Message partagé en note" },
+  sharedMessage: (who, to) => fr3(who, `avez partagé un message de cette discussion en ${to}`, `a partagé un message de cette discussion en ${to}`),
+  askedResend: (who) => fr3(who, "n'avez pas pu ouvrir un message et l'avez redemandé", "n'a pas pu ouvrir un message et l'a redemandé"),
   resetBackground: (who) => fr3(who, "avez réinitialisé le fond de la discussion", "a réinitialisé le fond de la discussion"),
   customBackground: (who) => fr3(who, "avez choisi un fond personnalisé", "a choisi un fond personnalisé"),
   changedBackground: (who, theme) =>
@@ -168,6 +177,10 @@ const mg: typeof en = {
   pinnedMessage: (who) => `Nametaka hafatra ${by(who)}`,
   screenshot: "Naka sary ny efijery",
   tookScreenshot: (who) => `Naka sary ny efijery ${by(who)}`,
+  resendRequest: "Nangataka hafatra indray",
+  sharedTo: { story: "Hafatra nozaraina ho story", note: "Hafatra nozaraina ho note" },
+  sharedMessage: (who, to) => `Nozaraina ho ${to} ${by(who)} ny hafatra iray avy amin'ity resaka ity`,
+  askedResend: (who) => `Nangatahana indray ${by(who)} ny hafatra tsy voasokatra`,
   resetBackground: (who) => `Namerina ho toy ny teo aloha ny sary aorian'ny resaka ${by(who)}`,
   customBackground: (who) => `Nametraka sary aoriana manokana ${by(who)}`,
   changedBackground: (who, theme) => `Nanova ny sary aorian'ny resaka ho ${theme} ${by(who)}`,

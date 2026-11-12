@@ -34,7 +34,7 @@ import { GifSearch } from "./gif-picker";
 import { currentPosition } from "./location-card";
 import { Portal } from "./portal";
 import { Sheet } from "./sheet";
-import { ChatBubbleCard, FromChatLabel, StoryStickers, backgroundAround } from "./stories";
+import { ChatBubbleCard, StoryStickers, backgroundAround } from "./stories";
 import { LastsPicker } from "./notes";
 import { DrawBar, type Pen, StoryDrawingLayer, TextWriter, type Writing } from "./story-drawing";
 import { VideoTrimmer } from "./video-trimmer";
@@ -274,10 +274,7 @@ export function StoryComposer({
             {kind === "image" && url && <img src={url} alt="" className="max-h-full max-w-full object-contain" />}
             {kind === "video" && url && <video src={url} autoPlay loop muted playsInline className="max-h-full max-w-full" />}
             {fromChat && (
-              <>
-                <ChatBubbleCard text={text} bubble={bubble ?? null} quote={quote ?? null} />
-                <FromChatLabel />
-              </>
+              <ChatBubbleCard text={text} bubble={bubble ?? null} quote={quote ?? null} />
             )}
             {!file && !fromChat && (
               <textarea
