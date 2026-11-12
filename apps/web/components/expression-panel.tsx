@@ -33,6 +33,9 @@ function loadMore(el: HTMLElement, query: ReturnType<typeof useGifs>) {
   if (el.scrollTop + el.clientHeight > el.scrollHeight - 200 && query.hasNextPage && !query.isFetchingNextPage) void query.fetchNextPage();
 }
 
+/** Keeps the search field's focus, so the keyboard stays up and the grid doesn't move under the finger. */
+const keepFocus = (e: React.MouseEvent) => e.preventDefault();
+
 function FoundGrid({ items, onPick, sticker }: { items: GifDTO[]; onPick: (g: GifDTO) => void; sticker?: boolean }) {
   return (
     <>
@@ -40,6 +43,7 @@ function FoundGrid({ items, onPick, sticker }: { items: GifDTO[]; onPick: (g: Gi
         <button
           key={g.id}
           type="button"
+          onMouseDown={keepFocus}
           onClick={() => onPick(g)}
           title={g.title}
           className={`aspect-square overflow-hidden rounded-lg ${sticker ? "" : "bg-stone-100 dark:bg-stone-800"}`}
@@ -51,7 +55,7 @@ function FoundGrid({ items, onPick, sticker }: { items: GifDTO[]; onPick: (g: Gi
   );
 }
 
-function Stickers({ onSticker }: { onSticker: (s: StickerDTO) => void }) {
+function Stickers({ onSticker, onSearching }: { onSticker: (s: StickerDTO) => void; onSearching: (on: boolean) => void }) {
   const tr = useT();
   const qc = useQueryClient();
   const [input, setInput] = useState("");
@@ -67,12 +71,23 @@ function Stickers({ onSticker }: { onSticker: (s: StickerDTO) => void }) {
     staleTime: 60_000,
   });
   const tile = "grid aspect-square place-items-center rounded-lg hover:bg-black/5 dark:hover:bg-white/10";
+  const field = (
+    <div className="p-2">
+      <input
+        type="search"
+        value={input}
+        onChange={(e) => setInput(e.target.value)}
+        onFocus={() => onSearching(true)}
+        onBlur={() => onSearching(false)}
+        placeholder={tr.composer.searchStickers}
+        className={search}
+      />
+    </div>
+  );
 
   return (
     <div className="flex min-h-0 flex-1 flex-col">
-      <div className="p-2">
-        <input type="search" value={input} onChange={(e) => setInput(e.target.value)} placeholder={tr.composer.searchStickers} className={search} />
-      </div>
+      {field}
       <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-2 pb-2">
         {q ? (
           <div className="grid grid-cols-4 gap-1">
@@ -149,7 +164,17 @@ function Stickers({ onSticker }: { onSticker: (s: StickerDTO) => void }) {
 }
 
 /** GIPHY and KLIPY: GIFs, or their stickers, which go out like a picture and aren't one of our stickers. */
-function Gifs({ onGif, onSticker }: { onGif: (g: GifDTO) => void; onSticker: (g: GifDTO) => void }) {
+function Gifs({
+  onGif,
+  onSticker,
+  onSearching,
+  compact,
+}: {
+  onGif: (g: GifDTO) => void;
+  onSticker: (g: GifDTO) => void;
+  onSearching: (on: boolean) => void;
+  compact: boolean;
+}) {
   const tr = useT();
   const [input, setInput] = useState("");
   const [kind, setKind] = useState<"gif" | "sticker">("gif");
@@ -159,7 +184,15 @@ function Gifs({ onGif, onSticker }: { onGif: (g: GifDTO) => void; onSticker: (g:
   return (
     <div className="flex min-h-0 flex-1 flex-col">
       <div className="flex items-center gap-2 p-2">
-        <input type="search" value={input} onChange={(e) => setInput(e.target.value)} placeholder={tr.ask.searchGifs} className={`${search} min-w-0 flex-1`} />
+        <input
+          type="search"
+          value={input}
+          onChange={(e) => setInput(e.target.value)}
+          onFocus={() => onSearching(true)}
+          onBlur={() => onSearching(false)}
+          placeholder={tr.ask.searchGifs}
+          className={`${search} min-w-0 flex-1`}
+        />
         <div className="flex shrink-0 rounded-full bg-stone-100 p-0.5 text-xs font-medium dark:bg-stone-800">
           {(["gif", "sticker"] as const).map((k) => (
             <button
@@ -189,7 +222,7 @@ function Gifs({ onGif, onSticker }: { onGif: (g: GifDTO) => void; onSticker: (g:
           </div>
         )}
       </div>
-      <p className="px-3 py-1 text-[11px] text-stone-400">{tr.composer.poweredByGiphy}</p>
+      {!compact && <p className="px-3 py-1 text-[11px] text-stone-400">{tr.composer.poweredByGiphy}</p>}
     </div>
   );
 }
@@ -213,6 +246,9 @@ export function ExpressionPanel({
 }) {
   const tr = useT();
   const [picked, setPicked] = useState<Tab>("emoji");
+  const [searching, setSearching] = useState(false);
+  const [touch] = useState(() => window.matchMedia("(pointer: coarse)").matches);
+  const compact = searching && touch && place === "docked";
   const admin = !!useIsAdmin().data;
   const hasStickers = admin || !!useStickerPacks().data?.some((p) => p.stickers.length > 0);
   const tab = picked === "sticker" && !hasStickers ? "emoji" : picked;
@@ -230,13 +266,13 @@ export function ExpressionPanel({
       aria-label={tr.composer.expressions}
       className={
         place === "docked"
-          ? "relative flex h-[min(22rem,45dvh)] shrink-0 flex-col border-t border-stone-200 bg-white pb-[env(safe-area-inset-bottom)] dark:border-stone-800 dark:bg-stone-900"
+          ? `relative flex h-[min(22rem,45dvh)] shrink-0 flex-col border-t border-stone-200 bg-white pb-[env(safe-area-inset-bottom)] dark:border-stone-800 dark:bg-stone-900`
           : place === "side"
             ? "relative z-10 flex w-96 shrink-0 flex-col border-l border-black/5 bg-stone-50/45 backdrop-blur-xl backdrop-saturate-150 dark:border-white/10 dark:bg-stone-950/40"
             : "absolute right-0 bottom-full z-30 mb-2 flex h-[min(26rem,60dvh)] w-96 flex-col overflow-hidden rounded-2xl bg-white/90 shadow-lg ring-1 ring-stone-200 backdrop-blur-xl backdrop-saturate-150 dark:bg-stone-900/90 dark:ring-stone-800"
       }
     >
-      <div role="tablist" className="mx-auto flex w-full max-w-md shrink-0 items-center gap-1 p-2">
+      <div role="tablist" hidden={compact} className="mx-auto flex w-full max-w-md shrink-0 items-center gap-1 p-2">
         {tabs.map((t) => (
           <button
             key={t.id}
@@ -263,9 +299,9 @@ export function ExpressionPanel({
           </button>
         )}
       </div>
-      {tab === "emoji" && <Emojis onPick={onEmoji} />}
-      {tab === "sticker" && <Stickers onSticker={onSticker} />}
-      {tab === "gif" && <Gifs onGif={onGif} onSticker={onFoundSticker} />}
+      {tab === "emoji" && <Emojis onPick={onEmoji} onSearching={setSearching} compact={compact} />}
+      {tab === "sticker" && <Stickers onSticker={onSticker} onSearching={setSearching} />}
+      {tab === "gif" && <Gifs onGif={onGif} onSticker={onFoundSticker} onSearching={setSearching} compact={compact} />}
     </div>
   );
 }

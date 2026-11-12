@@ -5,7 +5,7 @@ import { Image } from "expo-image";
 import { Smile, Sticker } from "lucide-react-native";
 import { useEffect, useState } from "react";
 import { FlatList, Pressable, ScrollView, StyleSheet, View, useWindowDimensions } from "react-native";
-import { EmojiGrid, useSearching } from "./emoji-picker";
+import { EmojiGrid, SEARCHING_HEIGHT, useSearching } from "./emoji-picker";
 import { StickerView } from "./sticker";
 import { Text, TextInput } from "./text";
 import { useT } from "@/lib/i18n";
@@ -86,21 +86,8 @@ function Stickers({ onSticker, onSearching, cell }: { onSticker: (s: StickerDTO)
     </Pressable>
   );
 
-  if (searching) {
-    const row = q ? (own.data ?? []) : (packs.data ?? []).flatMap((p) => p.stickers);
-    return (
-      <View>
-        <Search value={input} onChange={setInput} placeholder={tr.composer.searchStickers} field={field} />
-        <ScrollView horizontal keyboardShouldPersistTaps="handled" showsHorizontalScrollIndicator={false} style={{ height: cell }} contentContainerStyle={{ paddingHorizontal: 8 }}>
-          {row.map(tile)}
-          {q && own.data?.length === 0 && <Text style={[styles.empty, { color: t.muted, padding: 12 }]}>{tr.composer.noStickersFound}</Text>}
-        </ScrollView>
-      </View>
-    );
-  }
-
   return (
-    <View style={{ height: HEIGHT }}>
+    <View style={{ height: searching ? SEARCHING_HEIGHT + 50 : HEIGHT }}>
       <Search value={input} onChange={setInput} placeholder={tr.composer.searchStickers} field={field} />
       <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={{ paddingHorizontal: 8, paddingBottom: 8 }}>
         {q ? (
@@ -144,7 +131,7 @@ function Gifs({
   const columns = kind === "gif" ? 3 : 4;
   const cell = Math.floor((width - 16 - (columns - 1) * 4) / columns);
   return (
-    <View style={searching ? undefined : { height: HEIGHT }}>
+    <View style={{ height: searching ? SEARCHING_HEIGHT + 50 : HEIGHT }}>
       <View style={styles.row}>
         <View style={{ flex: 1 }}>
           <Search value={input} onChange={setInput} placeholder={tr.ask.searchGifs} field={field} />
@@ -163,16 +150,13 @@ function Gifs({
         </View>
       </View>
       <FlatList
-        key={searching ? `${kind}-row` : kind}
+        key={kind}
         data={items}
-        horizontal={searching}
-        numColumns={searching ? undefined : columns}
-        showsHorizontalScrollIndicator={false}
+        numColumns={columns}
         keyExtractor={(g) => g.id}
         keyboardShouldPersistTaps="handled"
-        style={searching ? { height: cell, flexGrow: 0 } : undefined}
         contentContainerStyle={{ paddingHorizontal: 8, gap: 4 }}
-        columnWrapperStyle={searching ? undefined : { gap: 4 }}
+        columnWrapperStyle={{ gap: 4 }}
         onEndReached={() => gifs.hasNextPage && !gifs.isFetchingNextPage && void gifs.fetchNextPage()}
         ListEmptyComponent={
           <Text style={[styles.empty, { color: t.muted }]}>

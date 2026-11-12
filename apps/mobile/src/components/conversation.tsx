@@ -218,6 +218,7 @@ function OpenConversation({ chatId }: { chatId: string }) {
   const c = chat.data;
   const peer = chatFace(c, meId);
   const app = c.withSupport || isBotChat(c);
+  const noContact = app || c.supportDesk;
   const count = selecting ? selectedIds.length : 0;
   const pins = c.pinnedMessages;
   const pin = pins[pinIndex % (pins.length || 1)];
@@ -266,9 +267,9 @@ function OpenConversation({ chatId }: { chatId: string }) {
         <ScreenHeader background={t.bar}>
           <IconButton Icon={ChevronLeft} label={tr.common.backToChats} size={26} onPress={goBack} />
           <Pressable
-            onPress={() => !app && setEditing(true)}
-            disabled={app}
-            accessibilityLabel={app || c.group ? c.title : tr.chat.editContact(c.title)}
+            onPress={() => !noContact && setEditing(true)}
+            disabled={noContact}
+            accessibilityLabel={noContact || c.group ? c.title : tr.chat.editContact(c.title)}
             style={({ pressed }) => [styles.peer, pressed && { backgroundColor: t.pressed }]}
           >
             <Avatar user={peer} online={!!presence?.online} />
@@ -329,7 +330,7 @@ function OpenConversation({ chatId }: { chatId: string }) {
           onUnpin={frozen ? undefined : () => void updateChatSettings(qc, chatId, { unpin: pin.id }).catch(() => null)}
         />
       )}
-      {!c.group && keyChanges.includes(peer.id) && !selecting && !c.withSupport && (
+      {!c.group && keyChanges.includes(peer.id) && !selecting && !noContact && (
         <Pressable
           onPress={() => {
             dismissKeyChange(peer.id);

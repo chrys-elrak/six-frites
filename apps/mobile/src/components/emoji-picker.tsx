@@ -28,9 +28,12 @@ const all = (categories as { title: string; data: Emoji[] }[]).flatMap((c) => c.
  * Search, category tabs and the grid of emoji, remembering the recent ones; swiping the grid sideways moves to the next
  * or previous category. With `onClose`, a close button too.
  */
+/** How tall a picker's results are while the keyboard is up. */
+export const SEARCHING_HEIGHT = 170;
+
 /**
- * Whether someone is typing in a picker's search field: it has focus and the keyboard is up. Pickers then shrink to the
- * field and one row of results, so the keyboard doesn't cover them; `onChange` hears about it.
+ * Whether someone is typing in a picker's search field: it has focus and the keyboard is up. Pickers then get shorter
+ * and drop their tabs, so the keyboard doesn't cover the results; `onChange` hears about it.
  */
 export function useSearching(onChange?: (searching: boolean) => void) {
   const [focused, setFocused] = useState(false);
@@ -180,15 +183,13 @@ export function EmojiGrid({
       <GestureDetector gesture={swipe}>
         <Animated.View style={sliding}>
           <FlatList
-            key={searching ? "row" : query ? "search" : tab}
+            key={query ? "search" : tab}
             data={data}
-            horizontal={searching}
-            numColumns={searching ? undefined : COLUMNS}
-            showsHorizontalScrollIndicator={false}
+            numColumns={COLUMNS}
             keyExtractor={(e, i) => `${e}:${i}`}
             keyboardShouldPersistTaps="handled"
-            initialNumToRender={searching ? 16 : 64}
-            style={{ height: searching ? cell + 12 : height }}
+            initialNumToRender={64}
+            style={{ height: searching ? SEARCHING_HEIGHT : height }}
             contentContainerStyle={{ paddingHorizontal: 8, paddingTop: 6 }}
             ListEmptyComponent={<Text style={[styles.empty, { color: t.muted }]}>{tr.composer.noEmoji}</Text>}
             renderItem={({ item }) => (

@@ -1,4 +1,4 @@
-import { QUICK_REACTIONS, type MessageDTO, type ReactionGif, type StickerDTO, reactionGlyph } from "@six/shared";
+import { QUICK_REACTIONS, type MessageDTO, type ReactionGif, type StickerDTO, reactionGlyph, reactionsByPerson } from "@six/shared";
 import { Image } from "expo-image";
 import { useVideoPlayer, VideoView } from "expo-video";
 import { Plus } from "lucide-react-native";
@@ -178,7 +178,13 @@ function Chip({ r, own, onPress }: { r: Reaction; own: boolean; onPress: () => v
         own && { backgroundColor: t.dark ? "#3b2a12" : "#fdebd0", borderColor: brand },
       ]}
     >
-      <ReactionFace r={r} size={18} />
+      {r.gif || r.sticker ? (
+        <ReactionFace r={r} size={18} />
+      ) : (
+        <View pointerEvents="none">
+          <AnimatedEmoji emoji={r.emoji} size={20} />
+        </View>
+      )}
       {!!r.gif && <Text style={{ color: t.textSoft, fontSize: 10, fontWeight: "800" }}>GIF</Text>}
       {r.userIds.length > 1 && (
         <Text style={{ color: t.textSoft, fontSize: 12, fontWeight: "600" }}>{r.userIds.length}</Text>
@@ -189,13 +195,17 @@ function Chip({ r, own, onPress }: { r: Reaction; own: boolean; onPress: () => v
 
 const LIST_WIDTH = 260;
 
-/** The reactions hidden behind the "+X" pill, anchored to it. Tapping a row toggles that emoji for you. */
+/**
+ * Everyone who reacted, anchored to the "+X" pill: one row each with all their reactions. Tapping an emoji toggles it
+ * for you; a GIF or sticker opens bigger.
+ */
 function ReactionList({
   anchor,
   reactions,
   meId,
   nameOf,
   onReact,
+  onPreview,
   onClose,
 }: {
   anchor: Anchor;
@@ -203,12 +213,16 @@ function ReactionList({
   meId: string;
   nameOf: (id: string) => string;
   onReact: (emoji: string) => void;
+  onPreview: (emoji: string) => void;
   onClose: () => void;
 }) {
   const t = useTheme();
+  const tr = useT();
   const insets = useSafeAreaInsets();
   const { width: screen, height: screenH } = useWindowDimensions();
-  const height = Math.min(320, reactions.length * 40 + 12);
+  const people = reactionsByPerson(reactions, meId);
+  const total = reactions.reduce((n, r) => n + r.userIds.length, 0);
+  const height = Math.min(360, people.length * 78 + 46);
   const below = anchor.y + anchor.height + 6;
   const top = below + height <= screenH - insets.bottom - 8 ? below : Math.max(insets.top + 8, anchor.y - height - 6);
   const left = Math.min(Math.max(anchor.x, 8), screen - LIST_WIDTH - 8);
@@ -220,29 +234,39 @@ function ReactionList({
         entering={ZoomIn.duration(140)}
         style={[styles.list, { top, left, height, backgroundColor: t.surface }]}
       >
-        <ScrollView contentContainerStyle={{ paddingVertical: 6 }}>
-          {reactions.map((r) => {
-            const own = r.userIds.includes(meId);
-            return (
-              <Pressable
-                key={r.emoji}
-                onPress={() => onReact(r.emoji)}
-                style={({ pressed }) => [
-                  styles.row,
-                  own && { backgroundColor: "rgba(235,138,0,0.1)" },
-                  pressed && { backgroundColor: t.pressed },
-                ]}
-              >
-                <ReactionFace r={r} size={24} />
-                <Text numberOfLines={1} style={{ flex: 1, color: t.text, fontSize: 14 }}>
-                  {r.userIds.map(nameOf).join(", ")}
-                </Text>
-                {r.userIds.length > 1 && (
-                  <Text style={{ color: t.muted, fontSize: 13, fontWeight: "600" }}>{r.userIds.length}</Text>
-                )}
-              </Pressable>
-            );
-          })}
+        <ScrollView contentContainerStyle={{ padding: 6 }}>
+          <View style={styles.listHead}>
+            <Text style={{ color: t.muted, fontSize: 12, fontWeight: "700" }}>{tr.messages.allReactions}</Text>
+            <Text style={[styles.total, { color: t.muted, backgroundColor: t.surfaceAlt }]}>{total}</Text>
+          </View>
+          {people.map((p, i) => (
+            <View key={p.userId} style={[styles.row, i % 2 === 0 && { backgroundColor: t.surfaceAlt }]}>
+              <Text numberOfLines={1} style={{ color: t.text, fontSize: 14, fontWeight: p.userId === meId ? "700" : "400" }}>
+                {p.userId === meId ? tr.common.you : nameOf(p.userId)}
+              </Text>
+              <View style={styles.rowFaces}>
+                {p.reactions.map((r) => {
+                  const own = r.userIds.includes(meId);
+                  return (
+                    <Pressable
+                      key={r.emoji}
+                      onPress={() => (r.gif || r.sticker ? onPreview(r.emoji) : onReact(r.emoji))}
+                      accessibilityRole="button"
+                      accessibilityState={{ selected: own }}
+                      accessibilityLabel={reactionGlyph(r)}
+                      style={({ pressed }) => [
+                        styles.face,
+                        own && { backgroundColor: t.dark ? "#3b2a12" : "#fdebd0", borderColor: brand },
+                        pressed && { transform: [{ scale: 0.9 }] },
+                      ]}
+                    >
+                      <ReactionFace r={r} size={20} />
+                    </Pressable>
+                  );
+                })}
+              </View>
+            </View>
+          ))}
         </ScrollView>
       </Animated.View>
     </Modal>
@@ -321,10 +345,14 @@ export function ReactionChips({
       {listAt && hidden > 0 && (
         <ReactionList
           anchor={listAt}
-          reactions={sorted.slice(shown.length)}
+          reactions={sorted}
           meId={meId}
           nameOf={nameOf}
           onReact={onReact}
+          onPreview={(key) => {
+            setListAt(null);
+            setGifFor(key);
+          }}
           onClose={() => setListAt(null)}
         />
       )}
@@ -442,7 +470,7 @@ export function QuickReactionsSettings() {
 const styles = StyleSheet.create({
   bar: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", gap: 2 },
   quick: { width: 40, height: 40, borderRadius: 20, alignItems: "center", justifyContent: "center" },
-  chips: { flexDirection: "row", flexWrap: "wrap", alignItems: "center", gap: 4, marginTop: 2, marginBottom: 6, paddingHorizontal: 6 },
+  chips: { flexDirection: "row", flexWrap: "wrap", alignItems: "center", gap: 4, marginTop: -8, marginBottom: 6, paddingHorizontal: 10, zIndex: 1 },
   chip: {
     flexDirection: "row",
     alignItems: "center",
@@ -463,7 +491,11 @@ const styles = StyleSheet.create({
     shadowRadius: 14,
     shadowOffset: { width: 0, height: 4 },
   },
-  row: { flexDirection: "row", alignItems: "center", gap: 10, height: 40, paddingHorizontal: 12 },
+  row: { gap: 4, paddingHorizontal: 10, paddingVertical: 6, borderRadius: 12 },
+  rowFaces: { flexDirection: "row", flexWrap: "wrap", gap: 4 },
+  face: { width: 32, height: 32, borderRadius: 16, alignItems: "center", justifyContent: "center", borderWidth: 1, borderColor: "transparent" },
+  listHead: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", paddingHorizontal: 10, paddingTop: 4, paddingBottom: 6 },
+  total: { fontSize: 12, fontWeight: "700", paddingHorizontal: 8, paddingVertical: 1, borderRadius: 10, overflow: "hidden" },
   popover: {
     position: "absolute",
     borderRadius: 999,

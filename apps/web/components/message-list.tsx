@@ -138,7 +138,7 @@ import { EphemeralViewer } from "./ephemeral-viewer";
 import { PackDialog } from "./pack-dialog";
 import { ReportDialog } from "./report-dialog";
 import { Styled } from "./rich-text";
-import { ReactionBar, ReactionChips, ReactionPicker, ReactionPopover } from "./reactions";
+import { ReactionBar, ReactionChips, ReactionPicker, ReactionPopover, useQuickReactions } from "./reactions";
 import { EffectLayer } from "./message-effects";
 import { MessageMenu } from "./message-menu";
 import { MessageTiming } from "./message-timing";
@@ -855,6 +855,7 @@ function Bubble({
   const selectable = selecting && row.message !== null;
   const bubble = useRef<HTMLDivElement>(null);
   const lastTap = useRef(0);
+  const favorite = useQuickReactions()[0]!;
   const anchor = () => bubble.current!.getBoundingClientRect();
   const press = useLongPress(selectable ? (at) => (at ? onToggle() : onDragPick(false)) : (at) => !gamesOnly && onMenu(at, anchor()));
   const reactable = !selecting && !frozen && !gamesOnly && canReact(row);
@@ -867,7 +868,7 @@ function Bubble({
     if (!reactable || (e.target as Element).closest("a, button, video, audio, input")) return;
     if (e.timeStamp - lastTap.current < 300) {
       lastTap.current = 0;
-      onReact("❤️");
+      onReact(favorite);
     } else lastTap.current = e.timeStamp;
   }
   const revealedMedia = useSpoilers((s) => s.revealed);
@@ -1116,7 +1117,7 @@ function Bubble({
                 </span>
               ) : inlineVoice ? null : (
                 <p
-                  className={`whitespace-pre-wrap break-words text-[15px] leading-snug ${row.deleted ? "italic" : ""} ${
+                  className={`flow-root whitespace-pre-wrap break-words text-[15px] leading-snug ${row.deleted ? "italic" : ""} ${
                     visual ? "px-2 pt-1 pb-0.5" : ""
                   } ${!hasText ? "-mt-0.5 min-h-4" : ""}`}
                 >
@@ -1406,6 +1407,11 @@ export const MessageList = forwardRef<
       firstKey.current = rows[0]?.key;
       lastKey.current = rows[rows.length - 1]?.key;
     });
+
+    const hasRows = rows.length > 0;
+    useEffect(() => {
+      if (atBottom.current) scrollToBottom();
+    }, [hasRows]);
 
     useEffect(() => {
       if (atBottom.current) onSeen();

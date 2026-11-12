@@ -228,6 +228,7 @@ function OpenConversation({ chatId }: { chatId: string }) {
   const muted = isMuted(c);
   const frozen = isFrozen(c);
   const app = c.withSupport || isBotChat(c);
+  const noContact = app || c.supportDesk;
   const shownPresence = frozen || app || c.group ? undefined : presence;
   const count = selecting ? selectedIds.length : 0;
   const pins = c.pinnedMessages;
@@ -294,9 +295,9 @@ function OpenConversation({ chatId }: { chatId: string }) {
                   <ChevronLeft className="size-6" />
                 </BackLink>
                 <button
-                  onClick={() => !app && setEditing(true)}
-                  className={`flex min-w-0 flex-1 items-center gap-2 py-0.5 pr-2 text-left ${app ? "cursor-default" : "cursor-pointer"}`}
-                  aria-label={app || c.group ? c.title : tr.chat.editContact(c.title)}
+                  onClick={() => !noContact && setEditing(true)}
+                  className={`flex min-w-0 flex-1 items-center gap-2 py-0.5 pr-2 text-left ${noContact ? "cursor-default" : "cursor-pointer"}`}
+                  aria-label={noContact || c.group ? c.title : tr.chat.editContact(c.title)}
                 >
                   <Avatar user={peer} online={shownPresence?.online} />
                   <span className="min-w-0 flex-1">
@@ -415,7 +416,7 @@ function OpenConversation({ chatId }: { chatId: string }) {
               </div>
             )}
             {!selecting && <AdBanner />}
-            {!selecting && keysChanged && !c.withSupport && (
+            {!selecting && keysChanged && !noContact && (
               <div className="flex items-center gap-2 border-t border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-900 dark:border-amber-900 dark:bg-amber-950 dark:text-amber-200">
                 <ShieldAlert className="size-4 shrink-0" />
                 <p className="min-w-0 flex-1">

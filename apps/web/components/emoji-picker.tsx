@@ -23,7 +23,11 @@ function loadRecent(): string[] {
  * Every emoji, drawn in Noto like the rest of the app: search, recently used first, then each category. Swiping the
  * list sideways jumps to the next or previous category, and the category in view is lit up in the row above.
  */
-export function Emojis({ onPick }: { onPick: (emoji: string) => void }) {
+/**
+ * The emoji grid with its search. `compact` drops the category bar, for when a phone's keyboard leaves little room;
+ * `onSearching` hears when the search field gets or loses focus.
+ */
+export function Emojis({ onPick, onSearching, compact = false }: { onPick: (emoji: string) => void; onSearching?: (on: boolean) => void; compact?: boolean }) {
   const tr = useT();
   const labels: Record<string, string> = tr.composer.emojiCategories;
   const [query, setQuery] = useState("");
@@ -114,10 +118,12 @@ export function Emojis({ onPick }: { onPick: (emoji: string) => void }) {
         value={query}
         onChange={(e) => setQuery(e.target.value)}
         autoFocus={window.matchMedia("(pointer: fine)").matches}
+        onFocus={() => onSearching?.(true)}
+        onBlur={() => onSearching?.(false)}
         placeholder={tr.composer.searchEmoji}
         className="mx-2 mt-2 appearance-none rounded-lg bg-black/5 px-3 py-2 text-[16px] outline-none focus:ring-2 focus:ring-brand md:text-sm dark:bg-white/10"
       />
-      {!q && (
+      {!q && !compact && (
         <div ref={tabs} className="flex shrink-0 gap-0.5 overflow-x-auto px-1.5 pt-1.5">
           {sections.map((s) => (
             <button

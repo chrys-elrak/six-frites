@@ -962,6 +962,15 @@ export function reactionGlyph(r: { emoji: string; sticker?: { emoji: string } | 
   return r.emoji;
 }
 
+/** Who reacted with what: one entry per person, you first. */
+export function reactionsByPerson<R extends { userIds: string[] }>(reactions: R[], meId: string) {
+  const by = new Map<string, R[]>();
+  for (const r of reactions) for (const id of r.userIds) by.set(id, [...(by.get(id) ?? []), r]);
+  return [...by]
+    .map(([userId, list]) => ({ userId, reactions: list }))
+    .sort((a, b) => Number(b.userId === meId) - Number(a.userId === meId));
+}
+
 export const CheckItemInput = z.object({ done: z.boolean() });
 export type CheckItemInput = z.infer<typeof CheckItemInput>;
 

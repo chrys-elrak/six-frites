@@ -150,7 +150,7 @@ import { LocationCard } from "./location-card";
 import { EphemeralViewer } from "./ephemeral-viewer";
 import { MediaIcon, mediaLabel } from "./media-label";
 import { MessageMenu } from "./message-menu";
-import { ReactionBar, ReactionChips, ReactionPicker, type Anchor } from "./reactions";
+import { ReactionBar, ReactionChips, ReactionPicker, type Anchor, useQuickReactions } from "./reactions";
 import { GradientText, styleFor } from "./rich-text";
 import { playHref } from "./live";
 import { EffectLayer } from "./message-effects";
@@ -985,7 +985,8 @@ function Bubble({
   const fx = !sealed && !row.deleted && row.type === "text" ? row.effect : null;
   const [fxBox, setFxBox] = useState<LayoutRectangle | null>(null);
   const canReact = !frozen && !gamesOnly && !!row.message && !row.pending && !row.deleted && row.type !== "service" && !row.ephemeral?.purged;
-  const latest = useLatest({ selectable, selecting, canReact, onToggle, onMenu, onReact, pick });
+  const favorite = useQuickReactions()[0]!;
+  const latest = useLatest({ selectable, selecting, canReact, onToggle, onMenu, onReact, pick, favorite });
   const openMenu = () => {
     const node = bubbleRef.current;
     if (!node) return latest.current.onMenu();
@@ -1008,7 +1009,7 @@ function Bubble({
       const l = latest.current;
       if (!l.canReact || l.selecting) return;
       void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-      l.onReact("❤️");
+      l.onReact(l.favorite);
     },
   });
   const swipe = useSwipe(

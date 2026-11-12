@@ -1,6 +1,6 @@
 "use client";
 
-import { type MessageDTO, QUICK_REACTIONS, type ReactionGif, type StickerDTO, reactionGlyph } from "@six/shared";
+import { type MessageDTO, QUICK_REACTIONS, type ReactionGif, type StickerDTO, reactionGlyph, reactionsByPerson } from "@six/shared";
 import { Plus, X } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useCloseOnBack } from "@/lib/back";
@@ -234,7 +234,6 @@ export function ReactionPicker({
 
 const VISIBLE_CHIPS = 3;
 const LIST_WIDTH = 260;
-const LIST_ROW = 44;
 
 type Reaction = MessageDTO["reactions"][number];
 
@@ -309,7 +308,7 @@ function Chip({ r, own, label, onClick }: { r: Reaction; own: boolean; label: st
         own ? "bg-brand/15 ring-brand/60 dark:bg-brand/25" : "bg-white ring-stone-200 dark:bg-stone-800 dark:ring-stone-700"
       }`}
     >
-      <ReactionFace r={r} size={18} />
+      {r.gif || r.sticker ? <ReactionFace r={r} size={18} /> : <AnimatedEmoji emoji={r.emoji} size={20} />}
       {r.gif && <span className="text-[10px] font-bold tracking-wide text-stone-500 dark:text-stone-300">GIF</span>}
       {r.userIds.length > 1 && (
         <span className="text-xs font-medium text-stone-600 dark:text-stone-300">{r.userIds.length}</span>
@@ -345,7 +344,7 @@ export function ReactionChips({
 
   return (
     <div
-      className={`relative z-10 mt-0.5 flex w-0 min-w-full flex-wrap items-center gap-1 self-stretch px-1.5 ${mine ? "justify-end" : "justify-start"}`}
+      className={`relative z-10 -mt-2 flex w-0 min-w-full flex-wrap items-center gap-1 self-stretch px-3 ${mine ? "justify-end" : "justify-start"}`}
     >
       {shown.map((r) => {
         const own = r.userIds.includes(meId);
@@ -391,10 +390,14 @@ export function ReactionChips({
         <ReactionList
           anchor={listAt}
           alignEnd={mine}
-          reactions={ranked.slice(shown.length)}
+          reactions={ranked}
           meId={meId}
-          names={names}
+          nameOf={nameOf}
           onReact={onReact}
+          onPreview={(key, anchor) => {
+            closeList();
+            setGifAt({ key, anchor });
+          }}
           onClose={closeList}
         />
       )}
@@ -402,59 +405,73 @@ export function ReactionChips({
   );
 }
 
+/** Everyone who reacted, one row each with all their reactions. Tapping an emoji toggles it for you; a GIF or sticker opens bigger. */
 function ReactionList({
   anchor,
   alignEnd,
   reactions,
   meId,
-  names,
+  nameOf,
   onReact,
+  onPreview,
   onClose,
 }: {
   anchor: DOMRect;
   alignEnd: boolean;
   reactions: Reaction[];
   meId: string;
-  names: (r: Reaction) => string;
+  nameOf: (userId: string) => string;
   onReact: (emoji: string) => void;
+  onPreview: (emoji: string, anchor: DOMRect) => void;
   onClose: () => void;
 }) {
   const tr = useT();
   const root = useRef<HTMLDivElement>(null);
   useDismiss(root, onClose);
-  const height = Math.min(reactions.length * LIST_ROW + 16, 320);
+  const people = reactionsByPerson(reactions, meId);
+  const total = reactions.reduce((n, r) => n + r.userIds.length, 0);
+  const height = Math.min(people.length * 76 + 44, 360);
   const { top, left, width } = placeNear(anchor, LIST_WIDTH, height, alignEnd, "below");
 
   return (
     <Portal>
       <div
         ref={root}
-        role="menu"
+        role="dialog"
         aria-label={tr.messages.allReactions}
         style={{ top, left, width, maxHeight: height }}
-        className="reaction-pop chat-colors fixed z-[60] overflow-y-auto overscroll-contain rounded-2xl bg-white/70 backdrop-blur-xl backdrop-saturate-150 p-2 shadow-xl ring-1 ring-surface-line dark:bg-stone-900/70"
+        className="reaction-pop chat-colors fixed z-[60] overflow-y-auto overscroll-contain rounded-2xl bg-white/80 p-1.5 shadow-xl ring-1 ring-surface-line backdrop-blur-xl backdrop-saturate-150 dark:bg-stone-900/80"
       >
-        {reactions.map((r) => {
-          const own = r.userIds.includes(meId);
-          return (
-            <button
-              key={r.emoji}
-              type="button"
-              role="menuitemcheckbox"
-              aria-checked={own}
-              onClick={() => onReact(r.emoji)}
-              className={`flex h-10 w-full items-center gap-3 rounded-xl px-2 text-left hover:bg-brand/20 ${
-                own ? "bg-brand/10" : ""
-              }`}
-            >
-              <span className="grid w-7 place-items-center text-xl">
-                <ReactionFace r={r} size={26} />
-              </span>
-              <span className="min-w-0 flex-1 truncate text-sm">{names(r)}</span>
-              {r.userIds.length > 1 && <span className="text-xs font-medium text-stone-500">{r.userIds.length}</span>}
-            </button>
-          );
-        })}
+        <p className="flex items-center justify-between px-2.5 pt-1 pb-1.5 text-xs font-semibold text-stone-500 dark:text-stone-400">
+          {tr.messages.allReactions}
+          <span className="rounded-full bg-black/5 px-2 py-0.5 tabular-nums dark:bg-white/10">{total}</span>
+        </p>
+        {people.map((p) => (
+          <div key={p.userId} className="rounded-xl px-2.5 py-1.5 odd:bg-black/[0.03] dark:odd:bg-white/[0.04]">
+            <p className={`truncate text-sm ${p.userId === meId ? "font-semibold" : ""}`}>
+              {p.userId === meId ? tr.common.you : nameOf(p.userId)}
+            </p>
+            <span className="mt-1 flex flex-wrap gap-1">
+              {p.reactions.map((r) => {
+                const own = r.userIds.includes(meId);
+                return (
+                  <button
+                    key={r.emoji}
+                    type="button"
+                    aria-pressed={own}
+                    aria-label={reactionGlyph(r)}
+                    onClick={(e) => (r.gif || r.sticker ? onPreview(r.emoji, e.currentTarget.getBoundingClientRect()) : onReact(r.emoji))}
+                    className={`grid size-8 place-items-center rounded-full transition hover:bg-brand/20 active:scale-90 ${
+                      own ? "bg-brand/15 ring-1 ring-brand/50" : ""
+                    }`}
+                  >
+                    <ReactionFace r={r} size={20} />
+                  </button>
+                );
+              })}
+            </span>
+          </div>
+        ))}
       </div>
     </Portal>
   );
