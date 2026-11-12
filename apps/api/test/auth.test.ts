@@ -1,4 +1,4 @@
-import { FRITE_BOT_ID } from "@six/shared";
+import { APP_ACCOUNT_IDS } from "@six/shared";
 import { describe, expect, it } from "vitest";
 import { env } from "../src/env.js";
 import { bearer, loginAs, prisma, useApp } from "./helpers.js";
@@ -11,7 +11,7 @@ describe("auth", () => {
   it("refuses new accounts once the user cap is reached, but still signs in existing users and admins", async () => {
     const existing = (await login("before-cap")).json();
     const cap = env.MAX_USERS;
-    env.MAX_USERS = await prisma.user.count({ where: { deletedAt: null, id: { not: FRITE_BOT_ID } } });
+    env.MAX_USERS = await prisma.user.count({ where: { deletedAt: null, id: { notIn: APP_ACCOUNT_IDS } } });
     try {
       const refused = await login("after-cap");
       expect(refused.statusCode).toBe(403);
