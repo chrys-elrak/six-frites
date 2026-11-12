@@ -120,6 +120,7 @@ services:
         NEXT_PUBLIC_ADSENSE_CLIENT: ${ADSENSE_CLIENT:-}
         NEXT_PUBLIC_ADSENSE_SLOT: ${ADSENSE_SLOT:-}
         NEXT_PUBLIC_GOOGLE_MAPS_KEY: ${GOOGLE_MAPS_PUBLIC_KEY:-}
+        NEXT_PUBLIC_LOGIN_PROVIDERS: ${LOGIN_PROVIDERS:-apple}
     command: npx tsx src/server.ts
     healthcheck: *api-health
     networks:

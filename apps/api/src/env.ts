@@ -21,6 +21,8 @@ const Env = z.object({
   WEB_PUSH_PRIVATE_KEY: z.string().optional(),
   WEB_PUSH_SUBJECT: z.string().default("mailto:admin@example.com"),
   FCM_SERVICE_ACCOUNT: z.string().optional(),
+  /** The Firebase project whose ID tokens sign people in, the same one the web app signs in with. */
+  FIREBASE_PROJECT_ID: z.string().default("akondro"),
   GIPHY_API_KEY: z.string().optional(),
   KLIPY_API_KEY: z.string().optional(),
   /** Place search goes to Google with it, to OpenStreetMap without. */

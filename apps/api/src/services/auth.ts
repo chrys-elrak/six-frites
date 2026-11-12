@@ -13,6 +13,7 @@ import {
 import { env } from "../env.js";
 import type { User } from "../generated/prisma/client.js";
 import { type Tx, withEvents } from "../lib/events.js";
+import { type FirebaseIdentity, type FirebaseVerifier, verifyFirebaseIdToken } from "../lib/firebase.js";
 import { type GoogleVerifier, verifyGoogleIdToken } from "../lib/google.js";
 import { prisma } from "../lib/prisma.js";
 import { isAdminEmail } from "../plugins/auth.js";
@@ -66,10 +67,47 @@ export async function loginWithGoogle(
   input: GoogleLoginInput,
   verify: GoogleVerifier = verifyGoogleIdToken,
 ): Promise<IssuedAuth> {
-  const identity = await verify(input.idToken);
+  const { sub, ...google } = await verify(input.idToken);
+  return signIn({ ...google, uid: null, googleSub: sub, providers: ["google"], emailVerified: true }, input);
+}
 
+export async function loginWithFirebase(
+  input: GoogleLoginInput,
+  verify: FirebaseVerifier = verifyFirebaseIdToken,
+): Promise<IssuedAuth> {
+  return signIn(await verify(input.idToken), input);
+}
+
+/**
+ * Finds who signed in by their Firebase account, then their Google account (so everyone who joined before
+ * Firebase keeps theirs), then their email when the provider vouches for it. Notes the accounts it didn't know yet.
+ */
+async function findAccount(tx: Tx, { uid, googleSub, providers, email, emailVerified }: Identity) {
+  const known =
+    (uid && (await tx.user.findUnique({ where: { firebaseUid: uid } }))) ||
+    (googleSub && (await tx.user.findUnique({ where: { googleSub } })));
+  const user = known || (await tx.user.findUnique({ where: { email } }));
+  if (!user) return null;
+  if (!known && !emailVerified) {
+    throw new AppError("EMAIL_TAKEN", "This email already has an account; sign in the way you did the first time");
+  }
+  const newProviders = providers.filter((p) => !user.providers.includes(p));
+  if ((!uid || user.firebaseUid) && (!googleSub || user.googleSub) && !newProviders.length) return user;
+  return tx.user.update({
+    where: { id: user.id },
+    data: {
+      firebaseUid: user.firebaseUid ?? uid,
+      googleSub: user.googleSub ?? googleSub,
+      providers: [...user.providers, ...newProviders],
+    },
+  });
+}
+
+type Identity = FirebaseIdentity | (Omit<FirebaseIdentity, "uid"> & { uid: null });
+
+async function signIn(identity: Identity, input: GoogleLoginInput): Promise<IssuedAuth> {
   const signedIn = await withEvents(async (tx, emit) => {
-    const existing = await tx.user.findUnique({ where: { googleSub: identity.sub } });
+    const existing = await findAccount(tx, identity);
     if (existing) checkBan(existing);
     await checkDeviceBan(tx, input.device.id, identity.email);
     const guest = existing
@@ -85,7 +123,9 @@ export async function loginWithGoogle(
       existing ??
       (await tx.user.create({
         data: {
-          googleSub: identity.sub,
+          firebaseUid: identity.uid,
+          googleSub: identity.googleSub,
+          providers: identity.providers,
           email: identity.email,
           displayName: identity.name,
           avatarUrl: identity.picture,

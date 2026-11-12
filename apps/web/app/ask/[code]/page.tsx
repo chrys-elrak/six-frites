@@ -27,7 +27,7 @@ import { Dialog } from "@/components/dialog";
 import { EmojiSuggestions, useEmojiSuggestions } from "@/components/emoji-suggestions";
 import { FormatBar, formatShortcut } from "@/components/format-bar";
 import { GifSearch } from "@/components/gif-picker";
-import { GoogleButton } from "@/components/google-button";
+import { SignInButtons, type SignInVia } from "@/components/sign-in-buttons";
 import { LanguageSelect } from "@/components/language-select";
 import { LegalLinks } from "@/components/legal-page";
 import { Logo } from "@/components/logo";
@@ -171,11 +171,11 @@ export default function AskPage({ params }: { params: Promise<{ code: string }> 
     setGif(null);
   }
 
-  async function onCredential(idToken: string) {
+  async function onCredential(idToken: string, via: SignInVia) {
     setSignInError(null);
     try {
       unlock();
-      await six.auth.loginWithGoogle(idToken, { guest: true, deviceName: deviceName(), deviceId: deviceId() });
+      await six.auth[via](idToken, { guest: true, deviceName: deviceName(), deviceId: deviceId() });
     } catch (err) {
       setSignInError(
         err instanceof SixApiError
@@ -499,7 +499,7 @@ export default function AskPage({ params }: { params: Promise<{ code: string }> 
       ) : status === "anon" ? (
         <div className="space-y-3">
           <p className="text-center text-sm text-stone-500 dark:text-stone-400">{tr.ask.signInToSend}</p>
-          <GoogleButton onCredential={onCredential} />
+          <SignInButtons onCredential={onCredential} />
           {signInError && (
             <p role="alert" className="rounded-xl bg-red-50 p-3 text-center text-sm text-red-700 dark:bg-red-950 dark:text-red-300">
               {signInError}

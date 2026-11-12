@@ -53,7 +53,8 @@ export function presenceLabel(p: PresenceDTO | undefined) {
   if (p.online) return t.online;
   if (!p.lastSeenAt) return t.lastSeenLongAgo;
   const seen = lastSeen(p.lastSeenAt);
-  return p.lastDevice ? `${seen} ${t.seenOn[p.lastDevice]}` : seen;
+  const where = p.lastPlatform && t.seenOn[p.lastPlatform];
+  return where ? `${seen} ${where}` : seen;
 }
 
 function lastSeen(lastSeenAt: string) {

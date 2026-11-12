@@ -1,9 +1,9 @@
 import type { FastifyReply, FastifyRequest } from "fastify";
 import type { FastifyPluginAsyncZod } from "fastify-type-provider-zod";
 import { z } from "zod";
-import { AppError, AuthResult, ClaimLinkInput, GoogleLoginInput, LinkClaim, LinkTicket, RefreshInput, StartLinkInput } from "@six/shared";
+import { AppError, AuthResult, ClaimLinkInput, FirebaseLoginInput, GoogleLoginInput, LinkClaim, LinkTicket, RefreshInput, StartLinkInput } from "@six/shared";
 import { isProd } from "../env.js";
-import { type IssuedAuth, claimLink, loginWithGoogle, logout, refreshSession, startLink } from "../services/auth.js";
+import { type IssuedAuth, claimLink, loginWithFirebase, loginWithGoogle, logout, refreshSession, startLink } from "../services/auth.js";
 
 const REFRESH_COOKIE = "six_rt";
 const cookiePath = "/v1/auth";
@@ -36,6 +36,25 @@ const authRoutes: FastifyPluginAsyncZod = async (app) => {
     },
     async (req, reply) => {
       const issued = await loginWithGoogle(req.body);
+      return respond(req, reply, issued, req.body.device.platform === "web");
+    },
+  );
+
+  app.post(
+    "/firebase",
+    {
+      config: { rateLimit: { max: 10, timeWindow: "1 minute" } },
+      schema: {
+        tags: ["auth"],
+        summary: "Sign in with a Firebase ID token: Google, Apple or Facebook",
+        description:
+          "Like /google. Someone who joined with Google keeps their account. EMAIL_TAKEN when the email has an account and the provider didn't verify it; EMAIL_REQUIRED when it has no email.",
+        body: FirebaseLoginInput,
+        response: { 200: AuthResult },
+      },
+    },
+    async (req, reply) => {
+      const issued = await loginWithFirebase(req.body);
       return respond(req, reply, issued, req.body.device.platform === "web");
     },
   );

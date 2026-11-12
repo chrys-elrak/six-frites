@@ -11,6 +11,7 @@ import {
 import { env } from "../env.js";
 import { generateCode, isUniqueViolation } from "../lib/codes.js";
 import { type Emit, type Tx, withEvents } from "../lib/events.js";
+import { presenceOf } from "../lib/presence.js";
 import { prisma } from "../lib/prisma.js";
 import { deleteObjects, presignGet, putObject } from "../lib/storage.js";
 import { checkBackupPin } from "./backups.js";
@@ -157,6 +158,7 @@ export async function deleteAccount(userId: string) {
       where: { id: userId },
       data: {
         googleSub: `deleted:${userId}`,
+        firebaseUid: null,
         email: `deleted-${userId}@deleted.invalid`,
         displayName: "Deleted account",
         avatarUrl: null,
@@ -187,6 +189,33 @@ export async function deleteAccount(userId: string) {
   await Promise.all(sessionIds.map(revokeSession));
   if (photoKeys.length) await deleteObjects(photoKeys).catch(() => null);
   if (attachments.length) await (await import("./uploads.js")).purgeUploads(attachments);
+}
+
+const HIDDEN_APPLE_EMAIL = "@privaterelay.appleid.com";
+const HIDDEN_APPLE_IDLE_MS = 7 * 24 * 60 * 60 * 1000;
+
+/** Deletes accounts made with Apple behind a hidden email once nobody has used them for a week. */
+export async function deleteIdleHiddenAppleAccounts() {
+  const cutoff = new Date(Date.now() - HIDDEN_APPLE_IDLE_MS);
+  const idle = await prisma.user.findMany({
+    where: {
+      deletedAt: null,
+      email: { endsWith: HIDDEN_APPLE_EMAIL },
+      OR: [{ lastSeenAt: { lt: cutoff } }, { lastSeenAt: null, createdAt: { lt: cutoff } }],
+    },
+    select: { id: true },
+    take: 50,
+  });
+  const online = new Set((await presenceOf(idle.map((u) => u.id))).filter((p) => p.online).map((p) => p.userId));
+  let deleted = 0;
+  for (const { id } of idle) {
+    if (online.has(id)) continue;
+    await deleteAccount(id).then(
+      () => deleted++,
+      (err) => console.error(`could not delete idle Apple account ${id}:`, err.message),
+    );
+  }
+  return deleted;
 }
 
 const scryptAsync = promisify(scrypt) as (pin: string, salt: Buffer, len: number) => Promise<Buffer>;

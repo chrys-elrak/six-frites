@@ -42,12 +42,20 @@ const headerClass =
 const iconButton =
   "grid size-10 place-items-center rounded-full text-stone-600 hover:bg-stone-200 dark:text-stone-300 dark:hover:bg-stone-800";
 
-const DEVICE_ICONS: Record<ClientDevice, LucideIcon> = { app: Smartphone, web: Globe, desktop: Monitor };
+const DEVICE_ICONS: Record<ClientDevice, LucideIcon> = {
+  android: Smartphone,
+  ios: Smartphone,
+  app: Smartphone,
+  web: Globe,
+  desktop: Monitor,
+};
 
+/** One chip per place they have it open. A kind added after this build shipped has no icon here and is left out. */
 function DeviceBadges({ devices = [] }: { devices: ClientDevice[] }) {
   const tr = useT();
   return devices.map((d) => {
     const Icon = DEVICE_ICONS[d];
+    if (!Icon) return null;
     return (
       <span
         key={d}
@@ -307,7 +315,7 @@ function OpenConversation({ chatId }: { chatId: string }) {
                       (shownPresence || muted || c.archived || c.autoDeleteSecs || c.support || c.withSupport || c.group) && (
                         <span className="line-clamp-2 text-xs text-stone-500">
                           {shownPresence?.online && <span className="font-medium text-brand">{tr.time.online}</span>}
-                          {shownPresence?.online && <DeviceBadges devices={shownPresence.devices} />}
+                          {shownPresence?.online && <DeviceBadges devices={shownPresence.platforms} />}
                           {shownPresence?.online && (muted || c.archived || c.autoDeleteSecs || c.support) && " · "}
                           {[
                             c.group && tr.groups.members(c.members.length),

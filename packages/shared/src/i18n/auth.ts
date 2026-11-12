@@ -5,6 +5,9 @@ const en = {
   signInToAdd: "Sign in to add this contact.",
   signingIn: "Signing in…",
   continueWithGoogle: "Continue with Google",
+  continueWithApple: "Continue with Apple",
+  appleShareEmail: "Already on Six Frites? With Apple, choose “Share my email” to keep your account.",
+  continueWithFacebook: "Continue with Facebook",
   googleNotFinished:
     "Google sign-in didn't finish. If you picked an account, this build isn't registered with Google yet (its package name and SHA-1 must be added as an Android OAuth client).",
   errors: {
@@ -16,6 +19,9 @@ const en = {
     ACCOUNT_QUEUED: "You're on the waiting list and will join Six Frites soon. Try signing in again later.",
     SIGNUPS_CLOSED: "Six Frites is full for now, so new accounts can't be created. Try again later.",
     INVALID_GOOGLE_TOKEN: "Google sign-in failed. Please try again.",
+    INVALID_LOGIN_TOKEN: "Sign-in failed. Please try again.",
+    EMAIL_REQUIRED: "This account has no email address. Add one to it, or sign in another way.",
+    EMAIL_TAKEN: "This email already has a Six Frites account. Sign in the way you did the first time.",
     DEVELOPER_ERROR:
       "Google sign-in isn't set up for this build yet. Its package name and SHA-1 must be registered in Google Cloud.",
     PLAY_SERVICES_NOT_AVAILABLE: "Google Play services are missing or out of date.",
@@ -57,6 +63,9 @@ const fr: typeof en = {
   signInToAdd: "Connectez-vous pour ajouter ce contact.",
   signingIn: "Connexion…",
   continueWithGoogle: "Continuer avec Google",
+  continueWithApple: "Continuer avec Apple",
+  appleShareEmail: "Déjà sur Six Frites ? Avec Apple, choisissez « Partager mon adresse e-mail » pour garder votre compte.",
+  continueWithFacebook: "Continuer avec Facebook",
   googleNotFinished:
     "La connexion Google n'a pas abouti. Si vous avez choisi un compte, cette version de l'app n'est pas encore enregistrée auprès de Google (son nom de package et son SHA-1 doivent être ajoutés comme client OAuth Android).",
   errors: {
@@ -70,6 +79,9 @@ const fr: typeof en = {
       "Vous êtes sur la liste d'attente et rejoindrez Six Frites bientôt. Réessayez de vous connecter plus tard.",
     SIGNUPS_CLOSED: "Six Frites est complet pour le moment, aucun nouveau compte ne peut être créé. Réessayez plus tard.",
     INVALID_GOOGLE_TOKEN: "Échec de la connexion Google. Veuillez réessayer.",
+    INVALID_LOGIN_TOKEN: "Échec de la connexion. Veuillez réessayer.",
+    EMAIL_REQUIRED: "Ce compte n'a pas d'adresse e-mail. Ajoutez-en une, ou connectez-vous autrement.",
+    EMAIL_TAKEN: "Cette adresse e-mail a déjà un compte Six Frites. Connectez-vous comme la première fois.",
     DEVELOPER_ERROR:
       "La connexion Google n'est pas encore configurée pour cette version de l'app. Son nom de package et son SHA-1 doivent être enregistrés dans Google Cloud.",
     PLAY_SERVICES_NOT_AVAILABLE: "Les services Google Play sont absents ou obsolètes.",
@@ -111,6 +123,9 @@ const mg: typeof en = {
   signInToAdd: "Midira mba hanampiana io mpifandray io.",
   signingIn: "Miditra…",
   continueWithGoogle: "Hiditra amin'ny Google",
+  continueWithApple: "Hiditra amin'ny Apple",
+  appleShareEmail: "Efa ao amin'ny Six Frites ianao? Amin'ny Apple, safidio ny « Partager mon adresse e-mail » mba hitazonana ny kaontinao.",
+  continueWithFacebook: "Hiditra amin'ny Facebook",
   googleNotFinished:
     "Tsy vita ny fidirana amin'ny Google. Raha efa nisafidy kaonty ianao, dia mbola tsy voasoratra ao amin'ny Google ity kinova ity (tsy maintsy ampidirina ho mpanjifa OAuth Android ny anaran'ny package sy ny SHA-1-ny).",
   errors: {
@@ -122,6 +137,9 @@ const mg: typeof en = {
     ACCOUNT_QUEUED: "Ao amin'ny lisitry ny miandry ianao ary hiditra ao amin'ny Six Frites tsy ho ela. Andramo miditra indray any aoriana.",
     SIGNUPS_CLOSED: "Feno ny Six Frites amin'izao, tsy afaka mamorona kaonty vaovao. Andramo indray any aoriana.",
     INVALID_GOOGLE_TOKEN: "Tsy nahomby ny fidirana amin'ny Google. Andramo indray.",
+    INVALID_LOGIN_TOKEN: "Tsy nahomby ny fidirana. Andramo indray.",
+    EMAIL_REQUIRED: "Tsy misy adiresy mailaka ity kaonty ity. Ampio iray, na midira amin'ny fomba hafa.",
+    EMAIL_TAKEN: "Efa manana kaonty Six Frites io mailaka io. Midira tahaka ny tamin'ny voalohany.",
     DEVELOPER_ERROR:
       "Mbola tsy voalamina ho an'ity kinova ity ny fidirana amin'ny Google. Tsy maintsy soratana ao amin'ny Google Cloud ny anaran'ny package sy ny SHA-1-ny.",
     PLAY_SERVICES_NOT_AVAILABLE: "Tsy misy na efa tranainy ny Google Play services.",

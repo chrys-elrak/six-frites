@@ -271,6 +271,8 @@ const TONES = {
   red: "bg-red-100 text-red-700 dark:bg-red-500/15 dark:text-red-300",
 };
 
+const PROVIDER_NAMES: Record<AdminUserDTO["providers"][number], string> = { google: "Google", facebook: "Facebook", apple: "Apple" };
+
 function Badge({ tone, children }: { tone: keyof typeof TONES; children: React.ReactNode }) {
   return <span className={`shrink-0 rounded-full px-2 py-0.5 text-[11px] font-semibold ${TONES[tone]}`}>{children}</span>;
 }
@@ -365,7 +367,10 @@ function UserRow({ u, checked, onCheck }: { u: AdminUserDTO; checked: boolean; o
             {u.queued && <Badge tone="amber">Waiting</Badge>}
             {!u.ads && <Badge tone="green">No ads</Badge>}
           </p>
-          <p className="truncate text-sm text-stone-500">{u.email}</p>
+          <p className="truncate text-sm text-stone-500">
+            {u.email}
+            {u.providers.length > 0 && ` · via ${u.providers.map((p) => PROVIDER_NAMES[p]).join(", ")}`}
+          </p>
           <p className="mt-0.5 flex flex-wrap items-center gap-x-1.5 text-xs text-stone-500">
             {u.online ? (
               <span className="flex items-center gap-1 font-medium text-green-600 dark:text-green-400">

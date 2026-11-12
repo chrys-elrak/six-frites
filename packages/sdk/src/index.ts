@@ -31,6 +31,8 @@ export interface SixClientOptions {
   fetch?: typeof fetch;
 }
 
+type LoginExtra = Omit<GoogleLoginInput, "idToken" | "device"> & { deviceName?: string; deviceId?: string };
+
 export function createSixClient(opts: SixClientOptions) {
   const tokens = new TokenManager({
     baseUrl: opts.baseUrl,
@@ -40,27 +42,29 @@ export function createSixClient(opts: SixClientOptions) {
   });
   const api = createRestClient(opts.baseUrl, tokens, opts.fetch);
 
+  async function login(path: "/v1/auth/google" | "/v1/auth/firebase", idToken: string, extra: LoginExtra) {
+    const result = unwrap(
+      await api.POST(path, {
+        body: {
+          idToken,
+          inviteCode: extra.inviteCode,
+          guest: extra.guest,
+          device: { platform: opts.platform, name: extra.deviceName, id: extra.deviceId },
+        },
+      }),
+    ) as AuthResult;
+    await tokens.accept(result);
+    return result.user;
+  }
+
   const auth = {
     onChange: tokens.onChange.bind(tokens),
     getAccessToken: () => tokens.getAccessToken(),
 
-    async loginWithGoogle(
-      idToken: string,
-      extra: Omit<GoogleLoginInput, "idToken" | "device"> & { deviceName?: string; deviceId?: string } = {},
-    ) {
-      const result = unwrap(
-        await api.POST("/v1/auth/google", {
-          body: {
-            idToken,
-            inviteCode: extra.inviteCode,
-            guest: extra.guest,
-            device: { platform: opts.platform, name: extra.deviceName, id: extra.deviceId },
-          },
-        }),
-      ) as AuthResult;
-      await tokens.accept(result);
-      return result.user;
-    },
+    loginWithGoogle: (idToken: string, extra: LoginExtra = {}) => login("/v1/auth/google", idToken, extra),
+
+    /** Signs in with a Firebase ID token, from Google, Apple or Facebook. */
+    loginWithFirebase: (idToken: string, extra: LoginExtra = {}) => login("/v1/auth/firebase", idToken, extra),
 
     /** Checks whether a phone approved this computer's QR code, and signs in once it has. */
     async claimLink(id: string, secret: string) {

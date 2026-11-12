@@ -6,7 +6,7 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
 import { Suspense, useCallback, useEffect, useRef, useState } from "react";
-import { GoogleButton } from "@/components/google-button";
+import { SignInButtons, type SignInVia } from "@/components/sign-in-buttons";
 import { InviteCard, invitePreviewQuery } from "@/components/invite-card";
 import { LegalLinks } from "@/components/legal-page";
 import { Logo } from "@/components/logo";
@@ -45,13 +45,13 @@ function LoginForm() {
     router.replace(invite ? `/invite/${encodeURIComponent(invite)}` : home);
   }, [status, router, invite, home]);
 
-  async function onCredential(idToken: string) {
+  async function onCredential(idToken: string, via: SignInVia) {
     signingIn.current = true;
     setBusy(true);
     setError(null);
     try {
       unlock();
-      await six.auth.loginWithGoogle(idToken, { inviteCode, guest: true, deviceName: deviceName(), deviceId: deviceId() });
+      await six.auth[via](idToken, { inviteCode, guest: true, deviceName: deviceName(), deviceId: deviceId() });
       const accepted = inviteCode
         ? await six.api.POST("/v1/invites/{code}/accept", { params: { path: { code: inviteCode } } }).catch(() => null)
         : null;
@@ -92,7 +92,7 @@ function LoginForm() {
       )}
 
       <div className="space-y-3">
-        <GoogleButton onCredential={onCredential} />
+        <SignInButtons onCredential={onCredential} />
         {busy && <p className="text-center text-sm text-stone-500">{tr.auth.signingIn}</p>}
         {error && (
           <p

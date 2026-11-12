@@ -6,7 +6,7 @@ import { ArrowLeft, ImagePlus, LogOut, SendHorizontal } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
-import { GoogleButton } from "@/components/google-button";
+import { SignInButtons, type SignInVia } from "@/components/sign-in-buttons";
 import { Logo } from "@/components/logo";
 import { BackLink } from "@/lib/back";
 import { unlock } from "@/lib/app-lock";
@@ -34,12 +34,12 @@ function SignIn() {
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
 
-  async function onCredential(idToken: string) {
+  async function onCredential(idToken: string, via: SignInVia) {
     setBusy(true);
     setError(null);
     try {
       unlock();
-      await six.auth.loginWithGoogle(idToken, { guest: true, deviceName: deviceName(), deviceId: deviceId() });
+      await six.auth[via](idToken, { guest: true, deviceName: deviceName(), deviceId: deviceId() });
     } catch (err) {
       setError(
         err instanceof SixApiError
@@ -62,7 +62,7 @@ function SignIn() {
         <p className="text-sm text-stone-500 dark:text-stone-400">{tr.support.intro}</p>
       </div>
       <div className="space-y-3">
-        <GoogleButton onCredential={onCredential} />
+        <SignInButtons onCredential={onCredential} />
         {busy && <p className="text-center text-sm text-stone-500">{tr.auth.signingIn}</p>}
         {error && (
           <p role="alert" className="rounded-xl bg-red-50 p-3 text-center text-sm text-red-700 dark:bg-red-950 dark:text-red-300">

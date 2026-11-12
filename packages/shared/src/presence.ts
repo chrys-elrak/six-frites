@@ -1,18 +1,31 @@
 import { z } from "zod";
 import { Id, IsoDate } from "./common.js";
 
-export const CLIENT_DEVICES = ["app", "web", "desktop"] as const;
+export const CLIENT_DEVICES = ["android", "ios", "app", "web", "desktop"] as const;
 export const ClientDevice = z.enum(CLIENT_DEVICES);
 export type ClientDevice = z.infer<typeof ClientDevice>;
+
+const OldDevice = z.enum(["app", "web", "desktop"]);
+
+/**
+ * A device as the phone apps released before Android and iOS were told apart know it. They have no icon for
+ * anything else and crash on it, so what they read stays within these.
+ */
+export const oldDevice = (device: ClientDevice): z.infer<typeof OldDevice> =>
+  device === "android" || device === "ios" ? "app" : device;
 
 export const PresenceDTO = z.object({
   userId: Id,
   online: z.boolean().describe("Has the app open on at least one device right now"),
-  devices: z
+  devices: z.array(OldDevice).describe("`platforms` for older phone apps, with Android and iOS both given as the app"),
+  platforms: z
     .array(ClientDevice)
-    .describe("What they have it open on right now: the mobile app, a phone browser or a computer. Empty when offline"),
+    .describe(
+      "What they have it open on right now: the Android or iOS app (just the app when which one is unknown), a phone browser or a computer. Empty when offline",
+    ),
   lastSeenAt: IsoDate.nullable().describe("When they last had the app open; null if never recorded"),
-  lastDevice: ClientDevice.nullable().describe("What they last had it open on, in the past 30 days; null if unknown"),
+  lastDevice: OldDevice.nullable().describe("`lastPlatform` for older phone apps, with Android and iOS both given as the app"),
+  lastPlatform: ClientDevice.nullable().describe("What they last had it open on, in the past 30 days; null if unknown"),
 });
 export type PresenceDTO = z.infer<typeof PresenceDTO>;
 

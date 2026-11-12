@@ -114,7 +114,7 @@ async function withTotals(rows: UserRow[]) {
   return rows.map((u) => ({
     ...toAdminUser(u, storage.get(u.id) ?? 0, maps.get(u.id) ?? 0, invites(u.id)),
     online: live.get(u.id)?.online ?? false,
-    devices: live.get(u.id)?.devices ?? [],
+    devices: live.get(u.id)?.platforms ?? [],
   }));
 }
 

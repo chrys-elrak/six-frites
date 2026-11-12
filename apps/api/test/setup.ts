@@ -10,3 +10,13 @@ vi.mock("../src/lib/google.js", () => ({
     return { sub, email: `${sub}@example.com`, name: sub, picture: null };
   },
 }));
+
+vi.mock("../src/lib/firebase.js", () => ({
+  verifyFirebaseIdToken: async (idToken: string) => {
+    const { AppError } = await import("@six/shared");
+    if (!idToken.startsWith("firebase:")) throw new AppError("INVALID_LOGIN_TOKEN");
+    const p = JSON.parse(idToken.slice(9));
+    if (!p.email) throw new AppError("EMAIL_REQUIRED");
+    return { googleSub: null, providers: [], emailVerified: true, name: p.uid, picture: null, ...p };
+  },
+}));

@@ -36,13 +36,21 @@ import { SharedMedia, type SharedTab } from "./shared-media";
 import { Sheet } from "./sheet";
 import { IconButton, Loading, ScreenHeader, TextButton } from "./ui";
 
-const DEVICE_ICONS: Record<ClientDevice, LucideIcon> = { app: Smartphone, web: Globe, desktop: Monitor };
+const DEVICE_ICONS: Record<ClientDevice, LucideIcon> = {
+  android: Smartphone,
+  ios: Smartphone,
+  app: Smartphone,
+  web: Globe,
+  desktop: Monitor,
+};
 
+/** One chip per place they have it open. A kind added after this build shipped has no icon here and is left out. */
 function DeviceBadges({ devices = [] }: { devices: ClientDevice[] }) {
   const t = useTheme();
   const tr = useT();
   return devices.map((d) => {
     const Icon = DEVICE_ICONS[d];
+    if (!Icon) return null;
     return (
       <View key={d} style={[styles.deviceBadge, { backgroundColor: t.chip }]}>
         <Icon size={11} color={t.textSoft} />
@@ -291,7 +299,7 @@ function OpenConversation({ chatId }: { chatId: string }) {
                         .filter(Boolean)
                         .join(" · ")}
                     </Text>
-                    {presence?.online && <DeviceBadges devices={presence.devices} />}
+                    {presence?.online && <DeviceBadges devices={presence.platforms} />}
                   </View>
                 )
               )}

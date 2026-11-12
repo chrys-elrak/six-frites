@@ -101,6 +101,17 @@ async function liveAnywhere(io: IO, event: LiveEvent, userId: string, p: unknown
   return there.find((res) => res !== null) ?? { ok: false, ...new AppError("ROOM_NOT_FOUND", "This game has ended").toBody() };
 }
 
+/**
+ * What a session has the app open on. The phone apps only say "app", so the platform they signed in with tells
+ * Android from iOS.
+ */
+async function deviceOf(sessionId: string, said: unknown): Promise<ClientDevice | null> {
+  const device = ClientDevice.safeParse(said).data ?? null;
+  if (device !== "app") return device;
+  const session = await prisma.session.findUnique({ where: { id: sessionId }, select: { platform: true } });
+  return session?.platform === "android" || session?.platform === "ios" ? session.platform : device;
+}
+
 export function createSocketServer(http: HttpServer) {
   const pub = redisConnection();
   const io: IO = new Server(http, {
@@ -114,7 +125,7 @@ export function createSocketServer(http: HttpServer) {
       const claims = await authenticateBearer(typeof token === "string" ? `Bearer ${token}` : undefined);
       socket.data.userId = claims.userId;
       socket.data.sessionId = claims.sessionId;
-      socket.data.device = ClientDevice.safeParse(socket.handshake.auth?.device).data ?? null;
+      socket.data.device = await deviceOf(claims.sessionId, socket.handshake.auth?.device);
       next();
     } catch (err) {
       const e = err instanceof AppError ? err : new AppError("UNAUTHENTICATED");

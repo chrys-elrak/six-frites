@@ -9,7 +9,12 @@ datasource db {
 
 model User {
   id              String    @id @default(cuid())
-  googleSub       String    @unique
+  /// Their Firebase account, which signs them in with Google, Apple or Facebook; null until they first sign in that way.
+  firebaseUid     String?   @unique
+  /// Their Google account; people who joined before Firebase are found by it the first time they sign in through it.
+  googleSub       String?   @unique
+  /// How they have signed in so far: google, facebook, apple.
+  providers       String[]  @default([])
   email           String    @unique
   displayName     String
   avatarUrl       String?

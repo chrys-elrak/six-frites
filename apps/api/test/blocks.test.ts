@@ -66,7 +66,7 @@ describe("account deletion", () => {
     expect((await get(host, "/v1/contacts")).items).toEqual([]);
     expect((await get(host, `/v1/users/find?q=${contactCode}`)).error.code).toBe("USER_NOT_FOUND");
 
-    const again = (await loginAs(ctx.app, googleSub.replace(/^google:/, ""))).json();
+    const again = (await loginAs(ctx.app, googleSub!.replace(/^google:/, ""))).json();
     expect(again.user.id).not.toBe(guest.user.id);
     expect(again.user.displayName).not.toBe("Deleted account");
   });

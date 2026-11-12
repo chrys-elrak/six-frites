@@ -1,4 +1,4 @@
-import { CLIENT_DEVICES, ClientDevice, type PresenceDTO } from "@six/shared";
+import { CLIENT_DEVICES, ClientDevice, type PresenceDTO, oldDevice } from "@six/shared";
 import type { Redis } from "ioredis";
 import { env } from "../env.js";
 import { prisma } from "./prisma.js";
@@ -102,12 +102,19 @@ export async function presenceOf(userIds: string[]): Promise<PresenceDTO[]> {
   ]);
   const stored = new Map(users.map((u) => [u.id, u.lastSeenAt?.toISOString() ?? null]));
   return userIds
-    .map((id, i) => ({
-      userId: id,
-      online: online[i] !== null,
-      devices: online[i] === null ? [] : CLIENT_DEVICES.filter((_, d) => devices[i * CLIENT_DEVICES.length + d] !== null),
-      lastSeenAt: seen[i] ?? stored.get(id) ?? null,
-      lastDevice: ClientDevice.safeParse(seenDevice[i]).data ?? null,
-    }))
+    .map((id, i) => {
+      const platforms =
+        online[i] === null ? [] : CLIENT_DEVICES.filter((_, d) => devices[i * CLIENT_DEVICES.length + d] !== null);
+      const lastPlatform = ClientDevice.safeParse(seenDevice[i]).data ?? null;
+      return {
+        userId: id,
+        online: online[i] !== null,
+        devices: [...new Set(platforms.map(oldDevice))],
+        platforms,
+        lastSeenAt: seen[i] ?? stored.get(id) ?? null,
+        lastDevice: lastPlatform && oldDevice(lastPlatform),
+        lastPlatform,
+      };
+    })
     .filter((p) => stored.has(p.userId));
 }

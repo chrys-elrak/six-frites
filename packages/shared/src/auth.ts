@@ -24,6 +24,10 @@ export const GoogleLoginInput = z.object({
 });
 export type GoogleLoginInput = z.infer<typeof GoogleLoginInput>;
 
+export const FirebaseLoginInput = GoogleLoginInput.extend({
+  idToken: z.string().min(1).describe("A Firebase ID token, from signing in with Google, Apple or Facebook"),
+});
+
 export const RefreshInput = z.object({
   refreshToken: z.string().min(1).optional(),
 });

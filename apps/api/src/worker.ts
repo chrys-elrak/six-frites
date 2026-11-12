@@ -25,6 +25,7 @@ import { sendDueScheduled } from "./services/scheduled.js";
 import { deleteExpiredStories } from "./services/stories.js";
 import { deleteOldNotifications } from "./services/notifications.js";
 import { sendDueEmails } from "./services/emails.js";
+import { deleteIdleHiddenAppleAccounts } from "./services/users.js";
 import { finishUpload, purgeAbandonedUploads, purgeUploads } from "./services/uploads.js";
 
 await ensureBucket();
@@ -50,6 +51,7 @@ const timers = new Worker<TimerJob>(
         bot: await sendDueBotAnon(),
         stories: await deleteExpiredStories(),
         notifications: await deleteOldNotifications(),
+        idleAppleAccounts: await deleteIdleHiddenAppleAccounts(),
       };
     }
     if ("mailSweep" in job.data) return sendDueEmails();

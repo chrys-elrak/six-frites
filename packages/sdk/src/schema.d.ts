@@ -677,7 +677,7 @@ export interface paths {
                                 /** @description Has the app open on at least one device right now */
                                 online: boolean;
                                 /** @description What they have it open on right now; empty when offline */
-                                devices: ("app" | "web" | "desktop")[];
+                                devices: ("android" | "ios" | "app" | "web" | "desktop")[];
                                 chats: number;
                                 messages: number;
                                 activeSessions: number;
@@ -789,7 +789,7 @@ export interface paths {
                             /** @description Has the app open on at least one device right now */
                             online: boolean;
                             /** @description What they have it open on right now; empty when offline */
-                            devices: ("app" | "web" | "desktop")[];
+                            devices: ("android" | "ios" | "app" | "web" | "desktop")[];
                             chats: number;
                             messages: number;
                             activeSessions: number;
@@ -917,7 +917,7 @@ export interface paths {
                             /** @description Has the app open on at least one device right now */
                             online: boolean;
                             /** @description What they have it open on right now; empty when offline */
-                            devices: ("app" | "web" | "desktop")[];
+                            devices: ("android" | "ios" | "app" | "web" | "desktop")[];
                             chats: number;
                             messages: number;
                             activeSessions: number;
@@ -1027,7 +1027,7 @@ export interface paths {
                             /** @description Has the app open on at least one device right now */
                             online: boolean;
                             /** @description What they have it open on right now; empty when offline */
-                            devices: ("app" | "web" | "desktop")[];
+                            devices: ("android" | "ios" | "app" | "web" | "desktop")[];
                             chats: number;
                             messages: number;
                             activeSessions: number;
@@ -1146,7 +1146,7 @@ export interface paths {
                             /** @description Has the app open on at least one device right now */
                             online: boolean;
                             /** @description What they have it open on right now; empty when offline */
-                            devices: ("app" | "web" | "desktop")[];
+                            devices: ("android" | "ios" | "app" | "web" | "desktop")[];
                             chats: number;
                             messages: number;
                             activeSessions: number;
@@ -1266,7 +1266,7 @@ export interface paths {
                             /** @description Has the app open on at least one device right now */
                             online: boolean;
                             /** @description What they have it open on right now; empty when offline */
-                            devices: ("app" | "web" | "desktop")[];
+                            devices: ("android" | "ios" | "app" | "web" | "desktop")[];
                             chats: number;
                             messages: number;
                             activeSessions: number;
@@ -1448,7 +1448,7 @@ export interface paths {
                             /** @description Has the app open on at least one device right now */
                             online: boolean;
                             /** @description What they have it open on right now; empty when offline */
-                            devices: ("app" | "web" | "desktop")[];
+                            devices: ("android" | "ios" | "app" | "web" | "desktop")[];
                             chats: number;
                             messages: number;
                             activeSessions: number;
@@ -1561,7 +1561,7 @@ export interface paths {
                             /** @description Has the app open on at least one device right now */
                             online: boolean;
                             /** @description What they have it open on right now; empty when offline */
-                            devices: ("app" | "web" | "desktop")[];
+                            devices: ("android" | "ios" | "app" | "web" | "desktop")[];
                             chats: number;
                             messages: number;
                             activeSessions: number;
@@ -1714,7 +1714,7 @@ export interface paths {
                             /** @description Has the app open on at least one device right now */
                             online: boolean;
                             /** @description What they have it open on right now; empty when offline */
-                            devices: ("app" | "web" | "desktop")[];
+                            devices: ("android" | "ios" | "app" | "web" | "desktop")[];
                             chats: number;
                             messages: number;
                             activeSessions: number;
@@ -23281,18 +23281,25 @@ export interface paths {
                                 userId: string;
                                 /** @description Has the app open on at least one device right now */
                                 online: boolean;
-                                /** @description What they have it open on right now: the mobile app, a phone browser or a computer. Empty when offline */
+                                /** @description `platforms` for older phone apps, with Android and iOS both given as the app */
                                 devices: ("app" | "web" | "desktop")[];
+                                /** @description What they have it open on right now: the Android or iOS app (just the app when which one is unknown), a phone browser or a computer. Empty when offline */
+                                platforms: ("android" | "ios" | "app" | "web" | "desktop")[];
                                 /**
                                  * Format: date-time
                                  * @description When they last had the app open; null if never recorded
                                  */
                                 lastSeenAt: string | null;
                                 /**
-                                 * @description What they last had it open on, in the past 30 days; null if unknown
+                                 * @description `lastPlatform` for older phone apps, with Android and iOS both given as the app
                                  * @enum {string|null}
                                  */
                                 lastDevice: "app" | "web" | "desktop" | null;
+                                /**
+                                 * @description What they last had it open on, in the past 30 days; null if unknown
+                                 * @enum {string|null}
+                                 */
+                                lastPlatform: "android" | "ios" | "app" | "web" | "desktop" | null;
                             }[];
                         };
                     };

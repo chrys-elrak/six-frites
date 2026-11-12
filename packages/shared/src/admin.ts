@@ -70,7 +70,11 @@ export const AdminUserRef = z.object({
 });
 export type AdminUserRef = z.infer<typeof AdminUserRef>;
 
+export const SIGN_IN_PROVIDERS = ["google", "facebook", "apple"] as const;
+export type SignInProvider = (typeof SIGN_IN_PROVIDERS)[number];
+
 export const AdminUserDTO = AdminUserRef.extend({
+  providers: z.array(z.enum(SIGN_IN_PROVIDERS)).describe("How they have signed in so far"),
   banReason: z.string().nullable(),
   admin: z.boolean(),
   createdAt: IsoDate,
