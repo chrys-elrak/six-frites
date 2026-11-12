@@ -55,6 +55,7 @@
     "expo-sharing": "~58.0.20",
     "expo-splash-screen": "~58.0.11",
     "expo-status-bar": "~58.0.4",
+    "expo-store-review": "~58.0.3",
     "expo-system-ui": "~58.0.6",
     "expo-video": "~58.0.12",
     "lottie-react-native": "~7.5.0",
