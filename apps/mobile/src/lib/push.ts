@@ -6,6 +6,7 @@ import { type Href, router } from "expo-router";
 import { useEffect } from "react";
 import { Linking, Platform } from "react-native";
 import { getLocale, getT } from "./i18n";
+import { useNotifyPrefs } from "./notify-prefs";
 import { six } from "./six";
 
 const provider = Platform.OS === "ios" ? "apns" : Constants.expoConfig?.extra?.playStore ? "fcmPlay" : "fcm";
@@ -37,15 +38,30 @@ export async function showBanner(tag: string, title: string, body: string, url: 
 export const clearChatNotifications = (chatId: string) => void Notifications.dismissNotificationAsync(chatId).catch(() => null);
 
 async function saveToken(token: string) {
-  unwrap(await six.api.POST("/v1/devices/push-token", { body: { provider, token, locale: getLocale() } }));
+  const tone = useNotifyPrefs.getState().tone;
+  unwrap(await six.api.POST("/v1/devices/push-token", { body: { provider, token, locale: getLocale(), tone } }));
+}
+
+/**
+ * Android rings whatever sound a channel was made with, and that can't change, so messages go to a channel made for
+ * the picked tone; the server sends them there. The other tones' channels go, so settings show one Messages channel.
+ */
+async function messagesChannel() {
+  const tone = useNotifyPrefs.getState().tone;
+  const id = `messages-${tone}`;
+  await Notifications.setNotificationChannelAsync(id, {
+    name: getT().settings.messagesChannel,
+    importance: AndroidImportance.HIGH,
+    sound: `${tone}.wav`,
+  });
+  for (const channel of await Notifications.getNotificationChannelsAsync()) {
+    if (channel.id.startsWith("messages") && channel.id !== id) await Notifications.deleteNotificationChannelAsync(channel.id);
+  }
 }
 
 /** Links this phone's push token to the signed-in session, asking for permission first when `ask` is set. */
 async function register(ask: boolean) {
-  await Notifications.setNotificationChannelAsync("messages", {
-    name: getT().settings.messagesChannel,
-    importance: AndroidImportance.HIGH,
-  });
+  if (Platform.OS === "android") await messagesChannel();
   await Notifications.setNotificationChannelAsync("in-app", {
     name: getT().settings.inAppChannel,
     importance: AndroidImportance.HIGH,
@@ -61,8 +77,12 @@ async function register(ask: boolean) {
   await saveToken((await Notifications.getDevicePushTokenAsync()).data);
 }
 
-/** Re-sends this phone's push token, without prompting, so notifications follow a language change. */
+/** Re-sends this phone's push token, without prompting, so notifications follow a language or tone change. */
 export const registerPush = () => register(false);
+
+useNotifyPrefs.subscribe((now, before) => {
+  if (now.tone !== before.tone) void registerPush().catch(() => null);
+});
 
 /** Keeps this phone registered for push while signed in, and opens the chat behind a tapped notification. */
 export function usePush() {

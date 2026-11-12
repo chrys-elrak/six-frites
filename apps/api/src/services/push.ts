@@ -31,8 +31,8 @@ export function pushConfig() {
 export async function registerPushToken(sessionId: string, input: RegisterPushTokenInput) {
   await prisma.pushToken.upsert({
     where: { sessionId_provider: { sessionId, provider: input.provider } },
-    create: { sessionId, provider: input.provider, token: input.token, locale: input.locale },
-    update: { token: input.token, locale: input.locale ?? "en" },
+    create: { sessionId, provider: input.provider, token: input.token, locale: input.locale, tone: input.tone },
+    update: { token: input.token, locale: input.locale ?? "en", tone: input.tone ?? null },
   });
 }
 
@@ -98,7 +98,7 @@ async function sendToAll(targets: Awaited<ReturnType<typeof targetsFor>>, payloa
     const provider = providers[t.provider as PushProvider];
     if (!provider) continue;
     const body = payload(dict[isLocale(t.locale) ? t.locale : "en"]);
-    if ((await provider.send(t.token, body)) === "gone") await prisma.pushToken.delete({ where: { id: t.id } });
+    if ((await provider.send(t.token, body, t.tone)) === "gone") await prisma.pushToken.delete({ where: { id: t.id } });
     else sent++;
   }
   return sent;

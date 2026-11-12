@@ -1,0 +1,1 @@
+ALTER TABLE "PushToken" ADD COLUMN "tone" TEXT;

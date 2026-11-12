@@ -200,6 +200,25 @@ describe("push notifications", () => {
     expect(sent.at(-1)!.payload.body).toBe("Self-destructing message");
   });
 
+  it("hands a phone's push service the message tone it registered, so the phone rings that tone", async () => {
+    const { host, guest, chatId } = await makeFriends();
+    const tones: (string | null | undefined)[] = [];
+    setPushProviders({
+      fcm: {
+        async send(_token, _payload, tone) {
+          tones.push(tone);
+          return "sent";
+        },
+      },
+    });
+    expect((await call(guest, "POST", "/v1/devices/push-token", { provider: "fcm", token: "phone", tone: "marimba" })).statusCode).toBe(204);
+    await deliverPush((await send(host, chatId, "hi")).json().id, guest.user.id);
+    expect((await call(guest, "POST", "/v1/devices/push-token", { provider: "fcm", token: "phone" })).statusCode).toBe(204);
+    await deliverPush((await send(host, chatId, "again")).json().id, guest.user.id);
+    expect(tones).toEqual(["marimba", null]);
+    expect((await call(guest, "POST", "/v1/devices/push-token", { provider: "fcm", token: "phone", tone: "kazoo" })).statusCode).toBe(400);
+  });
+
   it("forgets subscriptions the push service says are gone, and on request", async () => {
     const { host, guest, chatId } = await makeFriends();
     const token = await subscribe(guest);

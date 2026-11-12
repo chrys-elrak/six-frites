@@ -23658,6 +23658,11 @@ export interface paths {
                          * @enum {string}
                          */
                         locale?: "en" | "fr" | "mg";
+                        /**
+                         * @description fcm/apns: the message tone picked in the app, played by the phone itself; the phone's own sound when left out
+                         * @enum {string}
+                         */
+                        tone?: "frites" | "chime" | "pop" | "ding" | "marimba" | "drop" | "trio" | "blip";
                     };
                 };
             };

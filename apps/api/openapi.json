@@ -82247,6 +82247,20 @@
                       "fr",
                       "mg"
                     ]
+                  },
+                  "tone": {
+                    "description": "fcm/apns: the message tone picked in the app, played by the phone itself; the phone's own sound when left out",
+                    "type": "string",
+                    "enum": [
+                      "frites",
+                      "chime",
+                      "pop",
+                      "ding",
+                      "marimba",
+                      "drop",
+                      "trio",
+                      "blip"
+                    ]
                   }
                 },
                 "required": [

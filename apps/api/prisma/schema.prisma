@@ -290,6 +290,8 @@ model PushToken {
   provider  String
   token     String @db.Text
   locale    String @default("en")
+  /// The message tone picked in the app, which the phone plays for its notifications; null for the phone's own sound.
+  tone      String?
 
   session Session @relation(fields: [sessionId], references: [id], onDelete: Cascade)
 

@@ -69,7 +69,14 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     "expo-image",
     "expo-video",
     "expo-sharing",
-    ["expo-notifications", { icon: "./assets/android-icon-monochrome.png", color: "#eb8a00" }],
+    [
+      "expo-notifications",
+      {
+        icon: "./assets/android-icon-monochrome.png",
+        color: "#eb8a00",
+        sounds: ["frites", "chime", "pop", "ding", "marimba", "drop", "trio", "blip"].map((tone) => `./assets/tones/${tone}.wav`),
+      },
+    ],
     [
       "expo-splash-screen",
       {

@@ -7,7 +7,8 @@ export type SendResult = "sent" | "gone";
 
 /** One way of delivering push notifications (Web Push and FCM now; APNs plugs in the same way). */
 export interface PushProvider {
-  send(token: string, payload: PushPayload): Promise<SendResult>;
+  /** `tone` is the message tone the device picked, for providers whose notifications the phone itself rings. */
+  send(token: string, payload: PushPayload, tone?: string | null): Promise<SendResult>;
 }
 
 export class WebPushProvider implements PushProvider {
@@ -37,7 +38,8 @@ export class WebPushProvider implements PushProvider {
 /**
  * Firebase Cloud Messaging for the Android app. Sends data-only messages in the shape expo-notifications
  * presents itself (title, message, JSON body), so a tap hands the app the chat to open. The chat id is
- * the tag, so a newer message replaces that chat's notification instead of piling up.
+ * the tag, so a newer message replaces that chat's notification instead of piling up. Android rings whatever sound
+ * the channel has, and a channel's sound can't change, so each tone has its own `messages-<tone>` channel.
  */
 export class FcmProvider implements PushProvider {
   private readonly auth: GoogleAuth;
@@ -48,7 +50,7 @@ export class FcmProvider implements PushProvider {
     this.url = `https://fcm.googleapis.com/v1/projects/${serviceAccount.project_id}/messages:send`;
   }
 
-  async send(token: string, payload: PushPayload): Promise<SendResult> {
+  async send(token: string, payload: PushPayload, tone?: string | null): Promise<SendResult> {
     const res = await fetch(this.url, {
       method: "POST",
       headers: { authorization: `Bearer ${await this.auth.getAccessToken()}`, "content-type": "application/json" },
@@ -60,7 +62,7 @@ export class FcmProvider implements PushProvider {
             title: payload.title,
             message: payload.body,
             body: JSON.stringify({ chatId: payload.chatId, messageId: payload.messageId, url: payload.url }),
-            channelId: "messages",
+            channelId: tone ? `messages-${tone}` : "messages",
             tag: payload.chatId ?? "app",
           },
         },
