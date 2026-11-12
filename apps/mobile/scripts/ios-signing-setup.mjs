@@ -1,9 +1,12 @@
 #!/usr/bin/env node
 /**
- * One-time App Store signing setup through the App Store Connect API, so no device or Xcode login is needed: turns on
- * push for the App ID, creates an Apple Distribution certificate kept in its own keychain, and an App Store profile
- * named "Six Frites App Store" installed where Xcode looks. Run it again to replace the profile, say after adding a
- * capability. Reads and extends signing/apple.env.
+ * One-time App Store signing setup through the App Store Connect API, so no device or Xcode login is needed: registers
+ * the app's and its share extension's App IDs with their capabilities, creates an Apple Distribution certificate kept
+ * in its own keychain, and an App Store profile for each, installed where Xcode looks. Run it again to replace the
+ * profiles, say after adding a capability. Reads and extends signing/apple.env.
+ *
+ * The API can turn App Groups on but can't attach a group to an App ID: that is done once on developer.apple.com, and
+ * the script says so when a profile comes back without the group.
  */
 import { execFileSync } from "node:child_process";
 import { randomBytes } from "node:crypto";
@@ -13,9 +16,16 @@ import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { SignJWT, importPKCS8 } from "jose";
 
-const BUNDLE_ID = "com.sixfrites.app";
-const PROFILE_NAME = "Six Frites App Store";
-const CAPABILITIES = ["PUSH_NOTIFICATIONS", "ASSOCIATED_DOMAINS"];
+const APP_GROUP = "group.com.sixfrites.app";
+const TARGETS = [
+  {
+    id: "com.sixfrites.app",
+    name: "Six Frites",
+    profile: "Six Frites App Store",
+    capabilities: ["PUSH_NOTIFICATIONS", "ASSOCIATED_DOMAINS", "APP_GROUPS"],
+  },
+  { id: "com.sixfrites.app.share-extension", name: "Six Frites Share", profile: "Six Frites Share App Store", capabilities: ["APP_GROUPS"] },
+];
 
 const signing = join(dirname(fileURLToPath(import.meta.url)), "..", "signing");
 const envFile = join(signing, "apple.env");
@@ -48,18 +58,19 @@ async function api(method, path, body) {
   return json?.data;
 }
 
-const bundle = (await api("GET", `/v1/bundleIds?filter[identifier]=${BUNDLE_ID}&limit=200`)).find(
-  (b) => b.attributes.identifier === BUNDLE_ID,
-);
-if (!bundle) throw new Error(`${BUNDLE_ID} isn't registered as an App ID`);
-const have = (await api("GET", `/v1/bundleIds/${bundle.id}/bundleIdCapabilities`)).map((c) => c.attributes.capabilityType);
-for (const capabilityType of CAPABILITIES.filter((c) => !have.includes(c))) {
-  await api("POST", "/v1/bundleIdCapabilities", {
-    type: "bundleIdCapabilities",
-    attributes: { capabilityType },
-    relationships: { bundleId: { data: { type: "bundleIds", id: bundle.id } } },
-  });
-  console.log(`Turned on ${capabilityType} for ${BUNDLE_ID}`);
+for (const target of TARGETS) {
+  target.bundle =
+    (await api("GET", `/v1/bundleIds?filter[identifier]=${target.id}&limit=200`)).find((b) => b.attributes.identifier === target.id) ??
+    (await api("POST", "/v1/bundleIds", { type: "bundleIds", attributes: { identifier: target.id, name: target.name, platform: "IOS" } }));
+  const have = (await api("GET", `/v1/bundleIds/${target.bundle.id}/bundleIdCapabilities`)).map((c) => c.attributes.capabilityType);
+  for (const capabilityType of target.capabilities.filter((c) => !have.includes(c))) {
+    await api("POST", "/v1/bundleIdCapabilities", {
+      type: "bundleIdCapabilities",
+      attributes: { capabilityType },
+      relationships: { bundleId: { data: { type: "bundleIds", id: target.bundle.id } } },
+    });
+    console.log(`Turned on ${capabilityType} for ${target.id}`);
+  }
 }
 
 let certId = env.APPLE_CERTIFICATE_ID;
@@ -105,20 +116,31 @@ if (!certId) {
   }
 }
 
-for (const old of await api("GET", `/v1/profiles?filter[name]=${encodeURIComponent(PROFILE_NAME)}`)) {
-  await api("DELETE", `/v1/profiles/${old.id}`);
+let groupMissing = false;
+for (const target of TARGETS) {
+  for (const old of await api("GET", `/v1/profiles?filter[name]=${encodeURIComponent(target.profile)}`)) {
+    await api("DELETE", `/v1/profiles/${old.id}`);
+  }
+  const profile = await api("POST", "/v1/profiles", {
+    type: "profiles",
+    attributes: { name: target.profile, profileType: "IOS_APP_STORE" },
+    relationships: {
+      bundleId: { data: { type: "bundleIds", id: target.bundle.id } },
+      certificates: { data: [{ type: "certificates", id: certId }] },
+    },
+  });
+  const content = Buffer.from(profile.attributes.profileContent, "base64");
+  for (const dir of ["Library/MobileDevice/Provisioning Profiles", "Library/Developer/Xcode/UserData/Provisioning Profiles"]) {
+    mkdirSync(join(homedir(), dir), { recursive: true });
+    writeFileSync(join(homedir(), dir, `${profile.attributes.uuid}.mobileprovision`), content);
+  }
+  console.log(`Installed profile "${target.profile}" (${profile.attributes.uuid})`);
+  if (!content.includes(APP_GROUP)) groupMissing = true;
 }
-const profile = await api("POST", "/v1/profiles", {
-  type: "profiles",
-  attributes: { name: PROFILE_NAME, profileType: "IOS_APP_STORE" },
-  relationships: {
-    bundleId: { data: { type: "bundleIds", id: bundle.id } },
-    certificates: { data: [{ type: "certificates", id: certId }] },
-  },
-});
-const content = Buffer.from(profile.attributes.profileContent, "base64");
-for (const dir of ["Library/MobileDevice/Provisioning Profiles", "Library/Developer/Xcode/UserData/Provisioning Profiles"]) {
-  mkdirSync(join(homedir(), dir), { recursive: true });
-  writeFileSync(join(homedir(), dir, `${profile.attributes.uuid}.mobileprovision`), content);
+if (groupMissing) {
+  console.log(
+    `\nThe profiles don't carry the App Group yet. On developer.apple.com, under Identifiers, add the App Group ${APP_GROUP},` +
+      ` tick it under App Groups for ${TARGETS.map((t) => t.id).join(" and ")}, then run this again.`,
+  );
+  process.exitCode = 1;
 }
-console.log(`Installed profile "${PROFILE_NAME}" (${profile.attributes.uuid})`);

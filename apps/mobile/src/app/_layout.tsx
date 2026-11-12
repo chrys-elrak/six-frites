@@ -2,6 +2,7 @@ import "@/lib/polyfills";
 import { isLimited } from "@six/shared";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { DarkTheme, DefaultTheme, SplashScreen, Stack, ThemeProvider } from "expo-router";
+import { ShareIntentProvider } from "expo-share-intent";
 import { usePreventScreenCapture } from "expo-screen-capture";
 import { StatusBar } from "expo-status-bar";
 import { WifiOff } from "lucide-react-native";
@@ -70,37 +71,39 @@ export default function RootLayout() {
   };
 
   return (
-    <GestureHandlerRootView style={{ flex: 1, backgroundColor: t.bg }}>
-      <SafeAreaProvider>
-        <KeyboardProvider>
-          <QueryClientProvider client={client}>
-            <ThemeProvider value={navTheme}>
-              <StatusBar style={t.dark ? "light" : "dark"} />
-              {status === "unreachable" ? (
-                <Unreachable />
-              ) : (
-                <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: t.bg } }}>
-                  <Stack.Protected guard={authed && !guest}>
-                    <Stack.Screen name="(app)" />
-                  </Stack.Protected>
-                  <Stack.Protected guard={authed && guest}>
-                    <Stack.Screen name="guest" />
-                  </Stack.Protected>
-                  <Stack.Protected guard={!authed}>
-                    <Stack.Screen name="login" />
-                  </Stack.Protected>
-                  <Stack.Screen name="invite/[code]" />
-                  <Stack.Screen name="add/[code]" />
-                  <Stack.Screen name="g/[code]" />
-                </Stack>
-              )}
-              <TermsGate />
-              <LocaleSync />
-            </ThemeProvider>
-          </QueryClientProvider>
-        </KeyboardProvider>
-      </SafeAreaProvider>
-    </GestureHandlerRootView>
+    <ShareIntentProvider>
+      <GestureHandlerRootView style={{ flex: 1, backgroundColor: t.bg }}>
+        <SafeAreaProvider>
+          <KeyboardProvider>
+            <QueryClientProvider client={client}>
+              <ThemeProvider value={navTheme}>
+                <StatusBar style={t.dark ? "light" : "dark"} />
+                {status === "unreachable" ? (
+                  <Unreachable />
+                ) : (
+                  <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: t.bg } }}>
+                    <Stack.Protected guard={authed && !guest}>
+                      <Stack.Screen name="(app)" />
+                    </Stack.Protected>
+                    <Stack.Protected guard={authed && guest}>
+                      <Stack.Screen name="guest" />
+                    </Stack.Protected>
+                    <Stack.Protected guard={!authed}>
+                      <Stack.Screen name="login" />
+                    </Stack.Protected>
+                    <Stack.Screen name="invite/[code]" />
+                    <Stack.Screen name="add/[code]" />
+                    <Stack.Screen name="g/[code]" />
+                  </Stack>
+                )}
+                <TermsGate />
+                <LocaleSync />
+              </ThemeProvider>
+            </QueryClientProvider>
+          </KeyboardProvider>
+        </SafeAreaProvider>
+      </GestureHandlerRootView>
+    </ShareIntentProvider>
   );
 }
 

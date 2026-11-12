@@ -1,7 +1,7 @@
 #!/bin/sh
 # Archives the iOS app against the production server and uploads it to App Store Connect, from where it goes to
-# TestFlight and review. It signs with the Apple Distribution certificate and "Six Frites App Store" profile that
-# scripts/ios-signing-setup.mjs made, and uploads with the App Store Connect API key: signing/apple.env sets
+# TestFlight and review. It signs with the Apple Distribution certificate and the App Store profiles (the app's and
+# its share extension's) that scripts/ios-signing-setup.mjs made, and uploads with the App Store Connect API key: signing/apple.env sets
 # APPLE_KEY_ID, APPLE_ISSUER_ID and the keychain's password, and the key itself is signing/AuthKey_<APPLE_KEY_ID>.p8.
 set -e
 cd "$(dirname "$0")/.."
@@ -23,12 +23,15 @@ python3 - ios/SixFrites.xcodeproj/project.pbxproj <<'PY'
 import re, sys
 path = sys.argv[1]
 s = open(path).read()
-manual = 'CODE_SIGN_STYLE = Manual;\n\t\t\t\tCODE_SIGN_IDENTITY = "Apple Distribution";\n\t\t\t\tPROVISIONING_PROFILE_SPECIFIER = "Six Frites App Store";\n\t\t\t\t'
+profiles = {"com.sixfrites.app": "Six Frites App Store", "com.sixfrites.app.share-extension": "Six Frites Share App Store"}
 def sign(m):
     block = m.group(0)
-    if "PRODUCT_BUNDLE_IDENTIFIER = com.sixfrites.app;" not in block or "PROVISIONING_PROFILE_SPECIFIER" in block:
+    found = re.search(r'PRODUCT_BUNDLE_IDENTIFIER = "?([\w.-]+)"?;', block)
+    if not found or found.group(1) not in profiles:
         return block
-    return block.replace("PRODUCT_BUNDLE_IDENTIFIER = com.sixfrites.app;", manual + "PRODUCT_BUNDLE_IDENTIFIER = com.sixfrites.app;")
+    block = re.sub(r"\s*(CODE_SIGN_STYLE|CODE_SIGN_IDENTITY|PROVISIONING_PROFILE_SPECIFIER|DEVELOPMENT_TEAM) = [^;]*;", "", block)
+    manual = f'CODE_SIGN_STYLE = Manual;\n\t\t\t\tCODE_SIGN_IDENTITY = "Apple Distribution";\n\t\t\t\tPROVISIONING_PROFILE_SPECIFIER = "{profiles[found.group(1)]}";\n\t\t\t\t'
+    return block.replace(found.group(0), manual + found.group(0))
 s = re.sub(r"buildSettings = \{[^{}]*\};\s*name = Release;", sign, s)
 open(path, "w").write(s)
 PY

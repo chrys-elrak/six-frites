@@ -16,6 +16,8 @@
   <dict>
     <key>com.sixfrites.app</key>
     <string>Six Frites App Store</string>
+    <key>com.sixfrites.app.share-extension</key>
+    <string>Six Frites Share App Store</string>
   </dict>
   <key>manageAppVersionAndBuildNumber</key>
   <true/>

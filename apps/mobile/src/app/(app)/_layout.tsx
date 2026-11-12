@@ -6,6 +6,7 @@ import { CallScreen } from "@/components/call-screen";
 import { MiniPlayer, useMiniPlayer } from "@/components/mini-player";
 import { BackupPinPrompt } from "@/components/encryption-settings";
 import { StoryPostBar } from "@/components/story-post-bar";
+import { SharedLink } from "@/components/shared-link";
 import { StorageFullPrompt } from "@/components/storage-full";
 import { Toasts } from "@/components/toasts";
 import { LiveInvites, UnfinishedGame } from "@/components/live";
@@ -38,6 +39,7 @@ export default function AppLayout() {
         {!locked && <UnfinishedGame />}
         {!locked && <BackupPinPrompt />}
         {!locked && <WhatsNewPrompt />}
+        {!locked && <SharedLink />}
         <CallScreen />
         {locked && <LockScreen />}
       </View>

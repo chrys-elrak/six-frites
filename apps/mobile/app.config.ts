@@ -87,6 +87,18 @@ export default ({ config }: ConfigContext): ExpoConfig =>
     "expo-router",
     "expo-secure-store",
     "expo-apple-authentication",
+    [
+      "expo-share-intent",
+      {
+        iosActivationRules: {
+          NSExtensionActivationSupportsWebURLWithMaxCount: 1,
+          NSExtensionActivationSupportsWebPageWithMaxCount: 1,
+          NSExtensionActivationSupportsText: true,
+        },
+        androidIntentFilters: ["text/*"],
+      },
+    ],
+    "./plugins/share-sheet-name",
     ["expo-local-authentication", { faceIDPermission: "Allow $(PRODUCT_NAME) to unlock with Face ID." }],
     ["expo-location", { locationWhenInUsePermission: "Allow $(PRODUCT_NAME) to send your location when you choose to." }],
     "expo-image",
