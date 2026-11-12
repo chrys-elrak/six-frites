@@ -90,7 +90,7 @@ async function toChatDTO(db: Tx, chat: ChatWithRelations, viewerId: string): Pro
         : helped
           ? supportProfile(m.userId)
           : m.userId === chat.supportUserId
-            ? supportCase(shown(m.user), viewerId)
+            ? supportCase(m.user)
             : shown(m.user),
   }));
   const others = members.filter((m) => m.userId !== viewerId);

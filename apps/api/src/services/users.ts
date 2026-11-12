@@ -55,11 +55,8 @@ export function pairAlias(viewerId: string, userId: string) {
   return `#${createHash("md5").update(`${viewerId}:${userId}`).digest("hex").slice(0, 6).toUpperCase()}`;
 }
 
-/** Whoever asked support for help, as the desk sees them: their alias with Potato in front. */
-export function supportCase<P extends { id: string; displayName: string }>(p: P, viewerId: string): P {
-  const alias = pairAlias(viewerId, p.id);
-  return p.displayName === alias ? { ...p, displayName: `Potato ${alias}` } : p;
-}
+/** Whoever asked support for help, as the desk sees them: their real name and photo. */
+export const supportCase = (u: Parameters<typeof toPublicUser>[0]) => toPublicUser(u, u.id, true);
 
 /** Someone as `viewerId` sees them: their alias for that viewer and no photo, unless they share their profile. */
 export function toPublicUser(

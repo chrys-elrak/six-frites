@@ -68,7 +68,7 @@ describe("support chat", () => {
     await send(guest, chat.id, "Hello?");
     const desk = await get(boss, `/v1/chats/${chat.id}`);
     expect(desk.supportDesk).toBe(true);
-    expect(desk.title).toBe(`Potato ${pairAlias(boss.user.id, guest.user.id)}`);
+    expect(desk.title).toBe((await get(guest, "/v1/me")).displayName);
 
     const { code } = (await call(boss, "POST", "/v1/invites", {})).json();
     const friend: Auth = (await loginAs(ctx.app, uniqueSub("friend"), "web", { inviteCode: code })).json();
@@ -82,7 +82,7 @@ describe("support chat", () => {
       .map((c) => [c.id === help.id, c.title]);
     expect(Object.fromEntries(seen)).toEqual({
       false: pairAlias(boss.user.id, friend.user.id),
-      true: `Potato ${pairAlias(boss.user.id, friend.user.id)}`,
+      true: (await get(friend, "/v1/me")).displayName,
     });
 
     const friendsInvite = (await call(friend, "POST", "/v1/invites", {})).json().code;
