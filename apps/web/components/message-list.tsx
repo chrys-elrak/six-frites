@@ -994,7 +994,7 @@ function Bubble({
               {...press}
               onClick={onTap}
               onMouseDown={(e) => reactable && e.detail > 1 && e.preventDefault()}
-              className={`${fx || (visual && !hasText) ? "relative " : ""}${radius} ${tone} ${dashes} ${jumbo || note || sticker || loose ? "" : visual ? "p-1" : "px-3 py-1.5"} max-w-full transition-shadow [-webkit-touch-callout:none] pointer-coarse:select-none ${
+              className={`${fx || ((visual || loose) && !hasText) ? "relative " : ""}${radius} ${tone} ${dashes} ${jumbo || note || sticker || loose ? "" : visual ? "p-1" : "px-3 py-1.5"} max-w-full transition-shadow [-webkit-touch-callout:none] pointer-coarse:select-none ${
                 row.delivery === "failed" ? "opacity-60" : ""
               } ${highlighted ? "ring-4 ring-sky-400/60" : ""}`}
             >
@@ -1083,15 +1083,16 @@ function Bubble({
                   </span>
                 </div>
               ) : sticker ? (
-                <div className="flex flex-col items-end">
+                <div className="relative">
                   <button
                     type="button"
+                    className="block"
                     onClick={() => onOpenPack(sticker.packId)}
                     aria-label={tr.messages.stickerPack(sticker.emoji)}
                   >
                     <StickerView sticker={sticker} size={160} />
                   </button>
-                  <span className="flex items-center gap-1 rounded-full bg-stone-900/40 px-2 py-0.5 text-[11px] leading-none text-white">
+                  <span className="pointer-events-none absolute right-1 bottom-1 flex items-center gap-1 rounded-full bg-stone-900/45 px-2 py-0.5 text-[11px] leading-none text-white">
                     {clockTime(row.createdAt)}
                     {row.delivery && <Ticks delivery={row.delivery} pill />}
                   </span>
@@ -1109,8 +1110,8 @@ function Bubble({
                     {row.delivery && <Ticks delivery={row.delivery} pill />}
                   </span>
                 </div>
-              ) : visual && !hasText ? (
-                <span className="pointer-events-none absolute right-2.5 bottom-2.5 flex items-center gap-1 rounded-full bg-stone-900/45 px-2 py-0.5 text-[11px] leading-none text-white">
+              ) : (visual || loose) && !hasText ? (
+                <span className={`pointer-events-none absolute ${loose ? "right-1 bottom-1" : "right-2.5 bottom-2.5"} flex items-center gap-1 rounded-full bg-stone-900/45 px-2 py-0.5 text-[11px] leading-none text-white`}>
                   {row.edited && <span>{tr.messages.edited}</span>}
                   {clockTime(row.createdAt)}
                   {row.delivery && <Ticks delivery={row.delivery} pill />}

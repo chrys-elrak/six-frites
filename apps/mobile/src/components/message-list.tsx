@@ -1184,6 +1184,10 @@ function Bubble({
                 <Meta row={row} color="#fff" t={t} />
               </View>
             </View>
+          ) : (sticker || loose) && !hasText ? (
+            <View pointerEvents="none" style={[styles.jumboMeta, styles.stickerMeta]}>
+              <Meta row={row} color="#fff" t={t} />
+            </View>
           ) : note ? (
             <View style={[styles.jumboMeta, { alignSelf: mine ? "flex-end" : "flex-start", marginTop: 4 }]}>
               <Meta row={row} color="#fff" t={t} />
@@ -1999,6 +2003,7 @@ const styles = StyleSheet.create({
     paddingVertical: 2,
     backgroundColor: "rgba(28,25,23,0.4)",
   },
+  stickerMeta: { position: "absolute", right: 4, bottom: 4 },
   emptyChip: { fontSize: 14, paddingHorizontal: 14, paddingVertical: 6, borderRadius: 14 },
   onWallpaper: { backgroundColor: "rgba(0,0,0,0.28)", color: "#fff", overflow: "hidden" },
   service: { alignItems: "center", paddingHorizontal: 24, paddingVertical: 8 },
