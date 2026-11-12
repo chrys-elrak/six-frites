@@ -24323,12 +24323,20 @@ export interface paths {
                                         /** @description The file is encrypted; its key, name, type and preview are in the message content */
                                         encrypted: boolean;
                                     } | null;
+                                    /** @description Older apps: the first of `gifs` */
                                     gif: {
                                         /** Format: uri */
                                         url: string;
                                         width: number | null;
                                         height: number | null;
                                     } | null;
+                                    /** @description GIFs on top of the story, as MP4s to play muted on a loop */
+                                    gifs: {
+                                        /** Format: uri */
+                                        url: string;
+                                        width: number | null;
+                                        height: number | null;
+                                    }[];
                                     location: {
                                         lat: number;
                                         lng: number;
@@ -24337,7 +24345,21 @@ export interface paths {
                                         /** @description What the place is called, as the poster typed it */
                                         name?: string;
                                     } | null;
-                                    /** @description An anonymous message the poster received and shared, as a card */
+                                    /** @description A link sticker to open */
+                                    link: {
+                                        /**
+                                         * Format: uri
+                                         * @description Where it goes, http or https
+                                         */
+                                        url: string;
+                                        /** @description What the sticker says instead of the address */
+                                        label?: string;
+                                    } | null;
+                                    /** @description The poster's anonymous link code, as it is now, when the story invites anonymous messages; for the URL, see askUrl */
+                                    askCode: string | null;
+                                    /** @description What the anonymous link sticker says; null for the app's line */
+                                    askText: string | null;
+                                    /** @description Older apps: the first of `asks` */
                                     ask: {
                                         /** @description Empty when only a photo or a GIF was sent */
                                         text: string;
@@ -24353,6 +24375,22 @@ export interface paths {
                                             height: number | null;
                                         } | null;
                                     } | null;
+                                    /** @description Anonymous messages the poster received and shared, each as a card */
+                                    asks: {
+                                        /** @description Empty when only a photo or a GIF was sent */
+                                        text: string;
+                                        /** @description The prompt it answered; null for the app's own */
+                                        prompt: string | null;
+                                        /** Format: uri */
+                                        photoUrl: string | null;
+                                        /** @description As an MP4 to play muted on a loop */
+                                        gif: {
+                                            /** Format: uri */
+                                            url: string;
+                                            width: number | null;
+                                            height: number | null;
+                                        } | null;
+                                    }[];
                                     showDate: boolean;
                                     showTime: boolean;
                                     /** @description Where the poster dragged each sticker and how big they made it: its centre, as fractions of the story's width and height from the top left. Ones left out sit in the row at the bottom */
@@ -24362,30 +24400,150 @@ export interface paths {
                                             y: number;
                                             /** @description How much bigger or smaller than usual */
                                             scale?: number;
+                                            /** @description How far it is turned, in degrees clockwise */
+                                            rotate?: number;
+                                            /** @description Stacking order among the stickers and texts: higher sits on top */
+                                            z?: number;
+                                        };
+                                        ask2?: {
+                                            x: number;
+                                            y: number;
+                                            /** @description How much bigger or smaller than usual */
+                                            scale?: number;
+                                            /** @description How far it is turned, in degrees clockwise */
+                                            rotate?: number;
+                                            /** @description Stacking order among the stickers and texts: higher sits on top */
+                                            z?: number;
+                                        };
+                                        ask3?: {
+                                            x: number;
+                                            y: number;
+                                            /** @description How much bigger or smaller than usual */
+                                            scale?: number;
+                                            /** @description How far it is turned, in degrees clockwise */
+                                            rotate?: number;
+                                            /** @description Stacking order among the stickers and texts: higher sits on top */
+                                            z?: number;
+                                        };
+                                        ask4?: {
+                                            x: number;
+                                            y: number;
+                                            /** @description How much bigger or smaller than usual */
+                                            scale?: number;
+                                            /** @description How far it is turned, in degrees clockwise */
+                                            rotate?: number;
+                                            /** @description Stacking order among the stickers and texts: higher sits on top */
+                                            z?: number;
+                                        };
+                                        ask5?: {
+                                            x: number;
+                                            y: number;
+                                            /** @description How much bigger or smaller than usual */
+                                            scale?: number;
+                                            /** @description How far it is turned, in degrees clockwise */
+                                            rotate?: number;
+                                            /** @description Stacking order among the stickers and texts: higher sits on top */
+                                            z?: number;
                                         };
                                         gif?: {
                                             x: number;
                                             y: number;
                                             /** @description How much bigger or smaller than usual */
                                             scale?: number;
+                                            /** @description How far it is turned, in degrees clockwise */
+                                            rotate?: number;
+                                            /** @description Stacking order among the stickers and texts: higher sits on top */
+                                            z?: number;
+                                        };
+                                        gif2?: {
+                                            x: number;
+                                            y: number;
+                                            /** @description How much bigger or smaller than usual */
+                                            scale?: number;
+                                            /** @description How far it is turned, in degrees clockwise */
+                                            rotate?: number;
+                                            /** @description Stacking order among the stickers and texts: higher sits on top */
+                                            z?: number;
+                                        };
+                                        gif3?: {
+                                            x: number;
+                                            y: number;
+                                            /** @description How much bigger or smaller than usual */
+                                            scale?: number;
+                                            /** @description How far it is turned, in degrees clockwise */
+                                            rotate?: number;
+                                            /** @description Stacking order among the stickers and texts: higher sits on top */
+                                            z?: number;
+                                        };
+                                        gif4?: {
+                                            x: number;
+                                            y: number;
+                                            /** @description How much bigger or smaller than usual */
+                                            scale?: number;
+                                            /** @description How far it is turned, in degrees clockwise */
+                                            rotate?: number;
+                                            /** @description Stacking order among the stickers and texts: higher sits on top */
+                                            z?: number;
+                                        };
+                                        gif5?: {
+                                            x: number;
+                                            y: number;
+                                            /** @description How much bigger or smaller than usual */
+                                            scale?: number;
+                                            /** @description How far it is turned, in degrees clockwise */
+                                            rotate?: number;
+                                            /** @description Stacking order among the stickers and texts: higher sits on top */
+                                            z?: number;
                                         };
                                         location?: {
                                             x: number;
                                             y: number;
                                             /** @description How much bigger or smaller than usual */
                                             scale?: number;
+                                            /** @description How far it is turned, in degrees clockwise */
+                                            rotate?: number;
+                                            /** @description Stacking order among the stickers and texts: higher sits on top */
+                                            z?: number;
+                                        };
+                                        link?: {
+                                            x: number;
+                                            y: number;
+                                            /** @description How much bigger or smaller than usual */
+                                            scale?: number;
+                                            /** @description How far it is turned, in degrees clockwise */
+                                            rotate?: number;
+                                            /** @description Stacking order among the stickers and texts: higher sits on top */
+                                            z?: number;
+                                        };
+                                        asklink?: {
+                                            x: number;
+                                            y: number;
+                                            /** @description How much bigger or smaller than usual */
+                                            scale?: number;
+                                            /** @description How far it is turned, in degrees clockwise */
+                                            rotate?: number;
+                                            /** @description Stacking order among the stickers and texts: higher sits on top */
+                                            z?: number;
                                         };
                                         date?: {
                                             x: number;
                                             y: number;
                                             /** @description How much bigger or smaller than usual */
                                             scale?: number;
+                                            /** @description How far it is turned, in degrees clockwise */
+                                            rotate?: number;
+                                            /** @description Stacking order among the stickers and texts: higher sits on top */
+                                            z?: number;
                                         };
                                         time?: {
                                             x: number;
                                             y: number;
                                             /** @description How much bigger or smaller than usual */
                                             scale?: number;
+                                            /** @description How far it is turned, in degrees clockwise */
+                                            rotate?: number;
+                                            /** @description Stacking order among the stickers and texts: higher sits on top */
+                                            z?: number;
                                         };
                                     };
                                     /** @description Lines, shapes, arrows and text the poster drew on top, placed as fractions of the story */
@@ -24415,6 +24573,10 @@ export interface paths {
                                              * @enum {string}
                                              */
                                             look?: "plain" | "box" | "outline";
+                                            /** @description How far it is turned, in degrees clockwise */
+                                            rotate?: number;
+                                            /** @description Stacking order among the stickers and texts: higher sits on top */
+                                            z?: number;
                                         }[];
                                     };
                                     /** Format: date-time */
@@ -24453,8 +24615,10 @@ export interface paths {
                         background?: string;
                         /** @description A completed `image` or `video` upload; videos can be at most 30 seconds */
                         uploadId?: string;
-                        /** @description A GIF from GET /v1/gifs shown on top of the story */
+                        /** @description Older apps: one GIF to show; use gifIds */
                         gifId?: string;
+                        /** @description GIFs from GET /v1/gifs shown on top of the story */
+                        gifIds?: string[];
                         location?: {
                             lat: number;
                             lng: number;
@@ -24463,8 +24627,23 @@ export interface paths {
                             /** @description What the place is called, as the poster typed it */
                             name?: string;
                         };
-                        /** @description An anonymous message you received, shown on the story as a card: its text, photo or GIF */
+                        link?: {
+                            /**
+                             * Format: uri
+                             * @description Where it goes, http or https
+                             */
+                            url: string;
+                            /** @description What the sticker says instead of the address */
+                            label?: string;
+                        };
+                        /** @description Invite anonymous messages: a sticker that opens your anonymous link */
+                        askLink?: boolean;
+                        /** @description With askLink: what the sticker says, instead of the app's line */
+                        askText?: string;
+                        /** @description Older apps: one anonymous message to show; use askIds */
                         askId?: string;
+                        /** @description Anonymous messages you received, each shown on the story as a card: its text, photo or GIF */
+                        askIds?: string[];
                         /** @description The text is a chat message shared as it was, shown as a chat bubble */
                         fromChat?: boolean;
                         /** @description With fromChat: the bubble's colour and its text's, as in the chat, like #e11d48,#ffffff */
@@ -24482,30 +24661,150 @@ export interface paths {
                                 y: number;
                                 /** @description How much bigger or smaller than usual */
                                 scale?: number;
+                                /** @description How far it is turned, in degrees clockwise */
+                                rotate?: number;
+                                /** @description Stacking order among the stickers and texts: higher sits on top */
+                                z?: number;
+                            };
+                            ask2?: {
+                                x: number;
+                                y: number;
+                                /** @description How much bigger or smaller than usual */
+                                scale?: number;
+                                /** @description How far it is turned, in degrees clockwise */
+                                rotate?: number;
+                                /** @description Stacking order among the stickers and texts: higher sits on top */
+                                z?: number;
+                            };
+                            ask3?: {
+                                x: number;
+                                y: number;
+                                /** @description How much bigger or smaller than usual */
+                                scale?: number;
+                                /** @description How far it is turned, in degrees clockwise */
+                                rotate?: number;
+                                /** @description Stacking order among the stickers and texts: higher sits on top */
+                                z?: number;
+                            };
+                            ask4?: {
+                                x: number;
+                                y: number;
+                                /** @description How much bigger or smaller than usual */
+                                scale?: number;
+                                /** @description How far it is turned, in degrees clockwise */
+                                rotate?: number;
+                                /** @description Stacking order among the stickers and texts: higher sits on top */
+                                z?: number;
+                            };
+                            ask5?: {
+                                x: number;
+                                y: number;
+                                /** @description How much bigger or smaller than usual */
+                                scale?: number;
+                                /** @description How far it is turned, in degrees clockwise */
+                                rotate?: number;
+                                /** @description Stacking order among the stickers and texts: higher sits on top */
+                                z?: number;
                             };
                             gif?: {
                                 x: number;
                                 y: number;
                                 /** @description How much bigger or smaller than usual */
                                 scale?: number;
+                                /** @description How far it is turned, in degrees clockwise */
+                                rotate?: number;
+                                /** @description Stacking order among the stickers and texts: higher sits on top */
+                                z?: number;
+                            };
+                            gif2?: {
+                                x: number;
+                                y: number;
+                                /** @description How much bigger or smaller than usual */
+                                scale?: number;
+                                /** @description How far it is turned, in degrees clockwise */
+                                rotate?: number;
+                                /** @description Stacking order among the stickers and texts: higher sits on top */
+                                z?: number;
+                            };
+                            gif3?: {
+                                x: number;
+                                y: number;
+                                /** @description How much bigger or smaller than usual */
+                                scale?: number;
+                                /** @description How far it is turned, in degrees clockwise */
+                                rotate?: number;
+                                /** @description Stacking order among the stickers and texts: higher sits on top */
+                                z?: number;
+                            };
+                            gif4?: {
+                                x: number;
+                                y: number;
+                                /** @description How much bigger or smaller than usual */
+                                scale?: number;
+                                /** @description How far it is turned, in degrees clockwise */
+                                rotate?: number;
+                                /** @description Stacking order among the stickers and texts: higher sits on top */
+                                z?: number;
+                            };
+                            gif5?: {
+                                x: number;
+                                y: number;
+                                /** @description How much bigger or smaller than usual */
+                                scale?: number;
+                                /** @description How far it is turned, in degrees clockwise */
+                                rotate?: number;
+                                /** @description Stacking order among the stickers and texts: higher sits on top */
+                                z?: number;
                             };
                             location?: {
                                 x: number;
                                 y: number;
                                 /** @description How much bigger or smaller than usual */
                                 scale?: number;
+                                /** @description How far it is turned, in degrees clockwise */
+                                rotate?: number;
+                                /** @description Stacking order among the stickers and texts: higher sits on top */
+                                z?: number;
+                            };
+                            link?: {
+                                x: number;
+                                y: number;
+                                /** @description How much bigger or smaller than usual */
+                                scale?: number;
+                                /** @description How far it is turned, in degrees clockwise */
+                                rotate?: number;
+                                /** @description Stacking order among the stickers and texts: higher sits on top */
+                                z?: number;
+                            };
+                            asklink?: {
+                                x: number;
+                                y: number;
+                                /** @description How much bigger or smaller than usual */
+                                scale?: number;
+                                /** @description How far it is turned, in degrees clockwise */
+                                rotate?: number;
+                                /** @description Stacking order among the stickers and texts: higher sits on top */
+                                z?: number;
                             };
                             date?: {
                                 x: number;
                                 y: number;
                                 /** @description How much bigger or smaller than usual */
                                 scale?: number;
+                                /** @description How far it is turned, in degrees clockwise */
+                                rotate?: number;
+                                /** @description Stacking order among the stickers and texts: higher sits on top */
+                                z?: number;
                             };
                             time?: {
                                 x: number;
                                 y: number;
                                 /** @description How much bigger or smaller than usual */
                                 scale?: number;
+                                /** @description How far it is turned, in degrees clockwise */
+                                rotate?: number;
+                                /** @description Stacking order among the stickers and texts: higher sits on top */
+                                z?: number;
                             };
                         };
                         /** @description Lines, shapes, arrows and text the poster drew on top, placed as fractions of the story */
@@ -24535,6 +24834,10 @@ export interface paths {
                                  * @enum {string}
                                  */
                                 look?: "plain" | "box" | "outline";
+                                /** @description How far it is turned, in degrees clockwise */
+                                rotate?: number;
+                                /** @description Stacking order among the stickers and texts: higher sits on top */
+                                z?: number;
                             }[];
                         };
                         /**
@@ -24605,12 +24908,20 @@ export interface paths {
                                 /** @description The file is encrypted; its key, name, type and preview are in the message content */
                                 encrypted: boolean;
                             } | null;
+                            /** @description Older apps: the first of `gifs` */
                             gif: {
                                 /** Format: uri */
                                 url: string;
                                 width: number | null;
                                 height: number | null;
                             } | null;
+                            /** @description GIFs on top of the story, as MP4s to play muted on a loop */
+                            gifs: {
+                                /** Format: uri */
+                                url: string;
+                                width: number | null;
+                                height: number | null;
+                            }[];
                             location: {
                                 lat: number;
                                 lng: number;
@@ -24619,7 +24930,21 @@ export interface paths {
                                 /** @description What the place is called, as the poster typed it */
                                 name?: string;
                             } | null;
-                            /** @description An anonymous message the poster received and shared, as a card */
+                            /** @description A link sticker to open */
+                            link: {
+                                /**
+                                 * Format: uri
+                                 * @description Where it goes, http or https
+                                 */
+                                url: string;
+                                /** @description What the sticker says instead of the address */
+                                label?: string;
+                            } | null;
+                            /** @description The poster's anonymous link code, as it is now, when the story invites anonymous messages; for the URL, see askUrl */
+                            askCode: string | null;
+                            /** @description What the anonymous link sticker says; null for the app's line */
+                            askText: string | null;
+                            /** @description Older apps: the first of `asks` */
                             ask: {
                                 /** @description Empty when only a photo or a GIF was sent */
                                 text: string;
@@ -24635,6 +24960,22 @@ export interface paths {
                                     height: number | null;
                                 } | null;
                             } | null;
+                            /** @description Anonymous messages the poster received and shared, each as a card */
+                            asks: {
+                                /** @description Empty when only a photo or a GIF was sent */
+                                text: string;
+                                /** @description The prompt it answered; null for the app's own */
+                                prompt: string | null;
+                                /** Format: uri */
+                                photoUrl: string | null;
+                                /** @description As an MP4 to play muted on a loop */
+                                gif: {
+                                    /** Format: uri */
+                                    url: string;
+                                    width: number | null;
+                                    height: number | null;
+                                } | null;
+                            }[];
                             showDate: boolean;
                             showTime: boolean;
                             /** @description Where the poster dragged each sticker and how big they made it: its centre, as fractions of the story's width and height from the top left. Ones left out sit in the row at the bottom */
@@ -24644,30 +24985,150 @@ export interface paths {
                                     y: number;
                                     /** @description How much bigger or smaller than usual */
                                     scale?: number;
+                                    /** @description How far it is turned, in degrees clockwise */
+                                    rotate?: number;
+                                    /** @description Stacking order among the stickers and texts: higher sits on top */
+                                    z?: number;
+                                };
+                                ask2?: {
+                                    x: number;
+                                    y: number;
+                                    /** @description How much bigger or smaller than usual */
+                                    scale?: number;
+                                    /** @description How far it is turned, in degrees clockwise */
+                                    rotate?: number;
+                                    /** @description Stacking order among the stickers and texts: higher sits on top */
+                                    z?: number;
+                                };
+                                ask3?: {
+                                    x: number;
+                                    y: number;
+                                    /** @description How much bigger or smaller than usual */
+                                    scale?: number;
+                                    /** @description How far it is turned, in degrees clockwise */
+                                    rotate?: number;
+                                    /** @description Stacking order among the stickers and texts: higher sits on top */
+                                    z?: number;
+                                };
+                                ask4?: {
+                                    x: number;
+                                    y: number;
+                                    /** @description How much bigger or smaller than usual */
+                                    scale?: number;
+                                    /** @description How far it is turned, in degrees clockwise */
+                                    rotate?: number;
+                                    /** @description Stacking order among the stickers and texts: higher sits on top */
+                                    z?: number;
+                                };
+                                ask5?: {
+                                    x: number;
+                                    y: number;
+                                    /** @description How much bigger or smaller than usual */
+                                    scale?: number;
+                                    /** @description How far it is turned, in degrees clockwise */
+                                    rotate?: number;
+                                    /** @description Stacking order among the stickers and texts: higher sits on top */
+                                    z?: number;
                                 };
                                 gif?: {
                                     x: number;
                                     y: number;
                                     /** @description How much bigger or smaller than usual */
                                     scale?: number;
+                                    /** @description How far it is turned, in degrees clockwise */
+                                    rotate?: number;
+                                    /** @description Stacking order among the stickers and texts: higher sits on top */
+                                    z?: number;
+                                };
+                                gif2?: {
+                                    x: number;
+                                    y: number;
+                                    /** @description How much bigger or smaller than usual */
+                                    scale?: number;
+                                    /** @description How far it is turned, in degrees clockwise */
+                                    rotate?: number;
+                                    /** @description Stacking order among the stickers and texts: higher sits on top */
+                                    z?: number;
+                                };
+                                gif3?: {
+                                    x: number;
+                                    y: number;
+                                    /** @description How much bigger or smaller than usual */
+                                    scale?: number;
+                                    /** @description How far it is turned, in degrees clockwise */
+                                    rotate?: number;
+                                    /** @description Stacking order among the stickers and texts: higher sits on top */
+                                    z?: number;
+                                };
+                                gif4?: {
+                                    x: number;
+                                    y: number;
+                                    /** @description How much bigger or smaller than usual */
+                                    scale?: number;
+                                    /** @description How far it is turned, in degrees clockwise */
+                                    rotate?: number;
+                                    /** @description Stacking order among the stickers and texts: higher sits on top */
+                                    z?: number;
+                                };
+                                gif5?: {
+                                    x: number;
+                                    y: number;
+                                    /** @description How much bigger or smaller than usual */
+                                    scale?: number;
+                                    /** @description How far it is turned, in degrees clockwise */
+                                    rotate?: number;
+                                    /** @description Stacking order among the stickers and texts: higher sits on top */
+                                    z?: number;
                                 };
                                 location?: {
                                     x: number;
                                     y: number;
                                     /** @description How much bigger or smaller than usual */
                                     scale?: number;
+                                    /** @description How far it is turned, in degrees clockwise */
+                                    rotate?: number;
+                                    /** @description Stacking order among the stickers and texts: higher sits on top */
+                                    z?: number;
+                                };
+                                link?: {
+                                    x: number;
+                                    y: number;
+                                    /** @description How much bigger or smaller than usual */
+                                    scale?: number;
+                                    /** @description How far it is turned, in degrees clockwise */
+                                    rotate?: number;
+                                    /** @description Stacking order among the stickers and texts: higher sits on top */
+                                    z?: number;
+                                };
+                                asklink?: {
+                                    x: number;
+                                    y: number;
+                                    /** @description How much bigger or smaller than usual */
+                                    scale?: number;
+                                    /** @description How far it is turned, in degrees clockwise */
+                                    rotate?: number;
+                                    /** @description Stacking order among the stickers and texts: higher sits on top */
+                                    z?: number;
                                 };
                                 date?: {
                                     x: number;
                                     y: number;
                                     /** @description How much bigger or smaller than usual */
                                     scale?: number;
+                                    /** @description How far it is turned, in degrees clockwise */
+                                    rotate?: number;
+                                    /** @description Stacking order among the stickers and texts: higher sits on top */
+                                    z?: number;
                                 };
                                 time?: {
                                     x: number;
                                     y: number;
                                     /** @description How much bigger or smaller than usual */
                                     scale?: number;
+                                    /** @description How far it is turned, in degrees clockwise */
+                                    rotate?: number;
+                                    /** @description Stacking order among the stickers and texts: higher sits on top */
+                                    z?: number;
                                 };
                             };
                             /** @description Lines, shapes, arrows and text the poster drew on top, placed as fractions of the story */
@@ -24697,6 +25158,10 @@ export interface paths {
                                      * @enum {string}
                                      */
                                     look?: "plain" | "box" | "outline";
+                                    /** @description How far it is turned, in degrees clockwise */
+                                    rotate?: number;
+                                    /** @description Stacking order among the stickers and texts: higher sits on top */
+                                    z?: number;
                                 }[];
                             };
                             /** Format: date-time */

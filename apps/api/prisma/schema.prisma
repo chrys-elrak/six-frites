@@ -738,18 +738,26 @@ model Story {
   text       String?
   background String?
   uploadId   String?   @unique
-  /// A GIF on top: the MP4 in shared storage that chat GIFs use too, so it is never deleted with the story.
+  /// A GIF on top: the MP4 in shared storage that chat GIFs use too, so it is never deleted with the story. Older stories only.
   gifKey     String?
   gifWidth   Int?
   gifHeight  Int?
+  /// The GIFs on top, in that same shared storage: a list of { key, width, height }.
+  gifs       Json?
   location   Json?
+  /// A link sticker: { url, label }.
+  link       Json?
+  /// A sticker inviting anonymous messages, opening the poster's anonymous link as it is when someone looks.
+  askLink    Boolean   @default(false)
+  /// What that sticker says; null for the app's line.
+  askText    String?
   showDate   Boolean   @default(false)
   showTime   Boolean   @default(false)
-  /// Where the poster dragged each sticker: { ask, gif, location, date, time } of { x, y, scale }.
+  /// Where the poster dragged each sticker: { ask…ask5, gif…gif5, location, link, asklink, date, time } of { x, y, scale, rotate, z }.
   positions  Json?
   /// What the poster drew on top: { strokes, texts }, placed as fractions of the story.
   drawing    Json?
-  /// An anonymous message the poster shared on it, as a card: { text, prompt }.
+  /// The anonymous messages the poster shared on it, each as a card: a list of { text, prompt, photoKey, gif }; older stories keep one, not in a list.
   ask        Json?
   /// The text is a chat message shared as it was, shown as a bubble.
   fromChat   Boolean   @default(false)

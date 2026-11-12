@@ -11,8 +11,10 @@ import {
   type PublicUser,
   STORY_LIMITS,
   type StoryDrawing,
+  type StoryAsk,
   type StoryDTO,
   type StoryGroupDTO,
+  type StoryLink,
   type StoryLocation,
   type StoryPositions,
   type StoryReaction,
@@ -39,6 +41,7 @@ const MAX_ACTIVE = 50;
 const storyInclude = (viewerId: string) =>
   ({
     upload: true,
+    user: { select: { askCode: true } },
     views: { where: { userId: viewerId }, select: { userId: true } },
     _count: { select: { views: true } },
   }) satisfies Prisma.StoryInclude;
@@ -85,9 +88,12 @@ function toStoryDTO(s: StoryRow, viewerId: string, senders: Senders = new Map())
     quote: quoteFor(s, viewerId, senders),
     background: s.background,
     media: s.upload ? toAttachmentDTO(s.upload) : null,
-    gif: s.gifKey ? { url: presignGet(s.gifKey), width: s.gifWidth, height: s.gifHeight } : null,
-    ask: s.ask ? toAskDTO(s.ask as unknown as StoredAsk) : null,
+    ...withGifs(s),
+    ...withAsks(s.ask),
     location: s.location as StoryLocation | null,
+    link: s.link as StoryLink | null,
+    askCode: s.askLink ? s.user.askCode : null,
+    askText: s.askLink ? s.askText : null,
     showDate: s.showDate,
     showTime: s.showTime,
     positions: (s.positions as StoryPositions | null) ?? {},
@@ -142,7 +148,22 @@ async function askCard(userId: string, askId: string): Promise<StoredAsk> {
   return { text: m.text, prompt: m.prompt, photoKey: m.photoKey, gif };
 }
 
-function toAskDTO({ text, prompt, photoKey, gif }: StoredAsk): NonNullable<StoryDTO["ask"]> {
+type StoredGif = { key: string; width: number | null; height: number | null };
+
+/** A story's GIFs; before there could be several, it kept just one, in its own columns. */
+function withGifs(s: StoryRow): Pick<StoryDTO, "gif" | "gifs"> {
+  const stored = (s.gifs as StoredGif[] | null) ?? (s.gifKey ? [{ key: s.gifKey, width: s.gifWidth, height: s.gifHeight }] : []);
+  const gifs = stored.map((g) => ({ url: presignGet(g.key), width: g.width, height: g.height }));
+  return { gif: gifs[0] ?? null, gifs };
+}
+
+/** A story's anonymous messages; before there could be several, it kept just one, not in a list. */
+function withAsks(stored: unknown): Pick<StoryDTO, "ask" | "asks"> {
+  const asks = ((Array.isArray(stored) ? stored : stored ? [stored] : []) as StoredAsk[]).map(toAskDTO);
+  return { ask: asks[0] ?? null, asks };
+}
+
+function toAskDTO({ text, prompt, photoKey, gif }: StoredAsk): StoryAsk {
   return {
     text,
     prompt,
@@ -212,8 +233,12 @@ export async function createStory(userId: string, input: CreateStoryInput): Prom
   const active = await prisma.story.count({ where: { userId, expiresAt: { gt: new Date() } } });
   if (active >= MAX_ACTIVE) throw new AppError("STORY_LIMIT_REACHED", `You can have at most ${MAX_ACTIVE} stories up`);
   if (input.uploadId) await claimUpload(userId, input.uploadId);
-  const gif = input.gifId ? await sharedGif(input.gifId) : null;
-  const ask = input.askId ? await askCard(userId, input.askId) : null;
+  const gifs = (await Promise.all((input.gifIds ?? (input.gifId ? [input.gifId] : [])).map(sharedGif))).map(({ key, width, height }) => ({
+    key,
+    width,
+    height,
+  }));
+  const asks = await Promise.all((input.askIds ?? (input.askId ? [input.askId] : [])).map((id) => askCard(userId, id)));
   const quote = input.fromChat && input.messageId && input.text && !input.uploadId ? await quoteOf(userId, input.messageId) : null;
 
   const story = await prisma.story.create({
@@ -224,11 +249,12 @@ export async function createStory(userId: string, input: CreateStoryInput): Prom
       bubble: input.text && !input.uploadId && input.fromChat ? (input.bubble ?? null) : null,
       background: input.uploadId ? null : (input.background ?? null),
       uploadId: input.uploadId,
-      gifKey: gif?.key,
-      gifWidth: gif?.width,
-      gifHeight: gif?.height,
+      ...(gifs.length && { gifs }),
       location: input.location,
-      ...(ask && { ask }),
+      ...(input.link && { link: input.link }),
+      askLink: input.askLink ?? false,
+      askText: (input.askLink && input.askText) || null,
+      ...(asks.length && { ask: asks }),
       ...(quote && { quote }),
       showDate: input.showDate ?? false,
       showTime: input.showTime ?? false,

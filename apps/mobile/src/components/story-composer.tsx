@@ -16,13 +16,42 @@ import {
   type StoryPositions,
   type StorySpot,
   type StorySticker,
+  STORY_ASKS,
+  STORY_GIFS,
+  ASK_PROMPT_MAX,
+  askUrl,
+  dropSpot,
+  stickerIndex,
+  stickerOf,
+  zToTop,
 } from "@six/shared";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useInfiniteQuery, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Image } from "expo-image";
 import { useVideoPlayer, VideoView } from "expo-video";
-import { CalendarDays, Camera, CaseSensitive, ClipboardPaste, ChevronDown, Clock, Hourglass, ImagePlus, MapPin, Pencil, Scissors, SendHorizontal, Sticker, Type, Video, X } from "lucide-react-native";
+import {
+  CalendarDays,
+  Camera,
+  CaseSensitive,
+  Check,
+  ClipboardPaste,
+  ChevronDown,
+  Clock,
+  Hourglass,
+  ImageOff,
+  Link2,
+  MessageCircleQuestionMark,
+  ImagePlus,
+  MapPin,
+  Pencil,
+  Scissors,
+  SendHorizontal,
+  Sticker,
+  VenetianMask,
+  Video,
+  X,
+} from "lucide-react-native";
 import { type ComponentRef, useEffect, useRef, useState } from "react";
-import { ActivityIndicator, FlatList, type GestureResponderEvent, Pressable, ScrollView, StyleSheet, View } from "react-native";
+import { ActivityIndicator, FlatList, type GestureResponderEvent, Pressable, ScrollView, StyleSheet, View, useWindowDimensions } from "react-native";
 import { KeyboardAvoidingView } from "react-native-keyboard-controller";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { getLocale, useT } from "@/lib/i18n";
@@ -30,7 +59,8 @@ import { cutVideo, pickMedia, recordVideo, takePhoto } from "@/lib/media";
 import type { LocalFile } from "@/lib/send";
 import * as Clipboard from "expo-clipboard";
 import { File, Paths } from "expo-file-system";
-import { six } from "@/lib/six";
+import { useSession } from "@/lib/session";
+import { WEB_URL, six } from "@/lib/six";
 import { postStory } from "@/lib/story-post";
 import { brand, brandInk } from "@/lib/theme";
 import { currentPosition } from "./location-card";
@@ -41,6 +71,16 @@ import { LastsPicker } from "./notes";
 import { DrawBar, type Pen, StoryDrawingLayer, TextWriter, type Writing } from "./story-drawing";
 import { Text, TextInput } from "./text";
 import { VideoTrimmer } from "./video-trimmer";
+
+/** Where a typed link goes: https:// is added when left out; null until it looks like a web address. */
+function webLink(typed: string) {
+  const t = typed.trim();
+  if (!/^(https?:\/\/)?[^\s/.]+\.[^\s/]+/i.test(t)) return null;
+  return /^https?:\/\//i.test(t) ? t : `https://${t}`;
+}
+
+/** Where the `i`th of several anonymous messages or GIFs lands: each a little lower than the one before. */
+const cascade = (i: number) => ({ x: 0.5, y: Math.min(0.15 + 0.15 * i, 0.8), scale: 0.75 });
 
 function Tool({ on, Icon, label, busy, onPress }: { on: boolean; Icon: typeof X; label: string; busy?: boolean; onPress: () => void }) {
   return (
@@ -192,13 +232,21 @@ export function StoryComposer({
   const tr = useT();
   const qc = useQueryClient();
   const insets = useSafeAreaInsets();
+  const { height: screenH } = useWindowDimensions();
   const [file, setFile] = useState<LocalFile | null>(null);
   const [text, setText] = useState(initialText ?? "");
   const [background, setBackground] = useState<string>(initialText ? backgroundAround(bubble) : STORY_BACKGROUNDS[0]);
   const [custom, setCustom] = useState(false);
   const [from, to] = background.split(",") as [string, string | undefined];
-  const [gif, setGif] = useState<GifDTO | null>(null);
-  const [ask, setAsk] = useState(anon ?? null);
+  const [gifs, setGifs] = useState<GifDTO[]>([]);
+  const [link, setLink] = useState<{ url: string; label: string } | null>(null);
+  const [askLink, setAskLink] = useState(false);
+  const [askText, setAskText] = useState("");
+  const askField = useRef<ComponentRef<typeof TextInput>>(null);
+  const askCode = useSession((s) => s.user!.askCode);
+  const linkField = useRef<ComponentRef<typeof TextInput>>(null);
+  const [asks, setAsks] = useState<AnonMessageDTO[]>(anon ? [anon] : []);
+  const [pickingAsks, setPickingAsks] = useState(false);
   const [pickingGif, setPickingGif] = useState(false);
   const [location, setLocation] = useState<StoryLocation | null>(null);
   const [locating, setLocating] = useState(false);
@@ -219,8 +267,10 @@ export function StoryComposer({
   const placeField = useRef<ComponentRef<typeof TextInput>>(null);
   const [error, setError] = useState<string | null>(null);
   const tooLong = file?.kind === "video" && (file.durationMs ?? 0) > STORY_LIMITS.videoMs + STORY_LIMITS.videoSlackMs;
-  const ready = (!!file || !!text.trim() || !!gif || !!ask || drawn) && !tooLong;
+  const href = link && webLink(link.url);
+  const ready = (!!file || !!text.trim() || gifs.length > 0 || asks.length > 0 || !!href || askLink || drawn) && !tooLong;
   const fromChat = !!initialText && !file;
+  const covered = !text.trim() && (asks.length > 0 || gifs.length > 0 || !!link || askLink || !!location || showDate || showTime || drawn);
 
   const keep = () => setUndos((u) => [...u, drawing]);
   function finishWriting() {
@@ -230,7 +280,17 @@ export function StoryComposer({
     if (!words && w.index < 0) return;
     keep();
     const old = drawing.texts[w.index];
-    const t = { text: words, color: w.color, font: w.font, look: w.look, x: old?.x ?? 0.5, y: old?.y ?? 0.4, scale: old?.scale ?? 1 };
+    const t = {
+      text: words,
+      color: w.color,
+      font: w.font,
+      look: w.look,
+      x: old?.x ?? 0.5,
+      y: old?.y ?? 0.4,
+      scale: old?.scale ?? 1,
+      rotate: old?.rotate,
+      z: old ? old.z : zToTop(positions, drawing.texts),
+    };
     setDrawing((d) => ({
       ...d,
       texts: !words ? d.texts.filter((_, i) => i !== w.index) : w.index < 0 ? [...d.texts, t] : d.texts.map((it, i) => (i === w.index ? t : it)),
@@ -308,8 +368,11 @@ export function StoryComposer({
         bubble: fromChat ? bubble : undefined,
         messageId: fromChat ? quote?.messageId : undefined,
         background,
-        gifId: gif?.id,
-        askId: ask?.id,
+        gifIds: gifs.length ? gifs.map((g) => g.id) : undefined,
+        link: href ? { url: href, label: link!.label.trim() || undefined } : undefined,
+        askLink: askLink || undefined,
+        askText: (askLink && askText.trim()) || undefined,
+        askIds: asks.length ? asks.map((m) => m.id) : undefined,
         location: location ? { ...location, name: location.name?.trim() || undefined } : undefined,
         showDate,
         showTime,
@@ -322,24 +385,55 @@ export function StoryComposer({
     onClose();
   }
 
+  function dropAsk(i: number) {
+    setAsks((a) => a.filter((_, j) => j !== i));
+    setPositions((p) => dropSpot(p, "ask", i));
+  }
+
+  /** Puts an anonymous message on the story, or takes it off. Past the first, each lands a little lower than the last. */
+  function toggleAsk(m: AnonMessageDTO) {
+    const at = asks.findIndex((a) => a.id === m.id);
+    if (at >= 0) return dropAsk(at);
+    if (asks.length >= STORY_ASKS) return;
+    const i = asks.length;
+    setAsks([...asks, m]);
+    if (i > 0) setPositions((p) => ({ ...p, [stickerOf("ask", i)]: cascade(i) }));
+  }
+
+  function addGif(g: GifDTO) {
+    const i = gifs.length;
+    if (i >= STORY_GIFS) return;
+    setGifs([...gifs, g]);
+    if (i > 0) setPositions((p) => ({ ...p, [stickerOf("gif", i)]: cascade(i) }));
+  }
+
   const stickers = {
-    ask: ask && { text: ask.text, prompt: ask.prompt, photoUrl: ask.photoUrl, gif: ask.gif },
-    gif: gif && <Image source={{ uri: gif.previewUrl }} style={{ height: 120, width: (120 * gif.width) / gif.height, borderRadius: 10 }} />,
+    asks: asks.map((m) => ({ text: m.text, prompt: m.prompt, photoUrl: m.photoUrl, gif: m.gif })),
+    gifs: gifs.map((g, i) => <Image key={i} source={{ uri: g.previewUrl }} style={{ height: 120, width: (120 * g.width) / g.height, borderRadius: 10 }} />),
+    link: href ? { url: href, label: link!.label.trim() || undefined } : null,
+    askLink: askLink ? askUrl(WEB_URL, askCode) : null,
+    askText: askText.trim() || null,
     location,
     showDate,
     showTime,
     at: new Date().toISOString(),
     positions,
     frame: card,
-    onMove: (sticker: StorySticker, spot: StorySpot) => setPositions((p) => ({ ...p, [sticker]: spot })),
+    onMove: (sticker: StorySticker, spot: StorySpot) => setPositions((p) => ({ ...p, [sticker]: { ...spot, z: zToTop(p, drawing.texts, p[sticker]?.z) } })),
     onRemove: (sticker: StorySticker) => {
+      if (stickerIndex("ask", sticker) >= 0) return dropAsk(stickerIndex("ask", sticker));
+      if (stickerIndex("gif", sticker) >= 0) {
+        const i = stickerIndex("gif", sticker);
+        setGifs((g) => g.filter((_, j) => j !== i));
+        return setPositions((p) => dropSpot(p, "gif", i));
+      }
       ({
-        ask: () => setAsk(null),
-        gif: () => setGif(null),
         location: () => setLocation(null),
+        link: () => setLink(null),
+        asklink: () => setAskLink(false),
         date: () => setShowDate(false),
         time: () => setShowTime(false),
-      })[sticker]();
+      })[sticker as "link"]();
       setPositions((p) => {
         const next = { ...p };
         delete next[sticker];
@@ -347,8 +441,9 @@ export function StoryComposer({
       });
     },
     onTap: (sticker: StorySticker) => {
-      if (sticker === "gif") setPickingGif(true);
       if (sticker === "location") placeField.current?.focus();
+      if (sticker === "link") linkField.current?.focus();
+      if (sticker === "asklink") askField.current?.focus();
     },
   };
 
@@ -367,7 +462,7 @@ export function StoryComposer({
           {fromChat && (
             <ChatBubbleCard text={text} bubble={bubble ?? null} quote={quote ?? null} />
           )}
-          {!file && !fromChat && (
+          {!file && !fromChat && !covered && (
             <TextInput
               value={text}
               onChangeText={setText}
@@ -385,29 +480,52 @@ export function StoryComposer({
             {!!file && !!text.trim() && <Text style={styles.caption}>{text}</Text>}
           </View>
         </View>
-        <View pointerEvents="box-none" style={StyleSheet.absoluteFill}>
-          <StoryStickers {...stickers} placed />
-        </View>
         <StoryDrawingLayer
           drawing={drawing}
           pen={drawingOn ? pen : null}
           onBegin={keep}
           onChange={setDrawing}
+          raise={(z) => zToTop(positions, drawing.texts, z)}
           onEditText={(index) => {
             const t = drawing.texts[index]!;
             setWriting({ index, text: t.text, color: t.color, font: t.font, look: t.look ?? "plain" });
           }}
-        />
+        >
+          <StoryStickers {...stickers} placed onMove={drawingOn ? undefined : stickers.onMove} />
+        </StoryDrawingLayer>
 
         <View pointerEvents="box-none" style={[styles.top, { top: insets.top + 8 }]}>
           <Tool on={false} Icon={X} label={tr.common.close} onPress={onClose} />
-          <View style={styles.tools}>
-            {file && <Tool on={false} Icon={Type} label={tr.stories.text} onPress={() => setFile(null)} />}
+          <ScrollView
+            style={{ maxHeight: screenH - insets.top - 230, flexGrow: 0 }}
+            contentContainerStyle={styles.tools}
+            showsVerticalScrollIndicator={false}
+          >
+            {file && <Tool on={false} Icon={ImageOff} label={tr.stories.removeMedia} onPress={() => setFile(null)} />}
             <Tool on={!!file} Icon={ImagePlus} label={`${tr.stories.photo} / ${tr.stories.video}`} onPress={() => void pick("library")} />
             <Tool on={false} Icon={Camera} label={tr.stories.photo} onPress={() => void pick("camera")} />
             <Tool on={false} Icon={Video} label={tr.stories.video} onPress={() => void pick("video")} />
             {canPaste && <Tool on={false} Icon={ClipboardPaste} label={tr.stories.pasteImage} onPress={() => void paste()} />}
-            <Tool on={!!gif || pickingGif} Icon={Sticker} label={tr.stories.gif} onPress={() => (gif ? setGif(null) : setPickingGif(!pickingGif))} />
+            <Tool on={gifs.length > 0 || pickingGif} Icon={Sticker} label={tr.stories.gif} onPress={() => setPickingGif(!pickingGif)} />
+            <Tool
+              on={!!link}
+              Icon={Link2}
+              label={tr.stories.link}
+              onPress={() => {
+                setLink(link ? null : { url: "", label: "" });
+                if (!link) setTimeout(() => linkField.current?.focus(), 50);
+              }}
+            />
+            <Tool
+              on={askLink}
+              Icon={MessageCircleQuestionMark}
+              label={tr.stories.askLink}
+              onPress={() => {
+                setAskLink(!askLink);
+                if (!askLink) setTimeout(() => askField.current?.focus(), 50);
+              }}
+            />
+            <Tool on={asks.length > 0 || pickingAsks} Icon={VenetianMask} label={tr.ask.title} onPress={() => setPickingAsks(!pickingAsks)} />
             <Tool on={!!location} busy={locating} Icon={MapPin} label={tr.stories.location} onPress={() => void locate()} />
             <Tool on={showDate} Icon={CalendarDays} label={tr.stories.date} onPress={() => setShowDate(!showDate)} />
             <Tool on={showTime} Icon={Clock} label={tr.stories.time} onPress={() => setShowTime(!showTime)} />
@@ -421,7 +539,7 @@ export function StoryComposer({
                 if (drawing.texts.length < 10) setWriting({ index: -1, text: "", color: EDIT_COLORS[0]!, font: "classic", look: "plain" });
               }}
             />
-          </View>
+          </ScrollView>
         </View>
 
         <View style={[styles.bottom, { paddingBottom: Math.max(insets.bottom, 16) }]}>
@@ -437,11 +555,12 @@ export function StoryComposer({
               onDone={() => setDrawingOn(false)}
             />
           )}
+          {pickingAsks && <AskPicker picked={asks.map((m) => m.id)} onToggle={toggleAsk} onClose={() => setPickingAsks(false)} />}
           {pickingGif && (
             <View style={styles.gifs}>
               <GifSearch
                 onPick={(g) => {
-                  setGif(g);
+                  addGif(g);
                   setPickingGif(false);
                 }}
               />
@@ -497,6 +616,44 @@ export function StoryComposer({
                 />
               </View>
             </ScrollView>
+          )}
+          {askLink && (
+            <TextInput
+              ref={askField}
+              value={askText}
+              onChangeText={setAskText}
+              maxLength={ASK_PROMPT_MAX}
+              placeholder={tr.ask.prompt}
+              placeholderTextColor="rgba(255,255,255,0.6)"
+              accessibilityLabel={tr.stories.askText}
+              style={styles.field}
+            />
+          )}
+          {link && (
+            <View style={{ flexDirection: "row", gap: 8 }}>
+              <TextInput
+                ref={linkField}
+                value={link.url}
+                onChangeText={(url) => setLink({ ...link, url })}
+                keyboardType="url"
+                autoCapitalize="none"
+                autoCorrect={false}
+                maxLength={2000}
+                placeholder={tr.stories.linkUrl}
+                placeholderTextColor="rgba(255,255,255,0.6)"
+                accessibilityLabel={tr.stories.linkUrl}
+                style={[styles.field, { flex: 3 }]}
+              />
+              <TextInput
+                value={link.label}
+                onChangeText={(label) => setLink({ ...link, label })}
+                maxLength={40}
+                placeholder={tr.stories.linkLabel}
+                placeholderTextColor="rgba(255,255,255,0.6)"
+                accessibilityLabel={tr.stories.linkLabel}
+                style={[styles.field, { flex: 2 }]}
+              />
+            </View>
           )}
           {location && (
             <TextInput
@@ -594,6 +751,84 @@ export function StoryComposer({
   );
 }
 
+/** The anonymous messages you received that can go on a story, to tick up to five of them, each once. */
+function AskPicker({ picked, onToggle, onClose }: { picked: string[]; onToggle: (m: AnonMessageDTO) => void; onClose: () => void }) {
+  const tr = useT();
+  const inbox = useInfiniteQuery({
+    queryKey: ["ask"],
+    initialPageParam: undefined as string | undefined,
+    queryFn: async ({ pageParam }) => unwrap(await six.api.GET("/v1/ask", { params: { query: { limit: 30, cursor: pageParam } } })),
+    getNextPageParam: (last) => last.nextCursor ?? undefined,
+  });
+  const items = (inbox.data?.pages.flatMap((p) => p.items) ?? []).filter((m) => m.text.trim() || m.photoUrl || m.gif);
+  const full = picked.length >= STORY_ASKS;
+
+  return (
+    <View style={styles.asks}>
+      <View style={styles.asksHead}>
+        <Text style={{ color: "#fff", fontSize: 16, fontWeight: "700" }}>{tr.ask.title}</Text>
+        <Text style={styles.asksCount}>
+          {picked.length}/{STORY_ASKS}
+        </Text>
+      </View>
+      {inbox.isPending ? (
+        <ActivityIndicator color="#fff" style={{ paddingVertical: 24 }} />
+      ) : (
+        <FlatList
+          data={items}
+          keyExtractor={(m) => m.id}
+          style={{ flexGrow: 0 }}
+          keyboardShouldPersistTaps="handled"
+          onEndReached={() => inbox.hasNextPage && !inbox.isFetchingNextPage && void inbox.fetchNextPage()}
+          ListEmptyComponent={<Text style={{ color: "rgba(255,255,255,0.7)", textAlign: "center", paddingVertical: 24 }}>{tr.ask.empty}</Text>}
+          renderItem={({ item: m }) => {
+            const on = picked.includes(m.id);
+            const thumb = m.photoUrl ?? m.gif?.url;
+            return (
+              <Pressable
+                onPress={() => onToggle(m)}
+                disabled={!on && full}
+                accessibilityRole="checkbox"
+                accessibilityState={{ checked: on, disabled: !on && full }}
+                style={({ pressed }) => [
+                  styles.askRow,
+                  on && { borderColor: brand, backgroundColor: "rgba(235,138,0,0.18)" },
+                  !on && full && { opacity: 0.4 },
+                  pressed && { transform: [{ scale: 0.99 }] },
+                ]}
+              >
+                {m.photoUrl ? (
+                  <Image source={{ uri: thumb }} style={styles.askThumb} contentFit="cover" />
+                ) : m.gif ? (
+                  <View style={[styles.askThumb, { alignItems: "center", justifyContent: "center", backgroundColor: "rgba(255,255,255,0.15)" }]}>
+                    <Text style={{ color: "#fff", fontSize: 11, fontWeight: "800" }}>GIF</Text>
+                  </View>
+                ) : null}
+                <View style={{ flex: 1, minWidth: 0 }}>
+                  <Text numberOfLines={1} style={{ color: brand, fontSize: 12, fontWeight: "700" }}>
+                    {m.prompt ?? tr.ask.prompt}
+                  </Text>
+                  {!!m.text.trim() && (
+                    <Text numberOfLines={2} style={{ color: "#fff", fontSize: 14 }}>
+                      {m.text}
+                    </Text>
+                  )}
+                </View>
+                <View style={[styles.askTick, on && { backgroundColor: brand, borderColor: brand }]}>
+                  {on && <Check size={15} color={brandInk} strokeWidth={3} />}
+                </View>
+              </Pressable>
+            );
+          }}
+        />
+      )}
+      <Pressable onPress={onClose} accessibilityRole="button" style={({ pressed }) => [styles.askDone, pressed && { opacity: 0.85 }]}>
+        <Text style={{ color: brandInk, fontSize: 15, fontWeight: "700" }}>{tr.common.done}</Text>
+      </Pressable>
+    </View>
+  );
+}
+
 const styles = StyleSheet.create({
   screen: { flex: 1 },
   preview: { flex: 1, alignItems: "center", justifyContent: "center", overflow: "hidden" },
@@ -605,6 +840,13 @@ const styles = StyleSheet.create({
   tool: { width: 44, height: 44, borderRadius: 22, alignItems: "center", justifyContent: "center" },
   bottom: { gap: 12, paddingHorizontal: 16, paddingTop: 12, backgroundColor: "rgba(0,0,0,0.35)" },
   gifs: { borderRadius: 16, backgroundColor: "rgba(0,0,0,0.55)", padding: 10 },
+  asks: { maxHeight: 380, gap: 8, borderRadius: 20, backgroundColor: "rgba(0,0,0,0.6)", padding: 12 },
+  asksHead: { flexDirection: "row", alignItems: "center", justifyContent: "space-between" },
+  asksCount: { color: "#fff", fontSize: 13, fontWeight: "700", backgroundColor: "rgba(255,255,255,0.15)", borderRadius: 10, overflow: "hidden", paddingHorizontal: 9, paddingVertical: 2 },
+  askRow: { flexDirection: "row", alignItems: "center", gap: 10, borderRadius: 16, padding: 10, marginBottom: 8, borderWidth: 1, borderColor: "rgba(255,255,255,0.2)" },
+  askThumb: { width: 44, height: 44, borderRadius: 10 },
+  askTick: { width: 24, height: 24, borderRadius: 12, alignItems: "center", justifyContent: "center", borderWidth: 2, borderColor: "rgba(255,255,255,0.5)" },
+  askDone: { alignItems: "center", borderRadius: 999, backgroundColor: brand, paddingVertical: 11 },
   swatches: { flexGrow: 1, justifyContent: "center" },
   swatchRow: { flexDirection: "row", gap: 10, paddingVertical: 4 },
   custom: { gap: 12, borderRadius: 20, backgroundColor: "rgba(0,0,0,0.45)", padding: 14 },

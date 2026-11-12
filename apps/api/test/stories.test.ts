@@ -263,6 +263,30 @@ describe("stories", () => {
     expect(withPhoto.ask).toMatchObject({ text: "", photoUrl: expect.stringMatching(/^https?:/), gif: null });
   });
 
+  it("carries a link, and an invitation to your anonymous link as it is now", async () => {
+    const { host, guest } = await makeFriends();
+    const story = await call(host, "POST", "/v1/stories", { link: { url: "https://example.com/a", label: "My shop" }, askLink: true, askText: "Ask me anything" });
+    expect(story.statusCode).toBe(201);
+    const { askCode } = await get(host, "/v1/me");
+    expect(story.json()).toMatchObject({ link: { url: "https://example.com/a", label: "My shop" }, askCode, askText: "Ask me anything" });
+    expect(JSON.stringify((await get(guest, "/v1/stories")).items)).toContain(askCode);
+    expect((await call(host, "POST", "/v1/stories", { link: { url: "javascript:alert(1)" } })).statusCode).toBe(400);
+    expect((await call(host, "POST", "/v1/stories", { text: "hi" })).json()).toMatchObject({ link: null, askCode: null });
+  });
+
+  it("shows several anonymous messages on one story, each once", async () => {
+    const { host, guest } = await makeFriends();
+    const { askCode } = await get(host, "/v1/me");
+    for (const text of ["one", "two", "three"]) expect((await call(guest, "POST", `/v1/ask/${askCode}`, { text })).statusCode).toBe(204);
+    const ids = (await get(host, "/v1/ask")).items.map((m: { id: string }) => m.id);
+    const story = await call(host, "POST", "/v1/stories", { askIds: ids, positions: { ask3: { x: 0.5, y: 0.2, rotate: -30 } } });
+    expect(story.statusCode).toBe(201);
+    expect(story.json().asks.map((a: { text: string }) => a.text)).toEqual(["three", "two", "one"]);
+    expect(story.json()).toMatchObject({ ask: { text: "three" }, positions: { ask3: { x: 0.5, y: 0.2, rotate: -30 } } });
+    expect((await call(host, "POST", "/v1/stories", { askIds: [ids[0], ids[0]] })).statusCode).toBe(400);
+    expect((await call(host, "POST", "/v1/stories", { text: "hi", positions: { date: { x: 0.5, y: 0.5, rotate: 200 } } })).statusCode).toBe(400);
+  });
+
   it("takes any colour or a two colour gradient behind a text story", async () => {
     const { host } = await makeFriends();
     const post = (background: string) => call(host, "POST", "/v1/stories", { text: "hi", background });

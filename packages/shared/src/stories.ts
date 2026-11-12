@@ -3,6 +3,7 @@ import { GeoPoint } from "./chats.js";
 import { Id, IsoDate } from "./common.js";
 import { PublicUser } from "./invites.js";
 import { AttachmentDTO } from "./uploads.js";
+import { ASK_PROMPT_MAX } from "./ask.js";
 import { LABEL_FONTS, type LabelFont } from "./media-edit.js";
 
 const HOUR = 60 * 60;
@@ -55,21 +56,84 @@ export type StoryLocation = z.infer<typeof StoryLocation>;
 
 export const STORY_STICKER_SCALE = { min: 0.5, max: 3 } as const;
 
+const Turn = z.number().min(-180).max(180).optional().describe("How far it is turned, in degrees clockwise");
+
+/** An angle in degrees brought between -180 and 180, and straight when it is within a few degrees of it. */
+export function turned(deg: number) {
+  const d = ((((deg + 180) % 360) + 360) % 360) - 180;
+  return Math.abs(d) < 4 ? 0 : d;
+}
+
+/** The angle in degrees of the line from a to b, for turning something with two fingers or a handle. */
+export const angleOf = (a: { x: number; y: number }, b: { x: number; y: number }) => (Math.atan2(b.y - a.y, b.x - a.x) * 180) / Math.PI;
+
+export const StoryLink = z.object({
+  url: z
+    .string()
+    .trim()
+    .max(2000)
+    .url()
+    .refine((u) => /^https?:\/\//i.test(u), "Only web links")
+    .describe("Where it goes, http or https"),
+  label: z.string().trim().max(40).optional().describe("What the sticker says instead of the address"),
+});
+export type StoryLink = z.infer<typeof StoryLink>;
+
+const Layer = z.number().int().min(0).max(999).optional().describe("Stacking order among the stickers and texts: higher sits on top");
+
 const StorySpot = z.object({
   x: z.number().min(0).max(1),
   y: z.number().min(0).max(1),
   scale: z.number().min(STORY_STICKER_SCALE.min).max(STORY_STICKER_SCALE.max).optional().describe("How much bigger or smaller than usual"),
+  rotate: Turn,
+  z: Layer,
 });
 export type StorySpot = z.infer<typeof StorySpot>;
 
-export const STORY_STICKERS = ["ask", "gif", "location", "date", "time"] as const;
+/** How many anonymous messages, and how many GIFs, one story can show. */
+export const STORY_ASKS = 5;
+export const STORY_GIFS = 5;
+export const STORY_STICKERS = [
+  "ask",
+  "ask2",
+  "ask3",
+  "ask4",
+  "ask5",
+  "gif",
+  "gif2",
+  "gif3",
+  "gif4",
+  "gif5",
+  "location",
+  "date",
+  "time",
+  "link",
+  "asklink",
+] as const;
 export type StorySticker = (typeof STORY_STICKERS)[number];
+/** The stickers a story can have several of, and how many. */
+const MANY = { ask: STORY_ASKS, gif: STORY_GIFS };
+type Many = keyof typeof MANY;
+/** The sticker showing a story's `i`th anonymous message or GIF, from 0. */
+export const stickerOf = (kind: Many, i: number) => (i ? `${kind}${i + 1}` : kind) as StorySticker;
+/** Which of the story's anonymous messages or GIFs a sticker shows, or -1 when it isn't one of them. */
+export const stickerIndex = (kind: Many, k: StorySticker) => (k === kind ? 0 : new RegExp(`^${kind}\\d$`).test(k) ? Number(k.slice(kind.length)) - 1 : -1);
 
 export const StoryPositions = z
   .object({
     ask: StorySpot.optional(),
+    ask2: StorySpot.optional(),
+    ask3: StorySpot.optional(),
+    ask4: StorySpot.optional(),
+    ask5: StorySpot.optional(),
     gif: StorySpot.optional(),
+    gif2: StorySpot.optional(),
+    gif3: StorySpot.optional(),
+    gif4: StorySpot.optional(),
+    gif5: StorySpot.optional(),
     location: StorySpot.optional(),
+    link: StorySpot.optional(),
+    asklink: StorySpot.optional(),
     date: StorySpot.optional(),
     time: StorySpot.optional(),
   })
@@ -77,6 +141,27 @@ export const StoryPositions = z
     "Where the poster dragged each sticker and how big they made it: its centre, as fractions of the story's width and height from the top left. Ones left out sit in the row at the bottom",
   );
 export type StoryPositions = z.infer<typeof StoryPositions>;
+
+/**
+ * The stacking order that puts a sticker or text now at `current` above every other one on the story, keeping it
+ * when it already is alone on top. Without one, stickers sit under the drawing and texts over it.
+ */
+export function zToTop(positions: StoryPositions, texts: { z?: number }[], current?: number) {
+  const all = [...STORY_STICKERS.map((k) => positions[k]?.z ?? 0), ...texts.map((t) => t.z ?? 0)];
+  const top = Math.max(0, ...all);
+  return current === top && current > 0 && all.filter((v) => v === top).length === 1 ? current : Math.min(999, top + 1);
+}
+
+/** The positions once a story's `i`th anonymous message or GIF is taken off: the ones after it each take the spot of the one before. */
+export function dropSpot(positions: StoryPositions, kind: Many, i: number): StoryPositions {
+  const next = { ...positions };
+  for (let j = i; j < MANY[kind]; j++) {
+    const after = j + 1 < MANY[kind] ? positions[stickerOf(kind, j + 1)] : undefined;
+    if (after) next[stickerOf(kind, j)] = after;
+    else delete next[stickerOf(kind, j)];
+  }
+  return next;
+}
 
 export const STORY_SHAPES = ["pen", "arrow", "circle", "rect"] as const;
 export type StoryShape = (typeof STORY_SHAPES)[number];
@@ -107,6 +192,8 @@ export const StoryText = z.object({
   y: z.number().min(0).max(1),
   scale: z.number().min(STORY_STICKER_SCALE.min).max(STORY_STICKER_SCALE.max).default(1),
   look: z.enum(STORY_TEXT_LOOKS).optional().describe("plain when left out; box puts it on a pill of its colour, outline rings it"),
+  rotate: Turn,
+  z: Layer,
 });
 export type StoryText = z.infer<typeof StoryText>;
 
@@ -182,9 +269,23 @@ export const CreateStoryInput = z
       .string()
       .regex(/^[\w-]{1,128}$/)
       .optional()
-      .describe("A GIF from GET /v1/gifs shown on top of the story"),
+      .describe("Older apps: one GIF to show; use gifIds"),
+    gifIds: z
+      .array(z.string().regex(/^[\w-]{1,128}$/))
+      .max(STORY_GIFS)
+      .optional()
+      .describe("GIFs from GET /v1/gifs shown on top of the story"),
     location: StoryLocation.optional(),
-    askId: Id.optional().describe("An anonymous message you received, shown on the story as a card: its text, photo or GIF"),
+    link: StoryLink.optional(),
+    askLink: z.boolean().optional().describe("Invite anonymous messages: a sticker that opens your anonymous link"),
+    askText: z.string().trim().max(ASK_PROMPT_MAX).optional().describe("With askLink: what the sticker says, instead of the app's line"),
+    askId: Id.optional().describe("Older apps: one anonymous message to show; use askIds"),
+    askIds: z
+      .array(Id)
+      .max(STORY_ASKS)
+      .refine((ids) => new Set(ids).size === ids.length, "Each anonymous message can be on a story once")
+      .optional()
+      .describe("Anonymous messages you received, each shown on the story as a card: its text, photo or GIF"),
     fromChat: z.boolean().optional().describe("The text is a chat message shared as it was, shown as a chat bubble"),
     bubble: z
       .string()
@@ -205,10 +306,24 @@ export const CreateStoryInput = z
       .default(STORY_DEFAULT_SECS)
       .describe("How long it stays up, from one hour to a day"),
   })
-  .refine((v) => !!v.uploadId || !!v.text || !!v.gifId || !!v.askId || !!v.drawing?.strokes.length || !!v.drawing?.texts.length, {
-    message: "A story needs text, a photo, a video, a GIF, an anonymous message or a drawing",
+  .refine((v) => !!v.uploadId || !!v.text || !!v.gifId || !!v.gifIds?.length || !!v.link || !!v.askLink || !!v.askId || !!v.askIds?.length || !!v.drawing?.strokes.length || !!v.drawing?.texts.length, {
+    message: "A story needs text, a photo, a video, a GIF, a link, an anonymous message or a drawing",
   });
 export type CreateStoryInput = z.infer<typeof CreateStoryInput>;
+
+const StoryGif = z.object({ url: z.string().url(), width: z.number().int().nullable(), height: z.number().int().nullable() });
+export type StoryGif = z.infer<typeof StoryGif>;
+
+const StoryAsk = z.object({
+  text: z.string().describe("Empty when only a photo or a GIF was sent"),
+  prompt: z.string().nullable().describe("The prompt it answered; null for the app's own"),
+  photoUrl: z.string().url().nullable(),
+  gif: z
+    .object({ url: z.string().url(), width: z.number().int().nullable(), height: z.number().int().nullable() })
+    .nullable()
+    .describe("As an MP4 to play muted on a loop"),
+});
+export type StoryAsk = z.infer<typeof StoryAsk>;
 
 export const StoryDTO = z.object({
   id: Id,
@@ -222,20 +337,14 @@ export const StoryDTO = z.object({
     .describe("With fromChat and a messageId: who sent the message and when"),
   background: z.string().nullable(),
   media: AttachmentDTO.nullable(),
-  gif: z.object({ url: z.string().url(), width: z.number().int().nullable(), height: z.number().int().nullable() }).nullable(),
+  gif: StoryGif.nullable().describe("Older apps: the first of `gifs`"),
+  gifs: z.array(StoryGif).describe("GIFs on top of the story, as MP4s to play muted on a loop"),
   location: StoryLocation.nullable(),
-  ask: z
-    .object({
-      text: z.string().describe("Empty when only a photo or a GIF was sent"),
-      prompt: z.string().nullable().describe("The prompt it answered; null for the app's own"),
-      photoUrl: z.string().url().nullable(),
-      gif: z
-        .object({ url: z.string().url(), width: z.number().int().nullable(), height: z.number().int().nullable() })
-        .nullable()
-        .describe("As an MP4 to play muted on a loop"),
-    })
-    .nullable()
-    .describe("An anonymous message the poster received and shared, as a card"),
+  link: StoryLink.nullable().describe("A link sticker to open"),
+  askCode: z.string().nullable().describe("The poster's anonymous link code, as it is now, when the story invites anonymous messages; for the URL, see askUrl"),
+  askText: z.string().nullable().describe("What the anonymous link sticker says; null for the app's line"),
+  ask: StoryAsk.nullable().describe("Older apps: the first of `asks`"),
+  asks: z.array(StoryAsk).describe("Anonymous messages the poster received and shared, each as a card"),
   showDate: z.boolean(),
   showTime: z.boolean(),
   positions: StoryPositions,

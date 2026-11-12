@@ -83513,6 +83513,7 @@
                                 },
                                 "gif": {
                                   "nullable": true,
+                                  "description": "Older apps: the first of `gifs`",
                                   "type": "object",
                                   "properties": {
                                     "url": {
@@ -83538,6 +83539,37 @@
                                     "height"
                                   ],
                                   "additionalProperties": false
+                                },
+                                "gifs": {
+                                  "type": "array",
+                                  "items": {
+                                    "type": "object",
+                                    "properties": {
+                                      "url": {
+                                        "type": "string",
+                                        "format": "uri"
+                                      },
+                                      "width": {
+                                        "nullable": true,
+                                        "type": "integer",
+                                        "minimum": -9007199254740991,
+                                        "maximum": 9007199254740991
+                                      },
+                                      "height": {
+                                        "nullable": true,
+                                        "type": "integer",
+                                        "minimum": -9007199254740991,
+                                        "maximum": 9007199254740991
+                                      }
+                                    },
+                                    "required": [
+                                      "url",
+                                      "width",
+                                      "height"
+                                    ],
+                                    "additionalProperties": false
+                                  },
+                                  "description": "GIFs on top of the story, as MP4s to play muted on a loop"
                                 },
                                 "location": {
                                   "nullable": true,
@@ -83573,9 +83605,41 @@
                                   ],
                                   "additionalProperties": false
                                 },
+                                "link": {
+                                  "nullable": true,
+                                  "description": "A link sticker to open",
+                                  "type": "object",
+                                  "properties": {
+                                    "url": {
+                                      "type": "string",
+                                      "maxLength": 2000,
+                                      "format": "uri",
+                                      "description": "Where it goes, http or https"
+                                    },
+                                    "label": {
+                                      "description": "What the sticker says instead of the address",
+                                      "type": "string",
+                                      "maxLength": 40
+                                    }
+                                  },
+                                  "required": [
+                                    "url"
+                                  ],
+                                  "additionalProperties": false
+                                },
+                                "askCode": {
+                                  "nullable": true,
+                                  "description": "The poster's anonymous link code, as it is now, when the story invites anonymous messages; for the URL, see askUrl",
+                                  "type": "string"
+                                },
+                                "askText": {
+                                  "nullable": true,
+                                  "description": "What the anonymous link sticker says; null for the app's line",
+                                  "type": "string"
+                                },
                                 "ask": {
                                   "nullable": true,
-                                  "description": "An anonymous message the poster received and shared, as a card",
+                                  "description": "Older apps: the first of `asks`",
                                   "type": "object",
                                   "properties": {
                                     "text": {
@@ -83630,6 +83694,65 @@
                                   ],
                                   "additionalProperties": false
                                 },
+                                "asks": {
+                                  "type": "array",
+                                  "items": {
+                                    "type": "object",
+                                    "properties": {
+                                      "text": {
+                                        "type": "string",
+                                        "description": "Empty when only a photo or a GIF was sent"
+                                      },
+                                      "prompt": {
+                                        "nullable": true,
+                                        "description": "The prompt it answered; null for the app's own",
+                                        "type": "string"
+                                      },
+                                      "photoUrl": {
+                                        "nullable": true,
+                                        "type": "string",
+                                        "format": "uri"
+                                      },
+                                      "gif": {
+                                        "nullable": true,
+                                        "description": "As an MP4 to play muted on a loop",
+                                        "type": "object",
+                                        "properties": {
+                                          "url": {
+                                            "type": "string",
+                                            "format": "uri"
+                                          },
+                                          "width": {
+                                            "nullable": true,
+                                            "type": "integer",
+                                            "minimum": -9007199254740991,
+                                            "maximum": 9007199254740991
+                                          },
+                                          "height": {
+                                            "nullable": true,
+                                            "type": "integer",
+                                            "minimum": -9007199254740991,
+                                            "maximum": 9007199254740991
+                                          }
+                                        },
+                                        "required": [
+                                          "url",
+                                          "width",
+                                          "height"
+                                        ],
+                                        "additionalProperties": false
+                                      }
+                                    },
+                                    "required": [
+                                      "text",
+                                      "prompt",
+                                      "photoUrl",
+                                      "gif"
+                                    ],
+                                    "additionalProperties": false
+                                  },
+                                  "description": "Anonymous messages the poster received and shared, each as a card"
+                                },
                                 "showDate": {
                                   "type": "boolean"
                                 },
@@ -83657,6 +83780,170 @@
                                           "type": "number",
                                           "minimum": 0.5,
                                           "maximum": 3
+                                        },
+                                        "rotate": {
+                                          "description": "How far it is turned, in degrees clockwise",
+                                          "type": "number",
+                                          "minimum": -180,
+                                          "maximum": 180
+                                        },
+                                        "z": {
+                                          "description": "Stacking order among the stickers and texts: higher sits on top",
+                                          "type": "integer",
+                                          "minimum": 0,
+                                          "maximum": 999
+                                        }
+                                      },
+                                      "required": [
+                                        "x",
+                                        "y"
+                                      ],
+                                      "additionalProperties": false
+                                    },
+                                    "ask2": {
+                                      "type": "object",
+                                      "properties": {
+                                        "x": {
+                                          "type": "number",
+                                          "minimum": 0,
+                                          "maximum": 1
+                                        },
+                                        "y": {
+                                          "type": "number",
+                                          "minimum": 0,
+                                          "maximum": 1
+                                        },
+                                        "scale": {
+                                          "description": "How much bigger or smaller than usual",
+                                          "type": "number",
+                                          "minimum": 0.5,
+                                          "maximum": 3
+                                        },
+                                        "rotate": {
+                                          "description": "How far it is turned, in degrees clockwise",
+                                          "type": "number",
+                                          "minimum": -180,
+                                          "maximum": 180
+                                        },
+                                        "z": {
+                                          "description": "Stacking order among the stickers and texts: higher sits on top",
+                                          "type": "integer",
+                                          "minimum": 0,
+                                          "maximum": 999
+                                        }
+                                      },
+                                      "required": [
+                                        "x",
+                                        "y"
+                                      ],
+                                      "additionalProperties": false
+                                    },
+                                    "ask3": {
+                                      "type": "object",
+                                      "properties": {
+                                        "x": {
+                                          "type": "number",
+                                          "minimum": 0,
+                                          "maximum": 1
+                                        },
+                                        "y": {
+                                          "type": "number",
+                                          "minimum": 0,
+                                          "maximum": 1
+                                        },
+                                        "scale": {
+                                          "description": "How much bigger or smaller than usual",
+                                          "type": "number",
+                                          "minimum": 0.5,
+                                          "maximum": 3
+                                        },
+                                        "rotate": {
+                                          "description": "How far it is turned, in degrees clockwise",
+                                          "type": "number",
+                                          "minimum": -180,
+                                          "maximum": 180
+                                        },
+                                        "z": {
+                                          "description": "Stacking order among the stickers and texts: higher sits on top",
+                                          "type": "integer",
+                                          "minimum": 0,
+                                          "maximum": 999
+                                        }
+                                      },
+                                      "required": [
+                                        "x",
+                                        "y"
+                                      ],
+                                      "additionalProperties": false
+                                    },
+                                    "ask4": {
+                                      "type": "object",
+                                      "properties": {
+                                        "x": {
+                                          "type": "number",
+                                          "minimum": 0,
+                                          "maximum": 1
+                                        },
+                                        "y": {
+                                          "type": "number",
+                                          "minimum": 0,
+                                          "maximum": 1
+                                        },
+                                        "scale": {
+                                          "description": "How much bigger or smaller than usual",
+                                          "type": "number",
+                                          "minimum": 0.5,
+                                          "maximum": 3
+                                        },
+                                        "rotate": {
+                                          "description": "How far it is turned, in degrees clockwise",
+                                          "type": "number",
+                                          "minimum": -180,
+                                          "maximum": 180
+                                        },
+                                        "z": {
+                                          "description": "Stacking order among the stickers and texts: higher sits on top",
+                                          "type": "integer",
+                                          "minimum": 0,
+                                          "maximum": 999
+                                        }
+                                      },
+                                      "required": [
+                                        "x",
+                                        "y"
+                                      ],
+                                      "additionalProperties": false
+                                    },
+                                    "ask5": {
+                                      "type": "object",
+                                      "properties": {
+                                        "x": {
+                                          "type": "number",
+                                          "minimum": 0,
+                                          "maximum": 1
+                                        },
+                                        "y": {
+                                          "type": "number",
+                                          "minimum": 0,
+                                          "maximum": 1
+                                        },
+                                        "scale": {
+                                          "description": "How much bigger or smaller than usual",
+                                          "type": "number",
+                                          "minimum": 0.5,
+                                          "maximum": 3
+                                        },
+                                        "rotate": {
+                                          "description": "How far it is turned, in degrees clockwise",
+                                          "type": "number",
+                                          "minimum": -180,
+                                          "maximum": 180
+                                        },
+                                        "z": {
+                                          "description": "Stacking order among the stickers and texts: higher sits on top",
+                                          "type": "integer",
+                                          "minimum": 0,
+                                          "maximum": 999
                                         }
                                       },
                                       "required": [
@@ -83683,6 +83970,170 @@
                                           "type": "number",
                                           "minimum": 0.5,
                                           "maximum": 3
+                                        },
+                                        "rotate": {
+                                          "description": "How far it is turned, in degrees clockwise",
+                                          "type": "number",
+                                          "minimum": -180,
+                                          "maximum": 180
+                                        },
+                                        "z": {
+                                          "description": "Stacking order among the stickers and texts: higher sits on top",
+                                          "type": "integer",
+                                          "minimum": 0,
+                                          "maximum": 999
+                                        }
+                                      },
+                                      "required": [
+                                        "x",
+                                        "y"
+                                      ],
+                                      "additionalProperties": false
+                                    },
+                                    "gif2": {
+                                      "type": "object",
+                                      "properties": {
+                                        "x": {
+                                          "type": "number",
+                                          "minimum": 0,
+                                          "maximum": 1
+                                        },
+                                        "y": {
+                                          "type": "number",
+                                          "minimum": 0,
+                                          "maximum": 1
+                                        },
+                                        "scale": {
+                                          "description": "How much bigger or smaller than usual",
+                                          "type": "number",
+                                          "minimum": 0.5,
+                                          "maximum": 3
+                                        },
+                                        "rotate": {
+                                          "description": "How far it is turned, in degrees clockwise",
+                                          "type": "number",
+                                          "minimum": -180,
+                                          "maximum": 180
+                                        },
+                                        "z": {
+                                          "description": "Stacking order among the stickers and texts: higher sits on top",
+                                          "type": "integer",
+                                          "minimum": 0,
+                                          "maximum": 999
+                                        }
+                                      },
+                                      "required": [
+                                        "x",
+                                        "y"
+                                      ],
+                                      "additionalProperties": false
+                                    },
+                                    "gif3": {
+                                      "type": "object",
+                                      "properties": {
+                                        "x": {
+                                          "type": "number",
+                                          "minimum": 0,
+                                          "maximum": 1
+                                        },
+                                        "y": {
+                                          "type": "number",
+                                          "minimum": 0,
+                                          "maximum": 1
+                                        },
+                                        "scale": {
+                                          "description": "How much bigger or smaller than usual",
+                                          "type": "number",
+                                          "minimum": 0.5,
+                                          "maximum": 3
+                                        },
+                                        "rotate": {
+                                          "description": "How far it is turned, in degrees clockwise",
+                                          "type": "number",
+                                          "minimum": -180,
+                                          "maximum": 180
+                                        },
+                                        "z": {
+                                          "description": "Stacking order among the stickers and texts: higher sits on top",
+                                          "type": "integer",
+                                          "minimum": 0,
+                                          "maximum": 999
+                                        }
+                                      },
+                                      "required": [
+                                        "x",
+                                        "y"
+                                      ],
+                                      "additionalProperties": false
+                                    },
+                                    "gif4": {
+                                      "type": "object",
+                                      "properties": {
+                                        "x": {
+                                          "type": "number",
+                                          "minimum": 0,
+                                          "maximum": 1
+                                        },
+                                        "y": {
+                                          "type": "number",
+                                          "minimum": 0,
+                                          "maximum": 1
+                                        },
+                                        "scale": {
+                                          "description": "How much bigger or smaller than usual",
+                                          "type": "number",
+                                          "minimum": 0.5,
+                                          "maximum": 3
+                                        },
+                                        "rotate": {
+                                          "description": "How far it is turned, in degrees clockwise",
+                                          "type": "number",
+                                          "minimum": -180,
+                                          "maximum": 180
+                                        },
+                                        "z": {
+                                          "description": "Stacking order among the stickers and texts: higher sits on top",
+                                          "type": "integer",
+                                          "minimum": 0,
+                                          "maximum": 999
+                                        }
+                                      },
+                                      "required": [
+                                        "x",
+                                        "y"
+                                      ],
+                                      "additionalProperties": false
+                                    },
+                                    "gif5": {
+                                      "type": "object",
+                                      "properties": {
+                                        "x": {
+                                          "type": "number",
+                                          "minimum": 0,
+                                          "maximum": 1
+                                        },
+                                        "y": {
+                                          "type": "number",
+                                          "minimum": 0,
+                                          "maximum": 1
+                                        },
+                                        "scale": {
+                                          "description": "How much bigger or smaller than usual",
+                                          "type": "number",
+                                          "minimum": 0.5,
+                                          "maximum": 3
+                                        },
+                                        "rotate": {
+                                          "description": "How far it is turned, in degrees clockwise",
+                                          "type": "number",
+                                          "minimum": -180,
+                                          "maximum": 180
+                                        },
+                                        "z": {
+                                          "description": "Stacking order among the stickers and texts: higher sits on top",
+                                          "type": "integer",
+                                          "minimum": 0,
+                                          "maximum": 999
                                         }
                                       },
                                       "required": [
@@ -83709,6 +84160,94 @@
                                           "type": "number",
                                           "minimum": 0.5,
                                           "maximum": 3
+                                        },
+                                        "rotate": {
+                                          "description": "How far it is turned, in degrees clockwise",
+                                          "type": "number",
+                                          "minimum": -180,
+                                          "maximum": 180
+                                        },
+                                        "z": {
+                                          "description": "Stacking order among the stickers and texts: higher sits on top",
+                                          "type": "integer",
+                                          "minimum": 0,
+                                          "maximum": 999
+                                        }
+                                      },
+                                      "required": [
+                                        "x",
+                                        "y"
+                                      ],
+                                      "additionalProperties": false
+                                    },
+                                    "link": {
+                                      "type": "object",
+                                      "properties": {
+                                        "x": {
+                                          "type": "number",
+                                          "minimum": 0,
+                                          "maximum": 1
+                                        },
+                                        "y": {
+                                          "type": "number",
+                                          "minimum": 0,
+                                          "maximum": 1
+                                        },
+                                        "scale": {
+                                          "description": "How much bigger or smaller than usual",
+                                          "type": "number",
+                                          "minimum": 0.5,
+                                          "maximum": 3
+                                        },
+                                        "rotate": {
+                                          "description": "How far it is turned, in degrees clockwise",
+                                          "type": "number",
+                                          "minimum": -180,
+                                          "maximum": 180
+                                        },
+                                        "z": {
+                                          "description": "Stacking order among the stickers and texts: higher sits on top",
+                                          "type": "integer",
+                                          "minimum": 0,
+                                          "maximum": 999
+                                        }
+                                      },
+                                      "required": [
+                                        "x",
+                                        "y"
+                                      ],
+                                      "additionalProperties": false
+                                    },
+                                    "asklink": {
+                                      "type": "object",
+                                      "properties": {
+                                        "x": {
+                                          "type": "number",
+                                          "minimum": 0,
+                                          "maximum": 1
+                                        },
+                                        "y": {
+                                          "type": "number",
+                                          "minimum": 0,
+                                          "maximum": 1
+                                        },
+                                        "scale": {
+                                          "description": "How much bigger or smaller than usual",
+                                          "type": "number",
+                                          "minimum": 0.5,
+                                          "maximum": 3
+                                        },
+                                        "rotate": {
+                                          "description": "How far it is turned, in degrees clockwise",
+                                          "type": "number",
+                                          "minimum": -180,
+                                          "maximum": 180
+                                        },
+                                        "z": {
+                                          "description": "Stacking order among the stickers and texts: higher sits on top",
+                                          "type": "integer",
+                                          "minimum": 0,
+                                          "maximum": 999
                                         }
                                       },
                                       "required": [
@@ -83735,6 +84274,18 @@
                                           "type": "number",
                                           "minimum": 0.5,
                                           "maximum": 3
+                                        },
+                                        "rotate": {
+                                          "description": "How far it is turned, in degrees clockwise",
+                                          "type": "number",
+                                          "minimum": -180,
+                                          "maximum": 180
+                                        },
+                                        "z": {
+                                          "description": "Stacking order among the stickers and texts: higher sits on top",
+                                          "type": "integer",
+                                          "minimum": 0,
+                                          "maximum": 999
                                         }
                                       },
                                       "required": [
@@ -83761,6 +84312,18 @@
                                           "type": "number",
                                           "minimum": 0.5,
                                           "maximum": 3
+                                        },
+                                        "rotate": {
+                                          "description": "How far it is turned, in degrees clockwise",
+                                          "type": "number",
+                                          "minimum": -180,
+                                          "maximum": 180
+                                        },
+                                        "z": {
+                                          "description": "Stacking order among the stickers and texts: higher sits on top",
+                                          "type": "integer",
+                                          "minimum": 0,
+                                          "maximum": 999
                                         }
                                       },
                                       "required": [
@@ -83879,6 +84442,18 @@
                                               "box",
                                               "outline"
                                             ]
+                                          },
+                                          "rotate": {
+                                            "description": "How far it is turned, in degrees clockwise",
+                                            "type": "number",
+                                            "minimum": -180,
+                                            "maximum": 180
+                                          },
+                                          "z": {
+                                            "description": "Stacking order among the stickers and texts: higher sits on top",
+                                            "type": "integer",
+                                            "minimum": 0,
+                                            "maximum": 999
                                           }
                                         },
                                         "required": [
@@ -83932,8 +84507,13 @@
                                 "background",
                                 "media",
                                 "gif",
+                                "gifs",
                                 "location",
+                                "link",
+                                "askCode",
+                                "askText",
                                 "ask",
+                                "asks",
                                 "showDate",
                                 "showTime",
                                 "positions",
@@ -83995,9 +84575,18 @@
                     "minLength": 1
                   },
                   "gifId": {
-                    "description": "A GIF from GET /v1/gifs shown on top of the story",
+                    "description": "Older apps: one GIF to show; use gifIds",
                     "type": "string",
                     "pattern": "^[\\w-]{1,128}$"
+                  },
+                  "gifIds": {
+                    "description": "GIFs from GET /v1/gifs shown on top of the story",
+                    "maxItems": 5,
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "pattern": "^[\\w-]{1,128}$"
+                    }
                   },
                   "location": {
                     "type": "object",
@@ -84031,10 +84620,47 @@
                       "lng"
                     ]
                   },
+                  "link": {
+                    "type": "object",
+                    "properties": {
+                      "url": {
+                        "type": "string",
+                        "maxLength": 2000,
+                        "format": "uri",
+                        "description": "Where it goes, http or https"
+                      },
+                      "label": {
+                        "description": "What the sticker says instead of the address",
+                        "type": "string",
+                        "maxLength": 40
+                      }
+                    },
+                    "required": [
+                      "url"
+                    ]
+                  },
+                  "askLink": {
+                    "description": "Invite anonymous messages: a sticker that opens your anonymous link",
+                    "type": "boolean"
+                  },
+                  "askText": {
+                    "description": "With askLink: what the sticker says, instead of the app's line",
+                    "type": "string",
+                    "maxLength": 60
+                  },
                   "askId": {
-                    "description": "An anonymous message you received, shown on the story as a card: its text, photo or GIF",
+                    "description": "Older apps: one anonymous message to show; use askIds",
                     "type": "string",
                     "minLength": 1
+                  },
+                  "askIds": {
+                    "description": "Anonymous messages you received, each shown on the story as a card: its text, photo or GIF",
+                    "maxItems": 5,
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "minLength": 1
+                    }
                   },
                   "fromChat": {
                     "description": "The text is a chat message shared as it was, shown as a chat bubble",
@@ -84079,6 +84705,166 @@
                             "type": "number",
                             "minimum": 0.5,
                             "maximum": 3
+                          },
+                          "rotate": {
+                            "description": "How far it is turned, in degrees clockwise",
+                            "type": "number",
+                            "minimum": -180,
+                            "maximum": 180
+                          },
+                          "z": {
+                            "description": "Stacking order among the stickers and texts: higher sits on top",
+                            "type": "integer",
+                            "minimum": 0,
+                            "maximum": 999
+                          }
+                        },
+                        "required": [
+                          "x",
+                          "y"
+                        ]
+                      },
+                      "ask2": {
+                        "type": "object",
+                        "properties": {
+                          "x": {
+                            "type": "number",
+                            "minimum": 0,
+                            "maximum": 1
+                          },
+                          "y": {
+                            "type": "number",
+                            "minimum": 0,
+                            "maximum": 1
+                          },
+                          "scale": {
+                            "description": "How much bigger or smaller than usual",
+                            "type": "number",
+                            "minimum": 0.5,
+                            "maximum": 3
+                          },
+                          "rotate": {
+                            "description": "How far it is turned, in degrees clockwise",
+                            "type": "number",
+                            "minimum": -180,
+                            "maximum": 180
+                          },
+                          "z": {
+                            "description": "Stacking order among the stickers and texts: higher sits on top",
+                            "type": "integer",
+                            "minimum": 0,
+                            "maximum": 999
+                          }
+                        },
+                        "required": [
+                          "x",
+                          "y"
+                        ]
+                      },
+                      "ask3": {
+                        "type": "object",
+                        "properties": {
+                          "x": {
+                            "type": "number",
+                            "minimum": 0,
+                            "maximum": 1
+                          },
+                          "y": {
+                            "type": "number",
+                            "minimum": 0,
+                            "maximum": 1
+                          },
+                          "scale": {
+                            "description": "How much bigger or smaller than usual",
+                            "type": "number",
+                            "minimum": 0.5,
+                            "maximum": 3
+                          },
+                          "rotate": {
+                            "description": "How far it is turned, in degrees clockwise",
+                            "type": "number",
+                            "minimum": -180,
+                            "maximum": 180
+                          },
+                          "z": {
+                            "description": "Stacking order among the stickers and texts: higher sits on top",
+                            "type": "integer",
+                            "minimum": 0,
+                            "maximum": 999
+                          }
+                        },
+                        "required": [
+                          "x",
+                          "y"
+                        ]
+                      },
+                      "ask4": {
+                        "type": "object",
+                        "properties": {
+                          "x": {
+                            "type": "number",
+                            "minimum": 0,
+                            "maximum": 1
+                          },
+                          "y": {
+                            "type": "number",
+                            "minimum": 0,
+                            "maximum": 1
+                          },
+                          "scale": {
+                            "description": "How much bigger or smaller than usual",
+                            "type": "number",
+                            "minimum": 0.5,
+                            "maximum": 3
+                          },
+                          "rotate": {
+                            "description": "How far it is turned, in degrees clockwise",
+                            "type": "number",
+                            "minimum": -180,
+                            "maximum": 180
+                          },
+                          "z": {
+                            "description": "Stacking order among the stickers and texts: higher sits on top",
+                            "type": "integer",
+                            "minimum": 0,
+                            "maximum": 999
+                          }
+                        },
+                        "required": [
+                          "x",
+                          "y"
+                        ]
+                      },
+                      "ask5": {
+                        "type": "object",
+                        "properties": {
+                          "x": {
+                            "type": "number",
+                            "minimum": 0,
+                            "maximum": 1
+                          },
+                          "y": {
+                            "type": "number",
+                            "minimum": 0,
+                            "maximum": 1
+                          },
+                          "scale": {
+                            "description": "How much bigger or smaller than usual",
+                            "type": "number",
+                            "minimum": 0.5,
+                            "maximum": 3
+                          },
+                          "rotate": {
+                            "description": "How far it is turned, in degrees clockwise",
+                            "type": "number",
+                            "minimum": -180,
+                            "maximum": 180
+                          },
+                          "z": {
+                            "description": "Stacking order among the stickers and texts: higher sits on top",
+                            "type": "integer",
+                            "minimum": 0,
+                            "maximum": 999
                           }
                         },
                         "required": [
@@ -84104,6 +84890,166 @@
                             "type": "number",
                             "minimum": 0.5,
                             "maximum": 3
+                          },
+                          "rotate": {
+                            "description": "How far it is turned, in degrees clockwise",
+                            "type": "number",
+                            "minimum": -180,
+                            "maximum": 180
+                          },
+                          "z": {
+                            "description": "Stacking order among the stickers and texts: higher sits on top",
+                            "type": "integer",
+                            "minimum": 0,
+                            "maximum": 999
+                          }
+                        },
+                        "required": [
+                          "x",
+                          "y"
+                        ]
+                      },
+                      "gif2": {
+                        "type": "object",
+                        "properties": {
+                          "x": {
+                            "type": "number",
+                            "minimum": 0,
+                            "maximum": 1
+                          },
+                          "y": {
+                            "type": "number",
+                            "minimum": 0,
+                            "maximum": 1
+                          },
+                          "scale": {
+                            "description": "How much bigger or smaller than usual",
+                            "type": "number",
+                            "minimum": 0.5,
+                            "maximum": 3
+                          },
+                          "rotate": {
+                            "description": "How far it is turned, in degrees clockwise",
+                            "type": "number",
+                            "minimum": -180,
+                            "maximum": 180
+                          },
+                          "z": {
+                            "description": "Stacking order among the stickers and texts: higher sits on top",
+                            "type": "integer",
+                            "minimum": 0,
+                            "maximum": 999
+                          }
+                        },
+                        "required": [
+                          "x",
+                          "y"
+                        ]
+                      },
+                      "gif3": {
+                        "type": "object",
+                        "properties": {
+                          "x": {
+                            "type": "number",
+                            "minimum": 0,
+                            "maximum": 1
+                          },
+                          "y": {
+                            "type": "number",
+                            "minimum": 0,
+                            "maximum": 1
+                          },
+                          "scale": {
+                            "description": "How much bigger or smaller than usual",
+                            "type": "number",
+                            "minimum": 0.5,
+                            "maximum": 3
+                          },
+                          "rotate": {
+                            "description": "How far it is turned, in degrees clockwise",
+                            "type": "number",
+                            "minimum": -180,
+                            "maximum": 180
+                          },
+                          "z": {
+                            "description": "Stacking order among the stickers and texts: higher sits on top",
+                            "type": "integer",
+                            "minimum": 0,
+                            "maximum": 999
+                          }
+                        },
+                        "required": [
+                          "x",
+                          "y"
+                        ]
+                      },
+                      "gif4": {
+                        "type": "object",
+                        "properties": {
+                          "x": {
+                            "type": "number",
+                            "minimum": 0,
+                            "maximum": 1
+                          },
+                          "y": {
+                            "type": "number",
+                            "minimum": 0,
+                            "maximum": 1
+                          },
+                          "scale": {
+                            "description": "How much bigger or smaller than usual",
+                            "type": "number",
+                            "minimum": 0.5,
+                            "maximum": 3
+                          },
+                          "rotate": {
+                            "description": "How far it is turned, in degrees clockwise",
+                            "type": "number",
+                            "minimum": -180,
+                            "maximum": 180
+                          },
+                          "z": {
+                            "description": "Stacking order among the stickers and texts: higher sits on top",
+                            "type": "integer",
+                            "minimum": 0,
+                            "maximum": 999
+                          }
+                        },
+                        "required": [
+                          "x",
+                          "y"
+                        ]
+                      },
+                      "gif5": {
+                        "type": "object",
+                        "properties": {
+                          "x": {
+                            "type": "number",
+                            "minimum": 0,
+                            "maximum": 1
+                          },
+                          "y": {
+                            "type": "number",
+                            "minimum": 0,
+                            "maximum": 1
+                          },
+                          "scale": {
+                            "description": "How much bigger or smaller than usual",
+                            "type": "number",
+                            "minimum": 0.5,
+                            "maximum": 3
+                          },
+                          "rotate": {
+                            "description": "How far it is turned, in degrees clockwise",
+                            "type": "number",
+                            "minimum": -180,
+                            "maximum": 180
+                          },
+                          "z": {
+                            "description": "Stacking order among the stickers and texts: higher sits on top",
+                            "type": "integer",
+                            "minimum": 0,
+                            "maximum": 999
                           }
                         },
                         "required": [
@@ -84129,6 +85075,92 @@
                             "type": "number",
                             "minimum": 0.5,
                             "maximum": 3
+                          },
+                          "rotate": {
+                            "description": "How far it is turned, in degrees clockwise",
+                            "type": "number",
+                            "minimum": -180,
+                            "maximum": 180
+                          },
+                          "z": {
+                            "description": "Stacking order among the stickers and texts: higher sits on top",
+                            "type": "integer",
+                            "minimum": 0,
+                            "maximum": 999
+                          }
+                        },
+                        "required": [
+                          "x",
+                          "y"
+                        ]
+                      },
+                      "link": {
+                        "type": "object",
+                        "properties": {
+                          "x": {
+                            "type": "number",
+                            "minimum": 0,
+                            "maximum": 1
+                          },
+                          "y": {
+                            "type": "number",
+                            "minimum": 0,
+                            "maximum": 1
+                          },
+                          "scale": {
+                            "description": "How much bigger or smaller than usual",
+                            "type": "number",
+                            "minimum": 0.5,
+                            "maximum": 3
+                          },
+                          "rotate": {
+                            "description": "How far it is turned, in degrees clockwise",
+                            "type": "number",
+                            "minimum": -180,
+                            "maximum": 180
+                          },
+                          "z": {
+                            "description": "Stacking order among the stickers and texts: higher sits on top",
+                            "type": "integer",
+                            "minimum": 0,
+                            "maximum": 999
+                          }
+                        },
+                        "required": [
+                          "x",
+                          "y"
+                        ]
+                      },
+                      "asklink": {
+                        "type": "object",
+                        "properties": {
+                          "x": {
+                            "type": "number",
+                            "minimum": 0,
+                            "maximum": 1
+                          },
+                          "y": {
+                            "type": "number",
+                            "minimum": 0,
+                            "maximum": 1
+                          },
+                          "scale": {
+                            "description": "How much bigger or smaller than usual",
+                            "type": "number",
+                            "minimum": 0.5,
+                            "maximum": 3
+                          },
+                          "rotate": {
+                            "description": "How far it is turned, in degrees clockwise",
+                            "type": "number",
+                            "minimum": -180,
+                            "maximum": 180
+                          },
+                          "z": {
+                            "description": "Stacking order among the stickers and texts: higher sits on top",
+                            "type": "integer",
+                            "minimum": 0,
+                            "maximum": 999
                           }
                         },
                         "required": [
@@ -84154,6 +85186,18 @@
                             "type": "number",
                             "minimum": 0.5,
                             "maximum": 3
+                          },
+                          "rotate": {
+                            "description": "How far it is turned, in degrees clockwise",
+                            "type": "number",
+                            "minimum": -180,
+                            "maximum": 180
+                          },
+                          "z": {
+                            "description": "Stacking order among the stickers and texts: higher sits on top",
+                            "type": "integer",
+                            "minimum": 0,
+                            "maximum": 999
                           }
                         },
                         "required": [
@@ -84179,6 +85223,18 @@
                             "type": "number",
                             "minimum": 0.5,
                             "maximum": 3
+                          },
+                          "rotate": {
+                            "description": "How far it is turned, in degrees clockwise",
+                            "type": "number",
+                            "minimum": -180,
+                            "maximum": 180
+                          },
+                          "z": {
+                            "description": "Stacking order among the stickers and texts: higher sits on top",
+                            "type": "integer",
+                            "minimum": 0,
+                            "maximum": 999
                           }
                         },
                         "required": [
@@ -84294,6 +85350,18 @@
                                 "box",
                                 "outline"
                               ]
+                            },
+                            "rotate": {
+                              "description": "How far it is turned, in degrees clockwise",
+                              "type": "number",
+                              "minimum": -180,
+                              "maximum": 180
+                            },
+                            "z": {
+                              "description": "Stacking order among the stickers and texts: higher sits on top",
+                              "type": "integer",
+                              "minimum": 0,
+                              "maximum": 999
                             }
                           },
                           "required": [
@@ -84513,6 +85581,7 @@
                     },
                     "gif": {
                       "nullable": true,
+                      "description": "Older apps: the first of `gifs`",
                       "type": "object",
                       "properties": {
                         "url": {
@@ -84538,6 +85607,37 @@
                         "height"
                       ],
                       "additionalProperties": false
+                    },
+                    "gifs": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "url": {
+                            "type": "string",
+                            "format": "uri"
+                          },
+                          "width": {
+                            "nullable": true,
+                            "type": "integer",
+                            "minimum": -9007199254740991,
+                            "maximum": 9007199254740991
+                          },
+                          "height": {
+                            "nullable": true,
+                            "type": "integer",
+                            "minimum": -9007199254740991,
+                            "maximum": 9007199254740991
+                          }
+                        },
+                        "required": [
+                          "url",
+                          "width",
+                          "height"
+                        ],
+                        "additionalProperties": false
+                      },
+                      "description": "GIFs on top of the story, as MP4s to play muted on a loop"
                     },
                     "location": {
                       "nullable": true,
@@ -84573,9 +85673,41 @@
                       ],
                       "additionalProperties": false
                     },
+                    "link": {
+                      "nullable": true,
+                      "description": "A link sticker to open",
+                      "type": "object",
+                      "properties": {
+                        "url": {
+                          "type": "string",
+                          "maxLength": 2000,
+                          "format": "uri",
+                          "description": "Where it goes, http or https"
+                        },
+                        "label": {
+                          "description": "What the sticker says instead of the address",
+                          "type": "string",
+                          "maxLength": 40
+                        }
+                      },
+                      "required": [
+                        "url"
+                      ],
+                      "additionalProperties": false
+                    },
+                    "askCode": {
+                      "nullable": true,
+                      "description": "The poster's anonymous link code, as it is now, when the story invites anonymous messages; for the URL, see askUrl",
+                      "type": "string"
+                    },
+                    "askText": {
+                      "nullable": true,
+                      "description": "What the anonymous link sticker says; null for the app's line",
+                      "type": "string"
+                    },
                     "ask": {
                       "nullable": true,
-                      "description": "An anonymous message the poster received and shared, as a card",
+                      "description": "Older apps: the first of `asks`",
                       "type": "object",
                       "properties": {
                         "text": {
@@ -84630,6 +85762,65 @@
                       ],
                       "additionalProperties": false
                     },
+                    "asks": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "text": {
+                            "type": "string",
+                            "description": "Empty when only a photo or a GIF was sent"
+                          },
+                          "prompt": {
+                            "nullable": true,
+                            "description": "The prompt it answered; null for the app's own",
+                            "type": "string"
+                          },
+                          "photoUrl": {
+                            "nullable": true,
+                            "type": "string",
+                            "format": "uri"
+                          },
+                          "gif": {
+                            "nullable": true,
+                            "description": "As an MP4 to play muted on a loop",
+                            "type": "object",
+                            "properties": {
+                              "url": {
+                                "type": "string",
+                                "format": "uri"
+                              },
+                              "width": {
+                                "nullable": true,
+                                "type": "integer",
+                                "minimum": -9007199254740991,
+                                "maximum": 9007199254740991
+                              },
+                              "height": {
+                                "nullable": true,
+                                "type": "integer",
+                                "minimum": -9007199254740991,
+                                "maximum": 9007199254740991
+                              }
+                            },
+                            "required": [
+                              "url",
+                              "width",
+                              "height"
+                            ],
+                            "additionalProperties": false
+                          }
+                        },
+                        "required": [
+                          "text",
+                          "prompt",
+                          "photoUrl",
+                          "gif"
+                        ],
+                        "additionalProperties": false
+                      },
+                      "description": "Anonymous messages the poster received and shared, each as a card"
+                    },
                     "showDate": {
                       "type": "boolean"
                     },
@@ -84657,6 +85848,170 @@
                               "type": "number",
                               "minimum": 0.5,
                               "maximum": 3
+                            },
+                            "rotate": {
+                              "description": "How far it is turned, in degrees clockwise",
+                              "type": "number",
+                              "minimum": -180,
+                              "maximum": 180
+                            },
+                            "z": {
+                              "description": "Stacking order among the stickers and texts: higher sits on top",
+                              "type": "integer",
+                              "minimum": 0,
+                              "maximum": 999
+                            }
+                          },
+                          "required": [
+                            "x",
+                            "y"
+                          ],
+                          "additionalProperties": false
+                        },
+                        "ask2": {
+                          "type": "object",
+                          "properties": {
+                            "x": {
+                              "type": "number",
+                              "minimum": 0,
+                              "maximum": 1
+                            },
+                            "y": {
+                              "type": "number",
+                              "minimum": 0,
+                              "maximum": 1
+                            },
+                            "scale": {
+                              "description": "How much bigger or smaller than usual",
+                              "type": "number",
+                              "minimum": 0.5,
+                              "maximum": 3
+                            },
+                            "rotate": {
+                              "description": "How far it is turned, in degrees clockwise",
+                              "type": "number",
+                              "minimum": -180,
+                              "maximum": 180
+                            },
+                            "z": {
+                              "description": "Stacking order among the stickers and texts: higher sits on top",
+                              "type": "integer",
+                              "minimum": 0,
+                              "maximum": 999
+                            }
+                          },
+                          "required": [
+                            "x",
+                            "y"
+                          ],
+                          "additionalProperties": false
+                        },
+                        "ask3": {
+                          "type": "object",
+                          "properties": {
+                            "x": {
+                              "type": "number",
+                              "minimum": 0,
+                              "maximum": 1
+                            },
+                            "y": {
+                              "type": "number",
+                              "minimum": 0,
+                              "maximum": 1
+                            },
+                            "scale": {
+                              "description": "How much bigger or smaller than usual",
+                              "type": "number",
+                              "minimum": 0.5,
+                              "maximum": 3
+                            },
+                            "rotate": {
+                              "description": "How far it is turned, in degrees clockwise",
+                              "type": "number",
+                              "minimum": -180,
+                              "maximum": 180
+                            },
+                            "z": {
+                              "description": "Stacking order among the stickers and texts: higher sits on top",
+                              "type": "integer",
+                              "minimum": 0,
+                              "maximum": 999
+                            }
+                          },
+                          "required": [
+                            "x",
+                            "y"
+                          ],
+                          "additionalProperties": false
+                        },
+                        "ask4": {
+                          "type": "object",
+                          "properties": {
+                            "x": {
+                              "type": "number",
+                              "minimum": 0,
+                              "maximum": 1
+                            },
+                            "y": {
+                              "type": "number",
+                              "minimum": 0,
+                              "maximum": 1
+                            },
+                            "scale": {
+                              "description": "How much bigger or smaller than usual",
+                              "type": "number",
+                              "minimum": 0.5,
+                              "maximum": 3
+                            },
+                            "rotate": {
+                              "description": "How far it is turned, in degrees clockwise",
+                              "type": "number",
+                              "minimum": -180,
+                              "maximum": 180
+                            },
+                            "z": {
+                              "description": "Stacking order among the stickers and texts: higher sits on top",
+                              "type": "integer",
+                              "minimum": 0,
+                              "maximum": 999
+                            }
+                          },
+                          "required": [
+                            "x",
+                            "y"
+                          ],
+                          "additionalProperties": false
+                        },
+                        "ask5": {
+                          "type": "object",
+                          "properties": {
+                            "x": {
+                              "type": "number",
+                              "minimum": 0,
+                              "maximum": 1
+                            },
+                            "y": {
+                              "type": "number",
+                              "minimum": 0,
+                              "maximum": 1
+                            },
+                            "scale": {
+                              "description": "How much bigger or smaller than usual",
+                              "type": "number",
+                              "minimum": 0.5,
+                              "maximum": 3
+                            },
+                            "rotate": {
+                              "description": "How far it is turned, in degrees clockwise",
+                              "type": "number",
+                              "minimum": -180,
+                              "maximum": 180
+                            },
+                            "z": {
+                              "description": "Stacking order among the stickers and texts: higher sits on top",
+                              "type": "integer",
+                              "minimum": 0,
+                              "maximum": 999
                             }
                           },
                           "required": [
@@ -84683,6 +86038,170 @@
                               "type": "number",
                               "minimum": 0.5,
                               "maximum": 3
+                            },
+                            "rotate": {
+                              "description": "How far it is turned, in degrees clockwise",
+                              "type": "number",
+                              "minimum": -180,
+                              "maximum": 180
+                            },
+                            "z": {
+                              "description": "Stacking order among the stickers and texts: higher sits on top",
+                              "type": "integer",
+                              "minimum": 0,
+                              "maximum": 999
+                            }
+                          },
+                          "required": [
+                            "x",
+                            "y"
+                          ],
+                          "additionalProperties": false
+                        },
+                        "gif2": {
+                          "type": "object",
+                          "properties": {
+                            "x": {
+                              "type": "number",
+                              "minimum": 0,
+                              "maximum": 1
+                            },
+                            "y": {
+                              "type": "number",
+                              "minimum": 0,
+                              "maximum": 1
+                            },
+                            "scale": {
+                              "description": "How much bigger or smaller than usual",
+                              "type": "number",
+                              "minimum": 0.5,
+                              "maximum": 3
+                            },
+                            "rotate": {
+                              "description": "How far it is turned, in degrees clockwise",
+                              "type": "number",
+                              "minimum": -180,
+                              "maximum": 180
+                            },
+                            "z": {
+                              "description": "Stacking order among the stickers and texts: higher sits on top",
+                              "type": "integer",
+                              "minimum": 0,
+                              "maximum": 999
+                            }
+                          },
+                          "required": [
+                            "x",
+                            "y"
+                          ],
+                          "additionalProperties": false
+                        },
+                        "gif3": {
+                          "type": "object",
+                          "properties": {
+                            "x": {
+                              "type": "number",
+                              "minimum": 0,
+                              "maximum": 1
+                            },
+                            "y": {
+                              "type": "number",
+                              "minimum": 0,
+                              "maximum": 1
+                            },
+                            "scale": {
+                              "description": "How much bigger or smaller than usual",
+                              "type": "number",
+                              "minimum": 0.5,
+                              "maximum": 3
+                            },
+                            "rotate": {
+                              "description": "How far it is turned, in degrees clockwise",
+                              "type": "number",
+                              "minimum": -180,
+                              "maximum": 180
+                            },
+                            "z": {
+                              "description": "Stacking order among the stickers and texts: higher sits on top",
+                              "type": "integer",
+                              "minimum": 0,
+                              "maximum": 999
+                            }
+                          },
+                          "required": [
+                            "x",
+                            "y"
+                          ],
+                          "additionalProperties": false
+                        },
+                        "gif4": {
+                          "type": "object",
+                          "properties": {
+                            "x": {
+                              "type": "number",
+                              "minimum": 0,
+                              "maximum": 1
+                            },
+                            "y": {
+                              "type": "number",
+                              "minimum": 0,
+                              "maximum": 1
+                            },
+                            "scale": {
+                              "description": "How much bigger or smaller than usual",
+                              "type": "number",
+                              "minimum": 0.5,
+                              "maximum": 3
+                            },
+                            "rotate": {
+                              "description": "How far it is turned, in degrees clockwise",
+                              "type": "number",
+                              "minimum": -180,
+                              "maximum": 180
+                            },
+                            "z": {
+                              "description": "Stacking order among the stickers and texts: higher sits on top",
+                              "type": "integer",
+                              "minimum": 0,
+                              "maximum": 999
+                            }
+                          },
+                          "required": [
+                            "x",
+                            "y"
+                          ],
+                          "additionalProperties": false
+                        },
+                        "gif5": {
+                          "type": "object",
+                          "properties": {
+                            "x": {
+                              "type": "number",
+                              "minimum": 0,
+                              "maximum": 1
+                            },
+                            "y": {
+                              "type": "number",
+                              "minimum": 0,
+                              "maximum": 1
+                            },
+                            "scale": {
+                              "description": "How much bigger or smaller than usual",
+                              "type": "number",
+                              "minimum": 0.5,
+                              "maximum": 3
+                            },
+                            "rotate": {
+                              "description": "How far it is turned, in degrees clockwise",
+                              "type": "number",
+                              "minimum": -180,
+                              "maximum": 180
+                            },
+                            "z": {
+                              "description": "Stacking order among the stickers and texts: higher sits on top",
+                              "type": "integer",
+                              "minimum": 0,
+                              "maximum": 999
                             }
                           },
                           "required": [
@@ -84709,6 +86228,94 @@
                               "type": "number",
                               "minimum": 0.5,
                               "maximum": 3
+                            },
+                            "rotate": {
+                              "description": "How far it is turned, in degrees clockwise",
+                              "type": "number",
+                              "minimum": -180,
+                              "maximum": 180
+                            },
+                            "z": {
+                              "description": "Stacking order among the stickers and texts: higher sits on top",
+                              "type": "integer",
+                              "minimum": 0,
+                              "maximum": 999
+                            }
+                          },
+                          "required": [
+                            "x",
+                            "y"
+                          ],
+                          "additionalProperties": false
+                        },
+                        "link": {
+                          "type": "object",
+                          "properties": {
+                            "x": {
+                              "type": "number",
+                              "minimum": 0,
+                              "maximum": 1
+                            },
+                            "y": {
+                              "type": "number",
+                              "minimum": 0,
+                              "maximum": 1
+                            },
+                            "scale": {
+                              "description": "How much bigger or smaller than usual",
+                              "type": "number",
+                              "minimum": 0.5,
+                              "maximum": 3
+                            },
+                            "rotate": {
+                              "description": "How far it is turned, in degrees clockwise",
+                              "type": "number",
+                              "minimum": -180,
+                              "maximum": 180
+                            },
+                            "z": {
+                              "description": "Stacking order among the stickers and texts: higher sits on top",
+                              "type": "integer",
+                              "minimum": 0,
+                              "maximum": 999
+                            }
+                          },
+                          "required": [
+                            "x",
+                            "y"
+                          ],
+                          "additionalProperties": false
+                        },
+                        "asklink": {
+                          "type": "object",
+                          "properties": {
+                            "x": {
+                              "type": "number",
+                              "minimum": 0,
+                              "maximum": 1
+                            },
+                            "y": {
+                              "type": "number",
+                              "minimum": 0,
+                              "maximum": 1
+                            },
+                            "scale": {
+                              "description": "How much bigger or smaller than usual",
+                              "type": "number",
+                              "minimum": 0.5,
+                              "maximum": 3
+                            },
+                            "rotate": {
+                              "description": "How far it is turned, in degrees clockwise",
+                              "type": "number",
+                              "minimum": -180,
+                              "maximum": 180
+                            },
+                            "z": {
+                              "description": "Stacking order among the stickers and texts: higher sits on top",
+                              "type": "integer",
+                              "minimum": 0,
+                              "maximum": 999
                             }
                           },
                           "required": [
@@ -84735,6 +86342,18 @@
                               "type": "number",
                               "minimum": 0.5,
                               "maximum": 3
+                            },
+                            "rotate": {
+                              "description": "How far it is turned, in degrees clockwise",
+                              "type": "number",
+                              "minimum": -180,
+                              "maximum": 180
+                            },
+                            "z": {
+                              "description": "Stacking order among the stickers and texts: higher sits on top",
+                              "type": "integer",
+                              "minimum": 0,
+                              "maximum": 999
                             }
                           },
                           "required": [
@@ -84761,6 +86380,18 @@
                               "type": "number",
                               "minimum": 0.5,
                               "maximum": 3
+                            },
+                            "rotate": {
+                              "description": "How far it is turned, in degrees clockwise",
+                              "type": "number",
+                              "minimum": -180,
+                              "maximum": 180
+                            },
+                            "z": {
+                              "description": "Stacking order among the stickers and texts: higher sits on top",
+                              "type": "integer",
+                              "minimum": 0,
+                              "maximum": 999
                             }
                           },
                           "required": [
@@ -84879,6 +86510,18 @@
                                   "box",
                                   "outline"
                                 ]
+                              },
+                              "rotate": {
+                                "description": "How far it is turned, in degrees clockwise",
+                                "type": "number",
+                                "minimum": -180,
+                                "maximum": 180
+                              },
+                              "z": {
+                                "description": "Stacking order among the stickers and texts: higher sits on top",
+                                "type": "integer",
+                                "minimum": 0,
+                                "maximum": 999
                               }
                             },
                             "required": [
@@ -84932,8 +86575,13 @@
                     "background",
                     "media",
                     "gif",
+                    "gifs",
                     "location",
+                    "link",
+                    "askCode",
+                    "askText",
                     "ask",
+                    "asks",
                     "showDate",
                     "showTime",
                     "positions",

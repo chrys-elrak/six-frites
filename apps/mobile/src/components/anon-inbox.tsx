@@ -58,7 +58,7 @@ interface CardStyle {
 }
 type Doodles = { ink: string; opacity: number; size: number };
 
-const HEAD_DOODLES: Doodles = { ink: "#ffffff", opacity: 0.3, size: 150 };
+export const HEAD_DOODLES: Doodles = { ink: "#ffffff", opacity: 0.3, size: 150 };
 
 // ponytail: font size picked from length, not measured; fine up to ASK_MAX, measure with onTextLayout if it overflows
 const cardFont = (text: string) => (text.length < 60 ? 28 : text.length < 160 ? 22 : 16);
@@ -288,7 +288,7 @@ function TempLinks({ code }: { code: string }) {
   );
 }
 
-function Gradient({ id, colors, wash, doodles }: { id: string; colors: AskColors; wash?: boolean; doodles?: Doodles }) {
+export function Gradient({ id, colors, wash, doodles }: { id: string; colors: AskColors; wash?: boolean; doodles?: Doodles }) {
   return (
     <Svg style={StyleSheet.absoluteFill}>
       <Defs>

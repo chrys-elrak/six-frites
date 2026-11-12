@@ -1,6 +1,6 @@
 "use client";
 
-import { kindFor } from "@six/sdk";
+import { kindFor, unwrap } from "@six/sdk";
 import {
   type AnonMessageDTO,
   type StoryDTO,
@@ -20,19 +20,50 @@ import {
   type StoryPositions,
   type StorySpot,
   type StorySticker,
+  STORY_ASKS,
+  STORY_GIFS,
+  ASK_PROMPT_MAX,
+  askUrl,
+  dropSpot,
+  stickerIndex,
+  stickerOf,
+  zToTop,
+  STORY_STICKER_SCALE,
 } from "@six/shared";
-import { useQueryClient } from "@tanstack/react-query";
-import { CalendarDays, Camera, CaseSensitive, ChevronDown, Clock, Hourglass, ImagePlus, Loader2, MapPin, Pencil, Scissors, SendHorizontal, Sticker, Type, X } from "lucide-react";
+import { useInfiniteQuery, useQueryClient } from "@tanstack/react-query";
+import {
+  CalendarDays,
+  Camera,
+  CaseSensitive,
+  Check,
+  ChevronDown,
+  Clock,
+  Hourglass,
+  ImageOff,
+  Link2,
+  MessageCircleQuestionMark,
+  ImagePlus,
+  Loader2,
+  MapPin,
+  Pencil,
+  Scissors,
+  SendHorizontal,
+  Sticker,
+  VenetianMask,
+  X,
+} from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { useCloseOnBack } from "@/lib/back";
 import { getLocale, useT } from "@/lib/i18n";
 import { mediaMeta } from "@/lib/media-meta";
+import { useSession } from "@/lib/session";
 import { six } from "@/lib/six";
 import { postStory } from "@/lib/story-post";
 import { CameraDialog } from "./camera-dialog";
 import { GifSearch } from "./gif-picker";
 import { currentPosition } from "./location-card";
 import { Portal } from "./portal";
+import { PrimaryButton } from "./ui";
 import { Sheet } from "./sheet";
 import { ChatBubbleCard, StoryStickers, backgroundAround } from "./stories";
 import { LastsPicker } from "./notes";
@@ -51,6 +82,21 @@ const swatchInput =
 
 const field =
   "w-full rounded-full bg-black/40 px-4 py-2.5 text-[16px] text-white outline-none backdrop-blur placeholder:text-white/60 focus:ring-2 focus:ring-white/60";
+
+/** Where a typed link goes: https:// is added when left out; null until it looks like a web address. */
+function webLink(typed: string) {
+  const t = typed.trim();
+  if (!t) return null;
+  try {
+    const u = new URL(/^https?:\/\//i.test(t) ? t : `https://${t}`);
+    return u.hostname.includes(".") ? u.toString() : null;
+  } catch {
+    return null;
+  }
+}
+
+/** Where the `i`th of several anonymous messages or GIFs lands: each a little lower than the one before. */
+const cascade = (i: number) => ({ x: 0.5, y: Math.min(0.15 + 0.15 * i, 0.8), scale: 0.75 });
 
 /**
  * Makes a story: text on a colour, or a photo or video, with a GIF, the place, the date or the time on top. With
@@ -79,8 +125,15 @@ export function StoryComposer({
   const [background, setBackground] = useState<string>(initialText ? backgroundAround(bubble) : STORY_BACKGROUNDS[0]);
   const [custom, setCustom] = useState(false);
   const [from, to] = background.split(",") as [string, string | undefined];
-  const [gif, setGif] = useState<GifDTO | null>(null);
-  const [ask, setAsk] = useState(anon ?? null);
+  const [gifs, setGifs] = useState<GifDTO[]>([]);
+  const [link, setLink] = useState<{ url: string; label: string } | null>(null);
+  const [askLink, setAskLink] = useState(false);
+  const [askText, setAskText] = useState("");
+  const askField = useRef<HTMLInputElement>(null);
+  const askCode = useSession((s) => s.user!.askCode);
+  const linkField = useRef<HTMLInputElement>(null);
+  const [asks, setAsks] = useState<AnonMessageDTO[]>(anon ? [anon] : []);
+  const [pickingAsks, setPickingAsks] = useState(false);
   const [pickingGif, setPickingGif] = useState(false);
   const [camera, setCamera] = useState(false);
   const [location, setLocation] = useState<StoryLocation | null>(null);
@@ -103,8 +156,10 @@ export function StoryComposer({
   const [error, setError] = useState<string | null>(null);
   const kind = file ? kindFor(file.type) : null;
   const tooLong = kind === "video" && (videoMs ?? 0) > STORY_LIMITS.videoMs + STORY_LIMITS.videoSlackMs;
-  const ready = (!!file || !!text.trim() || !!gif || !!ask || drawn) && !tooLong;
+  const href = link && webLink(link.url);
+  const ready = (!!file || !!text.trim() || gifs.length > 0 || asks.length > 0 || !!href || askLink || drawn) && !tooLong;
   const fromChat = !!initialText && !file;
+  const covered = !text.trim() && (asks.length > 0 || gifs.length > 0 || !!link || askLink || !!location || showDate || showTime || drawn);
 
   useEffect(() => {
     if (!file) return setUrl(undefined);
@@ -112,6 +167,59 @@ export function StoryComposer({
     setUrl(made);
     return () => URL.revokeObjectURL(made);
   }, [file]);
+
+  const lastPinch = useRef(0);
+  useEffect(() => {
+    const el = card.current;
+    if (!el) return;
+    const fit = (v: number) => Math.min(STORY_STICKER_SCALE.max, Math.max(STORY_STICKER_SCALE.min, v));
+    const under = (e: Event) => (e.target as Element).closest<HTMLElement>("[data-pinch]");
+    /** Resizes the sticker or text under a trackpad pinch: Chrome and Firefox send it as a wheel with ctrl held, Safari as gestures. */
+    const wheel = (e: WheelEvent) => {
+      const item = e.ctrlKey ? under(e) : null;
+      if (!item) return;
+      e.preventDefault();
+      resize(item, Math.exp(-e.deltaY / 100), e.timeStamp);
+    };
+    let pinched = 1;
+    const touch = window.matchMedia("(pointer: coarse)").matches;
+    const gestureStart = (e: Event) => {
+      pinched = 1;
+      if (under(e)) e.preventDefault();
+    };
+    const gestureChange = (e: Event) => {
+      const item = touch ? null : under(e);
+      if (!item) return;
+      e.preventDefault();
+      const now = (e as Event & { scale: number }).scale;
+      resize(item, now / pinched, e.timeStamp);
+      pinched = now;
+    };
+    const resize = (item: HTMLElement, by: number, at: number) => {
+      const [kind, key] = item.dataset.pinch!.split(":") as [string, string];
+      if (kind === "text") {
+        if (at - lastPinch.current > 400) keepRef.current();
+        lastPinch.current = at;
+        const i = Number(key);
+        return setDrawing((d) => ({ ...d, texts: d.texts.map((t, j) => (j === i ? { ...t, scale: fit(t.scale * by) } : t)) }));
+      }
+      const k = key as StorySticker;
+      const box = el.getBoundingClientRect();
+      const r = item.getBoundingClientRect();
+      setPositions((p) => {
+        const spot = p[k] ?? { x: (r.left + r.width / 2 - box.left) / box.width, y: (r.top + r.height / 2 - box.top) / box.height };
+        return { ...p, [k]: { ...spot, scale: fit((spot.scale ?? 1) * by) } };
+      });
+    };
+    el.addEventListener("wheel", wheel, { passive: false });
+    el.addEventListener("gesturestart", gestureStart);
+    el.addEventListener("gesturechange", gestureChange);
+    return () => {
+      el.removeEventListener("wheel", wheel);
+      el.removeEventListener("gesturestart", gestureStart);
+      el.removeEventListener("gesturechange", gestureChange);
+    };
+  }, []);
 
   useCloseOnBack(() => {
     if (writing) setWriting(null);
@@ -131,6 +239,8 @@ export function StoryComposer({
   }, []);
 
   const keep = () => setUndos((u) => [...u, drawing]);
+  const keepRef = useRef(keep);
+  keepRef.current = keep;
   function finishWriting() {
     const w = writing!;
     setWriting(null);
@@ -138,7 +248,17 @@ export function StoryComposer({
     if (!words && w.index < 0) return;
     keep();
     const old = drawing.texts[w.index];
-    const t = { text: words, color: w.color, font: w.font, look: w.look, x: old?.x ?? 0.5, y: old?.y ?? 0.4, scale: old?.scale ?? 1 };
+    const t = {
+      text: words,
+      color: w.color,
+      font: w.font,
+      look: w.look,
+      x: old?.x ?? 0.5,
+      y: old?.y ?? 0.4,
+      scale: old?.scale ?? 1,
+      rotate: old?.rotate,
+      z: old ? old.z : zToTop(positions, drawing.texts),
+    };
     setDrawing((d) => ({
       ...d,
       texts: !words ? d.texts.filter((_, i) => i !== w.index) : w.index < 0 ? [...d.texts, t] : d.texts.map((it, i) => (i === w.index ? t : it)),
@@ -193,8 +313,11 @@ export function StoryComposer({
         bubble: fromChat ? bubble : undefined,
         messageId: fromChat ? quote?.messageId : undefined,
         background,
-        gifId: gif?.id,
-        askId: ask?.id,
+        gifIds: gifs.length ? gifs.map((g) => g.id) : undefined,
+        link: href ? { url: href, label: link!.label.trim() || undefined } : undefined,
+        askLink: askLink || undefined,
+        askText: (askLink && askText.trim()) || undefined,
+        askIds: asks.length ? asks.map((m) => m.id) : undefined,
         location: location ? { ...location, name: location.name?.trim() || undefined } : undefined,
         showDate,
         showTime,
@@ -208,23 +331,32 @@ export function StoryComposer({
   }
 
   const stickers = {
-    ask: ask && { text: ask.text, prompt: ask.prompt, photoUrl: ask.photoUrl, gif: ask.gif },
-    gif: gif && <img src={gif.previewUrl} alt={gif.title} draggable={false} className="max-h-40 max-w-56 rounded-xl" />,
+    asks: asks.map((m) => ({ text: m.text, prompt: m.prompt, photoUrl: m.photoUrl, gif: m.gif })),
+    gifs: gifs.map((g, i) => <img key={i} src={g.previewUrl} alt={g.title} draggable={false} className="max-h-40 max-w-56 rounded-xl" />),
+    link: href ? { url: href, label: link!.label.trim() || undefined } : null,
+    askLink: askLink ? askUrl(window.location.origin, askCode) : null,
+    askText: askText.trim() || null,
     location,
     showDate,
     showTime,
     at: new Date().toISOString(),
     positions,
     frame: card,
-    onMove: (sticker: StorySticker, spot: StorySpot) => setPositions((p) => ({ ...p, [sticker]: spot })),
+    onMove: (sticker: StorySticker, spot: StorySpot) => setPositions((p) => ({ ...p, [sticker]: { ...spot, z: zToTop(p, drawing.texts, p[sticker]?.z) } })),
     onRemove: (sticker: StorySticker) => {
+      if (stickerIndex("ask", sticker) >= 0) return dropAsk(stickerIndex("ask", sticker));
+      if (stickerIndex("gif", sticker) >= 0) {
+        const i = stickerIndex("gif", sticker);
+        setGifs((g) => g.filter((_, j) => j !== i));
+        return setPositions((p) => dropSpot(p, "gif", i));
+      }
       ({
-        ask: () => setAsk(null),
-        gif: () => setGif(null),
         location: () => setLocation(null),
+        link: () => setLink(null),
+        asklink: () => setAskLink(false),
         date: () => setShowDate(false),
         time: () => setShowTime(false),
-      })[sticker]();
+      })[sticker as "link"]();
       setPositions((p) => {
         const next = { ...p };
         delete next[sticker];
@@ -232,16 +364,58 @@ export function StoryComposer({
       });
     },
     onTap: (sticker: StorySticker) => {
-      if (sticker === "gif") setPickingGif(true);
       if (sticker === "location") placeField.current?.focus();
+      if (sticker === "link") linkField.current?.focus();
+      if (sticker === "asklink") askField.current?.focus();
     },
   };
 
+  function dropAsk(i: number) {
+    setAsks((a) => a.filter((_, j) => j !== i));
+    setPositions((p) => dropSpot(p, "ask", i));
+  }
+
+  /** Puts an anonymous message on the story, or takes it off. Past the first, each lands a little lower than the last. */
+  function toggleAsk(m: AnonMessageDTO) {
+    const at = asks.findIndex((a) => a.id === m.id);
+    if (at >= 0) return dropAsk(at);
+    if (asks.length >= STORY_ASKS) return;
+    const i = asks.length;
+    setAsks([...asks, m]);
+    if (i > 0) setPositions((p) => ({ ...p, [stickerOf("ask", i)]: cascade(i) }));
+  }
+
+  function addGif(g: GifDTO) {
+    const i = gifs.length;
+    if (i >= STORY_GIFS) return;
+    setGifs([...gifs, g]);
+    if (i > 0) setPositions((p) => ({ ...p, [stickerOf("gif", i)]: cascade(i) }));
+  }
+
   const tools = [
-    ...(file ? [{ label: tr.stories.text, icon: Type, on: false, onClick: () => setFile(null) }] : []),
+    ...(file ? [{ label: tr.stories.removeMedia, icon: ImageOff, on: false, onClick: () => setFile(null) }] : []),
     { label: `${tr.stories.photo} / ${tr.stories.video}`, icon: ImagePlus, on: !!file, onClick: () => picker.current?.click() },
     { label: tr.composer.camera, icon: Camera, on: false, onClick: () => setCamera(true) },
-    { label: tr.stories.gif, icon: Sticker, on: !!gif || pickingGif, onClick: () => (gif ? setGif(null) : setPickingGif(!pickingGif)) },
+    { label: tr.stories.gif, icon: Sticker, on: gifs.length > 0 || pickingGif, onClick: () => setPickingGif(!pickingGif) },
+    {
+      label: tr.stories.link,
+      icon: Link2,
+      on: !!link,
+      onClick: () => {
+        setLink(link ? null : { url: "", label: "" });
+        if (!link) setTimeout(() => linkField.current?.focus());
+      },
+    },
+    {
+      label: tr.stories.askLink,
+      icon: MessageCircleQuestionMark,
+      on: askLink,
+      onClick: () => {
+        setAskLink(!askLink);
+        if (!askLink) setTimeout(() => askField.current?.focus());
+      },
+    },
+    { label: tr.ask.title, icon: VenetianMask, on: asks.length > 0 || pickingAsks, onClick: () => setPickingAsks(!pickingAsks) },
     { label: tr.stories.location, icon: locating ? Loader2 : MapPin, on: !!location, onClick: () => void locate() },
     { label: tr.stories.date, icon: CalendarDays, on: showDate, onClick: () => setShowDate(!showDate) },
     { label: tr.stories.time, icon: Clock, on: showTime, onClick: () => setShowTime(!showTime) },
@@ -276,7 +450,7 @@ export function StoryComposer({
             {fromChat && (
               <ChatBubbleCard text={text} bubble={bubble ?? null} quote={quote ?? null} />
             )}
-            {!file && !fromChat && (
+            {!file && !fromChat && !covered && (
               <textarea
                 value={text}
                 onChange={(e) => setText(e.target.value)}
@@ -293,25 +467,25 @@ export function StoryComposer({
               {file && text.trim() && <p className="text-center break-words whitespace-pre-wrap drop-shadow">{text}</p>}
             </div>
           </div>
-          <div className="pointer-events-none absolute inset-0">
-            <StoryStickers {...stickers} placed />
-          </div>
           <StoryDrawingLayer
             drawing={drawing}
             pen={drawingOn ? pen : null}
             onBegin={keep}
             onChange={setDrawing}
+            raise={(z) => zToTop(positions, drawing.texts, z)}
             onEditText={(index) => {
               const t = drawing.texts[index]!;
               setWriting({ index, text: t.text, color: t.color, font: t.font, look: t.look ?? "plain" });
             }}
-          />
+          >
+            <StoryStickers {...stickers} placed onMove={drawingOn ? undefined : stickers.onMove} />
+          </StoryDrawingLayer>
 
           <div className="pointer-events-none absolute inset-x-0 top-0 flex items-start justify-between p-3 pt-[max(0.75rem,env(safe-area-inset-top))]">
             <button type="button" onClick={onClose} aria-label={tr.common.close} title={tr.common.close} className={tool(false)}>
               <X className="size-6" />
             </button>
-            <div className="flex flex-col gap-2.5">
+            <div className="pointer-events-auto -m-1 flex max-h-[calc(100dvh-11rem)] flex-col gap-2.5 overflow-y-auto p-1 [scrollbar-width:none] md:max-h-[calc(min(92dvh,52rem)-11rem)] [&::-webkit-scrollbar]:hidden">
               {tools.map(({ label, icon: Icon, on, onClick }) => (
                 <button key={label} type="button" onClick={onClick} aria-label={label} aria-pressed={on} title={label} className={tool(on)}>
                   <Icon className={`size-5 ${Icon === Loader2 ? "animate-spin" : ""}`} />
@@ -381,6 +555,40 @@ export function StoryComposer({
                   {tr.stories.gradient}
                 </button>
                 {to && <input type="color" value={to} onChange={(e) => setBackground(`${from},${e.target.value}`)} aria-label={`${tr.stories.gradient} 2`} className={swatchInput} />}
+              </div>
+            )}
+            {askLink && (
+              <input
+                ref={askField}
+                value={askText}
+                onChange={(e) => setAskText(e.target.value)}
+                maxLength={ASK_PROMPT_MAX}
+                placeholder={tr.ask.prompt}
+                aria-label={tr.stories.askText}
+                className={field}
+              />
+            )}
+            {link && (
+              <div className="flex gap-2">
+                <input
+                  ref={linkField}
+                  value={link.url}
+                  onChange={(e) => setLink({ ...link, url: e.target.value })}
+                  type="url"
+                  inputMode="url"
+                  maxLength={2000}
+                  placeholder={tr.stories.linkUrl}
+                  aria-label={tr.stories.linkUrl}
+                  className={`${field} min-w-0 flex-[3]`}
+                />
+                <input
+                  value={link.label}
+                  onChange={(e) => setLink({ ...link, label: e.target.value })}
+                  maxLength={40}
+                  placeholder={tr.stories.linkLabel}
+                  aria-label={tr.stories.linkLabel}
+                  className={`${field} min-w-0 flex-[2]`}
+                />
               </div>
             )}
             {location && (
@@ -457,6 +665,7 @@ export function StoryComposer({
               }
             />
           )}
+          {pickingAsks && <AskPicker picked={asks.map((m) => m.id)} onToggle={toggleAsk} onClose={() => setPickingAsks(false)} />}
           {pickingGif && (
             <div className="absolute inset-x-0 bottom-0 z-10 flex max-h-[70%] flex-col rounded-t-3xl bg-white pt-2 text-stone-900 shadow-2xl dark:bg-stone-900 dark:text-stone-100">
               <button
@@ -468,7 +677,7 @@ export function StoryComposer({
               <div className="min-h-0 overflow-y-auto">
                 <GifSearch
                   onPick={(g) => {
-                    setGif(g);
+                    addGif(g);
                     setPickingGif(false);
                   }}
                 />
@@ -516,5 +725,79 @@ export function StoryComposer({
       {customDuration && <LastsPicker value={durationSecs} onSave={setDurationSecs} onClose={() => setCustomDuration(false)} />}
       {cutting && file && <VideoTrimmer file={file} onCancel={() => setCutting(false)} onDone={(from, to) => void cut(from, to)} />}
     </Portal>
+  );
+}
+
+/** The anonymous messages you received that can go on a story, to tick up to five of them, each once. */
+function AskPicker({ picked, onToggle, onClose }: { picked: string[]; onToggle: (m: AnonMessageDTO) => void; onClose: () => void }) {
+  const tr = useT();
+  const inbox = useInfiniteQuery({
+    queryKey: ["ask"],
+    initialPageParam: undefined as string | undefined,
+    queryFn: async ({ pageParam }) => unwrap(await six.api.GET("/v1/ask", { params: { query: { limit: 30, cursor: pageParam } } })),
+    getNextPageParam: (last) => last.nextCursor ?? undefined,
+  });
+  const items = (inbox.data?.pages.flatMap((p) => p.items) ?? []).filter((m) => m.text.trim() || m.photoUrl || m.gif);
+  const full = picked.length >= STORY_ASKS;
+
+  return (
+    <div className="absolute inset-x-0 bottom-0 z-10 flex max-h-[70%] flex-col rounded-t-3xl bg-white pt-2 text-stone-900 shadow-2xl dark:bg-stone-900 dark:text-stone-100">
+      <button type="button" onClick={onClose} aria-label={tr.common.close} className="mx-auto mb-1 h-1.5 w-10 shrink-0 rounded-full bg-stone-300 dark:bg-stone-700" />
+      <div className="flex items-center justify-between px-4 pt-1 pb-2">
+        <h2 className="font-semibold">{tr.ask.title}</h2>
+        <span className="rounded-full bg-stone-100 px-2.5 py-0.5 text-sm font-semibold tabular-nums text-stone-600 dark:bg-stone-800 dark:text-stone-300">
+          {picked.length}/{STORY_ASKS}
+        </span>
+      </div>
+      <div
+        className="min-h-0 flex-1 space-y-2 overflow-y-auto overscroll-contain px-3 pb-3"
+        onScroll={(e) => {
+          const el = e.currentTarget;
+          if (el.scrollTop + el.clientHeight > el.scrollHeight - 200 && inbox.hasNextPage && !inbox.isFetchingNextPage) void inbox.fetchNextPage();
+        }}
+      >
+        {inbox.isPending ? (
+          <p className="py-8 text-center text-sm text-stone-500">{tr.common.loading}</p>
+        ) : items.length === 0 ? (
+          <p className="py-8 text-center text-sm text-stone-500">{tr.ask.empty}</p>
+        ) : (
+          items.map((m) => {
+            const on = picked.includes(m.id);
+            return (
+              <button
+                key={m.id}
+                type="button"
+                aria-pressed={on}
+                disabled={!on && full}
+                onClick={() => onToggle(m)}
+                className={`flex w-full items-center gap-3 rounded-2xl p-2.5 text-left transition active:scale-[0.99] disabled:opacity-40 ${
+                  on ? "bg-brand/10 ring-2 ring-brand" : "ring-1 ring-stone-200 hover:bg-stone-50 dark:ring-stone-800 dark:hover:bg-stone-800/60"
+                }`}
+              >
+                {m.photoUrl ? (
+                  <img src={m.photoUrl} alt="" className="size-12 shrink-0 rounded-xl object-cover" />
+                ) : m.gif ? (
+                  <video src={m.gif.url} autoPlay loop muted playsInline className="size-12 shrink-0 rounded-xl object-cover" />
+                ) : null}
+                <span className="min-w-0 flex-1">
+                  <span className="block truncate text-xs font-semibold text-brand">{m.prompt ?? tr.ask.prompt}</span>
+                  {m.text.trim() && <span className="line-clamp-2 text-sm break-words">{m.text}</span>}
+                </span>
+                <span
+                  className={`grid size-6 shrink-0 place-items-center rounded-full ${on ? "bg-brand text-brand-ink" : "ring-2 ring-stone-300 dark:ring-stone-600"}`}
+                >
+                  {on && <Check className="size-4" strokeWidth={3} />}
+                </span>
+              </button>
+            );
+          })
+        )}
+      </div>
+      <div className="border-t border-stone-100 px-4 pt-3 pb-[max(1rem,env(safe-area-inset-bottom))] dark:border-stone-800">
+        <PrimaryButton type="button" onClick={onClose} className="w-full">
+          {tr.common.done}
+        </PrimaryButton>
+      </div>
+    </div>
   );
 }

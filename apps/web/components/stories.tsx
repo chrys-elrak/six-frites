@@ -9,6 +9,11 @@ import {
   STORY_REACTIONS,
   STORY_SHOW_MS,
   STORY_STICKERS,
+  angleOf,
+  turned,
+  ASK_COLORS,
+  doodleTileSvg,
+  stickerIndex,
   STORY_STICKER_SCALE,
   type StoryDTO,
   type StoryGroupDTO,
@@ -21,10 +26,31 @@ import {
   type StoryPositions,
   type StoryReaction,
   type StorySpot,
+  type StoryAsk,
+  type StoryLink,
+  askUrl,
   type StorySticker,
 } from "@six/shared";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { CalendarDays, ChevronLeft, ChevronRight, Clock, Eye, Loader2, MapPin, MessageCircle, MoveDiagonal2, Pause, Play, Plus, SendHorizontal, Trash2, X } from "lucide-react";
+import {
+  CalendarDays,
+  ChevronLeft,
+  ChevronRight,
+  Clock,
+  Eye,
+  Link2,
+  Loader2,
+  MapPin,
+  MessageCircle,
+  MoveDiagonal2,
+  Pause,
+  Play,
+  Plus,
+  SendHorizontal,
+  Trash2,
+  VenetianMask,
+  X,
+} from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useCloseOnBack } from "@/lib/back";
 import { clockTime, shortDate, timeAgo } from "@/lib/format";
@@ -38,6 +64,7 @@ import { useHiddenByArchive } from "@/lib/archive-lock";
 import { useSession } from "@/lib/session";
 import { six } from "@/lib/six";
 import { Avatar } from "./avatar";
+import { Logo } from "./logo";
 import { GifSearch } from "./gif-picker";
 import { FloatingReactions, useFloaters } from "./floating-reactions";
 import { NoteBubble, NoteEditor, NoteReader, useNotes } from "./notes";
@@ -61,6 +88,19 @@ export function useStories() {
   });
 }
 
+/** The header of an anonymous message's card, as in the inbox: its gradient under the chat wallpaper's doodles. */
+const ASK_HEAD = `url("data:image/svg+xml,${encodeURIComponent(doodleTileSvg("#ffffff", 0.3, 150))}"), linear-gradient(135deg, ${ASK_COLORS[0][0]}, ${ASK_COLORS[0][1]})`;
+
+const askPill = "flex max-w-72 items-center gap-2 rounded-2xl px-4 py-3 text-base leading-snug font-bold break-words text-white shadow-lg";
+
+const hostOf = (url: string) => {
+  try {
+    return new URL(url).host.replace(/^www\./, "");
+  } catch {
+    return url;
+  }
+};
+
 const clampScale = (v: number) => Math.min(STORY_STICKER_SCALE.max, Math.max(STORY_STICKER_SCALE.min, v));
 
 /** Follows the pointer until it lets go, wherever it goes on the page. */
@@ -83,8 +123,11 @@ function follow(move: (e: PointerEvent) => void, done?: (e: PointerEvent) => voi
  * `onRemove` adds a button to take it off, and `onTap` is called when it is tapped rather than dragged.
  */
 export function StoryStickers({
-  ask,
-  gif,
+  asks,
+  gifs,
+  link,
+  askLink,
+  askText = null,
   location,
   showDate,
   showTime,
@@ -96,8 +139,13 @@ export function StoryStickers({
   onRemove,
   onTap,
 }: {
-  ask: StoryDTO["ask"];
-  gif: React.ReactNode | null;
+  asks: StoryAsk[];
+  gifs: React.ReactNode[];
+  link: StoryLink | null;
+  /** The poster's anonymous link, when the story invites anonymous messages. */
+  askLink: string | null;
+  /** What the anonymous link sticker says instead of the app's line. */
+  askText?: string | null;
   location: StoryLocation | null;
   showDate: boolean;
   showTime: boolean;
@@ -111,8 +159,14 @@ export function StoryStickers({
 }) {
   const tr = useT();
   const chip = "flex items-center gap-1.5 rounded-full bg-white/90 px-3 py-1.5 text-sm font-semibold whitespace-nowrap text-stone-900 shadow";
-  const has = { ask: !!ask, gif: !!gif, location: !!location, date: showDate, time: showTime };
-  const shown = STORY_STICKERS.filter((k) => has[k] && !!positions[k] === placed);
+  const has = (k: StorySticker) =>
+    stickerIndex("ask", k) >= 0
+      ? stickerIndex("ask", k) < asks.length
+      : stickerIndex("gif", k) >= 0
+        ? stickerIndex("gif", k) < gifs.length
+        : { location: !!location, date: showDate, time: showTime, link: !!link, asklink: !!askLink }[k as "link"];
+  const stop = (e: React.PointerEvent) => e.stopPropagation();
+  const shown = STORY_STICKERS.filter((k) => has(k) && !!positions[k] === placed);
   if (!shown.length) return null;
   const editing = !!onMove && !!frame;
 
@@ -130,7 +184,7 @@ export function StoryStickers({
     dragAndPinch(
       e,
       box,
-      { x, y, scale: positions[sticker]?.scale ?? 1 },
+      { x, y, scale: positions[sticker]?.scale ?? 1, rotate: positions[sticker]?.rotate },
       (spot) => onMove(sticker, spot),
       (moved) => !moved && onTap?.(sticker),
     );
@@ -144,24 +198,58 @@ export function StoryStickers({
     e.stopPropagation();
     const { cx, cy, x, y } = centreOf(el, box);
     const from = Math.hypot(e.clientX - cx, e.clientY - cy) || 1;
-    const scale = positions[sticker]?.scale ?? 1;
-    follow((ev) => onMove(sticker, { x, y, scale: clampScale((scale * Math.hypot(ev.clientX - cx, ev.clientY - cy)) / from) }));
+    const { scale = 1, rotate = 0 } = positions[sticker] ?? {};
+    const centre = { x: cx, y: cy };
+    const a0 = angleOf(centre, { x: e.clientX, y: e.clientY });
+    follow((ev) =>
+      onMove(sticker, {
+        x,
+        y,
+        scale: clampScale((scale * Math.hypot(ev.clientX - cx, ev.clientY - cy)) / from),
+        rotate: turned(rotate + angleOf(centre, { x: ev.clientX, y: ev.clientY }) - a0),
+      }),
+    );
   };
 
-  const node = (k: StorySticker) =>
-    k === "ask" && ask ? (
-      <div className="w-64 overflow-hidden rounded-2xl bg-white text-left shadow-lg">
-        <p className="bg-gradient-to-r from-amber-400 via-brand to-rose-500 px-4 py-2.5 text-sm font-bold text-white">
+  const node = (k: StorySticker, ask = asks[stickerIndex("ask", k)]) =>
+    ask ? (
+      <div className="w-64 overflow-hidden rounded-3xl bg-white text-center shadow-lg">
+        <p className="flex items-center justify-center gap-2 px-4 py-2.5 text-sm font-semibold text-white" style={{ backgroundImage: ASK_HEAD }}>
+          <Logo className="size-5 shrink-0" />
           {ask.prompt ?? tr.ask.prompt}
         </p>
         {ask.photoUrl && <img src={ask.photoUrl} alt="" draggable={false} className="max-h-72 w-full object-cover" />}
         {ask.gif && <video src={ask.gif.url} autoPlay loop muted playsInline className="max-h-72 w-full object-cover" />}
         {ask.text.trim() && (
-          <p className="px-4 py-3 text-base leading-snug font-semibold break-words whitespace-pre-wrap text-stone-900">{ask.text}</p>
+          <p className="px-4 pt-5 pb-4 text-lg leading-snug font-bold break-words whitespace-pre-wrap text-stone-900">{ask.text}</p>
         )}
       </div>
-    ) : k === "gif" ? (
-      gif
+    ) : stickerIndex("gif", k) >= 0 ? (
+      gifs[stickerIndex("gif", k)]
+    ) : k === "link" && link ? (
+      editing ? (
+        <span className={`${chip} text-sky-700`}>
+          <Link2 className="size-4" />
+          <span className="max-w-48 truncate">{link.label || hostOf(link.url)}</span>
+        </span>
+      ) : (
+        <a href={link.url} target="_blank" rel="noopener noreferrer nofollow" className={`${chip} text-sky-700`} onPointerDown={stop}>
+          <Link2 className="size-4" />
+          <span className="max-w-48 truncate">{link.label || hostOf(link.url)}</span>
+        </a>
+      )
+    ) : k === "asklink" && askLink ? (
+      editing ? (
+        <span className={askPill} style={{ backgroundImage: ASK_HEAD }}>
+          <VenetianMask className="size-5 shrink-0" />
+          {askText || tr.ask.prompt}
+        </span>
+      ) : (
+        <a href={askLink} target="_blank" rel="noopener noreferrer" className={askPill} style={{ backgroundImage: ASK_HEAD }} onPointerDown={stop}>
+          <VenetianMask className="size-5 shrink-0" />
+          {askText || tr.ask.prompt}
+        </a>
+      )
     ) : k === "location" && location ? (
       editing ? (
         <span className={chip}>
@@ -169,7 +257,7 @@ export function StoryStickers({
           <span className="max-w-48 truncate">{location.name ?? coordsLabel(location)}</span>
         </span>
       ) : (
-        <a href={mapsUrl(location)} target="_blank" rel="noopener noreferrer" className={chip} onPointerDown={(e) => e.stopPropagation()}>
+        <a href={mapsUrl(location)} target="_blank" rel="noopener noreferrer" className={chip} onPointerDown={stop}>
           <MapPin className="size-4 text-rose-600" />
           <span className="max-w-48 truncate">{location.name ?? coordsLabel(location)}</span>
         </a>
@@ -217,12 +305,14 @@ export function StoryStickers({
     return shown.map((k) => (
       <div
         key={k}
+        data-pinch={editing ? `sticker:${k}` : undefined}
         onPointerDown={drag(k)}
         className={`absolute ${grab}`}
         style={{
+          zIndex: positions[k]!.z,
           left: `${positions[k]!.x * 100}%`,
           top: `${positions[k]!.y * 100}%`,
-          transform: `translate(-50%, -50%) scale(${positions[k]!.scale ?? 1})`,
+          transform: `translate(-50%, -50%) scale(${positions[k]!.scale ?? 1}) rotate(${positions[k]!.rotate ?? 0}deg)`,
         }}
       >
         {node(k)}
@@ -230,25 +320,20 @@ export function StoryStickers({
       </div>
     ));
   }
-  const chips = shown.filter((k) => k !== "gif" && k !== "ask");
+  const big = (k: StorySticker) => stickerIndex("ask", k) >= 0 || stickerIndex("gif", k) >= 0;
+  const chips = shown.filter((k) => !big(k));
   return (
     <>
-      {shown.includes("ask") && (
-        <div onPointerDown={drag("ask")} className={`relative ${grab}`}>
-          {node("ask")}
-          {handles("ask")}
+      {shown.filter(big).map((k) => (
+        <div key={k} data-pinch={editing ? `sticker:${k}` : undefined} onPointerDown={drag(k)} className={`relative ${grab}`}>
+          {node(k)}
+          {handles(k)}
         </div>
-      )}
-      {shown.includes("gif") && (
-        <div onPointerDown={drag("gif")} className={`relative ${grab}`}>
-          {gif}
-          {handles("gif")}
-        </div>
-      )}
+      ))}
       {chips.length > 0 && (
         <div className="flex flex-wrap justify-center gap-3">
           {chips.map((k) => (
-            <div key={k} onPointerDown={drag(k)} className={`relative ${grab}`}>
+            <div key={k} data-pinch={editing ? `sticker:${k}` : undefined} onPointerDown={drag(k)} className={`relative ${grab}`}>
               {node(k)}
               {handles(k)}
             </div>
@@ -659,8 +744,11 @@ export function StoryViewer({ groups, start, onClose }: { groups: StoryGroupDTO[
 
   const media = story.media;
   const stickers = {
-    ask: story.ask,
-    gif: story.gif && <video src={story.gif.url} autoPlay loop muted playsInline className="max-h-40 max-w-56 rounded-xl" />,
+    asks: story.asks ?? [],
+    gifs: (story.gifs ?? []).map((g) => <video key={g.url} src={g.url} autoPlay loop muted playsInline className="max-h-40 max-w-56 rounded-xl" />),
+    link: story.link ?? null,
+    askLink: story.askCode ? askUrl(window.location.origin, story.askCode) : null,
+    askText: story.askText ?? null,
     location: story.location,
     showDate: story.showDate,
     showTime: story.showTime,
@@ -738,10 +826,9 @@ export function StoryViewer({ groups, start, onClose }: { groups: StoryGroupDTO[
 
           {!loading && (
             <>
-              <div className="pointer-events-none absolute inset-0">
+              <StoryDrawingLayer drawing={story.drawing}>
                 <StoryStickers {...stickers} placed />
-              </div>
-              <StoryDrawingLayer drawing={story.drawing} />
+              </StoryDrawingLayer>
             </>
           )}
 

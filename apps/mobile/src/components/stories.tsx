@@ -15,17 +15,41 @@ import {
   type GifDTO,
   type PublicUser,
   STORY_STICKERS,
+  angleOf,
+  turned,
+  ASK_COLORS,
+  stickerIndex,
   STORY_STICKER_SCALE,
   type StoryPositions,
   type StoryReaction,
   type StorySpot,
+  type StoryAsk,
+  type StoryLink,
+  askUrl,
   type StorySticker,
 } from "@six/shared";
+import { Gradient, HEAD_DOODLES } from "./anon-inbox";
+import { Logo } from "./logo";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEvent } from "expo";
 import { Image } from "expo-image";
 import { useVideoPlayer, VideoView } from "expo-video";
-import { CalendarDays, Clock, Eye, MapPin, MessageCircle, MoveDiagonal2, Pause, Play, Plus, SendHorizontal, Trash2, X } from "lucide-react-native";
+import {
+  CalendarDays,
+  Clock,
+  Eye,
+  Link2,
+  MapPin,
+  MessageCircle,
+  MoveDiagonal2,
+  Pause,
+  Play,
+  Plus,
+  SendHorizontal,
+  Trash2,
+  VenetianMask,
+  X,
+} from "lucide-react-native";
 import { type ComponentRef, useCallback, useEffect, useRef, useState } from "react";
 import { ActivityIndicator, FlatList, Keyboard, Linking, Pressable, ScrollView, StyleSheet, View } from "react-native";
 import { KeyboardStickyView } from "react-native-keyboard-controller";
@@ -40,7 +64,7 @@ import { queueMessage } from "@/lib/send";
 import { fingers } from "@/lib/fingers";
 import { useHiddenByArchive } from "@/lib/archive-lock";
 import { useSession } from "@/lib/session";
-import { six } from "@/lib/six";
+import { WEB_URL, six } from "@/lib/six";
 import { brand, brandInk, stone, useTheme } from "@/lib/theme";
 import { Avatar } from "./avatar";
 import { FloatingReactions, useFloaters } from "./floating-reactions";
@@ -85,22 +109,41 @@ interface Editing {
 }
 
 /**
- * A sticker at its size, which in the composer can be dragged anywhere on the story, pinched with a second finger or
- * resized by its corner handle, removed, or tapped. It follows the fingers while held and settles at its new spot
+ * A sticker at its size and angle, which in the composer can be dragged anywhere on the story, pinched and twisted with
+ * a second finger or resized and turned by its corner handle, removed, or tapped. It follows the fingers while held and settles at its new spot
  * or size once let go, so it stays the same view for the whole gesture; whenever a finger lands or lifts, it carries
  * on from where it is then.
  */
-function Sticker({ sticker, scale = 1, editing, children }: { sticker: StorySticker; scale?: number; editing?: Editing; children: React.ReactNode }) {
+function Sticker({
+  sticker,
+  scale = 1,
+  rotate = 0,
+  editing,
+  children,
+}: {
+  sticker: StorySticker;
+  scale?: number;
+  rotate?: number;
+  editing?: Editing;
+  children: React.ReactNode;
+}) {
   const tr = useT();
   const self = useRef<ViewRef>(null);
   const start = useRef<{ x: number; y: number; cx: number; cy: number; px: number; py: number; w: number; h: number } | null>(null);
   const [shift, setShift] = useState({ dx: 0, dy: 0 });
   const [live, setLive] = useState<number | null>(null);
   const liveRef = useRef<number | null>(null);
-  const hold = useRef({ count: 0, x: 0, y: 0, apart: 0, dx: 0, dy: 0, scale: 1, moved: false });
+  const [turn, setTurn] = useState<number | null>(null);
+  const turnRef = useRef<number | null>(null);
+  const hold = useRef({ count: 0, x: 0, y: 0, apart: 0, angle: 0, dx: 0, dy: 0, scale: 1, rotate: 0, moved: false });
   const shiftRef = useRef({ dx: 0, dy: 0 });
   const shown = live ?? scale;
-  if (!editing) return <View style={{ transform: [{ scale }] }}>{children}</View>;
+  const shownTurn = turn ?? rotate;
+  if (!editing) return <View style={{ transform: [{ scale }, { rotate: `${rotate}deg` }] }}>{children}</View>;
+  const setTurned = (deg: number) => {
+    turnRef.current = turned(deg);
+    setTurn(turnRef.current);
+  };
 
   const measure = (pageX: number, pageY: number) => {
     start.current = null;
@@ -121,14 +164,14 @@ function Sticker({ sticker, scale = 1, editing, children }: { sticker: StoryStic
       onResponderTerminationRequest={() => false}
       onResponderGrant={(e) => {
         measure(e.nativeEvent.pageX, e.nativeEvent.pageY);
-        hold.current = { ...fingers(e.nativeEvent.touches), dx: 0, dy: 0, scale, moved: false };
+        hold.current = { ...fingers(e.nativeEvent.touches), dx: 0, dy: 0, scale, rotate, moved: false };
         shiftRef.current = { dx: 0, dy: 0 };
       }}
       onResponderMove={(e) => {
         const h = hold.current;
         const f = fingers(e.nativeEvent.touches);
         if (f.count !== h.count) {
-          hold.current = { ...f, ...shiftRef.current, scale: liveRef.current ?? h.scale, moved: h.moved };
+          hold.current = { ...f, ...shiftRef.current, scale: liveRef.current ?? h.scale, rotate: turnRef.current ?? h.rotate, moved: h.moved };
           return;
         }
         const [dx, dy] = [h.dx + f.x - h.x, h.dy + f.y - h.y];
@@ -139,19 +182,22 @@ function Sticker({ sticker, scale = 1, editing, children }: { sticker: StoryStic
         if (f.count === 2 && h.apart) {
           liveRef.current = clampScale((h.scale * f.apart) / h.apart);
           setLive(liveRef.current);
+          setTurned(h.rotate + f.angle - h.angle);
         }
       }}
       onResponderRelease={() => {
         const s = start.current;
         const { dx, dy } = shiftRef.current;
         if (s && hold.current.moved) {
-          editing.onMove(sticker, { x: clamp(s.x + dx / s.w), y: clamp(s.y + dy / s.h), scale: liveRef.current ?? scale });
+          editing.onMove(sticker, { x: clamp(s.x + dx / s.w), y: clamp(s.y + dy / s.h), scale: liveRef.current ?? scale, rotate: turnRef.current ?? rotate });
         } else editing.onTap?.(sticker);
         liveRef.current = null;
         setLive(null);
+        turnRef.current = null;
+        setTurn(null);
         setShift({ dx: 0, dy: 0 });
       }}
-      style={{ transform: [{ translateX: shift.dx }, { translateY: shift.dy }, { scale: shown }] }}
+      style={{ transform: [{ translateX: shift.dx }, { translateY: shift.dy }, { scale: shown }, { rotate: `${shownTurn}deg` }] }}
     >
       {children}
       {editing.onRemove && (
@@ -167,15 +213,20 @@ function Sticker({ sticker, scale = 1, editing, children }: { sticker: StoryStic
         onResponderMove={(e) => {
           const s = start.current;
           if (!s) return;
+          const { pageX, pageY } = e.nativeEvent;
+          const centre = { x: s.cx, y: s.cy };
           const from = Math.hypot(s.px - s.cx, s.py - s.cy) || 1;
-          liveRef.current = clampScale((scale * Math.hypot(e.nativeEvent.pageX - s.cx, e.nativeEvent.pageY - s.cy)) / from);
+          liveRef.current = clampScale((scale * Math.hypot(pageX - s.cx, pageY - s.cy)) / from);
           setLive(liveRef.current);
+          setTurned(rotate + angleOf(centre, { x: pageX, y: pageY }) - angleOf(centre, { x: s.px, y: s.py }));
         }}
         onResponderRelease={() => {
           const s = start.current;
-          if (s && liveRef.current !== null) editing.onMove(sticker, { x: s.x, y: s.y, scale: liveRef.current });
+          if (s && liveRef.current !== null) editing.onMove(sticker, { x: s.x, y: s.y, scale: liveRef.current, rotate: turnRef.current ?? rotate });
           liveRef.current = null;
           setLive(null);
+          turnRef.current = null;
+          setTurn(null);
         }}
         hitSlop={8}
         style={[styles.handle, styles.resize, keep]}
@@ -186,6 +237,14 @@ function Sticker({ sticker, scale = 1, editing, children }: { sticker: StoryStic
   );
 }
 
+const hostOf = (url: string) => {
+  try {
+    return new URL(url).host.replace(/^www\./, "");
+  } catch {
+    return url;
+  }
+};
+
 /** Puts a sticker with its centre on `spot` of the layer around it. */
 function Placed({ spot, children }: { spot: StorySpot; children: React.ReactNode }) {
   const [size, setSize] = useState({ w: 0, h: 0 });
@@ -194,6 +253,7 @@ function Placed({ spot, children }: { spot: StorySpot; children: React.ReactNode
       onLayout={(e) => setSize({ w: e.nativeEvent.layout.width, h: e.nativeEvent.layout.height })}
       style={{
         position: "absolute",
+        zIndex: spot.z,
         left: `${spot.x * 100}%`,
         top: `${spot.y * 100}%`,
         opacity: size.w ? 1 : 0,
@@ -212,8 +272,11 @@ function Placed({ spot, children }: { spot: StorySpot; children: React.ReactNode
  * `onTap` is called when it is tapped rather than dragged.
  */
 export function StoryStickers({
-  ask,
-  gif,
+  asks,
+  gifs,
+  link,
+  askLink,
+  askText = null,
   location,
   showDate,
   showTime,
@@ -225,8 +288,13 @@ export function StoryStickers({
   onRemove,
   onTap,
 }: {
-  ask: StoryDTO["ask"];
-  gif: React.ReactNode | null;
+  asks: StoryAsk[];
+  gifs: React.ReactNode[];
+  link: StoryLink | null;
+  /** The poster's anonymous link, when the story invites anonymous messages. */
+  askLink: string | null;
+  /** What the anonymous link sticker says instead of the app's line. */
+  askText?: string | null;
   location: StoryLocation | null;
   showDate: boolean;
   showTime: boolean;
@@ -239,24 +307,51 @@ export function StoryStickers({
   onTap?: (sticker: StorySticker) => void;
 }) {
   const tr = useT();
-  const has = { ask: !!ask, gif: !!gif, location: !!location, date: showDate, time: showTime };
-  const shown = STORY_STICKERS.filter((k) => has[k] && !!positions[k] === placed);
+  const has = (k: StorySticker) =>
+    stickerIndex("ask", k) >= 0
+      ? stickerIndex("ask", k) < asks.length
+      : stickerIndex("gif", k) >= 0
+        ? stickerIndex("gif", k) < gifs.length
+        : { location: !!location, date: showDate, time: showTime, link: !!link, asklink: !!askLink }[k as "link"];
+  const shown = STORY_STICKERS.filter((k) => has(k) && !!positions[k] === placed);
   if (!shown.length) return null;
   const editing = onMove && frame ? { frame, onMove, onRemove, onTap } : undefined;
 
   const node = (k: StorySticker) => {
-    const body =
-      k === "ask" && ask ? (
+    const ask = asks[stickerIndex("ask", k)];
+    const body = ask ? (
         <View style={styles.askCard}>
-          <Text style={[styles.askPrompt, { backgroundImage: `linear-gradient(90deg, #fbbf24, ${brand}, #f43f5e)` }]}>
-            {ask.prompt ?? tr.ask.prompt}
-          </Text>
+          <View style={styles.askHead}>
+            <Gradient id={`ask-head-${k}`} colors={ASK_COLORS[0]} doodles={HEAD_DOODLES} />
+            <Logo size={20} />
+            <Text style={styles.askPrompt} numberOfLines={2}>
+              {ask.prompt ?? tr.ask.prompt}
+            </Text>
+          </View>
           {ask.photoUrl && <Image source={{ uri: ask.photoUrl }} style={styles.askMedia} contentFit="cover" />}
           {ask.gif && <AskGif url={ask.gif.url} />}
           {!!ask.text.trim() && <Text style={styles.askText}>{ask.text}</Text>}
         </View>
-      ) : k === "gif" ? (
-        gif
+      ) : stickerIndex("gif", k) >= 0 ? (
+        gifs[stickerIndex("gif", k)]
+      ) : k === "link" && link ? (
+        <Pressable
+          disabled={!!editing}
+          onPress={() => void Linking.openURL(link.url)}
+          accessibilityRole="link"
+          style={styles.chip}
+        >
+          <Link2 size={16} color="#0369a1" />
+          <Text numberOfLines={1} style={[styles.chipText, { color: "#0369a1" }]}>
+            {link.label || hostOf(link.url)}
+          </Text>
+        </Pressable>
+      ) : k === "asklink" && askLink ? (
+        <Pressable disabled={!!editing} onPress={() => void Linking.openURL(askLink)} accessibilityRole="link" style={styles.askPill}>
+          <Gradient id={`ask-link-${k}`} colors={ASK_COLORS[0]} doodles={HEAD_DOODLES} />
+          <VenetianMask size={20} color="#fff" />
+          <Text style={styles.askPillText}>{askText || tr.ask.prompt}</Text>
+        </Pressable>
       ) : k === "location" && location ? (
         editing ? (
           <View style={styles.chip}>
@@ -285,7 +380,7 @@ export function StoryStickers({
         </View>
       );
     return (
-      <Sticker key={k} sticker={k} scale={positions[k]?.scale} editing={editing}>
+      <Sticker key={k} sticker={k} scale={positions[k]?.scale} rotate={positions[k]?.rotate} editing={editing}>
         {body}
       </Sticker>
     );
@@ -298,11 +393,11 @@ export function StoryStickers({
       </Placed>
     ));
   }
-  const chips = shown.filter((k) => k !== "gif" && k !== "ask");
+  const big = (k: StorySticker) => stickerIndex("ask", k) >= 0 || stickerIndex("gif", k) >= 0;
+  const chips = shown.filter((k) => !big(k));
   return (
     <>
-      {shown.includes("ask") && node("ask")}
-      {shown.includes("gif") && node("gif")}
+      {shown.filter(big).map(node)}
       {chips.length > 0 && <View style={styles.stickers}>{chips.map(node)}</View>}
     </>
   );
@@ -701,8 +796,11 @@ export function StoryViewer({ groups, start, onClose }: { groups: StoryGroupDTO[
   if (!group || !story) return null;
   const media = story.media;
   const stickers = {
-    ask: story.ask,
-    gif: story.gif && <StoryGif url={story.gif.url} />,
+    asks: story.asks ?? [],
+    gifs: (story.gifs ?? []).map((g) => <StoryGif key={g.url} url={g.url} />),
+    link: story.link ?? null,
+    askLink: story.askCode ? askUrl(WEB_URL, story.askCode) : null,
+    askText: story.askText ?? null,
     location: story.location,
     showDate: story.showDate,
     showTime: story.showTime,
@@ -754,10 +852,9 @@ export function StoryViewer({ groups, start, onClose }: { groups: StoryGroupDTO[
         </Pressable>
         {!loading && (
           <>
-            <View pointerEvents="box-none" style={StyleSheet.absoluteFill}>
+            <StoryDrawingLayer drawing={story.drawing}>
               <StoryStickers {...stickers} placed />
-            </View>
-            <StoryDrawingLayer drawing={story.drawing} />
+            </StoryDrawingLayer>
           </>
         )}
 
@@ -850,10 +947,11 @@ const styles = StyleSheet.create({
   fromChat: { flexDirection: "row", alignItems: "center", gap: 6, paddingHorizontal: 12 },
   fromChatText: { color: "rgba(255,255,255,0.85)", fontSize: 14, fontWeight: "600" },
   cover: { width: 56, height: 56, borderRadius: 28 },
-  askCard: { width: 256, borderRadius: 16, overflow: "hidden", backgroundColor: "#fff", elevation: 4 },
-  askPrompt: { color: "#fff", fontSize: 14, fontWeight: "700", paddingHorizontal: 16, paddingVertical: 10, backgroundColor: brand },
+  askCard: { width: 256, borderRadius: 22, overflow: "hidden", backgroundColor: "#fff", elevation: 4 },
+  askHead: { flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 7, paddingVertical: 11, paddingHorizontal: 14 },
+  askPrompt: { flexShrink: 1, color: "#fff", fontSize: 14, fontWeight: "700", textAlign: "center" },
   askMedia: { width: 256, height: 220 },
-  askText: { color: stone[900], fontSize: 16, lineHeight: 22, fontWeight: "600", paddingHorizontal: 16, paddingVertical: 12 },
+  askText: { color: stone[900], fontSize: 18, lineHeight: 24, fontWeight: "700", textAlign: "center", paddingHorizontal: 16, paddingTop: 18, paddingBottom: 14 },
   handle: {
     position: "absolute",
     width: 24,
@@ -929,6 +1027,8 @@ const styles = StyleSheet.create({
     paddingVertical: 6,
   },
   chipText: { color: stone[900], fontSize: 14, fontWeight: "600", flexShrink: 1 },
+  askPill: { maxWidth: 280, flexDirection: "row", alignItems: "center", gap: 8, borderRadius: 18, overflow: "hidden", paddingHorizontal: 16, paddingVertical: 12, elevation: 4 },
+  askPillText: { flexShrink: 1, color: "#fff", fontSize: 16, fontWeight: "700" },
   dim: { color: "rgba(255,255,255,0.65)", fontSize: 13, fontWeight: "400" },
   viewers: {
     position: "absolute",

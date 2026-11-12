@@ -5,6 +5,8 @@ import {
   STORY_PEN_SIZES,
   STORY_SHAPES,
   STORY_STICKER_SCALE,
+  angleOf,
+  turned,
   STORY_TEXT_LOOKS,
   STORY_TEXT_SIZE,
   type StoryDrawing,
@@ -18,7 +20,7 @@ import {
 } from "@six/shared";
 import { useFonts } from "expo-font";
 import { Check, Circle, MoveDiagonal2, MoveUpRight, Pencil, Square, Trash2, Undo2 } from "lucide-react-native";
-import { useRef, useState } from "react";
+import { type ComponentRef, useRef, useState } from "react";
 import { type GestureResponderEvent, Pressable, StyleSheet, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import Svg, { Path } from "react-native-svg";
@@ -80,12 +82,22 @@ function LookText({ text, look, color, size, font }: { text: string; look?: Stor
 
 type Grab =
   | { kind: "stroke"; x: number; y: number; px: number; py: number }
-  | { kind: "move"; index: number; count: number; px: number; py: number; apart: number; from: { x: number; y: number; scale: number }; moved: boolean }
-  | { kind: "resize"; index: number; px: number; py: number; from: number };
+  | {
+      kind: "move";
+      index: number;
+      count: number;
+      px: number;
+      py: number;
+      apart: number;
+      angle: number;
+      from: { x: number; y: number; scale: number; rotate: number };
+      moved: boolean;
+    }
+  | { kind: "resize"; index: number; px: number; py: number; from: number; rot0: number; centre: { x: number; y: number } | null };
 
 /**
  * What the poster drew on a story, filling its parent. In the composer, `pen` turns it into a canvas to draw on;
- * without it, `onChange` lets each text be dragged and resized by its corner or a pinch, and `onEditText` is called when one is
+ * without it, `onChange` lets each text be dragged, resized and turned by its corner or two fingers, and `onEditText` is called when one is
  * tapped. `onBegin` comes before each change, to keep it for undo.
  */
 export function StoryDrawingLayer({
@@ -94,18 +106,25 @@ export function StoryDrawingLayer({
   onBegin,
   onChange,
   onEditText,
+  raise,
+  children,
 }: {
   drawing: StoryDrawing;
   pen?: Pen | null;
   onBegin?: () => void;
   onChange?: (d: StoryDrawing) => void;
   onEditText?: (index: number) => void;
+  /** The stacking order that puts a text now at `z` on top of everything else on the story. */
+  raise?: (z: number | undefined) => number;
+  /** The placed stickers, under the drawing until moved, so they share one stacking order with its texts. */
+  children?: React.ReactNode;
 }) {
   useFonts(FONT_FILES);
   const [{ w, h }, setSize] = useState({ w: 0, h: 0 });
   const latest = useRef(drawing);
   latest.current = drawing;
   const grab = useRef<Grab | null>(null);
+  const boxes = useRef<(ComponentRef<typeof View> | null)[]>([]);
   const set = (d: StoryDrawing) => {
     latest.current = d;
     onChange?.(d);
@@ -122,25 +141,33 @@ export function StoryDrawingLayer({
       strokes[strokes.length - 1] = extendStroke(strokes.at(-1)!, g.x + dx / w, g.y + dy / h);
       return set({ ...d, strokes });
     }
+    const c = g.centre;
+    if (!c) return;
+    const now = { x: e.nativeEvent.pageX, y: e.nativeEvent.pageY };
     const texts = d.texts.slice();
     const t = texts[g.index]!;
-    const scale = g.from * (1 + (dx + dy) / (w * 0.4));
-    texts[g.index] = { ...t, scale: Math.min(STORY_STICKER_SCALE.max, Math.max(STORY_STICKER_SCALE.min, scale)) };
+    const scale = (g.from * Math.hypot(now.x - c.x, now.y - c.y)) / Math.max(1, Math.hypot(g.px - c.x, g.py - c.y));
+    const rotate = turned(g.rot0 + angleOf(c, now) - angleOf(c, { x: g.px, y: g.py }));
+    texts[g.index] = { ...t, scale: Math.min(STORY_STICKER_SCALE.max, Math.max(STORY_STICKER_SCALE.min, scale)), rotate };
     set({ ...d, texts });
   }
 
-  /** Drags a text with one finger and pinches it bigger or smaller with two, carrying on from where it is whenever a finger lands or lifts. */
+  /**
+   * Drags a text with one finger, and pinches it bigger or smaller and twists it with two, carrying on from where it is
+   * whenever a finger lands or lifts. The text moved comes on top of everything else.
+   */
   function moveText(g: Extract<Grab, { kind: "move" }>, e: GestureResponderEvent) {
     const d = latest.current;
     const t = d.texts[g.index]!;
     const f = fingers(e.nativeEvent.touches);
     if (f.count !== g.count) {
-      Object.assign(g, { count: f.count, px: f.x, py: f.y, apart: f.apart, from: { x: t.x, y: t.y, scale: t.scale } });
+      Object.assign(g, { count: f.count, px: f.x, py: f.y, apart: f.apart, angle: f.angle, from: { x: t.x, y: t.y, scale: t.scale, rotate: t.rotate ?? 0 } });
       return;
     }
     const [dx, dy] = [f.x - g.px, f.y - g.py];
     if (!g.moved && f.count < 2 && Math.hypot(dx, dy) < 4) return;
     if (!g.moved) onBegin?.();
+    const z = g.moved ? t.z : (raise?.(t.z) ?? t.z);
     g.moved = true;
     const scale = f.count === 2 && g.apart ? (g.from.scale * f.apart) / g.apart : g.from.scale;
     const texts = d.texts.slice();
@@ -149,6 +176,8 @@ export function StoryDrawingLayer({
       x: clamp(g.from.x + dx / w),
       y: clamp(g.from.y + dy / h),
       scale: Math.min(STORY_STICKER_SCALE.max, Math.max(STORY_STICKER_SCALE.min, scale)),
+      rotate: f.count === 2 ? turned(g.from.rotate + f.angle - g.angle) : g.from.rotate,
+      z,
     };
     set({ ...d, texts });
   }
@@ -178,11 +207,12 @@ export function StoryDrawingLayer({
 
   return (
     <View
-      pointerEvents={pen ? "auto" : editing ? "box-none" : "none"}
+      pointerEvents={pen ? "auto" : editing || children ? "box-none" : "none"}
       onLayout={(e) => setSize({ w: e.nativeEvent.layout.width, h: e.nativeEvent.layout.height })}
       style={[StyleSheet.absoluteFill, { overflow: "hidden" }]}
       {...canvas}
     >
+      {children}
       {w > 0 && (
         <Svg width={w} height={h} pointerEvents="none" style={StyleSheet.absoluteFill}>
           {drawing.strokes.map((s, i) => (
@@ -203,15 +233,29 @@ export function StoryDrawingLayer({
           <View
             key={i}
             pointerEvents="box-none"
-            style={[styles.anchor, { left: t.x * w - w * 0.45, top: t.y * h - h, width: w * 0.9, height: h * 2 }]}
+            style={[styles.anchor, { zIndex: t.z, left: t.x * w - w * 0.45, top: t.y * h - h, width: w * 0.9, height: h * 2 }]}
           >
             <View
+              ref={(v) => {
+                boxes.current[i] = v;
+              }}
               pointerEvents={editing ? "auto" : "none"}
+              style={{ transform: [{ rotate: `${t.rotate ?? 0}deg` }] }}
               {...follow}
               onStartShouldSetResponder={() => editing}
               onResponderGrant={(e) => {
                 const f = fingers(e.nativeEvent.touches);
-                grab.current = { kind: "move", index: i, count: f.count, px: f.x, py: f.y, apart: f.apart, from: { x: t.x, y: t.y, scale: t.scale }, moved: false };
+                grab.current = {
+                  kind: "move",
+                  index: i,
+                  count: f.count,
+                  px: f.x,
+                  py: f.y,
+                  apart: f.apart,
+                  angle: f.angle,
+                  from: { x: t.x, y: t.y, scale: t.scale, rotate: t.rotate ?? 0 },
+                  moved: false,
+                };
               }}
             >
               <LookText text={t.text} look={t.look} color={t.color} size={STORY_TEXT_SIZE * t.scale * w} font={t.font} />
@@ -222,7 +266,10 @@ export function StoryDrawingLayer({
                   onResponderGrant={(e) => {
                     const { pageX, pageY } = e.nativeEvent;
                     onBegin?.();
-                    grab.current = { kind: "resize", index: i, px: pageX, py: pageY, from: t.scale };
+                    if (raise) set({ ...latest.current, texts: latest.current.texts.map((it, j) => (j === i ? { ...it, z: raise(t.z) } : it)) });
+                    const g: Grab = { kind: "resize", index: i, px: pageX, py: pageY, from: t.scale, rot0: t.rotate ?? 0, centre: null };
+                    grab.current = g;
+                    boxes.current[i]?.measureInWindow((x, y, bw, bh) => (g.centre = { x: x + bw / 2, y: y + bh / 2 }));
                   }}
                   hitSlop={10}
                   style={styles.handle}

@@ -7,6 +7,8 @@ import {
   STORY_PEN_SIZES,
   STORY_SHAPES,
   STORY_STICKER_SCALE,
+  angleOf,
+  turned,
   STORY_TEXT_LOOKS,
   STORY_TEXT_SIZE,
   type StoryDrawing,
@@ -48,7 +50,7 @@ function lookStyle(look: StoryTextLook | undefined, color: string): React.CSSPro
 
 type Grab =
   | { kind: "stroke" }
-  | { kind: "resize"; index: number; cx: number; cy: number; r0: number; from: number };
+  | { kind: "resize"; index: number; cx: number; cy: number; r0: number; from: number; a0: number; rot0: number };
 
 /**
  * What the poster drew on a story, filling an `absolute inset-0` layer. In the composer, `pen` turns the layer into a
@@ -61,12 +63,18 @@ export function StoryDrawingLayer({
   onBegin,
   onChange,
   onEditText,
+  raise,
+  children,
 }: {
   drawing: StoryDrawing;
   pen?: Pen | null;
   onBegin?: () => void;
   onChange?: (d: StoryDrawing) => void;
   onEditText?: (index: number) => void;
+  /** The stacking order that puts a text now at `z` on top of everything else on the story. */
+  raise?: (z: number | undefined) => number;
+  /** The placed stickers, under the drawing until moved, so they share one stacking order with its texts. */
+  children?: React.ReactNode;
 }) {
   const layer = useRef<HTMLDivElement>(null);
   const latest = useRef(drawing);
@@ -109,7 +117,8 @@ export function StoryDrawingLayer({
     const texts = d.texts.slice();
     const t = texts[g.index]!;
     const scale = (g.from * Math.hypot(e.clientX - g.cx, e.clientY - g.cy)) / g.r0;
-    texts[g.index] = { ...t, scale: Math.min(STORY_STICKER_SCALE.max, Math.max(STORY_STICKER_SCALE.min, scale)) };
+    const rotate = turned(g.rot0 + angleOf({ x: g.cx, y: g.cy }, { x: e.clientX, y: e.clientY }) - g.a0);
+    texts[g.index] = { ...t, scale: Math.min(STORY_STICKER_SCALE.max, Math.max(STORY_STICKER_SCALE.min, scale)), rotate };
     set({ ...d, texts });
   }
 
@@ -125,15 +134,19 @@ export function StoryDrawingLayer({
     e.stopPropagation();
     const t = latest.current.texts[index]!;
     let begun = false;
+    let z = t.z;
     dragAndPinch(
       e,
       layer.current!.getBoundingClientRect(),
-      { x: t.x, y: t.y, scale: t.scale },
+      { x: t.x, y: t.y, scale: t.scale, rotate: t.rotate },
       (spot) => {
-        if (!begun) onBegin?.();
-        begun = true;
+        if (!begun) {
+          onBegin?.();
+          z = raise?.(t.z) ?? t.z;
+          begun = true;
+        }
         const texts = latest.current.texts.slice();
-        texts[index] = { ...texts[index]!, ...spot };
+        texts[index] = { ...texts[index]!, ...spot, z };
         set({ ...latest.current, texts });
       },
       (moved) => !moved && onEditText?.(index),
@@ -147,7 +160,17 @@ export function StoryDrawingLayer({
     const t = latest.current.texts[index]!;
     const [cx, cy] = [r.left + t.x * r.width, r.top + t.y * r.height];
     onBegin?.();
-    grab.current = { kind: "resize", index, cx, cy, r0: Math.max(1, Math.hypot(e.clientX - cx, e.clientY - cy)), from: t.scale };
+    if (raise) set({ ...latest.current, texts: latest.current.texts.map((it, i) => (i === index ? { ...it, z: raise(t.z) } : it)) });
+    grab.current = {
+      kind: "resize",
+      index,
+      cx,
+      cy,
+      r0: Math.max(1, Math.hypot(e.clientX - cx, e.clientY - cy)),
+      from: t.scale,
+      a0: angleOf({ x: cx, y: cy }, { x: e.clientX, y: e.clientY }),
+      rot0: t.rotate ?? 0,
+    };
   };
 
   const editing = !!onChange && !pen;
@@ -158,8 +181,9 @@ export function StoryDrawingLayer({
       onPointerMove={move}
       onPointerUp={up}
       onPointerCancel={up}
-      className={`absolute inset-0 overflow-hidden ${pen ? "cursor-crosshair touch-none" : "pointer-events-none"}`}
+      className={`absolute inset-0 isolate overflow-hidden ${pen ? "cursor-crosshair touch-none" : "pointer-events-none"}`}
     >
+      {children}
       {w > 0 && (
         <svg width={w} height={h} className="pointer-events-none absolute inset-0">
           {drawing.strokes.map((s, i) => (
@@ -179,14 +203,16 @@ export function StoryDrawingLayer({
         drawing.texts.map((t, i) => (
           <div
             key={i}
+            data-pinch={editing ? `text:${i}` : undefined}
             onPointerDown={grabText(i)}
             className={`absolute text-center leading-tight break-words whitespace-pre-wrap select-none ${editing ? "pointer-events-auto cursor-grab touch-none" : ""}`}
             style={{
+              zIndex: t.z,
               left: `${t.x * 100}%`,
               top: `${t.y * 100}%`,
               width: "max-content",
               maxWidth: w * 0.9,
-              transform: "translate(-50%, -50%)",
+              transform: `translate(-50%, -50%) rotate(${t.rotate ?? 0}deg)`,
               ...lookStyle(t.look, t.color),
               fontSize: STORY_TEXT_SIZE * t.scale * w,
               fontFamily: familyOf(t.font) ?? undefined,
