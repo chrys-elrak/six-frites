@@ -9,6 +9,9 @@ import {
   GAME_EMOJI,
   GUESS_MAX,
   type GuessGame,
+  LIVE_EMOJI,
+  LIVE_GAMES,
+  type LiveGame,
   type PublicUser,
   RPS_EMOJI,
   RPS_HANDS,
@@ -22,6 +25,7 @@ import {
   rpsOutcome,
 } from "@six/shared";
 import { useQueryClient } from "@tanstack/react-query";
+import { usePathname, useRouter } from "next/navigation";
 import {
   EyeOff,
   Gamepad2,
@@ -59,11 +63,13 @@ import {
 import { useCloseOnBack } from "@/lib/back";
 import { useChat } from "@/lib/chats";
 import { formatDuration } from "@/lib/format";
-import { useT } from "@/lib/i18n";
+import { useLocale, useT } from "@/lib/i18n";
 import { RINGTONE, playSound } from "@/lib/notify";
+import { useRealtime } from "@/lib/realtime";
 import { useSession } from "@/lib/session";
 import { useVoiceEffect } from "@/lib/voice-fx";
 import { Avatar } from "./avatar";
+import { startLive } from "./live-invites";
 import { Portal } from "./portal";
 import { VoiceEffectSelect } from "./voice-effect-select";
 
@@ -371,9 +377,21 @@ function GuessBody({ game, outgoing, peerName }: { game: GuessGame; outgoing: bo
   );
 }
 
-function GamesPanel({ call, peerName }: { call: Call; peerName: string }) {
+/** Starts a live game with the person on the call; their app opens it as soon as they're asked. */
+function GamesPanel({ call, peerName, shrink }: { call: Call; peerName: string; shrink: () => void }) {
   const tr = useT();
+  const router = useRouter();
+  const { locale } = useLocale();
+  const { realtime } = useRealtime();
   const { games, game } = call;
+
+  async function playLive(live: LiveGame) {
+    openGame(false);
+    shrink();
+    const id = await startLive(realtime?.socket, { game: live, invite: [call.peerId], locale });
+    if (id) router.push(`/play/${id}`);
+  }
+
   return (
     <div
       role="dialog"
@@ -454,6 +472,23 @@ function GamesPanel({ call, peerName }: { call: Call; peerName: string }) {
       ) : (
         <GuessBody key={games.guess.round} game={games.guess} outgoing={call.outgoing} peerName={peerName} />
       )}
+      <div className="mt-5 border-t border-white/10 pt-4">
+        <p className="text-sm font-semibold">{tr.live.title}</p>
+        <div className="mt-2 flex flex-wrap justify-center gap-1.5">
+          {LIVE_GAMES.map((g) => (
+            <button
+              key={g}
+              onClick={() => void playLive(g)}
+              disabled={!realtime}
+              aria-label={tr.live.games[g]}
+              title={tr.live.games[g]}
+              className="grid size-10 place-items-center rounded-full bg-white/10 text-xl transition hover:bg-white/20 active:scale-95 disabled:opacity-40"
+            >
+              {LIVE_EMOJI[g]}
+            </button>
+          ))}
+        </div>
+      </div>
     </div>
   );
 }
@@ -508,9 +543,14 @@ function CallView({ call }: { call: Call }) {
   const [small, setSmall] = useState<"video" | "pill" | null>(null);
   const [tray, setTray] = useState(false);
   const drag = useDrag();
+  const pathname = usePathname();
+  const shrink = () => setSmall(call.video ? "video" : "pill");
   useEffect(() => {
     if (call.gameOpen) setSmall(null);
   }, [call.gameOpen]);
+  useEffect(() => {
+    if (pathname.startsWith("/play/")) setSmall((s) => s ?? (call.video ? "video" : "pill"));
+  }, [pathname, call.video]);
   useRingtone(call.phase === "incoming");
   useCloseOnBack(() => setSmall(call.video ? "video" : "pill"), !small && call.phase !== "incoming" && call.phase !== "ended");
   const [cameras, setCameras] = useState(0);
@@ -689,7 +729,7 @@ function CallView({ call }: { call: Call }) {
               </button>
             </div>
           )}
-          {call.gameOpen && call.phase === "active" && <GamesPanel call={call} peerName={peer?.displayName ?? name} />}
+          {call.gameOpen && call.phase === "active" && <GamesPanel call={call} peerName={peer?.displayName ?? name} shrink={shrink} />}
           <Media
             stream={call.remote}
             muted

@@ -7,6 +7,9 @@ import {
   GAME_EMOJI,
   GUESS_MAX,
   type GuessGame,
+  LIVE_EMOJI,
+  LIVE_GAMES,
+  type LiveGame,
   type PublicUser,
   RPS_EMOJI,
   RPS_HANDS,
@@ -20,6 +23,7 @@ import {
   rpsOutcome,
 } from "@six/shared";
 import { Image } from "expo-image";
+import { router, usePathname } from "expo-router";
 import {
   EyeOff,
   Gamepad2,
@@ -73,10 +77,12 @@ import {
   toggleSpeaker,
   useCall,
 } from "@/lib/calls";
-import { useT } from "@/lib/i18n";
+import { useLocale, useT } from "@/lib/i18n";
+import { useRealtime } from "@/lib/realtime";
 import { useSession } from "@/lib/session";
 import { brand } from "@/lib/theme";
 import { Avatar } from "./avatar";
+import { playHref, startLive } from "./live";
 
 const RED = "#dc2626";
 const GREEN = "#16a34a";
@@ -371,12 +377,22 @@ function GuessBody({ game, outgoing, peerName }: { game: GuessGame; outgoing: bo
   );
 }
 
-function GamesPanel({ call, top }: { call: Call; top: number }) {
+/** Starts a live game with the person on the call; their app opens it as soon as they're asked. */
+function GamesPanel({ call, top, shrink }: { call: Call; top: number; shrink: () => void }) {
   const tr = useT();
   const { height } = useWindowDimensions();
   const insets = useSafeAreaInsets();
+  const socket = useRealtime().realtime?.socket;
   const { games, game } = call;
   const peerName = call.peer.displayName;
+
+  async function playLive(live: LiveGame) {
+    openGame(false);
+    shrink();
+    const id = await startLive(socket, { game: live, invite: [call.peer.id], locale: useLocale.getState().locale });
+    if (id) router.push(playHref(id));
+  }
+
   return (
     <View style={[styles.panel, { top, maxHeight: height - top - insets.bottom - 16 }]} accessibilityLabel={tr.calls.games}>
       <ScrollView contentContainerStyle={styles.panelBody} showsVerticalScrollIndicator={false}>
@@ -458,6 +474,23 @@ function GamesPanel({ call, top }: { call: Call; top: number }) {
             peerName={peerName}
           />
         )}
+        <View style={styles.live}>
+          <Text style={styles.panelTitle}>{tr.live.title}</Text>
+          <View style={styles.liveGames}>
+            {LIVE_GAMES.map((g) => (
+              <Pressable
+                key={g}
+                onPress={() => void playLive(g)}
+                disabled={!socket}
+                accessibilityRole="button"
+                accessibilityLabel={tr.live.games[g]}
+                style={({ pressed }) => [styles.tab, styles.liveGame, pressed && styles.choicePressed]}
+              >
+                <Text style={styles.tabIcon}>{LIVE_EMOJI[g]}</Text>
+              </Pressable>
+            ))}
+          </View>
+        </View>
       </ScrollView>
     </View>
   );
@@ -569,6 +602,12 @@ export function CallScreen() {
   if (seen.id !== call?.id || seen.gameOpen !== call?.gameOpen) {
     setSeen({ id: call?.id, gameOpen: call?.gameOpen });
     if (seen.id !== call?.id || call?.gameOpen) setSmall(null);
+  }
+  const pathname = usePathname();
+  const [seenPath, setSeenPath] = useState(pathname);
+  if (seenPath !== pathname) {
+    setSeenPath(pathname);
+    if (call && !small && pathname.startsWith("/play/")) setSmall(call.video ? "video" : "pill");
   }
   if (!call) return null;
 
@@ -789,7 +828,7 @@ export function CallScreen() {
           )}
         </View>
         {call.gameOpen && call.status === "active" && (
-          <GamesPanel call={call} top={insets.top + 120} />
+          <GamesPanel call={call} top={insets.top + 120} shrink={shrink} />
         )}
         <FloatingReactions reactions={call.reactions} />
       </View>
@@ -901,6 +940,9 @@ const styles = StyleSheet.create({
   hint: { color: "#fff", fontSize: 16, fontWeight: "700", marginTop: 12 },
   tries: { flexDirection: "row", flexWrap: "wrap", justifyContent: "center", gap: 6, marginTop: 12 },
   panelBody: { padding: 20, alignItems: "center" },
+  live: { alignSelf: "stretch", alignItems: "center", marginTop: 20, borderTopWidth: 1, borderTopColor: "rgba(255,255,255,0.1)" },
+  liveGames: { flexDirection: "row", flexWrap: "wrap", justifyContent: "center", gap: 6, marginTop: 8 },
+  liveGame: { backgroundColor: "rgba(255,255,255,0.1)" },
   grid: { flexDirection: "row", flexWrap: "wrap", justifyContent: "center", gap: 3, marginTop: 16, alignSelf: "stretch" },
   cell: {
     width: "9%",

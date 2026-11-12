@@ -8,6 +8,7 @@ import { FlatList, Modal, Pressable, StyleSheet, View } from "react-native";
 import Animated, { FadeInUp, FadeOutUp } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { create } from "zustand";
+import { useCall } from "@/lib/calls";
 import { isBotChat, isFrozen, useChats } from "@/lib/chats";
 import { useLocale, useT } from "@/lib/i18n";
 import { playGameSound } from "@/lib/game-sound";
@@ -195,6 +196,8 @@ export function LiveInvites() {
     if (!socket) return;
     const timers: ReturnType<typeof setTimeout>[] = [];
     const onInvite = (invite: LiveInviteDTO) => {
+      const call = useCall.getState().call;
+      if (call?.status === "active" && call.peer.id === invite.from.id) return router.push(playHref(invite.roomId));
       setInvites((list) => [...list.filter((i) => i.roomId !== invite.roomId), invite]);
       timers.push(setTimeout(() => setInvites((list) => list.filter((i) => i !== invite)), 60_000));
     };

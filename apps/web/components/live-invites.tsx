@@ -5,6 +5,7 @@ import { type CreateLiveInput, LIVE_EMOJI, LIVE_SEATS, type LiveGame, type LiveI
 import { Check, X } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
+import { useCall } from "@/lib/call";
 import { isBotChat, useChats } from "@/lib/chats";
 import { useLocale, useT } from "@/lib/i18n";
 import { useRealtime } from "@/lib/realtime";
@@ -149,7 +150,11 @@ export function LiveInvites() {
   useEffect(() => {
     const socket = realtime?.socket;
     if (!socket) return;
-    const onInvite = (i: LiveInviteDTO) => setInvites((all) => [...all.filter((x) => x.roomId !== i.roomId), i]);
+    const onInvite = (i: LiveInviteDTO) => {
+      const call = useCall.getState().call;
+      if (call?.phase === "active" && call.peerId === i.from.id) return router.push(`/play/${i.roomId}`);
+      setInvites((all) => [...all.filter((x) => x.roomId !== i.roomId), i]);
+    };
     const onClosed = (e: { roomId: string }) => drop(e.roomId);
     socket.on("live:invite", onInvite);
     socket.on("live:closed", onClosed);
@@ -157,7 +162,7 @@ export function LiveInvites() {
       socket.off("live:invite", onInvite);
       socket.off("live:closed", onClosed);
     };
-  }, [realtime]);
+  }, [realtime, router]);
 
   if (!invites.length) return null;
   return (
