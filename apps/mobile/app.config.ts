@@ -1,4 +1,5 @@
 import type { ConfigContext, ExpoConfig } from "expo/config";
+import { type ConfigPlugin, withAndroidManifest } from "expo/config-plugins";
 
 const iosUrlScheme = process.env.GOOGLE_IOS_URL_SCHEME;
 const googleServicesFile = process.env.GOOGLE_SERVICES_FILE;
@@ -19,7 +20,21 @@ const APP_LINK_PREFIXES = ["/chats/", "/invite/", "/add/", "/g/", "/play/"];
  */
 const googleSignInPods = ["AppCheckCore", "GoogleUtilities", "RecaptchaInterop"].map((name) => ({ name, modular_headers: true }));
 
-export default ({ config }: ConfigContext): ExpoConfig => ({
+/**
+ * Google Maps marks OpenGL ES 2.0 as required. Every Android phone has it, but Play's device catalogue lists a few
+ * without it and drops them, so the app's manifest makes it optional again.
+ */
+const optionalOpenGl: ConfigPlugin = (config) =>
+  withAndroidManifest(config, (c) => {
+    const manifest = c.modResults.manifest;
+    manifest.$["xmlns:tools"] = "http://schemas.android.com/tools";
+    const openGl = { $: { "android:glEsVersion": "0x00020000", "android:required": "false", "tools:replace": "android:required" } };
+    manifest["uses-feature"] = [...(manifest["uses-feature"] ?? []), openGl as never];
+    return c;
+  });
+
+export default ({ config }: ConfigContext): ExpoConfig =>
+  optionalOpenGl({
   ...config,
   name: "Six Frites",
   slug: "six-frites",
@@ -38,7 +53,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   },
   android: {
     package: "com.sixfrites.app",
-    versionCode: 9,
+    versionCode: 10,
     adaptiveIcon: {
       backgroundColor: "#F2711C",
       foregroundImage: "./assets/android-icon-foreground.png",
@@ -148,4 +163,4 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     typedRoutes: true,
   },
   extra: { playStore, googleMapsKey: googleMapsKey ?? null },
-});
+  });
