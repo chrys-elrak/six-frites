@@ -1,7 +1,9 @@
 import { unwrap } from "@six/sdk";
 import {
   type NoteDTO,
+  STORY_BACKGROUNDS,
   STORY_REACTIONS,
+  chatTheme,
   STORY_SHOW_MS,
   type StoryDTO,
   type StoryGroupDTO,
@@ -22,7 +24,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEvent } from "expo";
 import { Image } from "expo-image";
 import { useVideoPlayer, VideoView } from "expo-video";
-import { CalendarDays, Clock, Eye, MapPin, MoveDiagonal2, Pause, Play, Plus, SendHorizontal, Trash2, X } from "lucide-react-native";
+import { CalendarDays, Clock, Eye, MapPin, MessageCircle, MoveDiagonal2, Pause, Play, Plus, SendHorizontal, Trash2, X } from "lucide-react-native";
 import { type ComponentRef, useCallback, useEffect, useRef, useState } from "react";
 import { ActivityIndicator, FlatList, Keyboard, Linking, Pressable, ScrollView, StyleSheet, View } from "react-native";
 import { KeyboardStickyView } from "react-native-keyboard-controller";
@@ -722,7 +724,13 @@ export function StoryViewer({ groups, start, onClose }: { groups: StoryGroupDTO[
               <Text style={styles.dim}>{tr.stories.processing}</Text>
             </View>
           )}
-          {!media && !!story.text && <Text style={styles.bigText}>{story.text}</Text>}
+          {!media && !!story.text && !story.fromChat && <Text style={styles.bigText}>{story.text}</Text>}
+          {!media && !!story.text && story.fromChat && (
+            <>
+              <ChatBubbleCard text={story.text} bubble={story.bubble} quote={story.quote} />
+              <FromChatLabel />
+            </>
+          )}
         </Pressable>
         {!loading && (
           <>
@@ -813,6 +821,14 @@ function StoryGif({ url }: { url: string }) {
 }
 
 const styles = StyleSheet.create({
+  chatCard: { maxWidth: "85%", marginHorizontal: 32, alignItems: "flex-start", gap: 8 },
+  chatFrom: { flexDirection: "row", alignItems: "center", gap: 8, maxWidth: "100%" },
+  chatFromName: { flexShrink: 1, color: "#fff", fontSize: 14, fontWeight: "700", textShadowColor: "rgba(0,0,0,0.35)", textShadowRadius: 4 },
+  chatBubble: { maxWidth: "100%", borderRadius: 28, paddingHorizontal: 20, paddingVertical: 12, elevation: 6 },
+  chatBubbleText: { fontSize: 20, lineHeight: 27 },
+  chatTime: { marginTop: 4, alignSelf: "flex-end", fontSize: 12, opacity: 0.7 },
+  fromChat: { position: "absolute", left: 0, right: 0, bottom: 110, flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 6 },
+  fromChatText: { color: "rgba(255,255,255,0.85)", fontSize: 14, fontWeight: "600" },
   cover: { width: 56, height: 56, borderRadius: 28 },
   askCard: { width: 256, borderRadius: 16, overflow: "hidden", backgroundColor: "#fff", elevation: 4 },
   askPrompt: { color: "#fff", fontSize: 14, fontWeight: "700", paddingHorizontal: 16, paddingVertical: 10, backgroundColor: brand },
@@ -910,3 +926,45 @@ const styles = StyleSheet.create({
   viewerReaction: { fontSize: 20, includeFontPadding: false },
   reactionCount: { color: "rgba(255,255,255,0.7)", fontSize: 12, fontWeight: "700" },
 });
+
+export function FromChatLabel() {
+  const tr = useT();
+  return (
+    <View pointerEvents="none" style={styles.fromChat}>
+      <MessageCircle size={16} color="rgba(255,255,255,0.85)" />
+      <Text style={styles.fromChatText}>{tr.stories.fromChat}</Text>
+    </View>
+  );
+}
+
+const DEFAULT_BUBBLE = `${chatTheme(null).light.bubble},${chatTheme(null).light.bubbleInk}`;
+
+/** The first story background that doesn't share its colour with a chat bubble put on it. */
+export const backgroundAround = (bubble: string | undefined) =>
+  STORY_BACKGROUNDS.find((b) => !b.startsWith((bubble ?? DEFAULT_BUBBLE).split(",")[0]!)) ?? STORY_BACKGROUNDS[0];
+
+export function ChatBubbleCard({ text, bubble, quote }: { text: string; bubble: string | null; quote: StoryDTO["quote"] }) {
+  const [backgroundColor, color] = (bubble ?? DEFAULT_BUBBLE).split(",");
+  return (
+    <View style={styles.chatCard}>
+      {quote && (
+        <View style={styles.chatFrom}>
+          <Avatar user={quote.from} size="sm" />
+          <Text numberOfLines={1} style={styles.chatFromName}>
+            {quote.from.displayName}
+          </Text>
+        </View>
+      )}
+      <View style={[styles.chatBubble, { backgroundColor }]}>
+        <Text numberOfLines={6} ellipsizeMode="tail" style={[styles.chatBubbleText, { color }]}>
+          {text}
+        </Text>
+        {quote && (
+          <Text style={[styles.chatTime, { color }]}>
+            {shortDate(quote.sentAt)} · {clockTime(quote.sentAt)}
+          </Text>
+        )}
+      </View>
+    </View>
+  );
+}

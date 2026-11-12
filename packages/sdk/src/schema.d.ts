@@ -110,6 +110,113 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/auth/firebase": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Sign in with a Firebase ID token: Google, Apple or Facebook
+         * @description Like /google. Someone who joined with Google keeps their account. EMAIL_TAKEN when the email has an account and the provider didn't verify it; EMAIL_REQUIRED when it has no email.
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        /** @description A Firebase ID token, from signing in with Google, Apple or Facebook */
+                        idToken: string;
+                        inviteCode?: string;
+                        /** @description Without an invite, give me a guest account (anonymous messages and support only) instead of INVITE_REQUIRED */
+                        guest?: boolean;
+                        device: {
+                            /** @enum {string} */
+                            platform: "web" | "ios" | "android";
+                            name?: string;
+                            /** @description A random ID the app keeps for this browser or phone; bans and anonymous blocks also cover other accounts used on it */
+                            id?: string;
+                        };
+                    };
+                };
+            };
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            accessToken: string;
+                            /** Format: date-time */
+                            accessTokenExpiresAt: string;
+                            refreshToken?: string;
+                            user: {
+                                id: string;
+                                /** Format: email */
+                                email: string;
+                                displayName: string;
+                                /** Format: uri */
+                                avatarUrl: string | null;
+                                /** @description Share it (or its QR code) so people can find you */
+                                contactCode: string;
+                                /** @description Your link for anonymous messages is /ask/{askCode} on the web app */
+                                askCode: string;
+                                /** @description Identifies the key from your recovery key; null until you set up a recovery key */
+                                backupKeyId: string | null;
+                                /** @description Whether a new device can restore your backup with your PIN */
+                                hasBackupPin: boolean;
+                                /** @description Whether the apps ask for your app lock code when they open */
+                                hasAppLock: boolean;
+                                /** @description Whether your app lock code is your backup PIN, so one code does both */
+                                appLockIsPin: boolean;
+                                /** @description Whether the apps show you ads; admins can turn them off for you */
+                                ads: boolean;
+                                /** @description Whether the Six Frites bot sends you a question in your anonymous inbox now and then */
+                                anonBot: boolean;
+                                /** @description The emojis offered first when you react, in order; empty means the defaults */
+                                quickReactions: string[];
+                                /** @description Signed in without an invite: can only get anonymous messages, send them, and write to support, until joining with an invite */
+                                guest: boolean;
+                                /** @description Answers the support chats, so the apps don't offer to contact support */
+                                support: boolean;
+                                /** @description Banned from chats by a moderator: like a guest, only anonymous messages and support work, until `until` or for good */
+                                chatBan: {
+                                    /** Format: date-time */
+                                    until: string | null;
+                                } | null;
+                                /** @description Accepted the Terms of Service and Privacy Policy; the apps ask once, before anything else */
+                                termsAccepted: boolean;
+                                /** @description Went through or skipped the quick tour the apps show once to someone new */
+                                tourSeen: boolean;
+                                /**
+                                 * @description The account's language, which every app follows; null until one is picked
+                                 * @enum {string|null}
+                                 */
+                                locale: "en" | "fr" | "mg" | null;
+                                /** Format: date-time */
+                                createdAt: string;
+                            };
+                        };
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/auth/link": {
         parameters: {
             query?: never;
@@ -668,6 +775,8 @@ export interface paths {
                                  * @enum {string}
                                  */
                                 banScope: "full" | "chat";
+                                /** @description How they have signed in so far */
+                                providers: ("google" | "facebook" | "apple")[];
                                 banReason: string | null;
                                 admin: boolean;
                                 /** Format: date-time */
@@ -780,6 +889,8 @@ export interface paths {
                              * @enum {string}
                              */
                             banScope: "full" | "chat";
+                            /** @description How they have signed in so far */
+                            providers: ("google" | "facebook" | "apple")[];
                             banReason: string | null;
                             admin: boolean;
                             /** Format: date-time */
@@ -908,6 +1019,8 @@ export interface paths {
                              * @enum {string}
                              */
                             banScope: "full" | "chat";
+                            /** @description How they have signed in so far */
+                            providers: ("google" | "facebook" | "apple")[];
                             banReason: string | null;
                             admin: boolean;
                             /** Format: date-time */
@@ -1018,6 +1131,8 @@ export interface paths {
                              * @enum {string}
                              */
                             banScope: "full" | "chat";
+                            /** @description How they have signed in so far */
+                            providers: ("google" | "facebook" | "apple")[];
                             banReason: string | null;
                             admin: boolean;
                             /** Format: date-time */
@@ -1137,6 +1252,8 @@ export interface paths {
                              * @enum {string}
                              */
                             banScope: "full" | "chat";
+                            /** @description How they have signed in so far */
+                            providers: ("google" | "facebook" | "apple")[];
                             banReason: string | null;
                             admin: boolean;
                             /** Format: date-time */
@@ -1257,6 +1374,8 @@ export interface paths {
                              * @enum {string}
                              */
                             banScope: "full" | "chat";
+                            /** @description How they have signed in so far */
+                            providers: ("google" | "facebook" | "apple")[];
                             banReason: string | null;
                             admin: boolean;
                             /** Format: date-time */
@@ -1439,6 +1558,8 @@ export interface paths {
                              * @enum {string}
                              */
                             banScope: "full" | "chat";
+                            /** @description How they have signed in so far */
+                            providers: ("google" | "facebook" | "apple")[];
                             banReason: string | null;
                             admin: boolean;
                             /** Format: date-time */
@@ -1552,6 +1673,8 @@ export interface paths {
                              * @enum {string}
                              */
                             banScope: "full" | "chat";
+                            /** @description How they have signed in so far */
+                            providers: ("google" | "facebook" | "apple")[];
                             banReason: string | null;
                             admin: boolean;
                             /** Format: date-time */
@@ -1705,6 +1828,8 @@ export interface paths {
                              * @enum {string}
                              */
                             banScope: "full" | "chat";
+                            /** @description How they have signed in so far */
+                            providers: ("google" | "facebook" | "apple")[];
                             banReason: string | null;
                             admin: boolean;
                             /** Format: date-time */
@@ -23821,6 +23946,24 @@ export interface paths {
                                     /** @enum {string} */
                                     type: "text" | "image" | "video";
                                     text: string | null;
+                                    /** @description The text is a chat message shared as it was */
+                                    fromChat: boolean;
+                                    /** @description With fromChat: the bubble's colour and its text's, #rrggbb,#rrggbb */
+                                    bubble: string | null;
+                                    /** @description With fromChat and a messageId: who sent the message and when */
+                                    quote: {
+                                        /** @description Who sent the message, as the poster sees them */
+                                        from: {
+                                            id: string;
+                                            displayName: string;
+                                            /** Format: uri */
+                                            avatarUrl: string | null;
+                                            /** @description Their alias, when you gave them a name of your own: without a photo, their picture still comes from it */
+                                            alias?: string;
+                                        };
+                                        /** Format: date-time */
+                                        sentAt: string;
+                                    } | null;
                                     background: string | null;
                                     media: {
                                         id: string;
@@ -23993,6 +24136,12 @@ export interface paths {
                         };
                         /** @description An anonymous message you received, shown on the story as a card: its text, photo or GIF */
                         askId?: string;
+                        /** @description The text is a chat message shared as it was, shown as a chat bubble */
+                        fromChat?: boolean;
+                        /** @description With fromChat: the bubble's colour and its text's, as in the chat, like #e11d48,#ffffff */
+                        bubble?: string;
+                        /** @description With fromChat: the message it is, so the story shows who sent it, as you see them, and when */
+                        messageId?: string;
                         /** @description Show the day it was posted on the story */
                         showDate?: boolean;
                         /** @description Show the time it was posted on the story */
@@ -24079,6 +24228,24 @@ export interface paths {
                             /** @enum {string} */
                             type: "text" | "image" | "video";
                             text: string | null;
+                            /** @description The text is a chat message shared as it was */
+                            fromChat: boolean;
+                            /** @description With fromChat: the bubble's colour and its text's, #rrggbb,#rrggbb */
+                            bubble: string | null;
+                            /** @description With fromChat and a messageId: who sent the message and when */
+                            quote: {
+                                /** @description Who sent the message, as the poster sees them */
+                                from: {
+                                    id: string;
+                                    displayName: string;
+                                    /** Format: uri */
+                                    avatarUrl: string | null;
+                                    /** @description Their alias, when you gave them a name of your own: without a photo, their picture still comes from it */
+                                    alias?: string;
+                                };
+                                /** Format: date-time */
+                                sentAt: string;
+                            } | null;
                             background: string | null;
                             media: {
                                 id: string;
@@ -24253,6 +24420,21 @@ export interface paths {
                                 id: string;
                                 /** @description Empty when the note is only a GIF */
                                 text: string;
+                                fromChat: boolean;
+                                /** @description With fromChat and a messageId: who sent the message and when */
+                                quote: {
+                                    /** @description Who sent the message, as the note's owner sees them */
+                                    from: {
+                                        id: string;
+                                        displayName: string;
+                                        /** Format: uri */
+                                        avatarUrl: string | null;
+                                        /** @description Their alias, when you gave them a name of your own: without a photo, their picture still comes from it */
+                                        alias?: string;
+                                    };
+                                    /** Format: date-time */
+                                    sentAt: string;
+                                } | null;
                                 background: string | null;
                                 /** @description As an MP4 to play muted on a loop */
                                 gif: {
@@ -24285,6 +24467,21 @@ export interface paths {
                                     id: string;
                                     /** @description Empty when the note is only a GIF */
                                     text: string;
+                                    fromChat: boolean;
+                                    /** @description With fromChat and a messageId: who sent the message and when */
+                                    quote: {
+                                        /** @description Who sent the message, as the note's owner sees them */
+                                        from: {
+                                            id: string;
+                                            displayName: string;
+                                            /** Format: uri */
+                                            avatarUrl: string | null;
+                                            /** @description Their alias, when you gave them a name of your own: without a photo, their picture still comes from it */
+                                            alias?: string;
+                                        };
+                                        /** Format: date-time */
+                                        sentAt: string;
+                                    } | null;
                                     background: string | null;
                                     /** @description As an MP4 to play muted on a loop */
                                     gif: {
@@ -24324,6 +24521,10 @@ export interface paths {
                     "application/json": {
                         /** @default  */
                         text?: string;
+                        /** @description The text is a chat message shared as it was, shown in quotes */
+                        fromChat?: boolean;
+                        /** @description With fromChat: the message it is, so the note shows who sent it, as you see them, and when */
+                        messageId?: string;
                         /** @description A GIF from GET /v1/gifs shown in the note */
                         gifId?: string;
                         /** @description The bubble's colour, like #e11d48; without it the bubble follows the reader's theme */
@@ -24347,6 +24548,21 @@ export interface paths {
                             id: string;
                             /** @description Empty when the note is only a GIF */
                             text: string;
+                            fromChat: boolean;
+                            /** @description With fromChat and a messageId: who sent the message and when */
+                            quote: {
+                                /** @description Who sent the message, as the note's owner sees them */
+                                from: {
+                                    id: string;
+                                    displayName: string;
+                                    /** Format: uri */
+                                    avatarUrl: string | null;
+                                    /** @description Their alias, when you gave them a name of your own: without a photo, their picture still comes from it */
+                                    alias?: string;
+                                };
+                                /** Format: date-time */
+                                sentAt: string;
+                            } | null;
                             background: string | null;
                             /** @description As an MP4 to play muted on a loop */
                             gif: {

@@ -23,10 +23,10 @@ import {
   splitLinks,
 } from "@six/shared";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { Ban, Eye, SendHorizontal, X } from "lucide-react";
+import { Ban, CheckCheck, Eye, MessageCircle, SendHorizontal, X } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useChats } from "@/lib/chats";
-import { timeAgo } from "@/lib/format";
+import { clockTime, shortDate, timeAgo } from "@/lib/format";
 import { useT } from "@/lib/i18n";
 import { useRealtime } from "@/lib/realtime";
 import { queueMessage } from "@/lib/send";
@@ -70,7 +70,9 @@ export function NoteBubble({ note, placeholder, label, onClick }: { note: NoteDT
         note?.gif ? "p-0.5" : `px-2 py-1 text-center text-[11px] leading-tight break-words ${note ? "font-medium" : "text-stone-400"}`
       }`}
     >
-      {note?.gif ? <Loop src={note.gif.url} className="h-8 rounded-[14px] object-cover" /> : <span className="line-clamp-2">{note?.text ?? placeholder}</span>}
+      {note?.gif ? <Loop src={note.gif.url} className="h-8 rounded-[14px] object-cover" /> : <span className={note?.fromChat ? "line-clamp-2 font-[family-name:Caveat] text-[13px] italic" : "line-clamp-2"}>
+          {note?.fromChat ? `“${note.text}”` : (note?.text ?? placeholder)}
+        </span>}
     </button>
   );
 }
@@ -170,6 +172,32 @@ export function NoteEditor({ note, onClose }: { note: NoteDTO | null; onClose: (
       setBusy(false);
     }
   }
+
+  if (note?.fromChat && note.text)
+    return (
+      <Dialog onClose={onClose}>
+        <div className="flex flex-col gap-4 p-5">
+          <h2 className="text-lg font-semibold">{tr.stories.yourNote}</h2>
+          <div className="self-center">
+            <ChatNote note={note} />
+          </div>
+          <NoteViewers count={note.viewCount ?? 0} />
+          {failed && (
+            <p role="alert" className="text-sm text-red-600 dark:text-red-400">
+              {tr.common.somethingWrongRetry}
+            </p>
+          )}
+          <button
+            type="button"
+            disabled={busy}
+            onClick={() => void run(() => six.api.DELETE("/v1/notes"))}
+            className="self-start rounded-full px-4 py-2.5 text-sm font-semibold text-red-600 hover:bg-red-50 disabled:opacity-50 dark:text-red-400 dark:hover:bg-red-950/40"
+          >
+            {tr.stories.deleteNote}
+          </button>
+        </div>
+      </Dialog>
+    );
 
   return (
     <Dialog onClose={onClose}>
@@ -339,31 +367,31 @@ export function NoteReader({ user, note, onClose }: { user: PublicUser; note: No
           if ((e.target as Element).closest("a[href]")) void six.api.POST("/v1/notes/{id}/click", { params: { path: { id: note.id } } });
         }}
       >
-        <span
-          style={tint(note.background)}
-          className={`flex max-w-full flex-col items-center gap-2 rounded-3xl text-center text-base font-medium break-words shadow ${note.background ? "" : plain} ${note.gif ? "p-1.5" : "px-4 py-2.5"}`}
-        >
-          {note.gif && <Loop src={note.gif.url} className="max-h-48 rounded-[1.25rem]" />}
-          {note.text && (
-            <span className={note.gif ? "px-2.5 pb-1" : ""}>
-              {splitLinks(note.text).map((part, i) =>
-                part.href ? (
-                  <a key={i} href={part.href} target="_blank" rel="noopener noreferrer" className="break-all underline underline-offset-2">
-                    {part.text}
-                  </a>
-                ) : (
-                  part.text
-                ),
-              )}
-            </span>
-          )}
-        </span>
+        {note.fromChat && note.text && !note.gif ? (
+          <ChatNote note={note} />
+        ) : (
+          <span
+            style={tint(note.background)}
+            className={`flex max-w-full flex-col items-center gap-2 rounded-3xl text-center text-base font-medium break-words shadow ${note.background ? "" : plain} ${note.gif ? "p-1.5" : "px-4 py-2.5"}`}
+          >
+            {note.gif && <Loop src={note.gif.url} className="max-h-48 rounded-[1.25rem]" />}
+            {note.text && (
+              <span className={note.gif ? "px-2.5 pb-1" : ""}>
+                <Linked text={note.text} />
+              </span>
+            )}
+          </span>
+        )}
         {previewLink(note.text) && <LinkCard url={previewLink(note.text)!} mine={false} />}
-        <Avatar user={user} size="lg" />
-        <p className="text-center">
-          <span className="font-semibold">{user.displayName}</span>
-          <span className="text-sm text-stone-500"> · {timeAgo(note.createdAt)}</span>
-        </p>
+        {!note.fromChat && (
+          <>
+            <Avatar user={user} size="lg" />
+            <p className="text-center">
+              <span className="font-semibold">{user.displayName}</span>
+              <span className="text-sm text-stone-500"> · {timeAgo(note.createdAt)}</span>
+            </p>
+          </>
+        )}
         <div className="flex justify-center gap-1">
           {STORY_REACTIONS.map((emoji) => (
             <button
@@ -408,5 +436,55 @@ export function NoteReader({ user, note, onClose }: { user: PublicUser; note: No
         )}
       </div>
     </Dialog>
+  );
+}
+
+function Linked({ text }: { text: string }) {
+  return splitLinks(text).map((part, i) =>
+    part.href ? (
+      <a key={i} href={part.href} target="_blank" rel="noopener noreferrer" className="break-all underline underline-offset-2">
+        {part.text}
+      </a>
+    ) : (
+      part.text
+    ),
+  );
+}
+
+/** A note made from a chat message, drawn as that message: a sent bubble next to who wrote it, with when. */
+function ChatNote({ note }: { note: NoteDTO }) {
+  const tr = useT();
+  const { quote } = note;
+  return (
+    <div className="flex max-w-full flex-col items-center gap-3">
+      <div className="flex max-w-full items-end gap-2">
+        {quote && <Avatar user={quote.from} size="sm" />}
+        <div className="flex min-w-0 flex-col items-start gap-1">
+          {quote && (
+            <p className="max-w-full truncate px-3 text-xs text-stone-500 dark:text-stone-400">
+              <span className="font-semibold text-stone-700 dark:text-stone-200">{quote.from.displayName}</span> · {shortDate(quote.sentAt)}
+            </p>
+          )}
+          <p
+            style={tint(note.background)}
+            className={`flex max-w-full items-end gap-2 rounded-[1.4rem] px-4 py-2 shadow ${note.background ? "" : "bg-brand text-brand-ink"}`}
+          >
+            <span className="min-w-0 font-[family-name:Caveat] text-2xl leading-tight break-words italic">
+              <Linked text={note.text} />
+            </span>
+            {quote && (
+              <span className="flex shrink-0 items-center gap-1 pb-0.5 text-xs opacity-70">
+                {clockTime(quote.sentAt)}
+                <CheckCheck className="size-4" aria-hidden />
+              </span>
+            )}
+          </p>
+        </div>
+      </div>
+      <p className="flex items-center gap-1.5 text-xs text-stone-500 dark:text-stone-400">
+        <MessageCircle className="size-3.5" aria-hidden />
+        {tr.stories.fromChat}
+      </p>
+    </div>
   );
 }

@@ -185,6 +185,14 @@ export const CreateStoryInput = z
       .describe("A GIF from GET /v1/gifs shown on top of the story"),
     location: StoryLocation.optional(),
     askId: Id.optional().describe("An anonymous message you received, shown on the story as a card: its text, photo or GIF"),
+    fromChat: z.boolean().optional().describe("The text is a chat message shared as it was, shown as a chat bubble"),
+    bubble: z
+      .string()
+      .regex(/^#[0-9a-f]{6},#[0-9a-f]{6}$/i)
+      .transform((s) => s.toLowerCase())
+      .optional()
+      .describe("With fromChat: the bubble's colour and its text's, as in the chat, like #e11d48,#ffffff"),
+    messageId: Id.optional().describe("With fromChat: the message it is, so the story shows who sent it, as you see them, and when"),
     showDate: z.boolean().optional().describe("Show the day it was posted on the story"),
     showTime: z.boolean().optional().describe("Show the time it was posted on the story"),
     positions: StoryPositions.optional(),
@@ -206,6 +214,12 @@ export const StoryDTO = z.object({
   id: Id,
   type: z.enum(["text", "image", "video"]),
   text: z.string().nullable(),
+  fromChat: z.boolean().describe("The text is a chat message shared as it was"),
+  bubble: z.string().nullable().describe("With fromChat: the bubble's colour and its text's, #rrggbb,#rrggbb"),
+  quote: z
+    .object({ from: PublicUser.describe("Who sent the message, as the poster sees them"), sentAt: IsoDate })
+    .nullable()
+    .describe("With fromChat and a messageId: who sent the message and when"),
   background: z.string().nullable(),
   media: AttachmentDTO.nullable(),
   gif: z.object({ url: z.string().url(), width: z.number().int().nullable(), height: z.number().int().nullable() }).nullable(),
@@ -240,6 +254,12 @@ export const StoryGroupDTO = z.object({
 export type StoryGroupDTO = z.infer<typeof StoryGroupDTO>;
 
 export const NOTE_LIMIT = 60;
+/** A text message's words as a story or a note would take them, and whether they fit in each. */
+export function shareTargets(text: string | null | undefined) {
+  const t = text?.trim() ?? "";
+  return { text: t, story: !!t && t.length <= STORY_LIMITS.text, note: !!t && t.length <= NOTE_LIMIT };
+}
+
 /** How long a note stays up. */
 export const NOTE_SECS = 24 * HOUR;
 
@@ -249,6 +269,8 @@ export const NOTE_BACKGROUNDS = STORY_BACKGROUNDS.filter((b) => !b.includes(",")
 export const SetNoteInput = z
   .object({
     text: z.string().trim().max(NOTE_LIMIT).default(""),
+    fromChat: z.boolean().optional().describe("The text is a chat message shared as it was, shown in quotes"),
+    messageId: Id.optional().describe("With fromChat: the message it is, so the note shows who sent it, as you see them, and when"),
     gifId: z
       .string()
       .regex(/^[\w-]{1,128}$/)
@@ -269,10 +291,16 @@ export const SetNoteInput = z
       .describe("How long it stays up, from one hour to a day"),
   })
   .refine((v) => !!v.text || !!v.gifId, { message: "A note needs text or a GIF", path: ["text"] });
+export type SetNoteInput = z.input<typeof SetNoteInput>;
 
 export const NoteDTO = z.object({
   id: Id,
   text: z.string().describe("Empty when the note is only a GIF"),
+  fromChat: z.boolean(),
+  quote: z
+    .object({ from: PublicUser.describe("Who sent the message, as the note's owner sees them"), sentAt: IsoDate })
+    .nullable()
+    .describe("With fromChat and a messageId: who sent the message and when"),
   background: z.string().nullable(),
   gif: z
     .object({

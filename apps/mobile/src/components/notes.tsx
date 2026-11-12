@@ -22,14 +22,17 @@ import {
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Image } from "expo-image";
 import { useVideoPlayer, VideoView } from "expo-video";
-import { Ban, Eye, SendHorizontal, X } from "lucide-react-native";
+import { useFonts } from "expo-font";
+import { Ban, CheckCheck, Eye, MessageCircle, SendHorizontal, X } from "lucide-react-native";
 import { useEffect, useState } from "react";
 import { Pressable, ScrollView, StyleSheet, View } from "react-native";
 import Animated, { BounceIn } from "react-native-reanimated";
 import { KeyboardAvoidingView } from "react-native-keyboard-controller";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { FloatingReactions, useFloaters } from "./floating-reactions";
+import { FONT_FILES } from "./photo-editor";
 import { useChats } from "@/lib/chats";
-import { timeAgo } from "@/lib/format";
+import { clockTime, shortDate, timeAgo } from "@/lib/format";
 import { useT } from "@/lib/i18n";
 import { useRealtime } from "@/lib/realtime";
 import { queueMessage } from "@/lib/send";
@@ -42,7 +45,6 @@ import { Modal } from "./modal";
 import { GifSearch } from "./story-composer";
 import { Text, TextInput } from "./text";
 import { PrimaryButton } from "./ui";
-import { FloatingReactions, useFloaters } from "./floating-reactions";
 
 /** Under the stories key, so `stories:changed` refreshes notes too. */
 export const notesKey = ["stories", "notes"] as const;
@@ -72,6 +74,7 @@ function Loop({ gif, height, maxWidth, radius }: { gif: NonNullable<NoteDTO["gif
 /** The thought bubble above someone's picture in the stories row: their GIF, or their words, on their colour. Without a note it shows `placeholder` greyed, as an invitation. */
 export function NoteBubble({ note, placeholder, label, onPress }: { note: NoteDTO | null; placeholder?: string; label: string; onPress: () => void }) {
   const t = useTheme();
+  useFonts(QUOTE_FONT);
   const bg = note?.background;
   return (
     <Pressable
@@ -86,9 +89,12 @@ export function NoteBubble({ note, placeholder, label, onPress }: { note: NoteDT
       ) : (
         <Text
           numberOfLines={2}
-          style={{ fontSize: 11, lineHeight: 13, textAlign: "center", color: bg ? inkOn(bg) : note ? t.text : stone[400], fontWeight: note ? "500" : "400" }}
+          style={[
+            { fontSize: 11, lineHeight: 13, textAlign: "center", color: bg ? inkOn(bg) : note ? t.text : stone[400], fontWeight: note ? "500" : "400" },
+            note?.fromChat && styles.quoteSmall,
+          ]}
         >
-          {note?.text ?? placeholder}
+          {note?.fromChat ? `“${note.text}”` : (note?.text ?? placeholder)}
         </Text>
       )}
     </Pressable>
@@ -219,6 +225,21 @@ export function NoteEditor({ note, onClose }: { note: NoteDTO | null; onClose: (
     );
   const ink = background ? inkOn(background) : t.text;
 
+  if (note?.fromChat && note.text)
+    return (
+      <Popup onClose={onClose}>
+        <Text style={{ color: t.text, fontSize: 18, fontWeight: "700" }}>{tr.stories.yourNote}</Text>
+        <View style={{ alignItems: "center" }}>
+          <ChatNote note={note} onOpen={() => null} />
+        </View>
+        <NoteViewers count={note.viewCount ?? 0} />
+        {failed && <Text style={{ color: "#dc2626", fontSize: 14 }}>{tr.common.somethingWrongRetry}</Text>}
+        <Pressable onPress={() => void run(() => six.api.DELETE("/v1/notes"))} disabled={busy} accessibilityRole="button" hitSlop={6}>
+          <Text style={{ color: "#dc2626", fontSize: 15, fontWeight: "600" }}>{tr.stories.deleteNote}</Text>
+        </Pressable>
+      </Popup>
+    );
+
   return (
     <Popup onClose={onClose}>
       <Text style={{ color: t.text, fontSize: 18, fontWeight: "700" }}>{tr.stories.yourNote}</Text>
@@ -307,6 +328,7 @@ export function NoteEditor({ note, onClose }: { note: NoteDTO | null; onClose: (
 /** A contact's note, with quick reactions only they see and a box to answer it in your chat with them. */
 export function NoteReader({ user, note, onClose }: { user: PublicUser; note: NoteDTO; onClose: () => void }) {
   const t = useTheme();
+  useFonts(QUOTE_FONT);
   const tr = useT();
   const qc = useQueryClient();
   const { realtime } = useRealtime();
@@ -337,20 +359,28 @@ export function NoteReader({ user, note, onClose }: { user: PublicUser; note: No
     <Popup onClose={onClose}>
       <FloatingReactions reactions={floaters} />
       <View style={{ alignItems: "center", gap: 12 }}>
-        <View style={[styles.bigBubble, { backgroundColor: note.background ?? t.surfaceAlt }, note.gif && { padding: 6 }]}>
-          {note.gif && <Loop gif={note.gif} height={180} maxWidth={280} radius={18} />}
-          {!!note.text && (
-            <Text style={[{ color: note.background ? inkOn(note.background) : t.text, fontSize: 16, fontWeight: "500", textAlign: "center" }, note.gif && { padding: 6 }]}>
-              <Linked text={note.text} selecting={false} onOpen={clicked} />
-            </Text>
-          )}
-        </View>
+        {note.fromChat && !!note.text && !note.gif ? (
+          <ChatNote note={note} onOpen={clicked} />
+        ) : (
+          <View style={[styles.bigBubble, { backgroundColor: note.background ?? t.surfaceAlt }, note.gif && { padding: 6 }]}>
+            {note.gif && <Loop gif={note.gif} height={180} maxWidth={280} radius={18} />}
+            {!!note.text && (
+              <Text style={[{ color: note.background ? inkOn(note.background) : t.text, fontSize: 16, fontWeight: "500", textAlign: "center" }, note.gif && { padding: 6 }]}>
+                <Linked text={note.text} selecting={false} onOpen={clicked} />
+              </Text>
+            )}
+          </View>
+        )}
         {previewLink(note.text) && <LinkCard url={previewLink(note.text)!} mine={false} width={280} onOpen={clicked} />}
-        <Avatar user={user} size="lg" />
-        <Text style={{ color: t.text, fontSize: 15 }}>
-          <Text style={{ fontWeight: "700" }}>{user.displayName}</Text>
-          <Text style={{ color: t.muted, fontSize: 13 }}> · {timeAgo(note.createdAt)}</Text>
-        </Text>
+        {!note.fromChat && (
+          <>
+            <Avatar user={user} size="lg" />
+            <Text style={{ color: t.text, fontSize: 15 }}>
+              <Text style={{ fontWeight: "700" }}>{user.displayName}</Text>
+              <Text style={{ color: t.muted, fontSize: 13 }}> · {timeAgo(note.createdAt)}</Text>
+            </Text>
+          </>
+        )}
         <View style={styles.actions}>
           {STORY_REACTIONS.map((emoji) => (
             <Pressable key={emoji} onPress={() => react(emoji)} accessibilityLabel={emoji} hitSlop={4} style={styles.reaction}>
@@ -390,7 +420,15 @@ export function NoteReader({ user, note, onClose }: { user: PublicUser; note: No
   );
 }
 
+const QUOTE_FONT = { Caveat: FONT_FILES.Caveat };
+
 const styles = StyleSheet.create({
+  chatNote: { flexDirection: "row", alignItems: "flex-end", gap: 8, maxWidth: "100%" },
+  chatNoteColumn: { flexShrink: 1, alignItems: "flex-start", gap: 4 },
+  chatNoteBubble: { flexDirection: "row", alignItems: "flex-end", gap: 8, borderRadius: 22, paddingHorizontal: 16, paddingVertical: 8, maxWidth: "100%" },
+  chatNoteText: { flexShrink: 1, fontFamily: "Caveat", fontSize: 26, lineHeight: 30, transform: [{ skewX: "-10deg" }] },
+  chatNoteTime: { flexDirection: "row", alignItems: "center", gap: 3, paddingBottom: 3 },
+  quoteSmall: { fontFamily: "Caveat", fontWeight: "normal", fontSize: 14, lineHeight: 15, transform: [{ skewX: "-10deg" }] },
   bubble: { zIndex: 1, marginBottom: -8, maxWidth: 72, borderRadius: 16, borderWidth: StyleSheet.hairlineWidth, paddingHorizontal: 8, paddingVertical: 4 },
   backdrop: { backgroundColor: "rgba(0,0,0,0.4)" },
   card: { marginHorizontal: 12, borderRadius: 24, padding: 20, gap: 12 },
@@ -416,3 +454,41 @@ const styles = StyleSheet.create({
     backgroundColor: stone[900],
   },
 });
+
+/** A note made from a chat message, drawn as that message: a sent bubble next to who wrote it, with when. */
+function ChatNote({ note, onOpen }: { note: NoteDTO; onOpen: () => void }) {
+  const t = useTheme();
+  const tr = useT();
+  const { quote } = note;
+  const bg = note.background ?? brand;
+  const ink = note.background ? inkOn(note.background) : brandInk;
+  return (
+    <View style={{ alignItems: "center", gap: 12, maxWidth: "100%" }}>
+      <View style={styles.chatNote}>
+        {quote && <Avatar user={quote.from} size="sm" />}
+        <View style={styles.chatNoteColumn}>
+          {quote && (
+            <Text numberOfLines={1} style={{ color: t.muted, fontSize: 12, paddingHorizontal: 12 }}>
+              <Text style={{ color: t.text, fontWeight: "700" }}>{quote.from.displayName}</Text> · {shortDate(quote.sentAt)}
+            </Text>
+          )}
+          <View style={[styles.chatNoteBubble, { backgroundColor: bg }]}>
+            <Text style={[styles.chatNoteText, { color: ink }]}>
+              <Linked text={note.text} selecting={false} onOpen={onOpen} />
+            </Text>
+            {quote && (
+              <View style={styles.chatNoteTime}>
+                <Text style={{ color: ink, fontSize: 12, opacity: 0.7 }}>{clockTime(quote.sentAt)}</Text>
+                <CheckCheck size={15} color={ink} style={{ opacity: 0.7 }} />
+              </View>
+            )}
+          </View>
+        </View>
+      </View>
+      <View style={{ flexDirection: "row", alignItems: "center", gap: 5 }}>
+        <MessageCircle size={13} color={t.muted} />
+        <Text style={{ color: t.muted, fontSize: 12 }}>{tr.stories.fromChat}</Text>
+      </View>
+    </View>
+  );
+}

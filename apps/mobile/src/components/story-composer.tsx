@@ -1,6 +1,7 @@
 import { unwrap } from "@six/sdk";
 import {
   type AnonMessageDTO,
+  type StoryDTO,
   EDIT_COLORS,
   EMPTY_DRAWING,
   STORY_PEN_SIZES,
@@ -35,7 +36,7 @@ import { brand, brandInk } from "@/lib/theme";
 import { currentPosition } from "./location-card";
 import { Modal } from "./modal";
 import { Sheet } from "./sheet";
-import { StoryStickers, storyFill } from "./stories";
+import { ChatBubbleCard, FromChatLabel, StoryStickers, backgroundAround, storyFill } from "./stories";
 import { LastsPicker } from "./notes";
 import { DrawBar, type Pen, StoryDrawingLayer, TextWriter, type Writing } from "./story-drawing";
 import { Text, TextInput } from "./text";
@@ -175,13 +176,25 @@ export function GifSearch({ onPick }: { onPick: (gif: GifDTO) => void }) {
  * Makes a story: text on a colour, or a photo or video, with a GIF, the place, the date or the time on top. With
  * `anon`, it starts with that anonymous message on it as a card, to answer in front of everyone.
  */
-export function StoryComposer({ anon, onClose }: { anon?: AnonMessageDTO; onClose: () => void }) {
+export function StoryComposer({
+  anon,
+  initialText,
+  bubble,
+  quote,
+  onClose,
+}: {
+  anon?: AnonMessageDTO;
+  initialText?: string;
+  bubble?: string;
+  quote?: StoryDTO["quote"] & { messageId: string };
+  onClose: () => void;
+}) {
   const tr = useT();
   const qc = useQueryClient();
   const insets = useSafeAreaInsets();
   const [file, setFile] = useState<LocalFile | null>(null);
-  const [text, setText] = useState("");
-  const [background, setBackground] = useState<string>(STORY_BACKGROUNDS[0]);
+  const [text, setText] = useState(initialText ?? "");
+  const [background, setBackground] = useState<string>(initialText ? backgroundAround(bubble) : STORY_BACKGROUNDS[0]);
   const [custom, setCustom] = useState(false);
   const [from, to] = background.split(",") as [string, string | undefined];
   const [gif, setGif] = useState<GifDTO | null>(null);
@@ -207,6 +220,7 @@ export function StoryComposer({ anon, onClose }: { anon?: AnonMessageDTO; onClos
   const [error, setError] = useState<string | null>(null);
   const tooLong = file?.kind === "video" && (file.durationMs ?? 0) > STORY_LIMITS.videoMs + STORY_LIMITS.videoSlackMs;
   const ready = (!!file || !!text.trim() || !!gif || !!ask || drawn) && !tooLong;
+  const fromChat = !!initialText && !file;
 
   const keep = () => setUndos((u) => [...u, drawing]);
   function finishWriting() {
@@ -290,6 +304,9 @@ export function StoryComposer({ anon, onClose }: { anon?: AnonMessageDTO; onClos
       qc,
       {
         text: text.trim() || undefined,
+        fromChat,
+        bubble: fromChat ? bubble : undefined,
+        messageId: fromChat ? quote?.messageId : undefined,
         background,
         gifId: gif?.id,
         askId: ask?.id,
@@ -347,7 +364,13 @@ export function StoryComposer({ anon, onClose }: { anon?: AnonMessageDTO; onClos
         <View style={styles.preview}>
           {file?.kind === "image" && <Image source={{ uri: file.uri }} style={StyleSheet.absoluteFill} contentFit="contain" />}
           {file?.kind === "video" && <PreviewVideo uri={file.uri} />}
-          {!file && (
+          {fromChat && (
+            <>
+              <ChatBubbleCard text={text} bubble={bubble ?? null} quote={quote ?? null} />
+              <FromChatLabel />
+            </>
+          )}
+          {!file && !fromChat && (
             <TextInput
               value={text}
               onChangeText={setText}

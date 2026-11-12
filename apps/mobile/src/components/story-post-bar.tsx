@@ -11,7 +11,7 @@ export function StoryPostBar() {
   const t = useTheme();
   const tr = useT();
   const insets = useSafeAreaInsets();
-  const { state, progress, retry } = useStoryPost();
+  const { kind, state, progress, retry } = useStoryPost();
   if (!state) return null;
 
   return (
@@ -23,9 +23,13 @@ export function StoryPostBar() {
           {state === "failed" && <TriangleAlert size={20} color={t.danger} />}
           <Text numberOfLines={1} style={{ flex: 1, color: t.text, fontSize: 14, fontWeight: "600" }}>
             {state === "posting"
-              ? `${tr.stories.postingStory} ${Math.round(progress * 100)}%`
+              ? kind === "note"
+                  ? tr.stories.postingNote
+                  : `${tr.stories.postingStory} ${Math.round(progress * 100)}%`
               : state === "done"
-                ? tr.stories.posted
+                ? kind === "note"
+                    ? tr.stories.notePosted
+                    : tr.stories.posted
                 : tr.stories.couldNotPostShort}
           </Text>
           {state === "failed" && (

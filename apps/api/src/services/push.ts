@@ -66,7 +66,7 @@ export async function queueReactionPush(messageId: string, authorId: string, rea
 
 /** Whether `userId` is the person being helped in this chat with support, who sees the other side as Six Frites. */
 /** Someone as `userId` sees them in a chat: support is Six Frites to whoever it helps, who is their real self to support. */
-async function seenIn(chatId: string, userId: string, person: Parameters<Awaited<ReturnType<typeof profilesFor>>>[0]) {
+export async function seenIn(chatId: string, userId: string, person: Parameters<Awaited<ReturnType<typeof profilesFor>>>[0]) {
   const chat = await prisma.chat.findUnique({ where: { id: chatId }, select: { supportUserId: true, type: true } });
   if (chat?.supportUserId === userId) return supportProfile(person.id);
   if (chat?.supportUserId === person.id) return supportCase(person);

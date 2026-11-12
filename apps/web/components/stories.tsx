@@ -4,6 +4,7 @@ import { unwrap } from "@six/sdk";
 import {
   type NoteDTO,
   type PublicUser,
+  STORY_BACKGROUNDS,
   STORY_REACTIONS,
   STORY_SHOW_MS,
   STORY_STICKERS,
@@ -11,6 +12,7 @@ import {
   type StoryDTO,
   type StoryGroupDTO,
   type StoryLocation,
+  chatTheme,
   coordsLabel,
   countReactions,
   mapsUrl,
@@ -21,7 +23,7 @@ import {
   type StorySticker,
 } from "@six/shared";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { CalendarDays, ChevronLeft, ChevronRight, Clock, Eye, Loader2, MapPin, MoveDiagonal2, Pause, Play, Plus, SendHorizontal, Trash2, X } from "lucide-react";
+import { CalendarDays, ChevronLeft, ChevronRight, Clock, Eye, Loader2, MapPin, MessageCircle, MoveDiagonal2, Pause, Play, Plus, SendHorizontal, Trash2, X } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useCloseOnBack } from "@/lib/back";
 import { clockTime, shortDate, timeAgo } from "@/lib/format";
@@ -702,7 +704,13 @@ export function StoryViewer({ groups, start, onClose }: { groups: StoryGroupDTO[
                 {tr.stories.processing}
               </div>
             )}
-            {!media && story.text && (
+            {!media && story.text && story.fromChat && (
+              <>
+                <ChatBubbleCard text={story.text} bubble={story.bubble} quote={story.quote} />
+                <FromChatLabel />
+              </>
+            )}
+            {!media && story.text && !story.fromChat && (
               <p className="px-8 text-center text-2xl leading-snug font-semibold break-words whitespace-pre-wrap select-none">{story.text}</p>
             )}
           </div>
@@ -792,5 +800,43 @@ export function StoryViewer({ groups, start, onClose }: { groups: StoryGroupDTO[
         </button>
       </div>
     </Portal>
+  );
+}
+
+export function FromChatLabel() {
+  const tr = useT();
+  return (
+    <p className="absolute inset-x-0 bottom-24 flex items-center justify-center gap-1.5 text-sm font-medium text-white/85 drop-shadow select-none">
+      <MessageCircle className="size-4" aria-hidden />
+      {tr.stories.fromChat}
+    </p>
+  );
+}
+
+const DEFAULT_BUBBLE = `${chatTheme(null).light.bubble},${chatTheme(null).light.bubbleInk}`;
+
+/** The first story background that doesn't share its colour with a chat bubble put on it. */
+export const backgroundAround = (bubble: string | undefined) =>
+  STORY_BACKGROUNDS.find((b) => !b.startsWith((bubble ?? DEFAULT_BUBBLE).split(",")[0]!)) ?? STORY_BACKGROUNDS[0];
+
+export function ChatBubbleCard({ text, bubble, quote }: { text: string; bubble: string | null; quote: StoryDTO["quote"] }) {
+  const [background, color] = (bubble ?? DEFAULT_BUBBLE).split(",");
+  return (
+    <div className="mx-8 flex max-w-[calc(100%-4rem)] flex-col items-start gap-2 select-none">
+      {quote && (
+        <div className="flex max-w-full items-center gap-2 text-white drop-shadow">
+          <Avatar user={quote.from} size="sm" />
+          <span className="truncate text-sm font-semibold">{quote.from.displayName}</span>
+        </div>
+      )}
+      <div style={{ background, color }} className="max-w-full rounded-[1.75rem] px-5 py-3 shadow-lg ring-1 ring-white/20">
+        <p className="line-clamp-6 text-xl leading-snug break-words whitespace-pre-wrap">{text}</p>
+        {quote && (
+          <p className="mt-1 text-right text-xs opacity-70">
+            {shortDate(quote.sentAt)} · {clockTime(quote.sentAt)}
+          </p>
+        )}
+      </div>
+    </div>
   );
 }

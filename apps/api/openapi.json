@@ -241,6 +241,233 @@
         }
       }
     },
+    "/v1/auth/firebase": {
+      "post": {
+        "summary": "Sign in with a Firebase ID token: Google, Apple or Facebook",
+        "tags": [
+          "auth"
+        ],
+        "description": "Like /google. Someone who joined with Google keeps their account. EMAIL_TAKEN when the email has an account and the provider didn't verify it; EMAIL_REQUIRED when it has no email.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "idToken": {
+                    "type": "string",
+                    "minLength": 1,
+                    "description": "A Firebase ID token, from signing in with Google, Apple or Facebook"
+                  },
+                  "inviteCode": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "guest": {
+                    "description": "Without an invite, give me a guest account (anonymous messages and support only) instead of INVITE_REQUIRED",
+                    "type": "boolean"
+                  },
+                  "device": {
+                    "type": "object",
+                    "properties": {
+                      "platform": {
+                        "type": "string",
+                        "enum": [
+                          "web",
+                          "ios",
+                          "android"
+                        ]
+                      },
+                      "name": {
+                        "type": "string",
+                        "maxLength": 100
+                      },
+                      "id": {
+                        "description": "A random ID the app keeps for this browser or phone; bans and anonymous blocks also cover other accounts used on it",
+                        "type": "string",
+                        "pattern": "^[\\w-]{16,64}$"
+                      }
+                    },
+                    "required": [
+                      "platform"
+                    ]
+                  }
+                },
+                "required": [
+                  "idToken",
+                  "device"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "accessToken": {
+                      "type": "string"
+                    },
+                    "accessTokenExpiresAt": {
+                      "type": "string",
+                      "format": "date-time",
+                      "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                    },
+                    "refreshToken": {
+                      "type": "string"
+                    },
+                    "user": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string",
+                          "minLength": 1
+                        },
+                        "email": {
+                          "type": "string",
+                          "format": "email",
+                          "pattern": "^(?:[A-Za-z0-9_'+\\-]+\\.)*[A-Za-z0-9_'+\\-]*[A-Za-z0-9_+-]@(?:[A-Za-z0-9][A-Za-z0-9\\-]*\\.)+[A-Za-z]{2,}$"
+                        },
+                        "displayName": {
+                          "type": "string"
+                        },
+                        "avatarUrl": {
+                          "nullable": true,
+                          "type": "string",
+                          "format": "uri"
+                        },
+                        "contactCode": {
+                          "type": "string",
+                          "description": "Share it (or its QR code) so people can find you"
+                        },
+                        "askCode": {
+                          "type": "string",
+                          "description": "Your link for anonymous messages is /ask/{askCode} on the web app"
+                        },
+                        "backupKeyId": {
+                          "nullable": true,
+                          "description": "Identifies the key from your recovery key; null until you set up a recovery key",
+                          "type": "string"
+                        },
+                        "hasBackupPin": {
+                          "type": "boolean",
+                          "description": "Whether a new device can restore your backup with your PIN"
+                        },
+                        "hasAppLock": {
+                          "type": "boolean",
+                          "description": "Whether the apps ask for your app lock code when they open"
+                        },
+                        "appLockIsPin": {
+                          "type": "boolean",
+                          "description": "Whether your app lock code is your backup PIN, so one code does both"
+                        },
+                        "ads": {
+                          "type": "boolean",
+                          "description": "Whether the apps show you ads; admins can turn them off for you"
+                        },
+                        "anonBot": {
+                          "type": "boolean",
+                          "description": "Whether the Six Frites bot sends you a question in your anonymous inbox now and then"
+                        },
+                        "quickReactions": {
+                          "type": "array",
+                          "items": {
+                            "type": "string"
+                          },
+                          "description": "The emojis offered first when you react, in order; empty means the defaults"
+                        },
+                        "guest": {
+                          "type": "boolean",
+                          "description": "Signed in without an invite: can only get anonymous messages, send them, and write to support, until joining with an invite"
+                        },
+                        "support": {
+                          "type": "boolean",
+                          "description": "Answers the support chats, so the apps don't offer to contact support"
+                        },
+                        "chatBan": {
+                          "nullable": true,
+                          "description": "Banned from chats by a moderator: like a guest, only anonymous messages and support work, until `until` or for good",
+                          "type": "object",
+                          "properties": {
+                            "until": {
+                              "nullable": true,
+                              "type": "string",
+                              "format": "date-time",
+                              "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                            }
+                          },
+                          "required": [
+                            "until"
+                          ],
+                          "additionalProperties": false
+                        },
+                        "termsAccepted": {
+                          "type": "boolean",
+                          "description": "Accepted the Terms of Service and Privacy Policy; the apps ask once, before anything else"
+                        },
+                        "tourSeen": {
+                          "type": "boolean",
+                          "description": "Went through or skipped the quick tour the apps show once to someone new"
+                        },
+                        "locale": {
+                          "nullable": true,
+                          "description": "The account's language, which every app follows; null until one is picked",
+                          "type": "string",
+                          "enum": [
+                            "en",
+                            "fr",
+                            "mg"
+                          ]
+                        },
+                        "createdAt": {
+                          "type": "string",
+                          "format": "date-time",
+                          "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "email",
+                        "displayName",
+                        "avatarUrl",
+                        "contactCode",
+                        "askCode",
+                        "backupKeyId",
+                        "hasBackupPin",
+                        "hasAppLock",
+                        "appLockIsPin",
+                        "ads",
+                        "anonBot",
+                        "quickReactions",
+                        "guest",
+                        "support",
+                        "chatBan",
+                        "termsAccepted",
+                        "tourSeen",
+                        "locale",
+                        "createdAt"
+                      ],
+                      "additionalProperties": false
+                    }
+                  },
+                  "required": [
+                    "accessToken",
+                    "accessTokenExpiresAt",
+                    "user"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/v1/auth/link": {
       "post": {
         "summary": "Start signing in this computer by scanning a QR code with a signed-in phone",
@@ -1214,6 +1441,18 @@
                             ],
                             "description": "What the ban takes away, while bannedAt is set"
                           },
+                          "providers": {
+                            "type": "array",
+                            "items": {
+                              "type": "string",
+                              "enum": [
+                                "google",
+                                "facebook",
+                                "apple"
+                              ]
+                            },
+                            "description": "How they have signed in so far"
+                          },
                           "banReason": {
                             "nullable": true,
                             "type": "string"
@@ -1390,6 +1629,7 @@
                           "bannedAt",
                           "bannedUntil",
                           "banScope",
+                          "providers",
                           "banReason",
                           "admin",
                           "createdAt",
@@ -1496,6 +1736,18 @@
                         "chat"
                       ],
                       "description": "What the ban takes away, while bannedAt is set"
+                    },
+                    "providers": {
+                      "type": "array",
+                      "items": {
+                        "type": "string",
+                        "enum": [
+                          "google",
+                          "facebook",
+                          "apple"
+                        ]
+                      },
+                      "description": "How they have signed in so far"
                     },
                     "banReason": {
                       "nullable": true,
@@ -1673,6 +1925,7 @@
                     "bannedAt",
                     "bannedUntil",
                     "banScope",
+                    "providers",
                     "banReason",
                     "admin",
                     "createdAt",
@@ -1803,6 +2056,18 @@
                       ],
                       "description": "What the ban takes away, while bannedAt is set"
                     },
+                    "providers": {
+                      "type": "array",
+                      "items": {
+                        "type": "string",
+                        "enum": [
+                          "google",
+                          "facebook",
+                          "apple"
+                        ]
+                      },
+                      "description": "How they have signed in so far"
+                    },
                     "banReason": {
                       "nullable": true,
                       "type": "string"
@@ -1979,6 +2244,7 @@
                     "bannedAt",
                     "bannedUntil",
                     "banScope",
+                    "providers",
                     "banReason",
                     "admin",
                     "createdAt",
@@ -2074,6 +2340,18 @@
                       ],
                       "description": "What the ban takes away, while bannedAt is set"
                     },
+                    "providers": {
+                      "type": "array",
+                      "items": {
+                        "type": "string",
+                        "enum": [
+                          "google",
+                          "facebook",
+                          "apple"
+                        ]
+                      },
+                      "description": "How they have signed in so far"
+                    },
                     "banReason": {
                       "nullable": true,
                       "type": "string"
@@ -2250,6 +2528,7 @@
                     "bannedAt",
                     "bannedUntil",
                     "banScope",
+                    "providers",
                     "banReason",
                     "admin",
                     "createdAt",
@@ -2366,6 +2645,18 @@
                       ],
                       "description": "What the ban takes away, while bannedAt is set"
                     },
+                    "providers": {
+                      "type": "array",
+                      "items": {
+                        "type": "string",
+                        "enum": [
+                          "google",
+                          "facebook",
+                          "apple"
+                        ]
+                      },
+                      "description": "How they have signed in so far"
+                    },
                     "banReason": {
                       "nullable": true,
                       "type": "string"
@@ -2542,6 +2833,7 @@
                     "bannedAt",
                     "bannedUntil",
                     "banScope",
+                    "providers",
                     "banReason",
                     "admin",
                     "createdAt",
@@ -2660,6 +2952,18 @@
                       ],
                       "description": "What the ban takes away, while bannedAt is set"
                     },
+                    "providers": {
+                      "type": "array",
+                      "items": {
+                        "type": "string",
+                        "enum": [
+                          "google",
+                          "facebook",
+                          "apple"
+                        ]
+                      },
+                      "description": "How they have signed in so far"
+                    },
                     "banReason": {
                       "nullable": true,
                       "type": "string"
@@ -2836,6 +3140,7 @@
                     "bannedAt",
                     "bannedUntil",
                     "banScope",
+                    "providers",
                     "banReason",
                     "admin",
                     "createdAt",
@@ -3094,6 +3399,18 @@
                       ],
                       "description": "What the ban takes away, while bannedAt is set"
                     },
+                    "providers": {
+                      "type": "array",
+                      "items": {
+                        "type": "string",
+                        "enum": [
+                          "google",
+                          "facebook",
+                          "apple"
+                        ]
+                      },
+                      "description": "How they have signed in so far"
+                    },
                     "banReason": {
                       "nullable": true,
                       "type": "string"
@@ -3270,6 +3587,7 @@
                     "bannedAt",
                     "bannedUntil",
                     "banScope",
+                    "providers",
                     "banReason",
                     "admin",
                     "createdAt",
@@ -3366,6 +3684,18 @@
                       ],
                       "description": "What the ban takes away, while bannedAt is set"
                     },
+                    "providers": {
+                      "type": "array",
+                      "items": {
+                        "type": "string",
+                        "enum": [
+                          "google",
+                          "facebook",
+                          "apple"
+                        ]
+                      },
+                      "description": "How they have signed in so far"
+                    },
                     "banReason": {
                       "nullable": true,
                       "type": "string"
@@ -3542,6 +3872,7 @@
                     "bannedAt",
                     "bannedUntil",
                     "banScope",
+                    "providers",
                     "banReason",
                     "admin",
                     "createdAt",
@@ -3694,6 +4025,18 @@
                       ],
                       "description": "What the ban takes away, while bannedAt is set"
                     },
+                    "providers": {
+                      "type": "array",
+                      "items": {
+                        "type": "string",
+                        "enum": [
+                          "google",
+                          "facebook",
+                          "apple"
+                        ]
+                      },
+                      "description": "How they have signed in so far"
+                    },
                     "banReason": {
                       "nullable": true,
                       "type": "string"
@@ -3870,6 +4213,7 @@
                     "bannedAt",
                     "bannedUntil",
                     "banScope",
+                    "providers",
                     "banReason",
                     "admin",
                     "createdAt",
@@ -81594,6 +81938,60 @@
                                   "nullable": true,
                                   "type": "string"
                                 },
+                                "fromChat": {
+                                  "type": "boolean",
+                                  "description": "The text is a chat message shared as it was"
+                                },
+                                "bubble": {
+                                  "nullable": true,
+                                  "description": "With fromChat: the bubble's colour and its text's, #rrggbb,#rrggbb",
+                                  "type": "string"
+                                },
+                                "quote": {
+                                  "nullable": true,
+                                  "description": "With fromChat and a messageId: who sent the message and when",
+                                  "type": "object",
+                                  "properties": {
+                                    "from": {
+                                      "type": "object",
+                                      "properties": {
+                                        "id": {
+                                          "type": "string",
+                                          "minLength": 1
+                                        },
+                                        "displayName": {
+                                          "type": "string"
+                                        },
+                                        "avatarUrl": {
+                                          "nullable": true,
+                                          "type": "string",
+                                          "format": "uri"
+                                        },
+                                        "alias": {
+                                          "description": "Their alias, when you gave them a name of your own: without a photo, their picture still comes from it",
+                                          "type": "string"
+                                        }
+                                      },
+                                      "required": [
+                                        "id",
+                                        "displayName",
+                                        "avatarUrl"
+                                      ],
+                                      "additionalProperties": false,
+                                      "description": "Who sent the message, as the poster sees them"
+                                    },
+                                    "sentAt": {
+                                      "type": "string",
+                                      "format": "date-time",
+                                      "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                                    }
+                                  },
+                                  "required": [
+                                    "from",
+                                    "sentAt"
+                                  ],
+                                  "additionalProperties": false
+                                },
                                 "background": {
                                   "nullable": true,
                                   "type": "string"
@@ -82117,6 +82515,9 @@
                                 "id",
                                 "type",
                                 "text",
+                                "fromChat",
+                                "bubble",
+                                "quote",
                                 "background",
                                 "media",
                                 "gif",
@@ -82221,6 +82622,20 @@
                   },
                   "askId": {
                     "description": "An anonymous message you received, shown on the story as a card: its text, photo or GIF",
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "fromChat": {
+                    "description": "The text is a chat message shared as it was, shown as a chat bubble",
+                    "type": "boolean"
+                  },
+                  "bubble": {
+                    "description": "With fromChat: the bubble's colour and its text's, as in the chat, like #e11d48,#ffffff",
+                    "type": "string",
+                    "pattern": "^#[0-9a-f]{6},#[0-9a-f]{6}$"
+                  },
+                  "messageId": {
+                    "description": "With fromChat: the message it is, so the story shows who sent it, as you see them, and when",
                     "type": "string",
                     "minLength": 1
                   },
@@ -82522,6 +82937,60 @@
                     "text": {
                       "nullable": true,
                       "type": "string"
+                    },
+                    "fromChat": {
+                      "type": "boolean",
+                      "description": "The text is a chat message shared as it was"
+                    },
+                    "bubble": {
+                      "nullable": true,
+                      "description": "With fromChat: the bubble's colour and its text's, #rrggbb,#rrggbb",
+                      "type": "string"
+                    },
+                    "quote": {
+                      "nullable": true,
+                      "description": "With fromChat and a messageId: who sent the message and when",
+                      "type": "object",
+                      "properties": {
+                        "from": {
+                          "type": "object",
+                          "properties": {
+                            "id": {
+                              "type": "string",
+                              "minLength": 1
+                            },
+                            "displayName": {
+                              "type": "string"
+                            },
+                            "avatarUrl": {
+                              "nullable": true,
+                              "type": "string",
+                              "format": "uri"
+                            },
+                            "alias": {
+                              "description": "Their alias, when you gave them a name of your own: without a photo, their picture still comes from it",
+                              "type": "string"
+                            }
+                          },
+                          "required": [
+                            "id",
+                            "displayName",
+                            "avatarUrl"
+                          ],
+                          "additionalProperties": false,
+                          "description": "Who sent the message, as the poster sees them"
+                        },
+                        "sentAt": {
+                          "type": "string",
+                          "format": "date-time",
+                          "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                        }
+                      },
+                      "required": [
+                        "from",
+                        "sentAt"
+                      ],
+                      "additionalProperties": false
                     },
                     "background": {
                       "nullable": true,
@@ -83046,6 +83515,9 @@
                     "id",
                     "type",
                     "text",
+                    "fromChat",
+                    "bubble",
+                    "quote",
                     "background",
                     "media",
                     "gif",
@@ -83099,6 +83571,54 @@
                         "text": {
                           "type": "string",
                           "description": "Empty when the note is only a GIF"
+                        },
+                        "fromChat": {
+                          "type": "boolean"
+                        },
+                        "quote": {
+                          "nullable": true,
+                          "description": "With fromChat and a messageId: who sent the message and when",
+                          "type": "object",
+                          "properties": {
+                            "from": {
+                              "type": "object",
+                              "properties": {
+                                "id": {
+                                  "type": "string",
+                                  "minLength": 1
+                                },
+                                "displayName": {
+                                  "type": "string"
+                                },
+                                "avatarUrl": {
+                                  "nullable": true,
+                                  "type": "string",
+                                  "format": "uri"
+                                },
+                                "alias": {
+                                  "description": "Their alias, when you gave them a name of your own: without a photo, their picture still comes from it",
+                                  "type": "string"
+                                }
+                              },
+                              "required": [
+                                "id",
+                                "displayName",
+                                "avatarUrl"
+                              ],
+                              "additionalProperties": false,
+                              "description": "Who sent the message, as the note's owner sees them"
+                            },
+                            "sentAt": {
+                              "type": "string",
+                              "format": "date-time",
+                              "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                            }
+                          },
+                          "required": [
+                            "from",
+                            "sentAt"
+                          ],
+                          "additionalProperties": false
                         },
                         "background": {
                           "nullable": true,
@@ -83159,6 +83679,8 @@
                       "required": [
                         "id",
                         "text",
+                        "fromChat",
+                        "quote",
                         "background",
                         "gif",
                         "viewCount",
@@ -83210,6 +83732,54 @@
                               "text": {
                                 "type": "string",
                                 "description": "Empty when the note is only a GIF"
+                              },
+                              "fromChat": {
+                                "type": "boolean"
+                              },
+                              "quote": {
+                                "nullable": true,
+                                "description": "With fromChat and a messageId: who sent the message and when",
+                                "type": "object",
+                                "properties": {
+                                  "from": {
+                                    "type": "object",
+                                    "properties": {
+                                      "id": {
+                                        "type": "string",
+                                        "minLength": 1
+                                      },
+                                      "displayName": {
+                                        "type": "string"
+                                      },
+                                      "avatarUrl": {
+                                        "nullable": true,
+                                        "type": "string",
+                                        "format": "uri"
+                                      },
+                                      "alias": {
+                                        "description": "Their alias, when you gave them a name of your own: without a photo, their picture still comes from it",
+                                        "type": "string"
+                                      }
+                                    },
+                                    "required": [
+                                      "id",
+                                      "displayName",
+                                      "avatarUrl"
+                                    ],
+                                    "additionalProperties": false,
+                                    "description": "Who sent the message, as the note's owner sees them"
+                                  },
+                                  "sentAt": {
+                                    "type": "string",
+                                    "format": "date-time",
+                                    "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                                  }
+                                },
+                                "required": [
+                                  "from",
+                                  "sentAt"
+                                ],
+                                "additionalProperties": false
                               },
                               "background": {
                                 "nullable": true,
@@ -83270,6 +83840,8 @@
                             "required": [
                               "id",
                               "text",
+                              "fromChat",
+                              "quote",
                               "background",
                               "gif",
                               "viewCount",
@@ -83317,6 +83889,15 @@
                     "type": "string",
                     "maxLength": 60
                   },
+                  "fromChat": {
+                    "description": "The text is a chat message shared as it was, shown in quotes",
+                    "type": "boolean"
+                  },
+                  "messageId": {
+                    "description": "With fromChat: the message it is, so the note shows who sent it, as you see them, and when",
+                    "type": "string",
+                    "minLength": 1
+                  },
                   "gifId": {
                     "description": "A GIF from GET /v1/gifs shown in the note",
                     "type": "string",
@@ -83359,6 +83940,54 @@
                     "text": {
                       "type": "string",
                       "description": "Empty when the note is only a GIF"
+                    },
+                    "fromChat": {
+                      "type": "boolean"
+                    },
+                    "quote": {
+                      "nullable": true,
+                      "description": "With fromChat and a messageId: who sent the message and when",
+                      "type": "object",
+                      "properties": {
+                        "from": {
+                          "type": "object",
+                          "properties": {
+                            "id": {
+                              "type": "string",
+                              "minLength": 1
+                            },
+                            "displayName": {
+                              "type": "string"
+                            },
+                            "avatarUrl": {
+                              "nullable": true,
+                              "type": "string",
+                              "format": "uri"
+                            },
+                            "alias": {
+                              "description": "Their alias, when you gave them a name of your own: without a photo, their picture still comes from it",
+                              "type": "string"
+                            }
+                          },
+                          "required": [
+                            "id",
+                            "displayName",
+                            "avatarUrl"
+                          ],
+                          "additionalProperties": false,
+                          "description": "Who sent the message, as the note's owner sees them"
+                        },
+                        "sentAt": {
+                          "type": "string",
+                          "format": "date-time",
+                          "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                        }
+                      },
+                      "required": [
+                        "from",
+                        "sentAt"
+                      ],
+                      "additionalProperties": false
                     },
                     "background": {
                       "nullable": true,
@@ -83419,6 +84048,8 @@
                   "required": [
                     "id",
                     "text",
+                    "fromChat",
+                    "quote",
                     "background",
                     "gif",
                     "viewCount",

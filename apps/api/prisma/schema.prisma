@@ -751,6 +751,12 @@ model Story {
   drawing    Json?
   /// An anonymous message the poster shared on it, as a card: { text, prompt }.
   ask        Json?
+  /// The text is a chat message shared as it was, shown as a bubble.
+  fromChat   Boolean   @default(false)
+  /// That bubble's colour and its text's, as in the chat it came from: "#rrggbb,#rrggbb".
+  bubble     String?
+  /// Who sent that message, as the poster saw them, and when: { from, sentAt }.
+  quote      Json?
   createdAt  DateTime  @default(now())
   expiresAt  DateTime
 
@@ -771,6 +777,10 @@ model Note {
   gifKey     String?
   gifWidth   Int?
   gifHeight  Int?
+  /// The text is a chat message shared as it was, shown in quotes.
+  fromChat   Boolean  @default(false)
+  /// Who sent that message, as the owner saw them, and when: { from, sentAt }.
+  quote      Json?
   createdAt  DateTime @default(now())
   expiresAt  DateTime
 

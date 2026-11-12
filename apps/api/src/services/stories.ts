@@ -7,6 +7,7 @@ import {
   type NoteDTO,
   type NoteViewerDTO,
   type NotesDTO,
+  type PublicUser,
   STORY_LIMITS,
   type StoryDrawing,
   type StoryDTO,
@@ -22,6 +23,7 @@ import { broadcaster, rooms } from "../lib/realtime.js";
 import { presignGet } from "../lib/storage.js";
 import { blockedWith } from "./blocks.js";
 import { profilesFor } from "./contacts.js";
+import { seenIn } from "./push.js";
 import { deliverStoryReactionPush } from "./push.js";
 import { notify } from "./notifications.js";
 import { sharedGif } from "./gifs.js";
@@ -75,6 +77,9 @@ function toStoryDTO(s: StoryRow, viewerId: string): StoryDTO {
     id: s.id,
     type: s.upload ? (s.upload.kind === "video" ? "video" : "image") : "text",
     text: s.text,
+    fromChat: s.fromChat,
+    bubble: s.bubble,
+    quote: s.fromChat ? ((s.quote as StoryDTO["quote"]) ?? null) : null,
     background: s.background,
     media: s.upload ? toAttachmentDTO(s.upload) : null,
     gif: s.gifKey ? { url: presignGet(s.gifKey), width: s.gifWidth, height: s.gifHeight } : null,
@@ -162,17 +167,31 @@ async function claimUpload(userId: string, uploadId: string) {
   }
 }
 
+/** Who sent a message in one of `userId`'s chats, as they see them there, and when. */
+async function quoteOf(userId: string, messageId: string): Promise<NonNullable<StoryDTO["quote"]>> {
+  const m = await prisma.message.findFirst({
+    where: { id: messageId, deletedAt: null, chat: { members: { some: { userId } } } },
+    select: { chatId: true, createdAt: true, sender: true },
+  });
+  if (!m) throw new AppError("MESSAGE_NOT_FOUND");
+  const p: PublicUser = await seenIn(m.chatId, userId, m.sender);
+  return { from: { id: p.id, displayName: p.displayName, avatarUrl: p.avatarUrl, ...(p.alias && { alias: p.alias }) }, sentAt: m.createdAt.toISOString() };
+}
+
 export async function createStory(userId: string, input: CreateStoryInput): Promise<StoryDTO> {
   const active = await prisma.story.count({ where: { userId, expiresAt: { gt: new Date() } } });
   if (active >= MAX_ACTIVE) throw new AppError("STORY_LIMIT_REACHED", `You can have at most ${MAX_ACTIVE} stories up`);
   if (input.uploadId) await claimUpload(userId, input.uploadId);
   const gif = input.gifId ? await sharedGif(input.gifId) : null;
   const ask = input.askId ? await askCard(userId, input.askId) : null;
+  const quote = input.fromChat && input.messageId && input.text && !input.uploadId ? await quoteOf(userId, input.messageId) : null;
 
   const story = await prisma.story.create({
     data: {
       userId,
       text: input.text || null,
+      fromChat: !!input.text && !input.uploadId && (input.fromChat ?? false),
+      bubble: input.text && !input.uploadId && input.fromChat ? (input.bubble ?? null) : null,
       background: input.uploadId ? null : (input.background ?? null),
       uploadId: input.uploadId,
       gifKey: gif?.key,
@@ -180,6 +199,7 @@ export async function createStory(userId: string, input: CreateStoryInput): Prom
       gifHeight: gif?.height,
       location: input.location,
       ...(ask && { ask }),
+      ...(quote && { quote }),
       showDate: input.showDate ?? false,
       showTime: input.showTime ?? false,
       ...(input.positions && { positions: input.positions }),
@@ -267,6 +287,8 @@ export async function deleteStory(userId: string, storyId: string) {
 type NoteRow = {
   id: string;
   text: string;
+  fromChat: boolean;
+  quote: Prisma.JsonValue;
   background: string | null;
   gifKey: string | null;
   gifWidth: number | null;
@@ -278,6 +300,8 @@ type NoteRow = {
 const toNoteDTO = (n: NoteRow, viewCount: number | null = null): NoteDTO => ({
   id: n.id,
   text: n.text,
+  fromChat: n.fromChat,
+  quote: n.fromChat ? ((n.quote as NoteDTO["quote"]) ?? null) : null,
   background: n.background,
   gif: n.gifKey
     ? { id: n.gifKey.slice(SHARED_PREFIX.length, -".mp4".length), url: presignGet(n.gifKey), width: n.gifWidth, height: n.gifHeight }
@@ -306,15 +330,25 @@ export async function listNotes(userId: string): Promise<NotesDTO> {
 /** Puts up a note, for a day unless asked otherwise, in place of the one before. */
 export async function setNote(
   userId: string,
-  { text, gifId, background, durationSecs = NOTE_SECS }: { text: string; gifId?: string; background?: string; durationSecs?: number },
+  {
+    text,
+    fromChat,
+    messageId,
+    gifId,
+    background,
+    durationSecs = NOTE_SECS,
+  }: { text: string; fromChat?: boolean; messageId?: string; gifId?: string; background?: string; durationSecs?: number },
 ): Promise<NoteDTO> {
   const gif = gifId ? await sharedGif(gifId) : null;
   const clean = await cleanLinksIn(text, [], followShareLink);
+  const quote = fromChat && messageId && clean.text ? await quoteOf(userId, messageId) : null;
   await prisma.note.deleteMany({ where: { userId } });
   const note = await prisma.note.create({
     data: {
       userId,
       text: clean.text,
+      fromChat: !!clean.text && (fromChat ?? false),
+      ...(quote && { quote }),
       background,
       gifKey: gif?.key,
       gifWidth: gif?.width,

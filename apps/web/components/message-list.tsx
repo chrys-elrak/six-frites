@@ -30,6 +30,8 @@ import {
   inkOn,
   commentsClosedNow,
   isBotGame,
+  shareTargets,
+  chatTheme,
 } from "@six/shared";
 import { startBotGame } from "./bot-games";
 import { Avatar } from "./avatar";
@@ -51,6 +53,8 @@ import {
   Flag,
   Flame,
   Forward,
+  CircleFadingPlus,
+  StickyNote,
   Image as ImageIcon,
   ImagePlus,
   Info,
@@ -125,6 +129,8 @@ import { useSwipe } from "@/lib/swipe";
 import { AnimatedEmoji } from "./animated-emoji";
 import { AlbumViewer, AttachmentView, Lightbox, type LightboxItem, type ShownAttachment } from "./attachment";
 import { ChatPicker } from "./chat-picker";
+import { StoryComposer } from "./story-composer";
+import { postNote } from "@/lib/story-post";
 import { ChecklistView } from "./checklist";
 import { GameView } from "./game";
 import { LocationCard } from "./location-card";
@@ -1252,6 +1258,12 @@ export const MessageList = forwardRef<
     const [timingFor, setTimingFor] = useState<string | null>(null);
     const [markingUp, setMarkingUp] = useState<{ message: MessageDTO; file: File } | null>(null);
     const [confirmDelete, setConfirmDelete] = useState<MessageDTO[] | null>(null);
+    const [sharing, setSharing] = useState<{ text: string; message: MessageDTO } | null>(null);
+    const look = chatTheme(chat.theme).light;
+    const quoteOf = (msg: MessageDTO) => {
+      const from = chat.members.find((x) => x.user.id === msg.senderId)?.user;
+      return from && { from, sentAt: msg.createdAt, messageId: msg.id };
+    };
     const [forwarding, setForwarding] = useState<Hydrated[] | null>(null);
     const [highlight, setHighlight] = useState<string | null>(null);
     const [lightbox, setLightbox] = useState<LightboxItem | null>(null);
@@ -1525,6 +1537,12 @@ export const MessageList = forwardRef<
                 onSelect: () => setForwarding(row.album?.flatMap((it) => (it.message ? [it.message] : [])) ?? [m]),
               },
             ]),
+        ...(m.type !== "text" || m.ephemeral || m.undecryptable || !shareTargets(m.text).story
+          ? []
+          : [{ label: tr.messages.shareToStory, icon: CircleFadingPlus, onSelect: () => setSharing({ text: shareTargets(m.text).text, message: m }) }]),
+        ...(m.type !== "text" || m.ephemeral || m.undecryptable || !shareTargets(m.text).note
+          ? []
+          : [{ label: tr.messages.setAsNote, icon: StickyNote, onSelect: () => void postNote(qc, { text: shareTargets(m.text).text, fromChat: true, messageId: m.id }) }]),
         ...(threadId ? [] : [{ label: tr.common.select, icon: CheckCircle2, onSelect: () => startSelection(chat.id, m.id) }]),
         ...(frozen || m.ephemeral || m.undecryptable || m.type === "service"
           ? []
@@ -1836,6 +1854,7 @@ export const MessageList = forwardRef<
             }}
           />
         )}
+        {sharing && <StoryComposer initialText={sharing.text} bubble={`${look.bubble},${look.bubbleInk}`} quote={quoteOf(sharing.message)} onClose={() => setSharing(null)} />}
         {forwarding && (
           <ChatPicker
             title={tr.messages.forwardTo}

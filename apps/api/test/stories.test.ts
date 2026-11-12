@@ -3,7 +3,7 @@ import { deleteExpiredStories } from "../src/services/stories.js";
 import { chatHelpers, prisma, useApp } from "./helpers.js";
 
 const ctx = useApp();
-const { signUp, get, call, makeFriends } = chatHelpers(ctx);
+const { signUp, get, call, send, makeFriends } = chatHelpers(ctx);
 
 const readyUpload = (ownerId: string, kind: "image" | "video", durationMs: number | null = null) =>
   prisma.upload.create({
@@ -270,4 +270,39 @@ describe("stories", () => {
     expect((await post("red")).statusCode).toBe(400);
     expect((await post("#f59e0b,#e11d48,#000000")).statusCode).toBe(400);
   });
+
+  it("keeps a chat message shared as it was, so it shows as a bubble or in quotes", async () => {
+    const { host } = await makeFriends();
+    expect((await call(host, "POST", "/v1/stories", { text: "on arrive", fromChat: true, bubble: "#B8325A,#FFFFFF" })).json()).toMatchObject({
+      fromChat: true,
+      bubble: "#b8325a,#ffffff",
+    });
+    expect((await call(host, "POST", "/v1/stories", { text: "x", fromChat: true, bubble: "red" })).statusCode).toBe(400);
+    expect((await call(host, "POST", "/v1/stories", { text: "plain", bubble: "#000000,#ffffff" })).json()).toMatchObject({ fromChat: false, bubble: null });
+    expect((await call(host, "PUT", "/v1/notes", { text: "on arrive", fromChat: true })).json()).toMatchObject({ fromChat: true });
+    expect((await get(host, "/v1/notes")).mine).toMatchObject({ text: "on arrive", fromChat: true });
+  });
+
+  it("shows who sent a shared message, as the poster sees them, and when", async () => {
+    const { host, guest, chatId } = await makeFriends();
+    const sent = (await send(guest, chatId, "on arrive")).json();
+    const seen = (await get(host, "/v1/contacts")).items[0].user;
+    const story = (await call(host, "POST", "/v1/stories", { text: "on arrive", fromChat: true, messageId: sent.id })).json();
+    expect(story.quote).toEqual({
+      from: expect.objectContaining({ id: seen.id, displayName: seen.displayName }),
+      sentAt: sent.createdAt,
+    });
+    const stranger = await signUp("stranger");
+    const res = await call(stranger, "POST", "/v1/stories", { text: "on arrive", fromChat: true, messageId: sent.id });
+    expect(res.json().error.code).toBe("MESSAGE_NOT_FOUND");
+  });
+
+  it("shows who sent a message made into a note", async () => {
+    const { host, guest, chatId } = await makeFriends();
+    const sent = (await send(guest, chatId, "see you")).json();
+    const note = (await call(host, "PUT", "/v1/notes", { text: "see you", fromChat: true, messageId: sent.id })).json();
+    expect(note.quote).toEqual({ from: expect.objectContaining({ id: sent.senderId }), sentAt: sent.createdAt });
+    expect((await call(host, "PUT", "/v1/notes", { text: "changed" })).json().quote).toBeNull();
+  });
 });
+
