@@ -8,7 +8,7 @@ export type SignInVia = "loginWithGoogle" | "loginWithFirebase";
 type Provider = "apple" | "facebook";
 
 const firebaseConfig = {
-  apiKey: "AIzaSyDMWpQvqXwcsO06nMQQi7N8jU0snbRWzIs",
+  apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
   authDomain: "akondro.firebaseapp.com",
   projectId: "akondro",
 };
