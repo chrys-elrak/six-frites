@@ -46,7 +46,6 @@ import { Fragment, type ReactNode, useEffect, useRef, useState } from "react";
 import {
   Animated,
   Dimensions,
-  Easing,
   type LayoutRectangle,
   PanResponder,
   Pressable,
@@ -82,6 +81,7 @@ import { useRealtime } from "@/lib/realtime";
 import { useSession } from "@/lib/session";
 import { brand } from "@/lib/theme";
 import { Avatar } from "./avatar";
+import { FloatingReactions } from "./floating-reactions";
 import { playHref, startLive } from "./live";
 
 const RED = "#dc2626";
@@ -121,45 +121,6 @@ function Backdrop({ user }: { user: Person }) {
         />
       )}
       <View style={[StyleSheet.absoluteFill, styles.shade]} />
-    </View>
-  );
-}
-
-function FloatingEmoji({ id, emoji, mine }: Call["reactions"][number]) {
-  const { height } = useWindowDimensions();
-  const [t] = useState(() => new Animated.Value(0));
-  useEffect(() => {
-    const run = Animated.timing(t, { toValue: 1, duration: 2800, easing: Easing.out(Easing.quad), useNativeDriver: true });
-    run.start();
-    return () => run.stop();
-  }, [t]);
-  return (
-    <Animated.Text
-      style={[
-        styles.floating,
-        {
-          left: `${(mine ? 58 : 12) + ((id * 37) % 26)}%`,
-          opacity: t.interpolate({ inputRange: [0, 0.12, 0.8, 1], outputRange: [0, 1, 0.8, 0] }),
-          transform: [
-            { translateY: t.interpolate({ inputRange: [0, 1], outputRange: [0, -height * 0.55] }) },
-            { translateX: t.interpolate({ inputRange: [0, 1], outputRange: [0, id % 2 ? 28 : -28] }) },
-            { scale: t.interpolate({ inputRange: [0, 0.12, 1], outputRange: [0.5, 1.25, 1] }) },
-          ],
-        },
-      ]}
-    >
-      {emoji}
-    </Animated.Text>
-  );
-}
-
-function FloatingReactions({ reactions }: { reactions: Call["reactions"] }) {
-  if (!reactions.length) return null;
-  return (
-    <View pointerEvents="none" style={StyleSheet.absoluteFill}>
-      {reactions.map((r) => (
-        <FloatingEmoji key={r.id} {...r} />
-      ))}
     </View>
   );
 }
@@ -911,7 +872,6 @@ const styles = StyleSheet.create({
   tray: { flexDirection: "row", gap: 2, padding: 4, borderRadius: 999, backgroundColor: "rgba(0,0,0,0.4)" },
   trayItem: { width: 38, height: 38, alignItems: "center", justifyContent: "center" },
   trayEmoji: { fontSize: 24 },
-  floating: { position: "absolute", bottom: 150, fontSize: 44 },
   panel: {
     position: "absolute",
     left: 16,

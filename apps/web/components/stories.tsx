@@ -34,6 +34,7 @@ import { useHiddenByArchive } from "@/lib/archive-lock";
 import { useSession } from "@/lib/session";
 import { six } from "@/lib/six";
 import { Avatar } from "./avatar";
+import { FloatingReactions, useFloaters } from "./floating-reactions";
 import { NoteBubble, NoteEditor, NoteReader, useNotes } from "./notes";
 import { Portal } from "./portal";
 import { StoryDrawingLayer } from "./story-drawing";
@@ -452,6 +453,7 @@ function ReplyBar({ story, owner, onTyping }: { story: StoryDTO; owner: PublicUs
   const [text, setText] = useState("");
   const [sent, setSent] = useState(false);
   const [popped, setPopped] = useState({ emoji: "", n: 0 });
+  const [floaters, float] = useFloaters();
   if (!chat || !realtime) return null;
 
   const done = () => {
@@ -461,6 +463,7 @@ function ReplyBar({ story, owner, onTyping }: { story: StoryDTO; owner: PublicUs
   const react = (emoji: StoryReaction) => {
     void six.api.POST("/v1/stories/{id}/react", { params: { path: { id: story.id } }, body: { emoji } });
     setPopped((p) => ({ emoji, n: p.n + 1 }));
+    float(emoji);
   };
   const send = (reply: string) => {
     if (!reply.trim()) return;
@@ -479,6 +482,7 @@ function ReplyBar({ story, owner, onTyping }: { story: StoryDTO; owner: PublicUs
 
   return (
     <div className="pointer-events-auto flex w-full flex-col gap-2" onPointerDown={(e) => e.stopPropagation()}>
+      <FloatingReactions reactions={floaters} />
       <div className="flex justify-center gap-1">
         {sent ? (
           <span className="rounded-full bg-white/90 px-3 py-1.5 text-sm font-semibold text-stone-900">{tr.stories.sent}</span>

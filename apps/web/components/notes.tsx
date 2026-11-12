@@ -37,6 +37,7 @@ import { Dialog } from "./dialog";
 import { GifSearch } from "./gif-picker";
 import { LinkCard } from "./message-list";
 import { PrimaryButton } from "./ui";
+import { FloatingReactions, useFloaters } from "./floating-reactions";
 
 /** Under the stories key, so `stories:changed` refreshes notes too. */
 export const notesKey = ["stories", "notes"] as const;
@@ -311,6 +312,7 @@ export function NoteReader({ user, note, onClose }: { user: PublicUser; note: No
   const chat = chats.find((c) => c.type === "direct" && c.members.some((m) => m.user.id === user.id));
   const [text, setText] = useState("");
   const [popped, setPopped] = useState({ emoji: "", n: 0 });
+  const [floaters, float] = useFloaters();
   useEffect(() => {
     void six.api.POST("/v1/notes/{id}/view", { params: { path: { id: note.id } } });
   }, [note.id]);
@@ -318,6 +320,7 @@ export function NoteReader({ user, note, onClose }: { user: PublicUser; note: No
   const react = (emoji: StoryReaction) => {
     void six.api.POST("/v1/notes/{id}/react", { params: { path: { id: note.id } }, body: { emoji } });
     setPopped((p) => ({ emoji, n: p.n + 1 }));
+    float(emoji);
   };
 
   function send() {
@@ -329,6 +332,7 @@ export function NoteReader({ user, note, onClose }: { user: PublicUser; note: No
 
   return (
     <Dialog onClose={onClose}>
+      <FloatingReactions reactions={floaters} />
       <div
         className="flex flex-col items-center gap-3 p-5"
         onClickCapture={(e) => {

@@ -39,6 +39,7 @@ import { useSession } from "@/lib/session";
 import { six } from "@/lib/six";
 import { brand, brandInk, stone, useTheme } from "@/lib/theme";
 import { Avatar } from "./avatar";
+import { FloatingReactions, useFloaters } from "./floating-reactions";
 import { Modal } from "./modal";
 import { NoteBubble, NoteEditor, NoteReader, useNotes } from "./notes";
 import { Sheet } from "./sheet";
@@ -525,6 +526,7 @@ function ReplyBar({ story, owner, onTyping }: { story: StoryDTO; owner: PublicUs
   const [text, setText] = useState("");
   const [sent, setSent] = useState(false);
   const [popped, setPopped] = useState({ emoji: "", n: 0 });
+  const [floaters, float] = useFloaters();
   if (!chat || !realtime) return null;
 
   const done = () => {
@@ -534,6 +536,7 @@ function ReplyBar({ story, owner, onTyping }: { story: StoryDTO; owner: PublicUs
   const react = (emoji: StoryReaction) => {
     void six.api.POST("/v1/stories/{id}/react", { params: { path: { id: story.id } }, body: { emoji } });
     setPopped((p) => ({ emoji, n: p.n + 1 }));
+    float(emoji);
   };
   const send = (reply: string) => {
     if (!reply.trim()) return;
@@ -553,6 +556,7 @@ function ReplyBar({ story, owner, onTyping }: { story: StoryDTO; owner: PublicUs
 
   return (
     <View style={styles.reply}>
+      <FloatingReactions reactions={floaters} />
       <View style={styles.reactions}>
         {sent ? (
           <Text style={styles.sent}>{tr.stories.sent}</Text>
