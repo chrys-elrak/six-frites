@@ -1,4 +1,4 @@
-import { AppError } from "@six/shared";
+import { AppError, facebookOnly } from "@six/shared";
 import { env } from "../env.js";
 import { withEvents } from "../lib/events.js";
 import { prisma } from "../lib/prisma.js";
@@ -17,9 +17,9 @@ export async function openSupportChat(userId: string) {
       deletedAt: null,
       bannedAt: null,
     },
-    select: { id: true, email: true },
+    select: { id: true, email: true, providers: true },
   });
-  const agent = env.ADMIN_EMAILS.map((e) => admins.find((a) => a.email.toLowerCase() === e)).find(Boolean);
+  const agent = env.ADMIN_EMAILS.map((e) => admins.find((a) => a.email.toLowerCase() === e && !facebookOnly(a.providers))).find(Boolean);
   if (!agent) throw new AppError("NOT_FOUND", "Support isn't available right now");
   if (agent.id === userId) throw new AppError("VALIDATION_FAILED", "You are support");
   const directKey = `support:${userId}`;

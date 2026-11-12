@@ -25,7 +25,7 @@ import { presenceOf } from "../lib/presence.js";
 import { prisma } from "../lib/prisma.js";
 import { deleteObjects } from "../lib/storage.js";
 import { matchTotp, newTotpSecret, totpUri } from "../lib/totp.js";
-import { adminTwoFactor, isAdminEmail } from "../plugins/auth.js";
+import { adminTwoFactor, isAdmin } from "../plugins/auth.js";
 import { emailFullAccess } from "./emails.js";
 import { notify } from "./notifications.js";
 import { admitQueued, grantFullAccess, invitesOf } from "./referrals.js";
@@ -86,7 +86,7 @@ function toAdminUser(
     ...toUserRef(u),
     providers: u.providers.filter((p): p is SignInProvider => (SIGN_IN_PROVIDERS as readonly string[]).includes(p)),
     banReason: u.banReason,
-    admin: isAdminEmail(u.email),
+    admin: isAdmin(u),
     createdAt: u.createdAt.toISOString(),
     lastActiveAt: lastActive?.toISOString() ?? null,
     chats: u._count.memberships,
@@ -183,7 +183,7 @@ const UNBANNED = { bannedAt: null, banReason: null, bannedUntil: null, banScope:
 export async function banUser(adminId: string, userId: string, reason: string, hours?: number, scope: BanScope = "full") {
   const user = await prisma.user.findUnique({ where: { id: userId } });
   if (!user) throw new AppError("USER_NOT_FOUND");
-  if (userId === adminId || isAdminEmail(user.email)) throw new AppError("FORBIDDEN", "Admins can't be banned");
+  if (userId === adminId || isAdmin(user)) throw new AppError("FORBIDDEN", "Admins can't be banned");
   const bannedUntil = hours ? new Date(Date.now() + hours * 3_600_000) : null;
   await withEvents(async (tx, emit) => {
     const banned = await tx.user.update({

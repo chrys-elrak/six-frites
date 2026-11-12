@@ -1,4 +1,4 @@
-import { isAdminEmail } from "../plugins/auth.js";
+import { isAdmin } from "../plugins/auth.js";
 import { createId } from "@paralleldrive/cuid2";
 import type { Prisma, Upload } from "../generated/prisma/client.js";
 import {
@@ -69,9 +69,9 @@ export async function storageOf(userIds: string[]) {
 export async function presignUpload(ownerId: string, input: PresignUploadInput) {
   const owner = await prisma.user.findUniqueOrThrow({
     where: { id: ownerId },
-    select: { guest: true, email: true, storageLimitMb: true },
+    select: { guest: true, email: true, providers: true, storageLimitMb: true },
   });
-  if (input.kind === "sticker_zip" && !isAdminEmail(owner.email)) throw new AppError("FORBIDDEN", "Admins only");
+  if (input.kind === "sticker_zip" && !isAdmin(owner)) throw new AppError("FORBIDDEN", "Admins only");
   if (owner.guest && (input.kind !== "image" || input.encrypted || input.size > GUEST_UPLOAD_BYTES)) {
     throw new AppError("FORBIDDEN", "Guests can only send photos up to 100 MB");
   }

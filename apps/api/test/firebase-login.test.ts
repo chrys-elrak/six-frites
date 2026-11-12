@@ -50,29 +50,67 @@ describe("signing in through Firebase", () => {
     expect((await prisma.user.findUniqueOrThrow({ where: { firebaseUid: uid } })).googleSub).toBeNull();
   });
 
-  it("opens no account on an email the provider didn't verify, so nobody can sit on someone else's address", async () => {
+  it("opens an account with Facebook, whose email Firebase never verifies, and lets it back in by its Firebase account", async () => {
+    const uid = unique("fb-newcomer");
+    const email = `${uid}@example.com`;
+    const res = await viaFirebase({ uid, providers: ["facebook"], email, emailVerified: false }, { guest: true });
+    expect(res.statusCode, res.body).toBe(200);
+    expect(await prisma.user.findUniqueOrThrow({ where: { email } })).toMatchObject({ firebaseUid: uid, providers: ["facebook"] });
+    const again = await viaFirebase({ uid, providers: ["facebook"], email, emailVerified: false });
+    expect(again.json().user.id).toBe(res.json().user.id);
+  });
+
+  it("opens no account on an unverified email from anything but Facebook, nor on an admin's address", async () => {
     const email = `${unique("squatted")}@example.com`;
-    const res = await viaFirebase({ uid: unique("stranger"), email, emailVerified: false }, { guest: true });
+    const res = await viaFirebase({ uid: unique("stranger"), providers: ["google"], email, emailVerified: false }, { guest: true });
     expect(res.json().error.code).toBe("EMAIL_REQUIRED");
     expect(await prisma.user.findUnique({ where: { email } })).toBeNull();
 
-    const admin = await viaFirebase({ uid: unique("stranger"), email: "the-admin@example.com", emailVerified: false });
+    const admin = await viaFirebase({ uid: unique("stranger"), providers: ["facebook"], email: "the-admin@example.com", emailVerified: false });
     expect(admin.json().error.code).toMatch(/^EMAIL_(REQUIRED|TAKEN)$/);
   });
 
-  it("doesn't let an unverified Firebase account into any account, its own Google one or one it already holds", async () => {
+  it("hands an account opened with Facebook alone to whoever Google vouches for, signing everyone else out of it", async () => {
+    const sub = unique("owner");
+    const email = `${sub}@example.com`;
+    const uid = unique("fb-squatter");
+    const squatter = await viaFirebase({ uid, providers: ["facebook"], email, emailVerified: false }, { guest: true });
+    expect(squatter.statusCode, squatter.body).toBe(200);
+    const id = squatter.json().user.id;
+
+    const owner = await loginAs(ctx.app, sub);
+    expect(owner.json().user.id).toBe(id);
+    expect(await prisma.user.findUniqueOrThrow({ where: { id } })).toMatchObject({ googleSub: sub, firebaseUid: null, providers: ["google"] });
+    expect(await prisma.session.count({ where: { userId: id, revokedAt: null } })).toBe(1);
+    expect((await viaFirebase({ uid, providers: ["facebook"], email, emailVerified: false })).json().error.code).toBe("EMAIL_TAKEN");
+  });
+
+  it("refuses a Facebook token from before Firebase handed its account to the address's owner through Apple", async () => {
+    const email = `${unique("owner")}@example.com`;
+    const uid = unique("fb-then-apple");
+    const facebook = { uid, providers: ["facebook"], email, emailVerified: false };
+    const id = (await viaFirebase(facebook, { guest: true })).json().user.id;
+
+    const apple = await viaFirebase({ uid, providers: ["apple"], email, emailVerified: true });
+    expect(apple.json().user.id).toBe(id);
+    expect(await prisma.user.findUniqueOrThrow({ where: { id } })).toMatchObject({ firebaseUid: uid, providers: ["apple"] });
+    expect((await viaFirebase(facebook)).json().error.code).toBe("EMAIL_TAKEN");
+  });
+
+  it("never counts an account that only signed in with Facebook as an admin, whatever its address", async () => {
+    const { isAdmin } = await import("../src/plugins/auth.js");
+    expect(isAdmin({ email: "The-Admin@example.com", providers: ["facebook"] })).toBe(false);
+    expect(isAdmin({ email: "The-Admin@example.com", providers: ["google"] })).toBe(true);
+    expect(isAdmin({ email: "The-Admin@example.com", providers: ["facebook", "apple"] })).toBe(true);
+  });
+
+  it("doesn't let an unverified Firebase account claim a Google account by its Google id", async () => {
     const sub = unique("stranger");
     const own = (await loginAs(ctx.app, sub)).json();
-    const squatted = unique("squatted-uid");
     const email = `${unique("victim")}@example.com`;
-    const bound = await viaFirebase({ uid: squatted, googleSub: sub, providers: ["google"], email, emailVerified: false });
+    const bound = await viaFirebase({ uid: unique("squatted-uid"), googleSub: sub, providers: ["google"], email, emailVerified: false });
     expect(bound.json().error.code).toBe("EMAIL_REQUIRED");
     expect((await prisma.user.findUniqueOrThrow({ where: { id: own.user.id } })).firebaseUid).toBeNull();
-
-    const uid = unique("owner-uid");
-    const owner = `${unique("owner")}@example.com`;
-    expect((await viaFirebase({ uid, email: owner }, { guest: true })).statusCode).toBe(200);
-    expect((await viaFirebase({ uid, email: owner, emailVerified: false })).json().error.code).toBe("EMAIL_TAKEN");
   });
 
   it("rejects a bad token", async () => {

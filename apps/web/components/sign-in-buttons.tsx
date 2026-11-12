@@ -42,15 +42,16 @@ async function firebaseIdToken(provider: Provider) {
 /** Google's own button, then the providers that sign in through Firebase. */
 export function SignInButtons({ onCredential }: { onCredential: (idToken: string, via: SignInVia) => void }) {
   const tr = useT();
-  const [failed, setFailed] = useState(false);
+  const [failed, setFailed] = useState<"EMAIL_TAKEN" | "INVALID_LOGIN_TOKEN" | null>(null);
 
   async function open(provider: Provider) {
-    setFailed(false);
+    setFailed(null);
     try {
       const idToken = await firebaseIdToken(provider);
       if (idToken) onCredential(idToken, "loginWithFirebase");
-    } catch {
-      setFailed(true);
+    } catch (err) {
+      const taken = (err as { code?: string }).code === "auth/account-exists-with-different-credential";
+      setFailed(taken ? "EMAIL_TAKEN" : "INVALID_LOGIN_TOKEN");
     }
   }
 
@@ -77,7 +78,7 @@ export function SignInButtons({ onCredential }: { onCredential: (idToken: string
       )}
       {failed && (
         <p role="alert" className="rounded-xl bg-red-50 p-3 text-center text-sm text-red-700 dark:bg-red-950 dark:text-red-300">
-          {tr.auth.errors.INVALID_LOGIN_TOKEN}
+          {tr.auth.errors[failed]}
         </p>
       )}
     </div>

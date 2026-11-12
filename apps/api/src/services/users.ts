@@ -6,6 +6,7 @@ import {
   type AppLockInput,
   type UpdateMeInput,
   type UserDTO,
+  facebookOnly,
   isLocale,
 } from "@six/shared";
 import { env } from "../env.js";
@@ -39,7 +40,7 @@ export function toUserDTO(u: User): UserDTO {
     anonBot: !u.anonBotDisabled,
     quickReactions: u.quickReactions,
     guest: u.guest,
-    support: env.ADMIN_EMAILS.includes(u.email.toLowerCase()),
+    support: env.ADMIN_EMAILS.includes(u.email.toLowerCase()) && !facebookOnly(u.providers),
     chatBan: chatBanned(u) ? { until: u.bannedUntil?.toISOString() ?? null } : null,
     termsAccepted: u.termsAcceptedAt !== null,
     tourSeen: u.tourSeenAt !== null,

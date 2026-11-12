@@ -12,7 +12,7 @@ import { generateCode, isUniqueViolation } from "../lib/codes.js";
 import { type Emit, type Tx, withEvents } from "../lib/events.js";
 import { pageArgs, toPage } from "../lib/paginate.js";
 import { prisma } from "../lib/prisma.js";
-import { isAdminEmail } from "../plugins/auth.js";
+import { isAdmin } from "../plugins/auth.js";
 import { ensureDirectChat, getChat } from "./chats.js";
 import { profilesFor } from "./contacts.js";
 import { toPublicUser, toUserDTO } from "./users.js";
@@ -125,7 +125,7 @@ export async function invitesOf(db: Tx, userIds: string[]) {
 
 /** Places left under someone's invite limit. Locks their row so two sign-ups can't both take the last one. */
 async function roomLeft(tx: Tx, referrer: User) {
-  if (isAdminEmail(referrer.email)) return Infinity;
+  if (isAdmin(referrer)) return Infinity;
   await tx.$executeRaw`SELECT 1 FROM "User" WHERE id = ${referrer.id} FOR UPDATE`;
   const { inviteLimit } = await tx.user.findUniqueOrThrow({ where: { id: referrer.id }, select: { inviteLimit: true } });
   return inviteLimit - (await invitesOf(tx, [referrer.id]))(referrer.id).invited;
@@ -137,7 +137,7 @@ async function quotaOf(db: Tx, userId: string): Promise<InviteQuota> {
     where: { creatorId: userId, revokedAt: null, OR: [{ expiresAt: null }, { expiresAt: { gt: new Date() } }] },
     select: { maxUses: true, uses: true },
   });
-  const limit = isAdminEmail(user.email) ? null : user.inviteLimit;
+  const limit = isAdmin(user) ? null : user.inviteLimit;
   const held = working.reduce((n, i) => n + (i.maxUses === null ? (limit ?? 0) : Math.max(0, i.maxUses - i.uses)), 0);
   return { limit, held, ...(await invitesOf(db, [userId]))(userId) };
 }

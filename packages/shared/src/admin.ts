@@ -71,6 +71,9 @@ export const AdminUserRef = z.object({
 export type AdminUserRef = z.infer<typeof AdminUserRef>;
 
 export const SIGN_IN_PROVIDERS = ["google", "facebook", "apple"] as const;
+
+/** Signed in with Facebook and nothing else, so nobody verified the email: Firebase never calls a Facebook one verified. */
+export const facebookOnly = (providers: readonly string[]) => providers.includes("facebook") && providers.every((p) => p === "facebook");
 export type SignInProvider = (typeof SIGN_IN_PROVIDERS)[number];
 
 export const AdminUserDTO = AdminUserRef.extend({

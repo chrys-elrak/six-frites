@@ -1,6 +1,6 @@
 import type { FastifyRequest } from "fastify";
 import fp from "fastify-plugin";
-import { AppError } from "@six/shared";
+import { AppError, facebookOnly } from "@six/shared";
 import { env, isProd } from "../env.js";
 import { prisma } from "../lib/prisma.js";
 import { type AccessClaims, verifyAccessToken } from "../lib/tokens.js";
@@ -22,6 +22,9 @@ declare module "fastify" {
 }
 
 export const isAdminEmail = (email: string) => env.ADMIN_EMAILS.includes(email.toLowerCase());
+
+/** An admin by their address, unless they only signed in with Facebook, so nobody verified it was theirs. */
+export const isAdmin = (u: { email: string; providers: string[] }) => isAdminEmail(u.email) && !facebookOnly(u.providers);
 
 export async function authenticateBearer(header: string | undefined) {
   const token = header?.startsWith("Bearer ") ? header.slice(7) : undefined;
@@ -49,8 +52,8 @@ export async function adminTwoFactor(sessionId: string) {
 async function authenticateAdmin(req: FastifyRequest) {
   const { guest, ...claims } = await authenticateBearer(req.headers.authorization);
   req.auth = claims;
-  const user = await prisma.user.findUnique({ where: { id: req.auth.userId }, select: { email: true } });
-  if (guest || !user || !isAdminEmail(user.email)) throw new AppError("FORBIDDEN", "Admins only");
+  const user = await prisma.user.findUnique({ where: { id: req.auth.userId }, select: { email: true, providers: true } });
+  if (guest || !user || !isAdmin(user)) throw new AppError("FORBIDDEN", "Admins only");
 }
 
 export default fp(async (app) => {
