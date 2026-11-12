@@ -24,6 +24,8 @@ export const CHANGELOG: Release[] = [
         "Pick a light or dark look in Settings, or follow your phone's.",
         "News from Six Frites now arrives in its own chat, Six Frites News. You can mute it but not reply there; write to support instead.",
         "On Android, six-frites.koera.mg links open straight in the app, and an empty chat offers a hello GIF to send with one tap.",
+        "Sign in with Apple or Facebook in the app too, and new messages ring with the tone you picked, even when the app is closed.",
+        "Richer stories: several anonymous messages and GIFs on one story, links, and everything placed where you like. Spoilers now hide behind drifting dots.",
       ],
       fr: [
         "Discussions de groupe : créez-en une et faites entrer les gens avec son lien. Les admins peuvent ouvrir un message aux commentaires, et les fermer quand ils veulent.",
@@ -33,6 +35,8 @@ export const CHANGELOG: Release[] = [
         "Choisissez un thème clair ou sombre dans les Paramètres, ou suivez celui du téléphone.",
         "Les nouvelles de Six Frites arrivent maintenant dans leur propre discussion, Six Frites News. Vous pouvez la mettre en sourdine, mais pas y répondre : écrivez plutôt au support.",
         "Sur Android, les liens six-frites.koera.mg s'ouvrent directement dans l'app, et une discussion vide propose un GIF pour dire bonjour en un geste.",
+        "Connectez-vous aussi avec Apple ou Facebook dans l'app, et les nouveaux messages sonnent avec la sonnerie que vous avez choisie, même app fermée.",
+        "Des stories plus riches : plusieurs messages anonymes et GIF sur une même story, des liens, et tout se place où vous voulez. Les spoilers se cachent maintenant derrière des points qui flottent.",
       ],
       mg: [
         "Resaka vondrona: mamorona iray ary ampidiro amin'ny rohiny ny olona. Afaka manokatra hafatra iray ho an'ny fanehoan-kevitra ny admin, ary manakatona azy rehefa tiany.",
@@ -42,6 +46,8 @@ export const CHANGELOG: Release[] = [
         "Misafidiana endrika Mazava na Maizina ao amin'ny Fikirana, na araho ny an'ny findainao.",
         "Tonga ao amin'ny resaka manokana, Six Frites News, ny vaovao avy amin'ny Six Frites. Azonao ampanginina izy fa tsy azo valiana eo; soraty ny support raha te hiresaka aminay.",
         "Amin'ny Android, misokatra mivantana ao amin'ny app ny rohy six-frites.koera.mg, ary manolotra GIF fiarahabana alefa amin'ny tsindry iray ny resaka mbola tsy misy hafatra.",
+        "Afaka miditra amin'ny Apple na Facebook ao amin'ny app koa ianao, ary maneno amin'ny feo nofidinao ny hafatra vaovao, na dia mihidy aza ny app.",
+        "Story manankarena kokoa: hafatra tsy fantatra anarana sy GIF maromaro amin'ny story iray, rohy, ary apetraho amin'izay tianao ny zavatra rehetra. Miafina ao ambadiky ny teboka mihetsiketsika izao ny hafatra miafina.",
       ],
     },
   },
