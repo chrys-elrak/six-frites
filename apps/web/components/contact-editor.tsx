@@ -4,13 +4,13 @@ import { SixApiError, unwrap } from "@six/sdk";
 import { LABEL_MAX, NAME_MAX } from "@six/shared";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import Link from "next/link";
-import { Camera, Lock, Shuffle, Trash2, X } from "lucide-react";
-import { useEffect, useRef, useState } from "react";
+import { Lock, Shuffle, Trash2, X } from "lucide-react";
+import { useEffect, useState } from "react";
 import { useCloseOnBack } from "@/lib/back";
 import { updateContact } from "@/lib/actions";
 import { suggestAvatars } from "@/lib/avatar-suggestions";
 import { useT } from "@/lib/i18n";
-import { toAvatarDataUrl, urlToAvatarDataUrl } from "@/lib/image";
+import { urlToAvatarDataUrl } from "@/lib/image";
 import { useSession } from "@/lib/session";
 import { six } from "@/lib/six";
 import { LockScreen } from "./app-lock";
@@ -31,7 +31,6 @@ export function ContactEditor({ userId, onClose }: { userId: string; onClose: ()
   const [photo, setPhoto] = useState<string | null | undefined>(undefined);
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
-  const file = useRef<HTMLInputElement>(null);
   const [suggestions, setSuggestions] = useState<string[]>([]);
   const [picked, setPicked] = useState<string | null>(null);
   const [reporting, setReporting] = useState(false);
@@ -54,17 +53,6 @@ export function ContactEditor({ userId, onClose }: { userId: string; onClose: ()
   const c = contact.data;
   const shownPhoto = photo === undefined ? (c?.user.avatarUrl ?? null) : photo === null ? null : photo;
   const hasCustomPhoto = photo === undefined ? !!c?.hasCustomPhoto : photo !== null;
-
-  async function pick(f: File | undefined) {
-    if (!f) return;
-    setError(null);
-    try {
-      setPhoto(await toAvatarDataUrl(f));
-      setPicked(null);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : tr.common.couldNotReadImage);
-    }
-  }
 
   async function choose(src: string) {
     setError(null);
@@ -137,24 +125,7 @@ export function ContactEditor({ userId, onClose }: { userId: string; onClose: ()
               }}
             >
               <div className="flex flex-col items-center gap-3">
-                <button
-                  type="button"
-                  onClick={() => file.current?.click()}
-                  className="group relative rounded-full"
-                  aria-label={tr.contacts.choosePhoto}
-                >
-                  <Avatar user={{ displayName: name || c.user.displayName, avatarUrl: shownPhoto, alias: c.originalName }} size="lg" />
-                  <span className="absolute inset-0 grid place-items-center rounded-full bg-black/40 text-white opacity-0 transition group-hover:opacity-100 group-focus-visible:opacity-100 pointer-coarse:opacity-100">
-                    <Camera className="size-6" />
-                  </span>
-                </button>
-                <input
-                  ref={file}
-                  type="file"
-                  accept="image/*"
-                  className="hidden"
-                  onChange={(e) => void pick(e.target.files?.[0])}
-                />
+                <Avatar user={{ displayName: name || c.user.displayName, avatarUrl: shownPhoto, alias: c.originalName }} size="lg" />
                 {hasCustomPhoto && (
                   <button
                     type="button"
@@ -172,7 +143,7 @@ export function ContactEditor({ userId, onClose }: { userId: string; onClose: ()
               {suggestions.length > 0 && (
                 <div className="space-y-2">
                   <div className="flex items-center justify-between">
-                    <span className="text-sm font-medium text-stone-600 dark:text-stone-300">{tr.contacts.orPickPicture}</span>
+                    <span className="text-sm font-medium text-stone-600 dark:text-stone-300">{tr.contacts.pickPicture}</span>
                     <button
                       type="button"
                       onClick={shuffle}

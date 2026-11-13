@@ -2,7 +2,7 @@ import { SixApiError, unwrap } from "@six/sdk";
 import { LABEL_MAX, NAME_MAX } from "@six/shared";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { router } from "expo-router";
-import { Camera, Lock, Shuffle, Trash2, X } from "lucide-react-native";
+import { Lock, Shuffle, Trash2, X } from "lucide-react-native";
 import { type ComponentRef, useRef, useState } from "react";
 import { Pressable, ScrollView, StyleSheet, View } from "react-native";
 import { Modal } from "./modal";
@@ -14,7 +14,6 @@ import { captureRef } from "react-native-view-shot";
 import { updateContact } from "@/lib/actions";
 import { suggestAvatars } from "@/lib/avatar-suggestions";
 import { useT } from "@/lib/i18n";
-import { pickAvatar } from "@/lib/media";
 import { useSession } from "@/lib/session";
 import { six } from "@/lib/six";
 import { brand, useTheme } from "@/lib/theme";
@@ -50,19 +49,6 @@ export function ContactEditor({ userId, onClose }: { userId: string; onClose: ()
   if (c && name === null) setName(c.customName ?? "");
   const shownPhoto = photo === undefined ? (c?.user.avatarUrl ?? null) : photo;
   const hasCustomPhoto = photo === undefined ? !!c?.hasCustomPhoto : photo !== null;
-
-  async function choosePhoto() {
-    setError(null);
-    try {
-      const url = await pickAvatar();
-      if (url) {
-        setPhoto(url);
-        setPicked(null);
-      }
-    } catch (err) {
-      setError(err instanceof Error ? err.message : tr.common.couldNotReadImage);
-    }
-  }
 
   async function chooseSuggestion(i: number) {
     setError(null);
@@ -127,12 +113,7 @@ export function ContactEditor({ userId, onClose }: { userId: string; onClose: ()
           ) : (
             <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={{ gap: 18 }}>
               <View style={{ alignItems: "center", gap: 10 }}>
-                <Pressable onPress={choosePhoto} accessibilityLabel={tr.contacts.choosePhoto}>
-                  <Avatar user={{ displayName: name || c.user.displayName, avatarUrl: shownPhoto, alias: c.originalName }} size="lg" />
-                  <View style={styles.cameraBadge}>
-                    <Camera size={22} color="#fff" />
-                  </View>
-                </Pressable>
+                <Avatar user={{ displayName: name || c.user.displayName, avatarUrl: shownPhoto, alias: c.originalName }} size="lg" />
                 {hasCustomPhoto && (
                   <Pressable
                     onPress={() => {
@@ -149,7 +130,7 @@ export function ContactEditor({ userId, onClose }: { userId: string; onClose: ()
 
               <View style={{ gap: 8 }}>
                 <View style={styles.suggestHead}>
-                  <Text style={{ color: t.textSoft, fontWeight: "600", fontSize: 14 }}>{tr.contacts.orPickPicture}</Text>
+                  <Text style={{ color: t.textSoft, fontWeight: "600", fontSize: 14 }}>{tr.contacts.pickPicture}</Text>
                   <Pressable onPress={() => setSuggestions(suggestAvatars())} style={styles.shuffle} hitSlop={6}>
                     <Shuffle size={16} color={brand} />
                     <Text style={{ color: brand, fontWeight: "600" }}>{tr.contacts.shuffle}</Text>
@@ -275,17 +256,6 @@ const styles = StyleSheet.create({
   panel: { borderTopLeftRadius: 24, borderTopRightRadius: 24, paddingHorizontal: 20, paddingTop: 12, maxHeight: "92%" },
   head: { flexDirection: "row", alignItems: "center", marginBottom: 8 },
   heading: { flex: 1, fontSize: 18, fontWeight: "700" },
-  cameraBadge: {
-    position: "absolute",
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    borderRadius: 40,
-    backgroundColor: "rgba(0,0,0,0.35)",
-    alignItems: "center",
-    justifyContent: "center",
-  },
   removePhoto: { flexDirection: "row", alignItems: "center", gap: 6 },
   suggestHead: { flexDirection: "row", alignItems: "center", justifyContent: "space-between" },
   shuffle: { flexDirection: "row", alignItems: "center", gap: 6 },
