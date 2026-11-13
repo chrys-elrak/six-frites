@@ -3,6 +3,7 @@ import { z } from "zod";
 import {
   ChatDTO,
   CreateGroupInput,
+  GroupLinkPreviewDTO,
   GroupPreviewDTO,
   Id,
   JoinGroupInput,
@@ -12,6 +13,7 @@ import {
 } from "@six/shared";
 import {
   createGroup,
+  groupLinkPreview,
   joinGroup,
   leaveGroup,
   previewGroup,
@@ -178,6 +180,23 @@ const groupRoutes: FastifyPluginAsyncZod = async (app) => {
       await leaveGroup(req.auth.userId, req.params.id);
       return reply.status(204).send(null);
     },
+  );
+};
+
+/** The one group route open to anyone: what a link's preview may show. */
+export const groupLinkRoutes: FastifyPluginAsyncZod = async (app) => {
+  app.get(
+    "/groups/link/:code",
+    {
+      config: { rateLimit: { max: 30, timeWindow: "1 minute" } },
+      schema: {
+        tags,
+        summary: "Public name and picture of the group behind a link (no auth)",
+        params: CodeParams,
+        response: { 200: GroupLinkPreviewDTO },
+      },
+    },
+    (req) => groupLinkPreview(req.params.code),
   );
 };
 

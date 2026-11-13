@@ -2,6 +2,7 @@ import { readFile } from "node:fs/promises";
 import { join } from "node:path";
 import { ASK_COLORS } from "@six/shared";
 import { ImageResponse } from "next/og";
+import { photoData } from "@/lib/link-preview";
 import { askPreview } from "./share";
 
 export const alt = "Six Frites";
@@ -9,14 +10,6 @@ export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 
 const file = (path: string) => readFile(join(process.cwd(), path));
-
-/** Their photo as a data URL, when it's one the image renderer can draw; otherwise their initial stands in. */
-async function photo(url: string | null) {
-  const res = url ? await fetch(url).catch(() => null) : null;
-  const type = res?.ok ? res.headers.get("content-type") : null;
-  if (!res || (type !== "image/jpeg" && type !== "image/png")) return null;
-  return `data:${type};base64,${Buffer.from(await res.arrayBuffer()).toString("base64")}`;
-}
 
 /** The picture shown when someone shares their link: their prompt, name and photo on an anonymous message card. */
 export default async function Image({ params }: { params: Promise<{ code: string }> }) {
@@ -26,7 +19,7 @@ export default async function Image({ params }: { params: Promise<{ code: string
     file("app/icon.svg"),
     file("public/fonts/Inter-600.ttf"),
     file("public/fonts/Inter-800.ttf"),
-    photo(profile?.avatarUrl ?? null),
+    photoData(profile?.avatarUrl ?? null),
   ]);
   const [from, to] = ASK_COLORS[0];
   const name = profile?.displayName ?? "Six Frites";

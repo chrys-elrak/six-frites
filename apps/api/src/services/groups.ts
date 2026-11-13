@@ -2,6 +2,7 @@ import { randomUUID } from "node:crypto";
 import {
   AppError,
   type CreateGroupInput,
+  type GroupLinkPreviewDTO,
   type GroupPreviewDTO,
   type JoinGroupInput,
   type ServiceAction,
@@ -112,6 +113,16 @@ export async function previewGroup(userId: string, code: string): Promise<GroupP
     banned: !!ban,
     chatId: mine ? chat.id : null,
   };
+}
+
+/** What anyone holding a group's link may know without signing in: its name and picture, for the link's preview. */
+export async function groupLinkPreview(code: string): Promise<GroupLinkPreviewDTO> {
+  const chat = await prisma.chat.findUnique({
+    where: { inviteCode: code.toUpperCase() },
+    select: { type: true, title: true, photoKey: true },
+  });
+  if (!chat || chat.type !== "group") throw new AppError("GROUP_LINK_INVALID");
+  return { title: chat.title ?? "", photoUrl: chat.photoKey ? presignGet(chat.photoKey) : null };
 }
 
 /**

@@ -58,6 +58,9 @@ export const GroupPreviewDTO = z.object({
 });
 export type GroupPreviewDTO = z.infer<typeof GroupPreviewDTO>;
 
+export const GroupLinkPreviewDTO = GroupPreviewDTO.pick({ title: true, photoUrl: true });
+export type GroupLinkPreviewDTO = z.infer<typeof GroupLinkPreviewDTO>;
+
 export const GroupLinkDTO = z.object({ inviteCode: z.string() });
 
 /** What stands for a chat in lists and headers: the group itself, or the other person. */

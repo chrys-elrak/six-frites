@@ -2,6 +2,17 @@
 
 What Six Frites News tells members after each deploy, newest first. CLAUDE.md says when to add a section and how.
 
+## 2026-11-13 22h40
+
+### en
+- Links you share now have their own preview: an invite shows who is inviting, a group link shows the group's name and picture, and a contact link has its own card.
+
+### fr
+- Les liens que vous partagez ont maintenant leur propre aperçu : une invitation montre qui invite, un lien de groupe montre le nom et la photo du groupe, et un lien de contact a sa propre carte.
+
+### mg
+- Manana topi-maso manokana izao ny rohy zarainao: asehon'ny fanasana hoe iza no manasa, asehon'ny rohin'ny vondrona ny anarany sy ny sariny, ary manana karatra manokana ny rohin'ny mpifandray.
+
 ## 2026-11-13 22h22
 
 ### en

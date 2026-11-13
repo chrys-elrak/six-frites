@@ -114568,6 +114568,51 @@
         }
       }
     },
+    "/v1/groups/link/{code}": {
+      "get": {
+        "summary": "Public name and picture of the group behind a link (no auth)",
+        "tags": [
+          "groups"
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "pattern": "^[A-Za-z0-9]{4,32}$"
+            },
+            "in": "path",
+            "name": "code",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "title": {
+                      "type": "string"
+                    },
+                    "photoUrl": {
+                      "nullable": true,
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "title",
+                    "photoUrl"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/v1/emoji/{key}/lottie.json": {
       "get": {
         "summary": "An animated emoji as Lottie JSON, by its code points (like 1f600 or 2764_fe0f)",

@@ -34,7 +34,7 @@ import askRoutes from "./routes/ask.js";
 import notificationRoutes from "./routes/notifications.js";
 import mailRoutes from "./routes/mail.js";
 import emojiRoutes from "./routes/emoji.js";
-import groupRoutes from "./routes/groups.js";
+import groupRoutes, { groupLinkRoutes } from "./routes/groups.js";
 
 export async function buildApp() {
   const app = Fastify({
@@ -99,6 +99,7 @@ export async function buildApp() {
       await v1.register(notificationRoutes);
       await v1.register(mailRoutes);
       await v1.register(groupRoutes);
+      await v1.register(groupLinkRoutes);
       await v1.register(emojiRoutes);
     },
     { prefix: "/v1" },
