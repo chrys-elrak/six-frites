@@ -9,6 +9,7 @@ const en = {
   appleShareEmail: "Already on Six Frites? With Apple, choose “Share my email” to keep your account.",
   continueWithFacebook: "Continue with Facebook",
   backToApp: "Back to the app",
+  backToTab: "Signed in. Go back to your Six Frites tab.",
   googleNotFinished:
     "Google sign-in didn't finish. If you picked an account, this build isn't registered with Google yet (its package name and SHA-1 must be added as an Android OAuth client).",
   errors: {
@@ -68,6 +69,7 @@ const fr: typeof en = {
   appleShareEmail: "Déjà sur Six Frites ? Avec Apple, choisissez « Partager mon adresse e-mail » pour garder votre compte.",
   continueWithFacebook: "Continuer avec Facebook",
   backToApp: "Retour à l'app",
+  backToTab: "Connecté(e). Revenez à votre onglet Six Frites.",
   googleNotFinished:
     "La connexion Google n'a pas abouti. Si vous avez choisi un compte, cette version de l'app n'est pas encore enregistrée auprès de Google (son nom de package et son SHA-1 doivent être ajoutés comme client OAuth Android).",
   errors: {
@@ -129,6 +131,7 @@ const mg: typeof en = {
   appleShareEmail: "Efa ao amin'ny Six Frites ianao? Amin'ny Apple, safidio ny « Partager mon adresse e-mail » mba hitazonana ny kaontinao.",
   continueWithFacebook: "Hiditra amin'ny Facebook",
   backToApp: "Hiverina amin'ny app",
+  backToTab: "Tafiditra ianao. Miverena amin'ny tabilao Six Frites-nao.",
   googleNotFinished:
     "Tsy vita ny fidirana amin'ny Google. Raha efa nisafidy kaonty ianao, dia mbola tsy voasoratra ao amin'ny Google ity kinova ity (tsy maintsy ampidirina ho mpanjifa OAuth Android ny anaran'ny package sy ny SHA-1-ny).",
   errors: {

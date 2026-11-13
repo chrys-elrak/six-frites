@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { GoogleButton } from "@/components/google-button";
+import { facebookIdToken } from "@/lib/facebook-sign-in";
 import { useT } from "@/lib/i18n";
 
 export type SignInVia = "loginWithGoogle" | "loginWithFirebase";
@@ -30,7 +31,7 @@ export async function firebaseProvider(provider: Provider) {
   return p;
 }
 
-/** Opens Apple's or Facebook's sign-in through Firebase and returns its ID token, or null when they closed it. */
+/** Opens Apple's sign-in through Firebase and returns its ID token, or null when they closed it. */
 async function firebaseIdToken(provider: Provider) {
   const { getApps, initializeApp } = await import("firebase/app");
   const { getAuth, signInWithPopup, signOut } = await import("firebase/auth");
@@ -53,10 +54,11 @@ export function SignInButtons({ onCredential }: { onCredential: (idToken: string
   async function open(provider: Provider) {
     setFailed(null);
     try {
-      const idToken = await firebaseIdToken(provider);
+      const idToken = provider === "facebook" ? await facebookIdToken() : await firebaseIdToken(provider);
       if (idToken) onCredential(idToken, "loginWithFirebase");
     } catch (err) {
-      const taken = (err as { code?: string }).code === "auth/account-exists-with-different-credential";
+      const { code } = err as { code?: string };
+      const taken = code === "auth/account-exists-with-different-credential" || code === "EMAIL_TAKEN";
       setFailed(taken ? "EMAIL_TAKEN" : "INVALID_LOGIN_TOKEN");
     }
   }

@@ -3,13 +3,14 @@
 import { fromB64, sealToLinkKey, utf8 } from "@six/crypto";
 import { useEffect, useState } from "react";
 import { type Provider, firebaseConfig, firebaseProvider } from "@/components/sign-in-buttons";
+import { goToFacebook } from "@/lib/facebook-sign-in";
 import { useT } from "@/lib/i18n";
 
 const BACK = "sixfrites://auth";
 const KEY = "six-app-sign-in";
 
 /**
- * Apple or Facebook sign-in for the phone app, run in its browser tab, then handed back through sixfrites://auth. The
+ * Apple or Facebook sign-in for the phone app (Facebook goes on to /auth/facebook), run in its browser tab, then handed back through sixfrites://auth. The
  * app puts a one-time public key after the #; the Firebase ID token goes back sealed to it, so another app catching
  * the link learns nothing. It redirects rather than opening a popup, which those tabs don't allow, and runs Firebase's
  * handler from this domain (proxied in next.config) so the redirect still works where third-party storage is blocked.
@@ -23,6 +24,11 @@ async function signIn(): Promise<string> {
   }
   const pub = sessionStorage.getItem(KEY);
   if (!pub || (provider !== "apple" && provider !== "facebook")) return `${BACK}?error=INVALID_LOGIN_TOKEN`;
+  if (provider === "facebook") {
+    sessionStorage.removeItem(KEY);
+    await goToFacebook(pub);
+    return new Promise(() => {});
+  }
 
   const { getApps, initializeApp } = await import("firebase/app");
   const { getAuth, getRedirectResult, signInWithRedirect, signOut } = await import("firebase/auth");
