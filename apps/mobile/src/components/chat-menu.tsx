@@ -24,7 +24,7 @@ import { Text, TextInput } from "./text";
 import { PrimaryButton } from "./ui";
 import { AutoDeleteCustom } from "./auto-delete-custom";
 import { CustomThemePicker } from "./custom-theme";
-import { DateRangeDialog } from "./scheduled";
+import { DateRangeDialog, ScheduledPanel } from "./scheduled";
 import { ReportSheet } from "./report-sheet";
 import { Sheet } from "./sheet";
 
@@ -72,6 +72,7 @@ export function ChatMenu({
     | "theme"
     | "customTheme"
     | "poke"
+    | "scheduled"
   >(start ?? "menu");
   const [range, setRange] = useState<Range | undefined>(undefined);
   const settings = (input: Parameters<typeof updateChatSettings>[2]) =>
@@ -87,6 +88,8 @@ export function ChatMenu({
   }
 
   if (view === "report") return <ReportSheet target={{ userId: peerId }} onClose={onClose} />;
+
+  if (view === "scheduled") return <ScheduledPanel chatId={chat.id} onClose={onClose} />;
 
   if (view === "poke") return <PokeSheet peerId={peerId} peerName={peerName} onClose={onClose} />;
 
@@ -258,6 +261,15 @@ export function ChatMenu({
                     { label: tr.chat.sharedMedia, onSelect: () => onSharedMedia("media") },
                   ]
                 : []),
+              ...(isFrozen(chat)
+                ? []
+                : [
+                    {
+                      label: chat.scheduledCount > 0 ? `${tr.chat.scheduledMessages} (${chat.scheduledCount})` : tr.chat.scheduledMessages,
+                      keepOpen: true,
+                      onSelect: () => setView("scheduled"),
+                    },
+                  ]),
               ...(isFrozen(chat) ? [] : [mute]),
               ...(chat.withSupport
                 ? []

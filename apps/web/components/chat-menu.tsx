@@ -29,6 +29,7 @@ import { AutoDeleteCustom } from "./auto-delete-custom";
 import { CustomThemeDialog } from "./chat-background";
 import { Dialog } from "./dialog";
 import { Sheet } from "./sheet";
+import { ScheduledPanel } from "./scheduled";
 import { PrimaryButton, codeError } from "./ui";
 
 type Range = { from?: string; to?: string };
@@ -134,6 +135,7 @@ export function ChatMenu({
     | "customTheme"
     | "block"
     | "poke"
+    | "scheduled"
   >(start ?? "menu");
   const [range, setRange] = useState<Range | undefined>(undefined);
   const meId = useSession((s) => s.user?.id);
@@ -152,6 +154,7 @@ export function ChatMenu({
     }
   }
 
+  if (view === "scheduled") return <ScheduledPanel chatId={chat.id} onClose={onClose} />;
   if (view === "poke" && peerId) return <PokeDialog peerId={peerId} peerName={peerName} onClose={onClose} />;
 
   const pick = (chosen: Range | undefined) => {
@@ -342,6 +345,15 @@ export function ChatMenu({
                     { label: tr.chat.sharedMedia, onSelect: () => onSharedMedia("media") },
                   ]
                 : []),
+              ...(frozen
+                ? []
+                : [
+                    {
+                      label: chat.scheduledCount > 0 ? `${tr.chat.scheduledMessages} (${chat.scheduledCount})` : tr.chat.scheduledMessages,
+                      keepOpen: true,
+                      onSelect: () => setView("scheduled"),
+                    },
+                  ]),
               ...(frozen ? [] : [mute]),
               ...(chat.withSupport
                 ? []

@@ -2,6 +2,17 @@
 
 What Six Frites News tells members after each deploy, newest first. CLAUDE.md says when to add a section and how.
 
+## 2026-11-13 21h17
+
+### en
+- Scheduled messages are now in the chat's menu too, with how many are waiting to be sent.
+
+### fr
+- Les messages programmés sont maintenant aussi dans le menu de la discussion, avec le nombre de messages en attente d'envoi.
+
+### mg
+- Ao amin'ny menu-n'ny resaka koa izao ny Hafatra voalahatra, miaraka amin'ny isan'ireo miandry halefa.
+
 ## 2026-11-13 20h14
 
 ### en
