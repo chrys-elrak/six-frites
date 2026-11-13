@@ -192,18 +192,59 @@ If the app is sold in France, Apple may ask for the French encryption declaratio
 
 ## Notes for the reviewer
 
-> Six Frites is an invite-only messenger. Sign in with the account below, which has already joined and has chats,
-> contacts and a group, so every feature can be tried.
->
-> Chats: open any chat to send messages, photos, voice notes and GIFs, or start a voice or video call.
-> Games: in a chat, tap the paperclip, then Game, to start a live game; "Six Frites Game" plays against the app.
-> Anonymous messages: the mask tab shows your link. Anyone can write to it without signing in. Every message can be
-> blocked or reported, reports reach our moderators, who act within 24 hours, and repeat abusers are banned.
-> Account deletion: Settings, then Delete account.
->
-> Contact: (your email and phone)
+Apple returned 1.6.0 (1) on 2026-11-13 under guideline 2.1, "Information Needed". Paste the block below into App
+Review Information > Notes, fill the brackets, attach nothing (the recording is a link), and resubmit.
 
-Fill in the account and contact. Apple calls the phone number if review gets stuck.
+```
+1. SCREEN RECORDING
+Recorded on [iPhone model], iOS [version]: [video link, unlisted, no sign-in needed]
+It starts at app launch and shows: Sign in with Apple with an invite link, the chat list, a one-to-one chat (text, photo, voice note, GIF), a voice call, a live game, stories, anonymous messages with Report and Block, blocking a user from a chat, and Settings > Delete account.
+
+2. PURPOSE AND AUDIENCE
+Six Frites is a free messenger for friends and family, built in Madagascar, for people aged 13 and up. It is invite-only: you join through a link from someone already on it, so chats stay among people who know each other. Each contact sees you under a colour code and a food picture until you choose to show your real name. Besides chats and calls, friends can post stories and play live games together inside a chat. The value: one private place for a group of friends to talk, call and play, in English, French or Malagasy.
+
+3. HOW TO ACCESS THE APP
+Demo account, already joined, with chats, contacts and a group:
+Sign in with Google: [demo email] / [password]
+If Google asks to verify the sign-in, use Sign in with Apple instead: open this invite link first, then sign in with any Apple ID: [invite link]
+Main features:
+- Chats: tap a chat to send text, photos, voice notes, GIFs; the phone icon starts a voice or video call.
+- Games: in a chat, tap the paperclip, then Game. "Six Frites Game" in the chat list plays against the app.
+- Anonymous messages: the mask tab shows your own link. Anyone can write to it without an account.
+- Reporting and blocking: long-press a message, then Report. Long-press a chat in the chat list for Report and Block on that person. Every anonymous message has Report and Block too. Reports reach our moderators, who act within 24 hours; repeat abusers are banned.
+- Account deletion: Settings > Delete account (also at https://six-frites.koera.mg/delete-account).
+
+There is no paid content, no in-app purchase, no subscription and no ads in the iOS app.
+
+4. EXTERNAL SERVICES
+- Our own server (six-frites.koera.mg, hosted by Contabo in Europe): accounts, messages, media, games.
+- Sign in with Apple, Google Sign-In, Facebook Login, through Firebase Authentication.
+- Apple Push Notification service and Firebase Cloud Messaging: notifications.
+- WebRTC with our own STUN/TURN servers: voice and video calls.
+- GIPHY and KLIPY: GIF and sticker search.
+- Google Maps Platform: place search and map previews when a user shares a location.
+No AI services, no payment processors, no analytics or advertising SDKs.
+
+5. REGIONS
+The app works the same in every region. The interface follows the phone's language: English, French or Malagasy.
+
+6. REGULATED CONTENT
+None. The app is not in a regulated industry and shows no third-party protected material. GIFs come from GIPHY and KLIPY under their API terms.
+
+Contact: [name], [email], [phone with country code]
+```
+
+Before resubmitting:
+
+- **The recording needs a real iPhone on the latest iOS.** A simulator recording doesn't count. Borrow one, install
+  the build through TestFlight, and record with Control Center's Screen Recording. The app blanks screen recordings, so
+  record a build made with `EXPO_PUBLIC_ALLOW_SCREEN_CAPTURE=1 npm run build:ios -w apps/mobile`, then submit a
+  normal build.
+- **Make the demo account.** A fresh Google account, joined through an invite, with a few chats, a group and a game in
+  progress. Don't put it in `ADMIN_EMAILS`.
+- **Make a reusable invite** (no use limit, no expiry) for the Apple sign-in path.
+- **Notifications.** The server has no APNs sender yet (Fix before submitting, item 2). If iPhones get no
+  notifications, take "Apple Push Notification service" out of the list above, and expect the reviewer to notice.
 
 ## Build and upload
 

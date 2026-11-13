@@ -41,8 +41,10 @@ function Unreachable() {
   );
 }
 
+const preventScreenCapture = process.env.EXPO_PUBLIC_ALLOW_SCREEN_CAPTURE ? () => {} : usePreventScreenCapture;
+
 export default function RootLayout() {
-  usePreventScreenCapture();
+  preventScreenCapture();
   const t = useTheme();
   const [client] = useState(
     () => new QueryClient({ defaultOptions: { queries: { staleTime: 30_000, retry: 1 } } }),

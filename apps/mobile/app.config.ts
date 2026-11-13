@@ -46,6 +46,7 @@ export default ({ config }: ConfigContext): ExpoConfig =>
   backgroundColor: "#fafaf9",
   ios: {
     bundleIdentifier: "com.sixfrites.app",
+    buildNumber: "3",
     ...(iosGoogleServicesFile && { googleServicesFile: iosGoogleServicesFile }),
     supportsTablet: true,
     associatedDomains: [`applinks:${APP_LINK_HOST}`],
