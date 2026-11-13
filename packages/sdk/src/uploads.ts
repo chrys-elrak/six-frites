@@ -17,7 +17,7 @@ function put(url: string, body: Blob, headers: Record<string, string>, opts: Upl
     const xhr = new XMLHttpRequest();
     xhr.open("PUT", url);
     for (const [k, v] of Object.entries(headers)) xhr.setRequestHeader(k, v);
-    xhr.upload.onprogress = (e) => e.lengthComputable && opts.onProgress?.(e.loaded / e.total);
+    xhr.upload.onprogress = (e) => e.lengthComputable && e.total > 0 && opts.onProgress?.(Math.min(1, e.loaded / e.total));
     xhr.onload = () =>
       xhr.status >= 200 && xhr.status < 300
         ? resolve()
