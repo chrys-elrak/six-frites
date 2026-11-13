@@ -9,8 +9,8 @@ import { Portal } from "./portal";
 import { ActionBar, Sheet, type SheetAction } from "./sheet";
 
 /**
- * A message's long-press menu, Messenger style: the screen dims except for the message and `children` (the reaction
- * bar) sits right on top of it. On a narrow screen the actions line up as icons in a bar at the bottom, on a wide one
+ * A message's long-press menu: `children` (the reaction bar) sits right on top of the message, and the chat stays
+ * as it is behind it. On a narrow screen the actions line up as icons in a bar at the bottom, on a wide one
  * they open in a card next to the message. Without `rect` it is the usual sheet or right-click menu.
  */
 export function MessageMenu({
@@ -77,11 +77,6 @@ export function MessageMenu({
     <Portal>
       <div className="fixed inset-0 z-50" role="dialog" aria-modal>
         <button type="button" aria-label={tr.common.close} onClick={onClose} className="absolute inset-0 cursor-default" />
-        <div
-          aria-hidden
-          className="pointer-events-none fixed rounded-2xl shadow-[0_0_0_200vmax_rgb(0_0_0/0.55)]"
-          style={{ top: rect.top, left: rect.left, width: rect.width, height: rect.height }}
-        />
         {children && (
           <div ref={bar} className="invisible fixed max-w-[calc(100vw-1rem)]">
             {children}

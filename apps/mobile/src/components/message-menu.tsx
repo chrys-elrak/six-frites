@@ -10,8 +10,8 @@ import { ActionBar, type SheetAction } from "./sheet";
 type Size = { width: number; height: number };
 
 /**
- * A message's long-press menu, like Messenger on Android: the screen dims except for the message at `anchor`,
- * `children` (the reaction bar) sits right on top of it, and the actions line up as icons in a bar at the bottom.
+ * A message's long-press menu: `children` (the reaction bar) sits right on top of the message at `anchor`, and the
+ * actions line up as icons in a bar at the bottom. The chat stays as it is behind them; tapping it closes the menu.
  */
 export function MessageMenu({
   anchor,
@@ -33,17 +33,10 @@ export function MessageMenu({
   const [tools, setTools] = useState(0);
   const screen = { top: insets.top + 8, bottom: height - tools - 8, width };
   const spot = bar && tools ? placeReactionBar(anchor, bar, screen, mine) : null;
-  const dim = { position: "absolute", backgroundColor: t.backdrop } as const;
-  const end = anchor.y + anchor.height;
 
   return (
     <Modal transparent animationType="fade" statusBarTranslucent navigationBarTranslucent onRequestClose={onClose}>
-      <Pressable style={StyleSheet.absoluteFill} onPress={onClose}>
-        <View style={[dim, { top: 0, left: 0, right: 0, height: Math.max(0, anchor.y) }]} />
-        <View style={[dim, { top: end, left: 0, right: 0, bottom: 0 }]} />
-        <View style={[dim, { top: anchor.y, height: anchor.height, left: 0, width: Math.max(0, anchor.x) }]} />
-        <View style={[dim, { top: anchor.y, height: anchor.height, left: anchor.x + anchor.width, right: 0 }]} />
-      </Pressable>
+      <Pressable style={StyleSheet.absoluteFill} onPress={onClose} />
       {children && (
         <View
           onLayout={(e: LayoutChangeEvent) => setBar({ width: e.nativeEvent.layout.width, height: e.nativeEvent.layout.height })}
