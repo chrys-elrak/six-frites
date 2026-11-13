@@ -20,6 +20,7 @@ import Constants from "expo-constants";
 import { Text, TextInput } from "./text";
 import { formatCode, contactUrl, sendAtLabel, shareContact, shareInvite, timeAgo } from "@/lib/format";
 import { useDataSaver } from "@/lib/data-saver";
+import { CHAT_LAYOUTS, setChatLayout, useChatLayout } from "@/lib/chat-layout";
 import { setPlainFont, usePlainFont } from "@/lib/font";
 import { setLocale, useLocale, useT } from "@/lib/i18n";
 import { playTone, useNotifyPrefs } from "@/lib/notify";
@@ -218,6 +219,36 @@ function ThemePicker() {
             >
               <Text style={{ flex: 1, color: t.text, fontWeight: "500", fontSize: 15 }}>{tr.settings.themes[th]}</Text>
               {th === current && <Check size={18} color={brand} />}
+            </Pressable>
+          </View>
+        ))}
+      </Card>
+    </View>
+  );
+}
+
+function LayoutPicker() {
+  const t = useTheme();
+  const tr = useT();
+  const layout = useChatLayout((s) => s.layout);
+  return (
+    <View>
+      <SectionTitle>{tr.settings.chatLayout}</SectionTitle>
+      <Card>
+        {CHAT_LAYOUTS.map((l, i) => (
+          <View key={l}>
+            {i > 0 && <Divider />}
+            <Pressable
+              onPress={() => setChatLayout(l)}
+              accessibilityRole="radio"
+              accessibilityState={{ selected: l === layout }}
+              style={styles.cardRow}
+            >
+              <View style={{ flex: 1 }}>
+                <Text style={{ color: t.text, fontWeight: "500", fontSize: 15 }}>{tr.settings.layouts[l].label}</Text>
+                <Text style={{ color: t.muted, fontSize: 13 }}>{tr.settings.layouts[l].hint}</Text>
+              </View>
+              {l === layout && <Check size={18} color={brand} />}
             </Pressable>
           </View>
         ))}
@@ -671,6 +702,7 @@ export function SettingsPanel() {
         <AllTips />
         <LanguagePicker />
         <ThemePicker />
+        <LayoutPicker />
         <FontPicker />
         <QuickReactionsSettings />
         <DataSaverSettings />

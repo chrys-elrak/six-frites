@@ -131,6 +131,7 @@ import { AlbumViewer, AttachmentView, Lightbox, type LightboxItem, type ShownAtt
 import { ChatPicker } from "./chat-picker";
 import { StoryComposer } from "./story-composer";
 import { StoryReplyLink } from "./stories";
+import { useChatLayout } from "@/lib/chat-layout";
 import { NoteEditor } from "./notes";
 import { ChecklistView } from "./checklist";
 import { GameView } from "./game";
@@ -853,6 +854,7 @@ function Bubble({
   quoteEarlier?: boolean;
 }) {
   const tr = useT();
+  const compact = useChatLayout((s) => s.layout === "compact");
   const selectable = selecting && row.message !== null;
   const bubble = useRef<HTMLDivElement>(null);
   const lastTap = useRef(0);
@@ -862,7 +864,7 @@ function Bubble({
   const reactable = !selecting && !frozen && !gamesOnly && canReact(row);
   const swipe = useSwipe(
     !selecting && !frozen && !gamesOnly && row.message && !row.pending && !row.deleted ? onReply : null,
-    row.mine ? -1 : 1,
+    row.mine && !compact ? -1 : 1,
   );
 
   function onTap(e: React.MouseEvent) {
@@ -875,6 +877,7 @@ function Bubble({
   const revealedMedia = useSpoilers((s) => s.revealed);
   const revealMedia = useSpoilers((s) => s.reveal);
   const { mine, groupStart, groupEnd } = row;
+  const right = mine && !compact;
   const e = row.ephemeral;
   const sealed = !!e && (mine || e.locked || e.expired);
   const jumbo =
@@ -920,7 +923,7 @@ function Bubble({
     !sealed && !row.deleted && !row.locked && !row.attachment && !row.spoiler && row.text
       ? previewLink(row.text, row.entities)
       : null;
-  const radius = mine
+  const radius = right
     ? `rounded-tl-2xl rounded-bl-2xl ${groupStart ? "rounded-tr-2xl" : "rounded-tr-md"} ${groupEnd ? "rounded-br-2xl" : "rounded-br-md"}`
     : `rounded-tr-2xl rounded-br-2xl ${groupStart ? "rounded-tl-2xl" : "rounded-tl-md"} ${groupEnd ? "rounded-bl-2xl" : "rounded-bl-md"}`;
   const tone =
@@ -968,18 +971,22 @@ function Bubble({
       )}
       <div
         ref={swipe.hint}
-        className={`pointer-events-none absolute inset-y-0 flex items-center opacity-0 ${mine ? "right-3" : "left-3"}`}
+        className={`pointer-events-none absolute inset-y-0 flex items-center opacity-0 ${right ? "right-3" : "left-3"}`}
       >
         <span className="grid size-8 place-items-center rounded-full bg-black/25 text-white backdrop-blur-sm">
           <Reply className="size-4" />
         </span>
       </div>
-      <div ref={swipe.moving} className={`flex min-w-0 flex-1 ${mine ? "justify-end" : "justify-start"}`}>
-        <div className={`flex max-w-[80%] items-center gap-1 md:max-w-[65%] ${mine ? "flex-row-reverse" : ""}`}>
-          {sender && <span className="w-9 shrink-0 self-end">{groupEnd && <Avatar user={sender} />}</span>}
-          <div className="flex min-w-0 flex-col items-end gap-1">
+      <div ref={swipe.moving} className={`flex min-w-0 flex-1 ${right ? "justify-end" : "justify-start"}`}>
+        <div className={`flex items-center gap-1 ${compact ? "min-w-0 flex-1 gap-2" : "max-w-[80%] md:max-w-[65%]"} ${right ? "flex-row-reverse" : ""}`}>
+          {sender && (
+            <span className={`w-9 shrink-0 ${compact ? "self-start pt-0.5" : "self-end"}`}>
+              {(compact ? groupStart : groupEnd) && <Avatar user={sender} />}
+            </span>
+          )}
+          <div className={`flex min-w-0 flex-col gap-1 ${compact ? "items-start" : "items-end"}`}>
             {sender && groupStart && (
-              <span className="flex items-center gap-1.5 self-start px-3 text-xs font-semibold text-brand">
+              <span className={`flex items-center gap-1.5 self-start text-xs font-semibold text-brand ${compact ? "text-sm" : "px-3"}`}>
                 {sender.displayName}
                 {sender.role && sender.role !== "member" && (
                   <span className="rounded-full bg-brand/15 px-1.5 py-px text-[10px] font-bold tracking-wide uppercase">
@@ -1146,7 +1153,7 @@ function Bubble({
               )}
             </div>
               <div
-                className={`absolute top-1/2 flex -translate-y-1/2 items-center gap-1 ${mine ? "right-full mr-1 flex-row-reverse" : "left-full ml-1"}`}
+                className={`absolute top-1/2 flex -translate-y-1/2 items-center gap-1 ${right ? "right-full mr-1 flex-row-reverse" : "left-full ml-1"}`}
               >
             {reactable && (
               <button
@@ -1182,7 +1189,7 @@ function Bubble({
               </div>
             </div>
             {row.message && !row.deleted && (
-              <ReactionChips message={row.message} meId={meId} mine={mine} nameOf={nameOf} onReact={onReact} />
+              <ReactionChips message={row.message} meId={meId} mine={right} nameOf={nameOf} onReact={onReact} />
             )}
             {comments && !row.deleted && (comments.count > 0 || commentsClosedNow(comments)) && (
               <button
@@ -1330,10 +1337,13 @@ export const MessageList = forwardRef<
 
     const names = useMemo(() => new Map(chat.members.map((m) => [m.user.id, m.user.displayName])), [chat.members]);
     const nameOf = (id: string) => (id === meId ? tr.common.you : (names.get(id) ?? (chat.group ? tr.groups.formerMember : tr.common.someone)));
+    const compact = useChatLayout((s) => s.layout === "compact");
     const senderOf = (row: MsgRow) => {
-      if (!chat.group || row.mine || !row.message) return undefined;
-      const member = chat.members.find((m) => m.user.id === row.message!.senderId);
-      return member ? { ...member.user, role: member.role } : { displayName: tr.groups.formerMember, avatarUrl: null };
+      const id = row.message?.senderId ?? (row.mine ? meId : null);
+      if (!id || (!compact && (!chat.group || row.mine))) return undefined;
+      if (id === meId) return { displayName: tr.common.you, avatarUrl: null };
+      const member = chat.members.find((m) => m.user.id === id);
+      return member ? { ...member.user, role: chat.group ? member.role : null } : { displayName: tr.groups.formerMember, avatarUrl: null };
     };
 
     const { peerDeliveredAt, peerReadAt } = useMemo(() => {

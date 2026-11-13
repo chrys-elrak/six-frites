@@ -10,6 +10,7 @@ import { useDataSaver } from "@/lib/data-saver";
 import { signOut } from "@/lib/e2ee";
 import { useLocale, useT } from "@/lib/i18n";
 import { relinkPush } from "@/lib/push";
+import { CHAT_LAYOUTS, setChatLayout, useChatLayout } from "@/lib/chat-layout";
 import { THEMES, type ThemePref, readTheme, setTheme } from "@/lib/theme";
 import { BlockedPeople, DeleteAccount } from "./account-settings";
 import { AppLockSettings } from "./app-lock";
@@ -81,6 +82,35 @@ function ThemePicker() {
               }`}
             >
               {tr.settings.themes[t]}
+            </button>
+          ))}
+        </div>
+      </Card>
+    </section>
+  );
+}
+
+function LayoutPicker() {
+  const tr = useT();
+  const layout = useChatLayout((s) => s.layout);
+  return (
+    <section className="space-y-3">
+      <SectionTitle>{tr.settings.chatLayout}</SectionTitle>
+      <Card>
+        <div role="radiogroup" aria-label={tr.settings.chatLayout} className="flex gap-1 p-2">
+          {CHAT_LAYOUTS.map((l) => (
+            <button
+              key={l}
+              type="button"
+              role="radio"
+              aria-checked={layout === l}
+              onClick={() => setChatLayout(l)}
+              className={`flex-1 rounded-xl px-3 py-2 text-left transition ${
+                layout === l ? "bg-brand text-brand-ink" : "text-stone-600 hover:bg-black/5 dark:text-stone-300 dark:hover:bg-white/10"
+              }`}
+            >
+              <span className="block text-sm font-medium">{tr.settings.layouts[l].label}</span>
+              <span className="block text-xs opacity-75">{tr.settings.layouts[l].hint}</span>
             </button>
           ))}
         </div>
@@ -197,6 +227,7 @@ export function SettingsPanel() {
           <AllTips />
           <LanguagePicker />
           <ThemePicker />
+          <LayoutPicker />
           <FontPicker />
           <QuickReactionsSettings />
           <DataSaverSettings />

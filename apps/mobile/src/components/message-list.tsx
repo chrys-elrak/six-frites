@@ -157,6 +157,7 @@ import { MessageTiming } from "./message-timing";
 import { ReportSheet } from "./report-sheet";
 import { Sheet, type SheetAction } from "./sheet";
 import { StoryReplyLink, storyFill } from "./stories";
+import { useChatLayout } from "@/lib/chat-layout";
 
 type Delivery = "sending" | "waiting" | "failed" | "sent" | "delivered" | "read";
 
@@ -912,6 +913,8 @@ function Bubble({
   onOpenThread?: () => void;
   quoteEarlier?: boolean;
 }) {
+  const compact = useChatLayout((s) => s.layout === "compact");
+  const right = row.mine && !compact;
   const t = useTheme();
   const tr = useT();
   const bubble = useBubbleColors();
@@ -950,7 +953,7 @@ function Bubble({
       : null;
   const big = 18;
   const small = 6;
-  const radius = mine
+  const radius = right
     ? {
         borderTopLeftRadius: big,
         borderBottomLeftRadius: big,
@@ -1013,7 +1016,7 @@ function Bubble({
   });
   const swipe = useSwipe(
     !selecting && !frozen && !gamesOnly && row.message && !row.pending && !row.deleted ? onReply : null,
-    row.mine ? -1 : 1,
+    right ? -1 : 1,
   );
   const slide = usePanGesture({
     enabled: selectable,
@@ -1051,16 +1054,20 @@ function Bubble({
         ) : (
           <View style={{ width: 20 }} />
         ))}
-      <Animated.View pointerEvents="none" style={[styles.swipeHint, mine ? { right: 12 } : { left: 12 }, swipe.hint]}>
+      <Animated.View pointerEvents="none" style={[styles.swipeHint, right ? { right: 12 } : { left: 12 }, swipe.hint]}>
         <View style={styles.swipeIcon}>
           <Reply size={16} color="#fff" />
         </View>
       </Animated.View>
-      {sender && <View style={{ width: 36, alignSelf: "flex-end" }}>{groupEnd && <Avatar user={sender} />}</View>}
-      <Animated.View style={[styles.side, { alignItems: mine ? "flex-end" : "flex-start" }, swipe.moving]}>
+      {sender && (
+        <View style={{ width: 36, alignSelf: compact ? "flex-start" : "flex-end" }}>
+          {(compact ? groupStart : groupEnd) && <Avatar user={sender} />}
+        </View>
+      )}
+      <Animated.View style={[styles.side, { alignItems: right ? "flex-end" : "flex-start" }, swipe.moving]}>
         {sender && groupStart && (
-          <View style={{ flexDirection: "row", alignItems: "center", gap: 6, marginBottom: 2, marginHorizontal: 12 }}>
-            <Text style={{ color: brand, fontSize: 12, fontWeight: "700" }}>{sender.displayName}</Text>
+          <View style={{ flexDirection: "row", alignItems: "center", gap: 6, marginBottom: 2, marginHorizontal: compact ? 0 : 12 }}>
+            <Text style={{ color: bubble.bg, fontSize: compact ? 14 : 12, fontWeight: "700" }}>{sender.displayName}</Text>
             {sender.role && sender.role !== "member" && (
               <Text style={styles.roleBadge}>{sender.role === "owner" ? tr.groups.owner : tr.groups.admin}</Text>
             )}
@@ -1190,7 +1197,7 @@ function Bubble({
               <Meta row={row} color="#fff" t={t} />
             </View>
           ) : note ? (
-            <View style={[styles.jumboMeta, { alignSelf: mine ? "flex-end" : "flex-start", marginTop: 4 }]}>
+            <View style={[styles.jumboMeta, { alignSelf: right ? "flex-end" : "flex-start", marginTop: 4 }]}>
               <Meta row={row} color="#fff" t={t} />
             </View>
           ) : inlineVoice ? null : (
@@ -1224,7 +1231,7 @@ function Bubble({
           <ReactionChips
             reactions={row.message.reactions ?? []}
             meId={meId}
-            mine={mine}
+            mine={right}
             nameOf={nameOf}
             onReact={frozen ? () => {} : onReact}
           />
@@ -1381,10 +1388,13 @@ export const MessageList = forwardRef<
 
     const names = useMemo(() => new Map(chat.members.map((m) => [m.user.id, m.user.displayName])), [chat.members]);
     const nameOf = (id: string) => (id === meId ? tr.common.you : (names.get(id) ?? (chat.group ? tr.groups.formerMember : tr.common.someone)));
+    const compact = useChatLayout((s) => s.layout === "compact");
     const senderOf = (row: MsgRow) => {
-      if (!chat.group || row.mine || !row.message) return undefined;
-      const member = chat.members.find((m) => m.user.id === row.message!.senderId);
-      return member ? { ...member.user, role: member.role } : { displayName: tr.groups.formerMember, avatarUrl: null };
+      const id = row.message?.senderId ?? (row.mine ? meId : null);
+      if (!id || (!compact && (!chat.group || row.mine))) return undefined;
+      if (id === meId) return { displayName: tr.common.you, avatarUrl: null };
+      const member = chat.members.find((m) => m.user.id === id);
+      return member ? { ...member.user, role: chat.group ? member.role : null } : { displayName: tr.groups.formerMember, avatarUrl: null };
     };
 
     const { peerDeliveredAt, peerReadAt } = useMemo(() => {
@@ -1684,7 +1694,7 @@ export const MessageList = forwardRef<
       );
     }
 
-    const maxWidth = Math.round(width * (selecting ? 0.72 : 0.8));
+    const maxWidth = compact ? width - 80 - (selecting ? 28 : 0) : Math.round(width * (selecting ? 0.72 : 0.8));
 
     return (
       <View
