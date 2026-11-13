@@ -53,6 +53,7 @@ import {
   Flag,
   Flame,
   Forward,
+  Ghost,
   CircleFadingPlus,
   StickyNote,
   Image as ImageIcon,
@@ -213,10 +214,14 @@ const albumItem = (r: Pick<MsgRow, "key" | "message" | "attachment" | "spoiler">
   spoiler: r.spoiler,
 });
 
+/** How long a direct chat stays silent before a "hello" GIF is offered again. */
+const QUIET_FOR_HELLO = 3 * 86_400_000;
+
 type Row =
   | { kind: "day"; key: string; at: string }
   | { kind: "unread"; key: string }
   | { kind: "comments"; key: string; count: number }
+  | { kind: "hello"; key: string }
   | { kind: "service"; key: string; message: MessageDTO }
   | MsgRow;
 
@@ -1214,6 +1219,8 @@ export interface MessageListHandle {
   jumpTo: (messageId: string) => void;
 }
 
+const VANISH_PULL = 120;
+
 export const MessageList = forwardRef<
   MessageListHandle,
   {
@@ -1251,6 +1258,9 @@ export const MessageList = forwardRef<
     const [autoplay, setAutoplay] = useState<string | null>(null);
     const atBottom = useRef(true);
     const [away, setAway] = useState(false);
+    const pullFrom = useRef<number | null>(null);
+    const [pulled, setPulled] = useState(0);
+    const [confirmVanish, setConfirmVanish] = useState(false);
     const viewportSize = useRef(0);
     const initialScrollDone = useRef(false);
     const [menuFor, setMenuFor] = useState<MsgRow | null>(null);
@@ -1350,8 +1360,10 @@ export const MessageList = forwardRef<
       const built = buildRows(ordered, pending, meId, peerDeliveredAt, peerReadAt, unreadAfter, chat.vanish);
       const at = root ? built.findIndex((r) => r.kind === "msg" && r.id === root.id) : -1;
       if (at >= 0) built.splice(at + 1, 0, { kind: "comments", key: "comments", count: root!.thread?.count ?? 0 });
+      const quiet = chat.type === "direct" && !chat.withSupport && !pending.length && ordered.length > 0 && Date.now() - Date.parse(ordered[ordered.length - 1]!.createdAt) > QUIET_FOR_HELLO;
+      if (quiet && !root) built.push({ kind: "hello", key: "hello" });
       return built;
-    }, [ordered, pending, meId, peerDeliveredAt, peerReadAt, unreadAfter, chat.vanish, root]);
+    }, [ordered, pending, meId, peerDeliveredAt, peerReadAt, unreadAfter, chat.vanish, chat.type, chat.withSupport, root]);
     useEffect(() => {
       pickOrder.current = rows.flatMap((r) => (r.kind === "msg" && r.message && r.id ? [r.id] : []));
     }, [rows]);
@@ -1439,6 +1451,26 @@ export const MessageList = forwardRef<
       if (atBottom.current && !wasAtBottom) onSeen();
       setAway(h.scrollSize - offset - h.viewportSize > h.viewportSize);
       if (offset < 300 && messages.hasNextPage && !messages.isFetchingNextPage) void messages.fetchNextPage();
+    }
+
+    /** Pulling up past the latest message asks to turn vanish mode on or off, like Instagram. */
+    function pullStart(e: React.TouchEvent) {
+      const h = list.current;
+      const end = !!h && h.scrollSize - h.scrollOffset - h.viewportSize < 2;
+      pullFrom.current = chat.type === "direct" && !isBotChat(chat) && !frozen && !threadId && !selecting && end ? e.touches[0]!.clientY : null;
+    }
+
+    function pullMove(e: React.TouchEvent) {
+      if (pullFrom.current === null) return;
+      const next = Math.max(0, pullFrom.current - e.touches[0]!.clientY);
+      if (next >= VANISH_PULL && pulled < VANISH_PULL) navigator.vibrate?.(10);
+      setPulled(next);
+    }
+
+    function pullEnd() {
+      if (pulled >= VANISH_PULL) setConfirmVanish(true);
+      pullFrom.current = null;
+      setPulled(0);
     }
 
     /** Keeps the last message in view when the list gets shorter, like when the on-screen keyboard opens. */
@@ -1637,7 +1669,29 @@ export const MessageList = forwardRef<
     }
 
     return (
-      <div ref={listFrame} className="flex min-h-0 flex-1 flex-col justify-end">
+      <div
+        ref={listFrame}
+        onTouchStart={pullStart}
+        onTouchMove={pullMove}
+        onTouchEnd={pullEnd}
+        onTouchCancel={pullEnd}
+        className="flex min-h-0 flex-1 flex-col justify-end"
+      >
+        {pulled > 0 && (
+          <div
+            className="pointer-events-none absolute inset-x-0 z-10 flex justify-center"
+            style={{ bottom: insetBottom + 12, opacity: Math.min(1, pulled / VANISH_PULL) }}
+          >
+            <span
+              className={`flex items-center gap-2 rounded-full px-4 py-2 text-sm font-semibold shadow-lg ${
+                pulled >= VANISH_PULL ? "bg-brand text-brand-ink" : "bg-black/60 text-white backdrop-blur-sm"
+              }`}
+            >
+              <Ghost className="size-4" />
+              {chat.vanish ? tr.composer.turnOffVanish : tr.composer.turnOnVanish}
+            </span>
+          </div>
+        )}
         {away && (
           <button
             type="button"
@@ -1699,6 +1753,10 @@ export const MessageList = forwardRef<
                   {row.count ? tr.groups.comments(row.count) : tr.groups.noComments}
                 </span>
                 <span className="h-px flex-1 bg-black/15 dark:bg-white/15" />
+              </div>
+            ) : row.kind === "hello" ? (
+              <div key={row.key} className="flex justify-center pb-3">
+                <HelloGif chatId={chat.id} />
               </div>
             ) : row.kind === "unread" ? (
               <div key={row.key} className="flex justify-center py-2">
@@ -1895,6 +1953,18 @@ export const MessageList = forwardRef<
               void forwardMessages(qc, realtime, to.id, forwarding).catch(() => null);
               if (to.id !== chat.id) router.push(`/chats/${to.id}`);
             }}
+          />
+        )}
+        {confirmVanish && (
+          <Sheet
+            title={tr.composer.vanishBanner}
+            onClose={() => setConfirmVanish(false)}
+            actions={[
+              {
+                label: chat.vanish ? tr.composer.turnOffVanish : tr.composer.turnOnVanish,
+                onSelect: () => void updateChatSettings(qc, chat.id, { vanish: !chat.vanish }).catch(() => null),
+              },
+            ]}
           />
         )}
         {confirmDelete && (
