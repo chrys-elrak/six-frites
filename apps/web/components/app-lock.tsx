@@ -239,6 +239,7 @@ export function LockScreen({
           title={hasKey.data ? tr.settings.signOutWithKey : tr.settings.signOutWithoutKey}
           actions={[{ label: tr.settings.signOut, destructive: true, onSelect: () => void signOut() }]}
           onClose={() => setConfirmSignOut(false)}
+          overLock
         />
       )}
     </div>

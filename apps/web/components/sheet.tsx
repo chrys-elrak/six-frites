@@ -23,6 +23,7 @@ export function Sheet({
   children,
   at,
   bar,
+  overLock,
 }: {
   title?: React.ReactNode;
   actions: SheetAction[];
@@ -32,6 +33,7 @@ export function Sheet({
   at?: { x: number; y: number };
   /** On a narrow screen, shows the actions as icons in a bar at the bottom instead of the sheet. */
   bar?: boolean;
+  overLock?: boolean;
 }) {
   const tr = useT();
   const narrow = useMedia("(width < 48rem)");
@@ -111,7 +113,7 @@ export function Sheet({
 
   return (
     <Portal>
-      <div key="sheet" className="fixed inset-0 z-[65] flex items-end justify-center md:items-center" role="dialog" aria-modal>
+      <div key="sheet" className={`fixed inset-0 ${overLock ? "z-[110]" : "z-[65]"} flex items-end justify-center md:items-center`} role="dialog" aria-modal>
         <button
           type="button"
           aria-label={tr.common.close}
