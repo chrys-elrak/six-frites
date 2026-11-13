@@ -139,9 +139,15 @@ export function StoryStickers({
   onMove,
   onRemove,
   onTap,
+  skip,
+  photos = [],
 }: {
   asks: StoryAsk[];
   gifs: React.ReactNode[];
+  /** Photos placed like stickers while composing; they end up drawn into the story's picture. */
+  photos?: React.ReactNode[];
+  /** Leaves these stickers out, as when the story is drawn into a picture without the ones that stay live. */
+  skip?: (sticker: StorySticker) => boolean;
   link: StoryLink | null;
   /** The poster's anonymous link, when the story invites anonymous messages. */
   askLink: string | null;
@@ -165,9 +171,11 @@ export function StoryStickers({
       ? stickerIndex("ask", k) < asks.length
       : stickerIndex("gif", k) >= 0
         ? stickerIndex("gif", k) < gifs.length
-        : { location: !!location, date: showDate, time: showTime, link: !!link, asklink: !!askLink }[k as "link"];
+        : stickerIndex("photo", k) >= 0
+          ? stickerIndex("photo", k) < photos.length
+          : { location: !!location, date: showDate, time: showTime, link: !!link, asklink: !!askLink }[k as "link"];
   const stop = (e: React.PointerEvent) => e.stopPropagation();
-  const shown = STORY_STICKERS.filter((k) => has(k) && !!positions[k] === placed);
+  const shown = STORY_STICKERS.filter((k) => has(k) && !!positions[k] === placed && !skip?.(k));
   if (!shown.length) return null;
   const editing = !!onMove && !!frame;
 
@@ -227,6 +235,8 @@ export function StoryStickers({
       </div>
     ) : stickerIndex("gif", k) >= 0 ? (
       gifs[stickerIndex("gif", k)]
+    ) : stickerIndex("photo", k) >= 0 ? (
+      photos[stickerIndex("photo", k)]
     ) : k === "link" && link ? (
       editing ? (
         <span className={`${chip} text-sky-700`}>
@@ -321,7 +331,7 @@ export function StoryStickers({
       </div>
     ));
   }
-  const big = (k: StorySticker) => stickerIndex("ask", k) >= 0 || stickerIndex("gif", k) >= 0;
+  const big = (k: StorySticker) => stickerIndex("ask", k) >= 0 || stickerIndex("gif", k) >= 0 || stickerIndex("photo", k) >= 0;
   const chips = shown.filter((k) => !big(k));
   return (
     <>

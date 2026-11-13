@@ -23,6 +23,7 @@ import {
   type StorySticker,
   STORY_ASKS,
   STORY_GIFS,
+  STORY_PHOTOS,
   ASK_PROMPT_MAX,
   askUrl,
   dropSpot,
@@ -44,6 +45,7 @@ import {
   Link2,
   MessageCircleQuestionMark,
   ImagePlus,
+  Images,
   Loader2,
   MapPin,
   Pencil,
@@ -53,6 +55,7 @@ import {
   VenetianMask,
   X,
 } from "lucide-react";
+import { toJpeg } from "html-to-image";
 import { useEffect, useRef, useState } from "react";
 import { useCloseOnBack } from "@/lib/back";
 import { getLocale, useT } from "@/lib/i18n";
@@ -100,6 +103,13 @@ function webLink(typed: string) {
 
 /** Where the `i`th of several anonymous messages or GIFs lands: each a little lower than the one before. */
 const cascade = (i: number) => ({ x: 0.5, y: Math.min(0.15 + 0.15 * i, 0.8), scale: 0.75 });
+
+/** Positions without the photo stickers, which only exist in a flattened picture. */
+const noPhotos = (positions: StoryPositions) =>
+  Object.fromEntries(Object.entries(positions).filter(([k]) => stickerIndex("photo", k as StorySticker) < 0)) as StoryPositions;
+
+/** The stickers that stay live on a story drawn into a picture; the date, time and photos go into the picture. */
+const stays = (sticker: StorySticker) => sticker !== "date" && sticker !== "time" && stickerIndex("photo", sticker) < 0;
 
 /**
  * Makes a story: text on a colour, or a photo or video, with a GIF, the place, the date or the time on top. With
@@ -159,14 +169,17 @@ export function StoryComposer({
   const [typing, setTyping] = useState(false);
   const styled = mainStyle.color !== EDIT_COLORS[0] || mainStyle.font !== "classic" || mainStyle.look !== "plain";
   const card = useRef<HTMLDivElement>(null);
+  const photoPicker = useRef<HTMLInputElement>(null);
+  const [photos, setPhotos] = useState<{ file: File; url: string }[]>([]);
+  const [flattening, setFlattening] = useState(false);
   const placeField = useRef<HTMLInputElement>(null);
   const [error, setError] = useState<string | null>(null);
   const kind = file ? kindFor(file.type) : null;
   const tooLong = kind === "video" && (videoMs ?? 0) > STORY_LIMITS.videoMs + STORY_LIMITS.videoSlackMs;
   const href = link && webLink(link.url);
-  const ready = (!!file || !!text.trim() || gifs.length > 0 || asks.length > 0 || !!href || askLink || drawn) && !tooLong;
+  const ready = (!!file || !!text.trim() || gifs.length > 0 || photos.length > 0 || asks.length > 0 || !!href || askLink || drawn) && !tooLong;
   const fromChat = !!initialText && !file;
-  const covered = !text.trim() && (asks.length > 0 || gifs.length > 0 || !!link || askLink || !!location || showDate || showTime || drawn);
+  const covered = !text.trim() && (asks.length > 0 || gifs.length > 0 || photos.length > 0 || !!link || askLink || !!location || showDate || showTime || drawn);
 
   useEffect(() => {
     if (!file) return setUrl(undefined);
@@ -278,6 +291,10 @@ export function StoryComposer({
     if (k !== "image" && k !== "video") return;
     setError(null);
     setFile(picked);
+    if (k === "video") {
+      setPhotos([]);
+      setPositions(noPhotos);
+    }
     setVideoMs(k === "video" ? ((await mediaMeta(picked, "video")).durationMs ?? null) : null);
   }
   const pickRef = useRef(pick);
@@ -310,7 +327,7 @@ export function StoryComposer({
     }
   }
 
-  function share() {
+  async function share() {
     if (!ready) return;
     const live = {
       gifIds: gifs.length ? gifs.map((g) => g.id) : undefined,
@@ -340,6 +357,24 @@ export function StoryComposer({
       );
       return onClose();
     }
+    const flat = kind !== "video" ? await flatten() : null;
+    if (flat) {
+      void postStory(
+        qc,
+        {
+          gifIds: gifs.length ? gifs.map((g) => g.id) : undefined,
+          link: href ? { url: href, label: link!.label.trim() || undefined } : undefined,
+          askLink: askLink || undefined,
+          askText: (askLink && askText.trim()) || undefined,
+          askIds: asks.length ? asks.map((m) => m.id) : undefined,
+          location: location ? { ...location, name: location.name?.trim() || undefined } : undefined,
+          positions: Object.fromEntries(Object.entries(positions).filter(([k]) => stays(k as StorySticker))),
+          durationSecs,
+        },
+        { blob: flat, kind: "image", name: "story.jpg", mime: "image/jpeg" },
+      );
+      return onClose();
+    }
     const words = text.trim();
     const asDrawn = styled && !file && !fromChat && !!words && words.length <= STORY_LIMITS.drawnText && drawing.texts.length < 10;
     void postStory(
@@ -358,7 +393,7 @@ export function StoryComposer({
         location: location ? { ...location, name: location.name?.trim() || undefined } : undefined,
         showDate,
         showTime,
-        positions,
+        positions: noPhotos(positions),
         drawing: asDrawn
           ? { ...drawing, texts: [...drawing.texts, { text: words, ...mainStyle, x: 0.5, y: 0.45, scale: 1, z: zToTop(positions, drawing.texts) }] }
           : drawn
@@ -374,6 +409,7 @@ export function StoryComposer({
   const stickers = {
     asks: asks.map((m) => ({ text: m.text, prompt: m.prompt, photoUrl: m.photoUrl, gif: m.gif })),
     gifs: gifs.map((g, i) => <img key={i} src={g.previewUrl} alt={g.title} draggable={false} className="max-h-40 max-w-56 rounded-xl" />),
+    photos: photos.map((p, i) => <img key={i} src={p.url} alt="" draggable={false} className="max-h-72 max-w-48 rounded-2xl object-cover shadow-lg" />),
     link: href ? { url: href, label: link!.label.trim() || undefined } : null,
     askLink: askLink ? askUrl(window.location.origin, askCode) : null,
     askText: askText.trim() || null,
@@ -390,6 +426,12 @@ export function StoryComposer({
         const i = stickerIndex("gif", sticker);
         setGifs((g) => g.filter((_, j) => j !== i));
         return setPositions((p) => dropSpot(p, "gif", i));
+      }
+      if (stickerIndex("photo", sticker) >= 0) {
+        const i = stickerIndex("photo", sticker);
+        URL.revokeObjectURL(photos[i]!.url);
+        setPhotos((ps) => ps.filter((_, j) => j !== i));
+        return setPositions((p) => dropSpot(p, "photo", i));
       }
       ({
         location: () => setLocation(null),
@@ -426,6 +468,43 @@ export function StoryComposer({
     if (i > 0) setPositions((p) => ({ ...p, [stickerOf("ask", i)]: cascade(i) }));
   }
 
+  /** Puts photos from the computer or phone on the story like stickers, up to five; past the first, each lands lower. */
+  function addPhotos(files: File[]) {
+    const picked = files.filter((f) => kindFor(f.type) === "image").slice(0, STORY_PHOTOS - photos.length);
+    if (!picked.length) return;
+    const from = photos.length;
+    setPhotos([...photos, ...picked.map((file) => ({ file, url: URL.createObjectURL(file) }))]);
+    setPositions((p) => {
+      const next = { ...p };
+      picked.forEach((_, j) => from + j > 0 && (next[stickerOf("photo", from + j)] = cascade(from + j)));
+      return next;
+    });
+  }
+
+  /**
+   * Draws a picture or text story into one JPEG, everything but the stickers that stay live (link, GIFs, place,
+   * anonymous messages) and the tools, which are left out of the capture.
+   */
+  async function flatten() {
+    const node = card.current;
+    if (!node) return null;
+    setFlattening(true);
+    await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)));
+    try {
+      const jpeg = await toJpeg(node, {
+        quality: 0.9,
+        pixelRatio: 1080 / node.offsetWidth,
+        backgroundColor: "#000",
+        filter: (n) => !(n instanceof HTMLElement && n.dataset.flatSkip !== undefined),
+      });
+      return await (await fetch(jpeg)).blob();
+    } catch {
+      return null;
+    } finally {
+      setFlattening(false);
+    }
+  }
+
   function addGif(g: GifDTO) {
     const i = gifs.length;
     if (i >= STORY_GIFS) return;
@@ -437,6 +516,9 @@ export function StoryComposer({
     ...(file ? [{ label: tr.stories.removeMedia, icon: ImageOff, on: false, onClick: () => setFile(null) }] : []),
     { label: `${tr.stories.photo} / ${tr.stories.video}`, icon: ImagePlus, on: !!file, onClick: () => picker.current?.click() },
     { label: tr.composer.camera, icon: Camera, on: false, onClick: () => setCamera(true) },
+    ...(kind !== "video" && !fromChat
+      ? [{ label: tr.stories.photoSticker, icon: Images, on: photos.length > 0, onClick: () => photoPicker.current?.click() }]
+      : []),
     { label: tr.stories.gif, icon: Sticker, on: gifs.length > 0 || pickingGif, onClick: () => setPickingGif(!pickingGif) },
     {
       label: tr.stories.link,
@@ -491,7 +573,17 @@ export function StoryComposer({
             {fromChat && (
               <ChatBubbleCard text={text} bubble={bubble ?? null} quote={quote ?? null} />
             )}
-            {!file && !fromChat && !covered && (
+            {flattening && !file && !fromChat && !!text.trim() && (
+              <p
+                className={`text-center text-2xl leading-snug font-semibold break-words whitespace-pre-wrap ${
+                  styled && mainStyle.look === "box" ? "max-w-[80%] rounded-xl px-4 py-1" : "w-full px-16"
+                }`}
+                style={styled ? writtenStyle(mainStyle) : undefined}
+              >
+                {text}
+              </p>
+            )}
+            {!flattening && !file && !fromChat && !covered && (
               <textarea
                 value={text}
                 onChange={(e) => setText(e.target.value)}
@@ -509,7 +601,7 @@ export function StoryComposer({
               />
             )}
             <div className="pointer-events-none absolute inset-x-0 bottom-3 flex flex-col items-center gap-3 px-16">
-              <StoryStickers {...stickers} placed={false} />
+              <StoryStickers {...stickers} placed={false} skip={flattening ? stays : undefined} />
               {file && text.trim() && <p className="text-center break-words whitespace-pre-wrap drop-shadow">{text}</p>}
             </div>
           </div>
@@ -524,10 +616,10 @@ export function StoryComposer({
               setWriting({ index, text: t.text, color: t.color, font: t.font, look: t.look ?? "plain" });
             }}
           >
-            <StoryStickers {...stickers} placed onMove={drawingOn ? undefined : stickers.onMove} />
+            <StoryStickers {...stickers} placed onMove={drawingOn ? undefined : stickers.onMove} skip={flattening ? stays : undefined} />
           </StoryDrawingLayer>
 
-          <div className="pointer-events-none absolute inset-x-0 top-0 flex items-start justify-between p-3 pt-[max(0.75rem,env(safe-area-inset-top))]">
+          <div data-flat-skip className="pointer-events-none absolute inset-x-0 top-0 flex items-start justify-between p-3 pt-[max(0.75rem,env(safe-area-inset-top))]">
             <button type="button" onClick={onClose} aria-label={tr.common.close} title={tr.common.close} className={tool(false)}>
               <X className="size-6" />
             </button>
@@ -540,7 +632,7 @@ export function StoryComposer({
             </div>
           </div>
 
-          <div className="relative flex flex-col gap-3 bg-gradient-to-t from-black/70 to-transparent px-4 pt-6 pb-[max(1rem,env(safe-area-inset-bottom))]">
+          <div data-flat-skip className="relative flex flex-col gap-3 bg-gradient-to-t from-black/70 to-transparent px-4 pt-6 pb-[max(1rem,env(safe-area-inset-bottom))]">
             {drawingOn && (
               <DrawBar
                 pen={pen}
@@ -732,6 +824,17 @@ export function StoryComposer({
             </div>
           )}
         </div>
+        <input
+          ref={photoPicker}
+          type="file"
+          accept="image/*"
+          multiple
+          hidden
+          onChange={(e) => {
+            addPhotos([...(e.target.files ?? [])]);
+            e.target.value = "";
+          }}
+        />
         <input
           ref={picker}
           type="file"
