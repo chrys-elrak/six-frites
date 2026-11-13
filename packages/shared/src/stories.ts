@@ -93,6 +93,8 @@ export type StorySpot = z.infer<typeof StorySpot>;
 /** How many anonymous messages, and how many GIFs, one story can show. */
 export const STORY_ASKS = 5;
 export const STORY_GIFS = 5;
+/** Photos placed like stickers; they only exist drawn into a story's picture, never stored on their own. */
+export const STORY_PHOTOS = 5;
 export const STORY_STICKERS = [
   "ask",
   "ask2",
@@ -104,6 +106,11 @@ export const STORY_STICKERS = [
   "gif3",
   "gif4",
   "gif5",
+  "photo",
+  "photo2",
+  "photo3",
+  "photo4",
+  "photo5",
   "location",
   "date",
   "time",
@@ -112,7 +119,7 @@ export const STORY_STICKERS = [
 ] as const;
 export type StorySticker = (typeof STORY_STICKERS)[number];
 /** The stickers a story can have several of, and how many. */
-const MANY = { ask: STORY_ASKS, gif: STORY_GIFS };
+const MANY = { ask: STORY_ASKS, gif: STORY_GIFS, photo: STORY_PHOTOS };
 type Many = keyof typeof MANY;
 /** The sticker showing a story's `i`th anonymous message or GIF, from 0. */
 export const stickerOf = (kind: Many, i: number) => (i ? `${kind}${i + 1}` : kind) as StorySticker;
@@ -131,6 +138,11 @@ export const StoryPositions = z
     gif3: StorySpot.optional(),
     gif4: StorySpot.optional(),
     gif5: StorySpot.optional(),
+    photo: StorySpot.optional(),
+    photo2: StorySpot.optional(),
+    photo3: StorySpot.optional(),
+    photo4: StorySpot.optional(),
+    photo5: StorySpot.optional(),
     location: StorySpot.optional(),
     link: StorySpot.optional(),
     asklink: StorySpot.optional(),

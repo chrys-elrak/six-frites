@@ -18,6 +18,7 @@ import {
   type StorySticker,
   STORY_ASKS,
   STORY_GIFS,
+  STORY_PHOTOS,
   ASK_PROMPT_MAX,
   askUrl,
   dropSpot,
@@ -41,6 +42,7 @@ import {
   Link2,
   MessageCircleQuestionMark,
   ImagePlus,
+  Images,
   MapPin,
   Pencil,
   Scissors,
@@ -51,8 +53,9 @@ import {
   X,
 } from "lucide-react-native";
 import { type ComponentRef, useEffect, useRef, useState } from "react";
-import { ActivityIndicator, FlatList, type GestureResponderEvent, Pressable, ScrollView, StyleSheet, View, useWindowDimensions } from "react-native";
-import { KeyboardAvoidingView } from "react-native-keyboard-controller";
+import { ActivityIndicator, FlatList, type GestureResponderEvent, Keyboard, Pressable, ScrollView, StyleSheet, View, useWindowDimensions } from "react-native";
+import { captureRef } from "react-native-view-shot";
+import { KeyboardAvoidingView, useKeyboardState } from "react-native-keyboard-controller";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { getLocale, useT } from "@/lib/i18n";
 import { cutVideo, pickMedia, recordVideo, takePhoto } from "@/lib/media";
@@ -216,6 +219,13 @@ export function GifSearch({ onPick }: { onPick: (gif: GifDTO) => void }) {
  * Makes a story: text on a colour, or a photo or video, with a GIF, the place, the date or the time on top. With
  * `anon`, it starts with that anonymous message on it as a card, to answer in front of everyone.
  */
+/** The stickers that stay live on a story drawn into a picture; the date and time go into the picture. */
+/** Positions without the photo stickers, which only exist in a flattened picture. */
+const noPhotos = (positions: StoryPositions) =>
+  Object.fromEntries(Object.entries(positions).filter(([k]) => stickerIndex("photo", k as StorySticker) < 0)) as StoryPositions;
+
+const live = (sticker: StorySticker) => sticker !== "date" && sticker !== "time" && stickerIndex("photo", sticker) < 0;
+
 export function StoryComposer({
   anon,
   initialText,
@@ -232,7 +242,10 @@ export function StoryComposer({
   const tr = useT();
   const qc = useQueryClient();
   const insets = useSafeAreaInsets();
-  const { height: screenH } = useWindowDimensions();
+  const { height: screenH, width: screenW } = useWindowDimensions();
+  const keyboard = useKeyboardState((k) => (k.isVisible ? k.height : 0));
+  const screen = useRef<ComponentRef<typeof View>>(null);
+  const [flattening, setFlattening] = useState(false);
   const [file, setFile] = useState<LocalFile | null>(null);
   const [text, setText] = useState(initialText ?? "");
   const [background, setBackground] = useState<string>(initialText ? backgroundAround(bubble) : STORY_BACKGROUNDS[0]);
@@ -268,9 +281,10 @@ export function StoryComposer({
   const [error, setError] = useState<string | null>(null);
   const tooLong = file?.kind === "video" && (file.durationMs ?? 0) > STORY_LIMITS.videoMs + STORY_LIMITS.videoSlackMs;
   const href = link && webLink(link.url);
-  const ready = (!!file || !!text.trim() || gifs.length > 0 || asks.length > 0 || !!href || askLink || drawn) && !tooLong;
+  const [photos, setPhotos] = useState<LocalFile[]>([]);
+  const ready = (!!file || !!text.trim() || gifs.length > 0 || photos.length > 0 || asks.length > 0 || !!href || askLink || drawn) && !tooLong;
   const fromChat = !!initialText && !file;
-  const covered = !text.trim() && (asks.length > 0 || gifs.length > 0 || !!link || askLink || !!location || showDate || showTime || drawn);
+  const covered = !text.trim() && (asks.length > 0 || gifs.length > 0 || photos.length > 0 || !!link || askLink || !!location || showDate || showTime || drawn);
 
   const keep = () => setUndos((u) => [...u, drawing]);
   function finishWriting() {
@@ -307,6 +321,10 @@ export function StoryComposer({
             ? await recordVideo(STORY_LIMITS.videoMs / 1000)
             : await pickMedia(["images", "videos"]);
       if (picked && (picked.kind === "image" || picked.kind === "video")) setFile(picked);
+      if (picked?.kind === "video") {
+        setPhotos([]);
+        setPositions(noPhotos);
+      }
     } catch (err) {
       setError((err as Error).message);
     }
@@ -358,8 +376,50 @@ export function StoryComposer({
     }
   }
 
-  function share() {
+  /**
+   * Draws a picture or text story into one JPEG, everything but the stickers that stay live (link, GIFs, place,
+   * anonymous messages): the tools and those stickers hide for a frame while the screen is captured.
+   */
+  async function flatten() {
+    Keyboard.dismiss();
+    setFlattening(true);
+    await new Promise((r) => setTimeout(r, 350));
+    try {
+      const uri = await captureRef(screen, {
+        format: "jpg",
+        quality: 0.9,
+        result: "tmpfile",
+        width: 1080,
+        height: Math.round((1080 * screenH) / screenW),
+      });
+      return { uri, kind: "image" as const, name: "story.jpg", mime: "image/jpeg" };
+    } catch {
+      return null;
+    } finally {
+      setFlattening(false);
+    }
+  }
+
+  async function share() {
     if (!ready) return;
+    const flat = !fromChat && file?.kind !== "video" ? await flatten() : null;
+    if (flat) {
+      void postStory(
+        qc,
+        {
+          gifIds: gifs.length ? gifs.map((g) => g.id) : undefined,
+          link: href ? { url: href, label: link!.label.trim() || undefined } : undefined,
+          askLink: askLink || undefined,
+          askText: (askLink && askText.trim()) || undefined,
+          askIds: asks.length ? asks.map((m) => m.id) : undefined,
+          location: location ? { ...location, name: location.name?.trim() || undefined } : undefined,
+          positions: Object.fromEntries(Object.entries(positions).filter(([k]) => live(k as StorySticker))),
+          durationSecs,
+        },
+        flat,
+      );
+      return onClose();
+    }
     void postStory(
       qc,
       {
@@ -376,7 +436,7 @@ export function StoryComposer({
         location: location ? { ...location, name: location.name?.trim() || undefined } : undefined,
         showDate,
         showTime,
-        positions,
+        positions: noPhotos(positions),
         drawing: drawn ? drawing : undefined,
         durationSecs,
       },
@@ -400,6 +460,24 @@ export function StoryComposer({
     if (i > 0) setPositions((p) => ({ ...p, [stickerOf("ask", i)]: cascade(i) }));
   }
 
+  /** Puts photos from the phone on the story like stickers, up to five; past the first, each lands a little lower. */
+  async function addPhotos() {
+    setError(null);
+    try {
+      const picked = (await pickMedia(["images"])).filter((p) => p.kind === "image").slice(0, STORY_PHOTOS - photos.length);
+      if (!picked.length) return;
+      const from = photos.length;
+      setPhotos([...photos, ...picked]);
+      setPositions((p) => {
+        const next = { ...p };
+        picked.forEach((_, j) => from + j > 0 && (next[stickerOf("photo", from + j)] = cascade(from + j)));
+        return next;
+      });
+    } catch (err) {
+      setError((err as Error).message);
+    }
+  }
+
   function addGif(g: GifDTO) {
     const i = gifs.length;
     if (i >= STORY_GIFS) return;
@@ -410,6 +488,14 @@ export function StoryComposer({
   const stickers = {
     asks: asks.map((m) => ({ text: m.text, prompt: m.prompt, photoUrl: m.photoUrl, gif: m.gif })),
     gifs: gifs.map((g, i) => <Image key={i} source={{ uri: g.previewUrl }} style={{ height: 120, width: (120 * g.width) / g.height, borderRadius: 10 }} />),
+    photos: photos.map((p, i) => (
+      <Image
+        key={i}
+        source={{ uri: p.uri }}
+        style={{ width: 180, height: p.width && p.height ? Math.min(320, (180 * p.height) / p.width) : 180, borderRadius: 14 }}
+        contentFit="cover"
+      />
+    )),
     link: href ? { url: href, label: link!.label.trim() || undefined } : null,
     askLink: askLink ? askUrl(WEB_URL, askCode) : null,
     askText: askText.trim() || null,
@@ -426,6 +512,11 @@ export function StoryComposer({
         const i = stickerIndex("gif", sticker);
         setGifs((g) => g.filter((_, j) => j !== i));
         return setPositions((p) => dropSpot(p, "gif", i));
+      }
+      if (stickerIndex("photo", sticker) >= 0) {
+        const i = stickerIndex("photo", sticker);
+        setPhotos((ps) => ps.filter((_, j) => j !== i));
+        return setPositions((p) => dropSpot(p, "photo", i));
       }
       ({
         location: () => setLocation(null),
@@ -454,281 +545,287 @@ export function StoryComposer({
       navigationBarTranslucent
       onRequestClose={() => (writing ? setWriting(null) : drawingOn ? setDrawingOn(false) : onClose())}
     >
-      <KeyboardAvoidingView behavior="padding" style={[styles.screen, file ? { backgroundColor: "#000" } : storyFill(background)]}>
-        <View ref={card} pointerEvents="none" style={StyleSheet.absoluteFill} />
-        <View style={styles.preview}>
-          {file?.kind === "image" && <Image source={{ uri: file.uri }} style={StyleSheet.absoluteFill} contentFit="contain" />}
-          {file?.kind === "video" && <PreviewVideo uri={file.uri} />}
-          {fromChat && (
-            <ChatBubbleCard text={text} bubble={bubble ?? null} quote={quote ?? null} />
-          )}
-          {!file && !fromChat && !covered && (
-            <TextInput
-              value={text}
-              onChangeText={setText}
-              maxLength={STORY_LIMITS.text}
-              multiline
-              autoFocus
-              placeholder={tr.stories.typeSomething}
-              placeholderTextColor="rgba(255,255,255,0.6)"
-              accessibilityLabel={tr.stories.text}
-              style={styles.bigInput}
-            />
-          )}
-          <View pointerEvents="box-none" style={styles.overlay}>
-            <StoryStickers {...stickers} placed={false} />
-            {!!file && !!text.trim() && <Text style={styles.caption}>{text}</Text>}
+      <View ref={screen} collapsable={false} style={styles.screen}>
+        <KeyboardAvoidingView behavior="padding" style={[styles.screen, file ? { backgroundColor: "#000" } : storyFill(background)]}>
+          <View ref={card} pointerEvents="none" style={StyleSheet.absoluteFill} />
+          <View style={styles.preview}>
+            {file?.kind === "image" && <Image source={{ uri: file.uri }} style={StyleSheet.absoluteFill} contentFit="contain" />}
+            {file?.kind === "video" && <PreviewVideo uri={file.uri} />}
+            {fromChat && (
+              <ChatBubbleCard text={text} bubble={bubble ?? null} quote={quote ?? null} />
+            )}
+            {flattening && !file && !fromChat && !!text.trim() && <Text style={styles.bigInput}>{text}</Text>}
+            {!flattening && !file && !fromChat && !covered && (
+              <TextInput
+                value={text}
+                onChangeText={setText}
+                maxLength={STORY_LIMITS.text}
+                multiline
+                autoFocus
+                placeholder={tr.stories.typeSomething}
+                placeholderTextColor="rgba(255,255,255,0.6)"
+                accessibilityLabel={tr.stories.text}
+                style={styles.bigInput}
+              />
+            )}
+            <View pointerEvents="box-none" style={styles.overlay}>
+              <StoryStickers {...stickers} placed={false} skip={flattening ? live : undefined} />
+              {!!file && !!text.trim() && <Text style={styles.caption}>{text}</Text>}
+            </View>
           </View>
-        </View>
-        <StoryDrawingLayer
-          drawing={drawing}
-          pen={drawingOn ? pen : null}
-          onBegin={keep}
-          onChange={setDrawing}
-          raise={(z) => zToTop(positions, drawing.texts, z)}
-          onEditText={(index) => {
-            const t = drawing.texts[index]!;
-            setWriting({ index, text: t.text, color: t.color, font: t.font, look: t.look ?? "plain" });
-          }}
-        >
-          <StoryStickers {...stickers} placed onMove={drawingOn ? undefined : stickers.onMove} />
-        </StoryDrawingLayer>
-
-        <View pointerEvents="box-none" style={[styles.top, { top: insets.top + 8 }]}>
-          <Tool on={false} Icon={X} label={tr.common.close} onPress={onClose} />
-          <ScrollView
-            style={{ maxHeight: screenH - insets.top - 230, flexGrow: 0 }}
-            contentContainerStyle={styles.tools}
-            showsVerticalScrollIndicator={false}
+          <StoryDrawingLayer
+            drawing={drawing}
+            pen={drawingOn ? pen : null}
+            onBegin={keep}
+            onChange={setDrawing}
+            raise={(z) => zToTop(positions, drawing.texts, z)}
+            onEditText={(index) => {
+              const t = drawing.texts[index]!;
+              setWriting({ index, text: t.text, color: t.color, font: t.font, look: t.look ?? "plain" });
+            }}
           >
-            {file && <Tool on={false} Icon={ImageOff} label={tr.stories.removeMedia} onPress={() => setFile(null)} />}
-            <Tool on={!!file} Icon={ImagePlus} label={`${tr.stories.photo} / ${tr.stories.video}`} onPress={() => void pick("library")} />
-            <Tool on={false} Icon={Camera} label={tr.stories.photo} onPress={() => void pick("camera")} />
-            <Tool on={false} Icon={Video} label={tr.stories.video} onPress={() => void pick("video")} />
-            {canPaste && <Tool on={false} Icon={ClipboardPaste} label={tr.stories.pasteImage} onPress={() => void paste()} />}
-            <Tool on={gifs.length > 0 || pickingGif} Icon={Sticker} label={tr.stories.gif} onPress={() => setPickingGif(!pickingGif)} />
-            <Tool
-              on={!!link}
-              Icon={Link2}
-              label={tr.stories.link}
-              onPress={() => {
-                setLink(link ? null : { url: "", label: "" });
-                if (!link) setTimeout(() => linkField.current?.focus(), 50);
-              }}
-            />
-            <Tool
-              on={askLink}
-              Icon={MessageCircleQuestionMark}
-              label={tr.stories.askLink}
-              onPress={() => {
-                setAskLink(!askLink);
-                if (!askLink) setTimeout(() => askField.current?.focus(), 50);
-              }}
-            />
-            <Tool on={asks.length > 0 || pickingAsks} Icon={VenetianMask} label={tr.ask.title} onPress={() => setPickingAsks(!pickingAsks)} />
-            <Tool on={!!location} busy={locating} Icon={MapPin} label={tr.stories.location} onPress={() => void locate()} />
-            <Tool on={showDate} Icon={CalendarDays} label={tr.stories.date} onPress={() => setShowDate(!showDate)} />
-            <Tool on={showTime} Icon={Clock} label={tr.stories.time} onPress={() => setShowTime(!showTime)} />
-            <Tool on={drawingOn} Icon={Pencil} label={tr.composer.editTools.draw} onPress={() => setDrawingOn(!drawingOn)} />
-            <Tool
-              on={false}
-              Icon={CaseSensitive}
-              label={tr.stories.addText}
-              onPress={() => {
-                setDrawingOn(false);
-                if (drawing.texts.length < 10) setWriting({ index: -1, text: "", color: EDIT_COLORS[0]!, font: "classic", look: "plain" });
-              }}
-            />
-          </ScrollView>
-        </View>
+            <StoryStickers {...stickers} placed onMove={drawingOn ? undefined : stickers.onMove} skip={flattening ? live : undefined} />
+          </StoryDrawingLayer>
 
-        <View style={[styles.bottom, { paddingBottom: Math.max(insets.bottom, 16) }]}>
-          {drawingOn && (
-            <DrawBar
-              pen={pen}
-              onPen={setPen}
-              canUndo={undos.length > 0}
-              onUndo={() => {
-                setDrawing(undos.at(-1)!);
-                setUndos(undos.slice(0, -1));
-              }}
-              onDone={() => setDrawingOn(false)}
-            />
-          )}
-          {pickingAsks && <AskPicker picked={asks.map((m) => m.id)} onToggle={toggleAsk} onClose={() => setPickingAsks(false)} />}
-          {pickingGif && (
-            <View style={styles.gifs}>
-              <GifSearch
-                onPick={(g) => {
-                  addGif(g);
-                  setPickingGif(false);
+          <View pointerEvents="box-none" style={[styles.top, { top: insets.top + 8 }, flattening && styles.gone]}>
+            <Tool on={false} Icon={X} label={tr.common.close} onPress={onClose} />
+            <ScrollView
+              style={{ maxHeight: Math.max(96, screenH - insets.top - 230 - keyboard), flexGrow: 0 }}
+              contentContainerStyle={styles.tools}
+              showsVerticalScrollIndicator={false}
+            >
+              {file && <Tool on={false} Icon={ImageOff} label={tr.stories.removeMedia} onPress={() => setFile(null)} />}
+              <Tool on={!!file} Icon={ImagePlus} label={`${tr.stories.photo} / ${tr.stories.video}`} onPress={() => void pick("library")} />
+              <Tool on={false} Icon={Camera} label={tr.stories.photo} onPress={() => void pick("camera")} />
+              <Tool on={false} Icon={Video} label={tr.stories.video} onPress={() => void pick("video")} />
+            {file?.kind !== "video" && !fromChat && (
+              <Tool on={photos.length > 0} Icon={Images} label={tr.stories.photoSticker} onPress={() => void addPhotos()} />
+            )}
+              {canPaste && <Tool on={false} Icon={ClipboardPaste} label={tr.stories.pasteImage} onPress={() => void paste()} />}
+              <Tool on={gifs.length > 0 || pickingGif} Icon={Sticker} label={tr.stories.gif} onPress={() => setPickingGif(!pickingGif)} />
+              <Tool
+                on={!!link}
+                Icon={Link2}
+                label={tr.stories.link}
+                onPress={() => {
+                  setLink(link ? null : { url: "", label: "" });
+                  if (!link) setTimeout(() => linkField.current?.focus(), 50);
                 }}
               />
-            </View>
-          )}
-          {!file && custom && (
-            <View style={styles.custom}>
-              <View style={styles.customRow}>
-                <View style={[styles.dot, { backgroundColor: from }]} />
-                <ColorPicker onChange={(c) => setBackground(to ? `${c},${to}` : c)} />
-              </View>
-              <Pressable
-                onPress={() => setBackground(to ? from : `${from},${from === "#7c3aed" ? "#e11d48" : "#7c3aed"}`)}
-                accessibilityRole="switch"
-                accessibilityState={{ checked: !!to }}
-                style={({ pressed }) => [styles.toggle, to ? styles.toggleOn : styles.toggleOff, pressed && { transform: [{ scale: 0.95 }] }]}
-              >
-                <View style={[styles.check, { backgroundImage: `linear-gradient(135deg, ${from}, ${to ?? "#7c3aed"})`, opacity: to ? 1 : 0.6 }]} />
-                <Text style={{ color: to ? "#1c1917" : "#fff", fontSize: 14, fontWeight: "600" }}>{tr.stories.gradient}</Text>
-              </Pressable>
-              {to && (
-                <View style={styles.customRow}>
-                  <View style={[styles.dot, { backgroundColor: to }]} />
-                  <ColorPicker onChange={(c) => setBackground(`${from},${c}`)} />
-                </View>
-              )}
-            </View>
-          )}
-          {!file && !drawingOn && (
-            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.swatches}>
-              <View accessibilityRole="radiogroup" accessibilityLabel={tr.stories.background} style={styles.swatchRow}>
-                {STORY_BACKGROUNDS.map((c) => (
-                  <Pressable
-                    key={c}
-                    onPress={() => {
-                      setBackground(c);
-                      setCustom(false);
-                    }}
-                    accessibilityRole="radio"
-                    accessibilityState={{ checked: background === c && !custom }}
-                    accessibilityLabel={c}
-                    hitSlop={4}
-                    style={[styles.swatch, storyFill(c), background === c && !custom && styles.swatchOn]}
-                  />
-                ))}
-                <Pressable
-                  onPress={() => setCustom(!custom)}
-                  accessibilityRole="button"
-                  accessibilityLabel={tr.stories.customColour}
-                  accessibilityState={{ selected: custom }}
-                  hitSlop={4}
-                  style={[styles.swatch, { backgroundImage: "linear-gradient(135deg, #f00, #ff0, #0f0, #0ff, #00f, #f0f)" }, custom && styles.swatchOn]}
+              <Tool
+                on={askLink}
+                Icon={MessageCircleQuestionMark}
+                label={tr.stories.askLink}
+                onPress={() => {
+                  setAskLink(!askLink);
+                  if (!askLink) setTimeout(() => askField.current?.focus(), 50);
+                }}
+              />
+              <Tool on={asks.length > 0 || pickingAsks} Icon={VenetianMask} label={tr.ask.title} onPress={() => setPickingAsks(!pickingAsks)} />
+              <Tool on={!!location} busy={locating} Icon={MapPin} label={tr.stories.location} onPress={() => void locate()} />
+              <Tool on={showDate} Icon={CalendarDays} label={tr.stories.date} onPress={() => setShowDate(!showDate)} />
+              <Tool on={showTime} Icon={Clock} label={tr.stories.time} onPress={() => setShowTime(!showTime)} />
+              <Tool on={drawingOn} Icon={Pencil} label={tr.composer.editTools.draw} onPress={() => setDrawingOn(!drawingOn)} />
+              <Tool
+                on={false}
+                Icon={CaseSensitive}
+                label={tr.stories.addText}
+                onPress={() => {
+                  setDrawingOn(false);
+                  if (drawing.texts.length < 10) setWriting({ index: -1, text: "", color: EDIT_COLORS[0]!, font: "classic", look: "plain" });
+                }}
+              />
+            </ScrollView>
+          </View>
+
+          <View style={[styles.bottom, { paddingBottom: Math.max(insets.bottom, 16) }, flattening && styles.gone]}>
+            {drawingOn && (
+              <DrawBar
+                pen={pen}
+                onPen={setPen}
+                canUndo={undos.length > 0}
+                onUndo={() => {
+                  setDrawing(undos.at(-1)!);
+                  setUndos(undos.slice(0, -1));
+                }}
+                onDone={() => setDrawingOn(false)}
+              />
+            )}
+            {pickingAsks && <AskPicker picked={asks.map((m) => m.id)} onToggle={toggleAsk} onClose={() => setPickingAsks(false)} />}
+            {pickingGif && (
+              <View style={styles.gifs}>
+                <GifSearch
+                  onPick={(g) => {
+                    addGif(g);
+                    setPickingGif(false);
+                  }}
                 />
               </View>
-            </ScrollView>
-          )}
-          {askLink && (
-            <TextInput
-              ref={askField}
-              value={askText}
-              onChangeText={setAskText}
-              maxLength={ASK_PROMPT_MAX}
-              placeholder={tr.ask.prompt}
-              placeholderTextColor="rgba(255,255,255,0.6)"
-              accessibilityLabel={tr.stories.askText}
-              style={styles.field}
-            />
-          )}
-          {link && (
-            <View style={{ flexDirection: "row", gap: 8 }}>
+            )}
+            {!file && custom && (
+              <View style={styles.custom}>
+                <View style={styles.customRow}>
+                  <View style={[styles.dot, { backgroundColor: from }]} />
+                  <ColorPicker onChange={(c) => setBackground(to ? `${c},${to}` : c)} />
+                </View>
+                <Pressable
+                  onPress={() => setBackground(to ? from : `${from},${from === "#7c3aed" ? "#e11d48" : "#7c3aed"}`)}
+                  accessibilityRole="switch"
+                  accessibilityState={{ checked: !!to }}
+                  style={({ pressed }) => [styles.toggle, to ? styles.toggleOn : styles.toggleOff, pressed && { transform: [{ scale: 0.95 }] }]}
+                >
+                  <View style={[styles.check, { backgroundImage: `linear-gradient(135deg, ${from}, ${to ?? "#7c3aed"})`, opacity: to ? 1 : 0.6 }]} />
+                  <Text style={{ color: to ? "#1c1917" : "#fff", fontSize: 14, fontWeight: "600" }}>{tr.stories.gradient}</Text>
+                </Pressable>
+                {to && (
+                  <View style={styles.customRow}>
+                    <View style={[styles.dot, { backgroundColor: to }]} />
+                    <ColorPicker onChange={(c) => setBackground(`${from},${c}`)} />
+                  </View>
+                )}
+              </View>
+            )}
+            {!file && !drawingOn && (
+              <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.swatches}>
+                <View accessibilityRole="radiogroup" accessibilityLabel={tr.stories.background} style={styles.swatchRow}>
+                  {STORY_BACKGROUNDS.map((c) => (
+                    <Pressable
+                      key={c}
+                      onPress={() => {
+                        setBackground(c);
+                        setCustom(false);
+                      }}
+                      accessibilityRole="radio"
+                      accessibilityState={{ checked: background === c && !custom }}
+                      accessibilityLabel={c}
+                      hitSlop={4}
+                      style={[styles.swatch, storyFill(c), background === c && !custom && styles.swatchOn]}
+                    />
+                  ))}
+                  <Pressable
+                    onPress={() => setCustom(!custom)}
+                    accessibilityRole="button"
+                    accessibilityLabel={tr.stories.customColour}
+                    accessibilityState={{ selected: custom }}
+                    hitSlop={4}
+                    style={[styles.swatch, { backgroundImage: "linear-gradient(135deg, #f00, #ff0, #0f0, #0ff, #00f, #f0f)" }, custom && styles.swatchOn]}
+                  />
+                </View>
+              </ScrollView>
+            )}
+            {askLink && (
               <TextInput
-                ref={linkField}
-                value={link.url}
-                onChangeText={(url) => setLink({ ...link, url })}
-                keyboardType="url"
-                autoCapitalize="none"
-                autoCorrect={false}
-                maxLength={2000}
-                placeholder={tr.stories.linkUrl}
+                ref={askField}
+                value={askText}
+                onChangeText={setAskText}
+                maxLength={ASK_PROMPT_MAX}
+                placeholder={tr.ask.prompt}
                 placeholderTextColor="rgba(255,255,255,0.6)"
-                accessibilityLabel={tr.stories.linkUrl}
-                style={[styles.field, { flex: 3 }]}
+                accessibilityLabel={tr.stories.askText}
+                style={styles.field}
               />
+            )}
+            {link && (
+              <View style={{ flexDirection: "row", gap: 8 }}>
+                <TextInput
+                  ref={linkField}
+                  value={link.url}
+                  onChangeText={(url) => setLink({ ...link, url })}
+                  keyboardType="url"
+                  autoCapitalize="none"
+                  autoCorrect={false}
+                  maxLength={2000}
+                  placeholder={tr.stories.linkUrl}
+                  placeholderTextColor="rgba(255,255,255,0.6)"
+                  accessibilityLabel={tr.stories.linkUrl}
+                  style={[styles.field, { flex: 3 }]}
+                />
+                <TextInput
+                  value={link.label}
+                  onChangeText={(label) => setLink({ ...link, label })}
+                  maxLength={40}
+                  placeholder={tr.stories.linkLabel}
+                  placeholderTextColor="rgba(255,255,255,0.6)"
+                  accessibilityLabel={tr.stories.linkLabel}
+                  style={[styles.field, { flex: 2 }]}
+                />
+              </View>
+            )}
+            {location && (
               <TextInput
-                value={link.label}
-                onChangeText={(label) => setLink({ ...link, label })}
-                maxLength={40}
-                placeholder={tr.stories.linkLabel}
+                ref={placeField}
+                value={location.name ?? ""}
+                onChangeText={(name) => setLocation({ ...location, name })}
+                maxLength={STORY_LIMITS.place}
+                placeholder={tr.stories.placeName}
                 placeholderTextColor="rgba(255,255,255,0.6)"
-                accessibilityLabel={tr.stories.linkLabel}
-                style={[styles.field, { flex: 2 }]}
+                accessibilityLabel={tr.stories.placeName}
+                style={styles.field}
               />
-            </View>
-          )}
-          {location && (
-            <TextInput
-              ref={placeField}
-              value={location.name ?? ""}
-              onChangeText={(name) => setLocation({ ...location, name })}
-              maxLength={STORY_LIMITS.place}
-              placeholder={tr.stories.placeName}
-              placeholderTextColor="rgba(255,255,255,0.6)"
-              accessibilityLabel={tr.stories.placeName}
-              style={styles.field}
-            />
-          )}
-          {file && (
-            <TextInput
-              value={text}
-              onChangeText={setText}
-              maxLength={STORY_LIMITS.text}
-              placeholder={tr.stories.caption}
-              placeholderTextColor="rgba(255,255,255,0.6)"
-              accessibilityLabel={tr.stories.caption}
-              style={styles.field}
-            />
-          )}
-          {tooLong && (
-            <View style={styles.warn}>
-              <Text style={{ flex: 1, color: "#fff", fontSize: 14 }}>{tr.stories.videoTooLong}</Text>
-              <Pressable onPress={() => setCutting(true)} accessibilityRole="button" style={styles.cut}>
-                <Scissors size={16} color="#1c1917" />
-                <Text style={{ color: "#1c1917", fontSize: 14, fontWeight: "600" }}>{tr.composer.cut}</Text>
+            )}
+            {file && (
+              <TextInput
+                value={text}
+                onChangeText={setText}
+                maxLength={STORY_LIMITS.text}
+                placeholder={tr.stories.caption}
+                placeholderTextColor="rgba(255,255,255,0.6)"
+                accessibilityLabel={tr.stories.caption}
+                style={styles.field}
+              />
+            )}
+            {tooLong && (
+              <View style={styles.warn}>
+                <Text style={{ flex: 1, color: "#fff", fontSize: 14 }}>{tr.stories.videoTooLong}</Text>
+                <Pressable onPress={() => setCutting(true)} accessibilityRole="button" style={styles.cut}>
+                  <Scissors size={16} color="#1c1917" />
+                  <Text style={{ color: "#1c1917", fontSize: 14, fontWeight: "600" }}>{tr.composer.cut}</Text>
+                </Pressable>
+              </View>
+            )}
+            {error && <Text style={styles.error}>{error}</Text>}
+            <View style={styles.actions}>
+              <Pressable
+                onPress={() => setPickingDuration(true)}
+                accessibilityRole="button"
+                accessibilityLabel={`${tr.stories.lasts} ${durationLabel(durationSecs, tr)}`}
+                style={styles.pill}
+              >
+                <Hourglass size={16} color="#fff" />
+                <Text style={{ color: "#fff", fontSize: 14, fontWeight: "600" }}>{durationLabel(durationSecs, tr)}</Text>
+                <ChevronDown size={16} color="rgba(255,255,255,0.7)" />
+              </Pressable>
+              <Pressable
+                onPress={share}
+                disabled={!ready}
+                accessibilityRole="button"
+                style={({ pressed }) => [styles.share, { opacity: !ready ? 0.5 : pressed ? 0.85 : 1 }]}
+              >
+                <Text style={{ color: brandInk, fontSize: 16, fontWeight: "700" }}>
+                  {tr.stories.post}
+                </Text>
+                <SendHorizontal size={18} color={brandInk} />
               </Pressable>
             </View>
-          )}
-          {error && <Text style={styles.error}>{error}</Text>}
-          <View style={styles.actions}>
-            <Pressable
-              onPress={() => setPickingDuration(true)}
-              accessibilityRole="button"
-              accessibilityLabel={`${tr.stories.lasts} ${durationLabel(durationSecs, tr)}`}
-              style={styles.pill}
-            >
-              <Hourglass size={16} color="#fff" />
-              <Text style={{ color: "#fff", fontSize: 14, fontWeight: "600" }}>{durationLabel(durationSecs, tr)}</Text>
-              <ChevronDown size={16} color="rgba(255,255,255,0.7)" />
-            </Pressable>
-            <Pressable
-              onPress={share}
-              disabled={!ready}
-              accessibilityRole="button"
-              style={({ pressed }) => [styles.share, { opacity: !ready ? 0.5 : pressed ? 0.85 : 1 }]}
-            >
-              <Text style={{ color: brandInk, fontSize: 16, fontWeight: "700" }}>
-                {tr.stories.post}
-              </Text>
-              <SendHorizontal size={18} color={brandInk} />
-            </Pressable>
           </View>
-        </View>
-        {writing && (
-          <TextWriter
-            writing={writing}
-            onChange={setWriting}
-            onDone={finishWriting}
-            onRemove={
-              writing.index >= 0
-                ? () => {
-                    keep();
-                    setDrawing((d) => ({ ...d, texts: d.texts.filter((_, i) => i !== writing.index) }));
-                    setWriting(null);
-                  }
-                : undefined
-            }
-          />
-        )}
-      </KeyboardAvoidingView>
+          {writing && (
+            <TextWriter
+              writing={writing}
+              onChange={setWriting}
+              onDone={finishWriting}
+              onRemove={
+                writing.index >= 0
+                  ? () => {
+                      keep();
+                      setDrawing((d) => ({ ...d, texts: d.texts.filter((_, i) => i !== writing.index) }));
+                      setWriting(null);
+                    }
+                  : undefined
+              }
+            />
+          )}
+        </KeyboardAvoidingView>
+      </View>
       {pickingDuration && (
         <Sheet
           title={tr.stories.lasts}
@@ -831,6 +928,7 @@ function AskPicker({ picked, onToggle, onClose }: { picked: string[]; onToggle: 
 
 const styles = StyleSheet.create({
   screen: { flex: 1 },
+  gone: { opacity: 0 },
   preview: { flex: 1, alignItems: "center", justifyContent: "center", overflow: "hidden" },
   bigInput: { width: "100%", color: "#fff", fontSize: 26, lineHeight: 34, fontWeight: "700", textAlign: "center", paddingHorizontal: 64 },
   overlay: { position: "absolute", left: 0, right: 0, bottom: 0, alignItems: "center", gap: 10, paddingHorizontal: 64, paddingBottom: 12 },

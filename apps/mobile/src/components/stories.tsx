@@ -288,9 +288,13 @@ export function StoryStickers({
   onMove,
   onRemove,
   onTap,
+  skip,
+  photos = [],
 }: {
   asks: StoryAsk[];
   gifs: React.ReactNode[];
+  /** Photos placed like stickers while composing; they end up drawn into the story's picture. */
+  photos?: React.ReactNode[];
   link: StoryLink | null;
   /** The poster's anonymous link, when the story invites anonymous messages. */
   askLink: string | null;
@@ -306,6 +310,8 @@ export function StoryStickers({
   onMove?: Move;
   onRemove?: (sticker: StorySticker) => void;
   onTap?: (sticker: StorySticker) => void;
+  /** Leaves these stickers out, as when the story is drawn into a picture without the ones that stay live. */
+  skip?: (sticker: StorySticker) => boolean;
 }) {
   const tr = useT();
   const has = (k: StorySticker) =>
@@ -313,8 +319,10 @@ export function StoryStickers({
       ? stickerIndex("ask", k) < asks.length
       : stickerIndex("gif", k) >= 0
         ? stickerIndex("gif", k) < gifs.length
-        : { location: !!location, date: showDate, time: showTime, link: !!link, asklink: !!askLink }[k as "link"];
-  const shown = STORY_STICKERS.filter((k) => has(k) && !!positions[k] === placed);
+        : stickerIndex("photo", k) >= 0
+          ? stickerIndex("photo", k) < photos.length
+          : { location: !!location, date: showDate, time: showTime, link: !!link, asklink: !!askLink }[k as "link"];
+  const shown = STORY_STICKERS.filter((k) => has(k) && !!positions[k] === placed && !skip?.(k));
   if (!shown.length) return null;
   const editing = onMove && frame ? { frame, onMove, onRemove, onTap } : undefined;
 
@@ -335,6 +343,8 @@ export function StoryStickers({
         </View>
       ) : stickerIndex("gif", k) >= 0 ? (
         gifs[stickerIndex("gif", k)]
+      ) : stickerIndex("photo", k) >= 0 ? (
+        photos[stickerIndex("photo", k)]
       ) : k === "link" && link ? (
         <Pressable
           disabled={!!editing}
@@ -394,7 +404,7 @@ export function StoryStickers({
       </Placed>
     ));
   }
-  const big = (k: StorySticker) => stickerIndex("ask", k) >= 0 || stickerIndex("gif", k) >= 0;
+  const big = (k: StorySticker) => stickerIndex("ask", k) >= 0 || stickerIndex("gif", k) >= 0 || stickerIndex("photo", k) >= 0;
   const chips = shown.filter((k) => !big(k));
   return (
     <>
