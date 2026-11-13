@@ -1,5 +1,6 @@
 "use client";
 
+import { emojifyEnd, emojifyTyped } from "@six/shared";
 import { useQueryClient } from "@tanstack/react-query";
 import { Check, MessageCircle, Reply, SendHorizontal, X } from "lucide-react";
 import { useRouter } from "next/navigation";
@@ -71,7 +72,7 @@ function ToastCard({ toast: t }: { toast: Toast }) {
 
   const send = () => {
     if (!text.trim() || !realtime || !t.replyChatId) return;
-    void queueMessage(qc, realtime, t.replyChatId, { text: text.trim() }).catch(() => null);
+    void queueMessage(qc, realtime, t.replyChatId, { text: emojifyEnd(text).trim() }).catch(() => null);
     dismiss(t.id);
   };
 
@@ -167,7 +168,7 @@ function ToastCard({ toast: t }: { toast: Toast }) {
           <input
             autoFocus
             value={text}
-            onChange={(e) => setText(e.target.value)}
+            onChange={(e) => setText(emojifyTyped(text, e.target.value)?.text ?? e.target.value)}
             onKeyDown={(e) => e.key === "Escape" && dismiss(t.id)}
             placeholder={tr.stories.replyTo(t.title)}
             aria-label={tr.messages.reply}
