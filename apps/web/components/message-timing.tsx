@@ -4,7 +4,6 @@ import { unwrap } from "@six/sdk";
 import { latencyLabel, messageTrip } from "@six/shared";
 import { useQuery } from "@tanstack/react-query";
 import { Fragment } from "react";
-import { momentLabel } from "@/lib/format";
 import { getLocale, useT } from "@/lib/i18n";
 import { six } from "@/lib/six";
 import { Sheet } from "./sheet";
@@ -31,8 +30,8 @@ export function MessageTiming({ messageId, onClose }: { messageId: string; onClo
           ],
           [tr.messages.timingUp, trip.up === null ? tr.messages.timingUnknown : latencyLabel(trip.up)],
           [tr.messages.timingDown, trip.down === null ? tr.messages.timingWaiting : latencyLabel(trip.down)],
-          ...(trip.total === null ? [] : [[tr.messages.timingTotal, latencyLabel(trip.total)] as [string, string]]),
-          [tr.messages.timingSeen, t.readAt ? momentLabel(t.readAt) : tr.messages.timingNotSeen],
+          ...(trip.total === null ? [] : [[tr.messages.timingTotal, tr.messages.timingAfter(latencyLabel(trip.total))] as [string, string]]),
+          [tr.messages.timingSeen, trip.seen === null ? tr.messages.timingNotSeen : tr.messages.timingAfter(latencyLabel(trip.seen))],
         ]
       : [];
 

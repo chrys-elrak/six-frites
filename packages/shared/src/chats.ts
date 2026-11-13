@@ -813,6 +813,7 @@ export function messageTrip(t: MessageTimingDTO) {
   const sent = t.sentAt ? Date.parse(t.sentAt) : null;
   const arrived = t.arrivedAt ? Date.parse(t.arrivedAt) : null;
   return {
+    seen: t.readAt ? Date.parse(t.readAt) - (sent ?? server) : null,
     up: sent === null ? null : server - sent,
     down: arrived === null ? null : arrived - server,
     total: sent === null || arrived === null ? null : arrived - sent,
@@ -820,7 +821,13 @@ export function messageTrip(t: MessageTimingDTO) {
 }
 
 export const latencyLabel = (ms: number) =>
-  ms < 1000 ? `${ms} ms` : ms < 60_000 ? `${(ms / 1000).toFixed(1)} s` : `${Math.round(ms / 60_000)} min`;
+  ms < 1000
+    ? `${ms} ms`
+    : ms < 60_000
+      ? `${(ms / 1000).toFixed(1)} s`
+      : ms < 3_600_000
+        ? `${Math.round(ms / 60_000)} min`
+        : `${Math.round(ms / 3_600_000)} h`;
 
 export const ChatDeliveredDTO = z.object({
   chatId: Id,
