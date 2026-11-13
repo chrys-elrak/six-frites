@@ -68,7 +68,7 @@ export function Sheet({
             {children}
             <div
               role="menu"
-              className={`chat-colors max-h-[calc(100dvh-5rem)] overflow-y-auto rounded-xl bg-(--bubble-their)/70 p-1 shadow-xl ring-1 ring-black/5 backdrop-blur-xl backdrop-saturate-150 dark:ring-white/10 ${
+              className={`max-h-[calc(100dvh-5rem)] overflow-y-auto rounded-xl bg-white/80 p-1 shadow-xl ring-1 ring-black/5 backdrop-blur-xl backdrop-saturate-150 dark:bg-stone-900/80 dark:ring-white/10 ${
                 picking ? "min-w-40" : "w-56"
               }`}
             >
@@ -81,7 +81,7 @@ export function Sheet({
                   autoFocus={a.checked ?? i === 0}
                   onClick={() => select(a)}
                   className={`flex w-full items-center gap-2 rounded-lg px-3 py-1.5 text-left text-sm hover:bg-brand/20 focus:outline-none focus-visible:bg-brand/20 ${
-                    a.destructive ? "text-red-600 dark:text-red-400" : "text-(--bubble-their-ink)"
+                    a.destructive ? "text-red-600 dark:text-red-400" : "text-stone-900 dark:text-stone-100"
                   } ${a.checked ? "font-semibold" : ""}`}
                 >
                   {picking && <Check className={`size-4 shrink-0 text-brand ${a.checked ? "" : "invisible"}`} />}
