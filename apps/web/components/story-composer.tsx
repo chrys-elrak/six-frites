@@ -67,7 +67,7 @@ import { PrimaryButton } from "./ui";
 import { Sheet } from "./sheet";
 import { ChatBubbleCard, StoryStickers, backgroundAround } from "./stories";
 import { LastsPicker } from "./notes";
-import { DrawBar, type Pen, StoryDrawingLayer, TextWriter, type Writing } from "./story-drawing";
+import { DrawBar, type Pen, StoryDrawingLayer, TextStyler, TextWriter, type Writing, type WrittenStyle, writtenStyle } from "./story-drawing";
 import { VideoTrimmer } from "./video-trimmer";
 
 const MEDIA_TYPES = "image/jpeg,image/png,image/webp,image/gif,video/mp4,video/quicktime,video/webm";
@@ -151,6 +151,9 @@ export function StoryComposer({
   const [drawingOn, setDrawingOn] = useState(false);
   const [writing, setWriting] = useState<Writing | null>(null);
   const drawn = drawing.strokes.length > 0 || drawing.texts.length > 0;
+  const [mainStyle, setMainStyle] = useState<WrittenStyle>({ color: EDIT_COLORS[0]!, font: "classic", look: "plain" });
+  const [typing, setTyping] = useState(false);
+  const styled = mainStyle.color !== EDIT_COLORS[0] || mainStyle.font !== "classic" || mainStyle.look !== "plain";
   const card = useRef<HTMLDivElement>(null);
   const placeField = useRef<HTMLInputElement>(null);
   const [error, setError] = useState<string | null>(null);
@@ -305,10 +308,12 @@ export function StoryComposer({
 
   function share() {
     if (!ready) return;
+    const words = text.trim();
+    const asDrawn = styled && !file && !fromChat && !!words && words.length <= STORY_LIMITS.drawnText && drawing.texts.length < 10;
     void postStory(
       qc,
       {
-        text: text.trim() || undefined,
+        text: asDrawn ? undefined : words || undefined,
         fromChat,
         bubble: fromChat ? bubble : undefined,
         messageId: fromChat ? quote?.messageId : undefined,
@@ -322,7 +327,11 @@ export function StoryComposer({
         showDate,
         showTime,
         positions,
-        drawing: drawn ? drawing : undefined,
+        drawing: asDrawn
+          ? { ...drawing, texts: [...drawing.texts, { text: words, ...mainStyle, x: 0.5, y: 0.45, scale: 1, z: zToTop(positions, drawing.texts) }] }
+          : drawn
+            ? drawing
+            : undefined,
         durationSecs,
       },
       file && kind ? { blob: file, kind, name: file.name, mime: file.type } : undefined,
@@ -458,7 +467,12 @@ export function StoryComposer({
                 autoFocus
                 placeholder={tr.stories.typeSomething}
                 aria-label={tr.stories.text}
-                className="w-full resize-none bg-transparent px-16 text-center text-2xl leading-snug font-semibold outline-none placeholder:text-white/60"
+                onFocus={() => setTyping(true)}
+                onBlur={() => setTyping(false)}
+                className={`resize-none bg-transparent text-center text-2xl leading-snug font-semibold outline-none placeholder:text-white/60 ${
+                  styled && mainStyle.look === "box" ? "max-w-[80%] rounded-xl px-4 py-1 [field-sizing:content]" : "w-full px-16"
+                }`}
+                style={styled ? writtenStyle(mainStyle) : undefined}
                 rows={4}
               />
             )}
@@ -507,7 +521,8 @@ export function StoryComposer({
                 onDone={() => setDrawingOn(false)}
               />
             )}
-            {!file && !drawingOn && (
+            {!file && !drawingOn && typing && <TextStyler value={mainStyle} onChange={setMainStyle} />}
+            {!file && !drawingOn && !typing && (
               <div className="-mx-4 shrink-0 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
                 <div role="radiogroup" aria-label={tr.stories.background} className="mx-auto flex w-max gap-2.5 px-4 py-1.5">
                   {STORY_BACKGROUNDS.map((c) => (

@@ -21,7 +21,8 @@ import {
 import { useFonts } from "expo-font";
 import { Check, Circle, MoveDiagonal2, MoveUpRight, Pencil, Square, Trash2, Undo2 } from "lucide-react-native";
 import { type ComponentRef, useRef, useState } from "react";
-import { type GestureResponderEvent, Pressable, StyleSheet, View } from "react-native";
+import { type GestureResponderEvent, Pressable, StyleSheet, type TextStyle, View } from "react-native";
+import { useKeyboardState } from "react-native-keyboard-controller";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import Svg, { Path } from "react-native-svg";
 import { fingers } from "@/lib/fingers";
@@ -356,8 +357,15 @@ export function TextWriter({
 }) {
   const tr = useT();
   const insets = useSafeAreaInsets();
+  const keyboard = useKeyboardState((k) => (k.isVisible ? k.height : 0));
   return (
-    <View style={[StyleSheet.absoluteFill, styles.writer, { paddingTop: insets.top + 8, paddingBottom: Math.max(insets.bottom, 16) }]}>
+    <View
+      style={[
+        StyleSheet.absoluteFill,
+        styles.writer,
+        { paddingTop: insets.top + 8, paddingBottom: keyboard ? keyboard + 12 : Math.max(insets.bottom, 16) },
+      ]}
+    >
       <View style={styles.writerBar}>
         {onRemove ? (
           <Pressable onPress={onRemove} accessibilityRole="button" accessibilityLabel={tr.common.remove} hitSlop={8} style={styles.round}>
@@ -380,40 +388,50 @@ export function TextWriter({
           placeholder={tr.composer.typeSomething}
           placeholderTextColor="rgba(255,255,255,0.4)"
           accessibilityLabel={tr.stories.addText}
-          style={{
-            minWidth: 120,
-            maxWidth: "100%",
-            color: writing.look === "box" ? inkOn(writing.color) : writing.color,
-            backgroundColor: writing.look === "box" ? writing.color : undefined,
-            borderRadius: 10,
-            paddingHorizontal: 12,
-            fontSize: 30,
-            fontFamily: familyOf(writing.font),
-            fontWeight: familyOf(writing.font) ? "400" : "700",
-            textAlign: "center",
-            textShadowColor: writing.look === "outline" ? inkOn(writing.color) : writing.look === "box" ? undefined : shadow(writing.color),
-            textShadowRadius: writing.look === "outline" ? 3 : 6,
-          }}
+          style={[{ minWidth: 120, maxWidth: "100%", paddingHorizontal: 12, fontSize: 30, textAlign: "center" }, writtenStyle(writing)]}
         />
       </View>
-      <View style={{ alignItems: "center", gap: 12, paddingHorizontal: 12 }}>
-        <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
-          {STORY_TEXT_LOOKS.map((look) => (
-            <Pressable
-              key={look}
-              onPress={() => onChange({ ...writing, look })}
-              accessibilityRole="button"
-              accessibilityLabel={tr.stories.textLooks[look]}
-              accessibilityState={{ selected: writing.look === look }}
-              style={[styles.round, writing.look === look && styles.lookOn]}
-            >
-              <LookText text="A" look={look} color={writing.color} size={18} font="classic" />
-            </Pressable>
-          ))}
-        </View>
-        <Fonts value={writing.font} onChange={(font) => onChange({ ...writing, font })} />
-        <Colors value={writing.color} onChange={(color) => onChange({ ...writing, color })} />
+      <TextStyler value={writing} onChange={(style) => onChange({ ...writing, ...style })} />
+    </View>
+  );
+}
+
+export type WrittenStyle = Pick<Writing, "color" | "font" | "look">;
+
+/** How text written on a story is drawn in its colour, font and look, for a text field showing it. */
+export function writtenStyle(w: WrittenStyle): TextStyle {
+  return {
+    color: w.look === "box" ? inkOn(w.color) : w.color,
+    backgroundColor: w.look === "box" ? w.color : undefined,
+    borderRadius: 10,
+    fontFamily: familyOf(w.font),
+    fontWeight: familyOf(w.font) ? "400" : "700",
+    textShadowColor: w.look === "outline" ? inkOn(w.color) : w.look === "box" ? undefined : shadow(w.color),
+    textShadowRadius: w.look === "outline" ? 3 : 6,
+  };
+}
+
+/** The look, font and colour pickers for text on a story. */
+export function TextStyler({ value, onChange }: { value: WrittenStyle; onChange: (style: WrittenStyle) => void }) {
+  const tr = useT();
+  return (
+    <View style={{ alignItems: "center", gap: 12, paddingHorizontal: 12 }}>
+      <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
+        {STORY_TEXT_LOOKS.map((look) => (
+          <Pressable
+            key={look}
+            onPress={() => onChange({ ...value, look })}
+            accessibilityRole="button"
+            accessibilityLabel={tr.stories.textLooks[look]}
+            accessibilityState={{ selected: value.look === look }}
+            style={[styles.round, value.look === look && styles.lookOn]}
+          >
+            <LookText text="A" look={look} color={value.color} size={18} font="classic" />
+          </Pressable>
+        ))}
       </View>
+      <Fonts value={value.font} onChange={(font) => onChange({ ...value, font })} />
+      <Colors value={value.color} onChange={(color) => onChange({ ...value, color })} />
     </View>
   );
 }

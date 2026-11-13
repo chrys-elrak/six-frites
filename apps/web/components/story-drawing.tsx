@@ -330,34 +330,49 @@ export function TextWriter({
           placeholder={tr.composer.typeSomething}
           aria-label={tr.stories.addText}
           className="max-w-full min-w-24 resize-none bg-transparent text-center text-3xl outline-none [field-sizing:content] placeholder:text-white/40"
-          style={{
-            ...lookStyle(writing.look, writing.color),
-            fontFamily: familyOf(writing.font) ?? undefined,
-            fontWeight: familyOf(writing.font) ? 400 : 700,
-          }}
+          style={writtenStyle(writing)}
         />
       </div>
-      <div className="flex flex-col items-center gap-3 px-4 pb-[max(1.5rem,env(safe-area-inset-bottom))]">
-        <div className="flex items-center gap-2">
-          {STORY_TEXT_LOOKS.map((look) => (
-            <button
-              key={look}
-              type="button"
-              onClick={() => onChange({ ...writing, look })}
-              aria-label={tr.stories.textLooks[look]}
-              aria-pressed={writing.look === look}
-              title={tr.stories.textLooks[look]}
-              className={`${round} text-lg font-bold ${writing.look === look ? "bg-white/25 ring-2 ring-white" : "hover:bg-white/10"}`}
-            >
-              <span className="leading-none" style={lookStyle(look, writing.color)}>
-                A
-              </span>
-            </button>
-          ))}
-        </div>
-        <Fonts value={writing.font} onChange={(font) => onChange({ ...writing, font })} />
-        <Colors value={writing.color} onChange={(color) => onChange({ ...writing, color })} />
+      <div className="px-4 pb-[max(1.5rem,env(safe-area-inset-bottom))]">
+        <TextStyler value={writing} onChange={(style) => onChange({ ...writing, ...style })} />
       </div>
+    </div>
+  );
+}
+
+export type WrittenStyle = Pick<Writing, "color" | "font" | "look">;
+
+/** How text written on a story is drawn in its colour, font and look. */
+export const writtenStyle = (w: WrittenStyle): React.CSSProperties => ({
+  ...lookStyle(w.look, w.color),
+  fontFamily: familyOf(w.font) ?? undefined,
+  fontWeight: familyOf(w.font) ? 400 : 700,
+});
+
+/** The look, font and colour pickers for text on a story. Pressing them keeps the focus in the text being styled. */
+export function TextStyler({ value, onChange }: { value: WrittenStyle; onChange: (style: WrittenStyle) => void }) {
+  const tr = useT();
+  return (
+    <div className="flex flex-col items-center gap-3" onMouseDown={(e) => e.preventDefault()}>
+      <div className="flex items-center gap-2">
+        {STORY_TEXT_LOOKS.map((look) => (
+          <button
+            key={look}
+            type="button"
+            onClick={() => onChange({ ...value, look })}
+            aria-label={tr.stories.textLooks[look]}
+            aria-pressed={value.look === look}
+            title={tr.stories.textLooks[look]}
+            className={`${round} text-lg font-bold ${value.look === look ? "bg-white/25 ring-2 ring-white" : "hover:bg-white/10"}`}
+          >
+            <span className="leading-none" style={lookStyle(look, value.color)}>
+              A
+            </span>
+          </button>
+        ))}
+      </div>
+      <Fonts value={value.font} onChange={(font) => onChange({ ...value, font })} />
+      <Colors value={value.color} onChange={(color) => onChange({ ...value, color })} />
     </div>
   );
 }

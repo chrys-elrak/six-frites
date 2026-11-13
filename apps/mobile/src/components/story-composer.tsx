@@ -71,7 +71,7 @@ import { Modal } from "./modal";
 import { Sheet } from "./sheet";
 import { ChatBubbleCard, StoryStickers, backgroundAround, storyFill } from "./stories";
 import { LastsPicker } from "./notes";
-import { DrawBar, type Pen, StoryDrawingLayer, TextWriter, type Writing } from "./story-drawing";
+import { DrawBar, type Pen, StoryDrawingLayer, TextStyler, TextWriter, type Writing, type WrittenStyle, writtenStyle } from "./story-drawing";
 import { Text, TextInput } from "./text";
 import { VideoTrimmer } from "./video-trimmer";
 
@@ -282,6 +282,10 @@ export function StoryComposer({
   const tooLong = file?.kind === "video" && (file.durationMs ?? 0) > STORY_LIMITS.videoMs + STORY_LIMITS.videoSlackMs;
   const href = link && webLink(link.url);
   const [photos, setPhotos] = useState<LocalFile[]>([]);
+  const [mainStyle, setMainStyle] = useState<WrittenStyle>({ color: EDIT_COLORS[0]!, font: "classic", look: "plain" });
+  const [typing, setTyping] = useState(false);
+  const styled = mainStyle.color !== EDIT_COLORS[0] || mainStyle.font !== "classic" || mainStyle.look !== "plain";
+  const mainText = [styles.bigInput, styled && writtenStyle(mainStyle), styled && mainStyle.look === "box" && styles.boxed];
   const ready = (!!file || !!text.trim() || gifs.length > 0 || photos.length > 0 || asks.length > 0 || !!href || askLink || drawn) && !tooLong;
   const fromChat = !!initialText && !file;
   const covered = !text.trim() && (asks.length > 0 || gifs.length > 0 || photos.length > 0 || !!link || askLink || !!location || showDate || showTime || drawn);
@@ -420,10 +424,15 @@ export function StoryComposer({
       );
       return onClose();
     }
+    const words = text.trim();
+    const asDrawn = styled && !file && !fromChat && !!words && words.length <= STORY_LIMITS.drawnText && drawing.texts.length < 10;
+    const drawnMain = asDrawn
+      ? { ...drawing, texts: [...drawing.texts, { text: words, ...mainStyle, x: 0.5, y: 0.45, scale: 1, z: zToTop(positions, drawing.texts) }] }
+      : drawing;
     void postStory(
       qc,
       {
-        text: text.trim() || undefined,
+        text: asDrawn ? undefined : words || undefined,
         fromChat,
         bubble: fromChat ? bubble : undefined,
         messageId: fromChat ? quote?.messageId : undefined,
@@ -437,7 +446,7 @@ export function StoryComposer({
         showDate,
         showTime,
         positions: noPhotos(positions),
-        drawing: drawn ? drawing : undefined,
+        drawing: drawn || asDrawn ? drawnMain : undefined,
         durationSecs,
       },
       file ? { uri: file.uri, kind: file.kind, name: file.name, mime: file.mime } : undefined,
@@ -554,7 +563,7 @@ export function StoryComposer({
             {fromChat && (
               <ChatBubbleCard text={text} bubble={bubble ?? null} quote={quote ?? null} />
             )}
-            {flattening && !file && !fromChat && !!text.trim() && <Text style={styles.bigInput}>{text}</Text>}
+            {flattening && !file && !fromChat && !!text.trim() && <Text style={mainText}>{text}</Text>}
             {!flattening && !file && !fromChat && !covered && (
               <TextInput
                 value={text}
@@ -565,7 +574,9 @@ export function StoryComposer({
                 placeholder={tr.stories.typeSomething}
                 placeholderTextColor="rgba(255,255,255,0.6)"
                 accessibilityLabel={tr.stories.text}
-                style={styles.bigInput}
+                onFocus={() => setTyping(true)}
+                onBlur={() => setTyping(false)}
+                style={mainText}
               />
             )}
             <View pointerEvents="box-none" style={styles.overlay}>
@@ -685,7 +696,8 @@ export function StoryComposer({
                 )}
               </View>
             )}
-            {!file && !drawingOn && (
+            {!file && !drawingOn && typing && <TextStyler value={mainStyle} onChange={setMainStyle} />}
+            {!file && !drawingOn && !typing && (
               <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.swatches}>
                 <View accessibilityRole="radiogroup" accessibilityLabel={tr.stories.background} style={styles.swatchRow}>
                   {STORY_BACKGROUNDS.map((c) => (
@@ -931,6 +943,7 @@ const styles = StyleSheet.create({
   gone: { opacity: 0 },
   preview: { flex: 1, alignItems: "center", justifyContent: "center", overflow: "hidden" },
   bigInput: { width: "100%", color: "#fff", fontSize: 26, lineHeight: 34, fontWeight: "700", textAlign: "center", paddingHorizontal: 64 },
+  boxed: { width: "auto", maxWidth: "80%", alignSelf: "center", paddingHorizontal: 14, paddingVertical: 4 },
   overlay: { position: "absolute", left: 0, right: 0, bottom: 0, alignItems: "center", gap: 10, paddingHorizontal: 64, paddingBottom: 12 },
   caption: { color: "#fff", fontSize: 16, textAlign: "center", textShadowColor: "rgba(0,0,0,0.6)", textShadowRadius: 4 },
   top: { position: "absolute", left: 12, right: 12, flexDirection: "row", justifyContent: "space-between", alignItems: "flex-start" },
