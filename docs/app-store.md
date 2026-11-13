@@ -14,18 +14,16 @@ App Store Connect checks the exact pixel size per tab, so each tab takes only it
 same invented chats as the Play ones, rendered from the web app's design. Compare them with the iOS app before
 publishing: Apple expects screenshots to show the app as it is.
 
-**iPad:** `supportsTablet: true` in `app.config.ts` makes it an iPad app too, which needs 13" iPad screenshots
-(2064 x 2752) taken from the app running on an iPad, and an iPad layout that holds up in review. For a first release,
-setting `supportsTablet: false` avoids both: iPads still run it, at iPhone size.
+**iPad:** `supportsTablet` is false, so iPads run the app at iPhone size and no iPad screenshots are needed. Turning it
+on later needs 13" iPad screenshots (2064 x 2752) taken from the app on an iPad, and an iPad layout that holds up.
 
 ## Fix before submitting
 
 1. **Sign in with Apple in the iOS app.** Guideline 4.8: an app that signs in with Google must also offer Sign in with
    Apple. Done: the iOS app shows Apple's own button (`expo-apple-authentication`), swaps Apple's token for a Firebase
    one and sends it to `/v1/auth/firebase`. The build needs `EXPO_PUBLIC_FIREBASE_API_KEY` in `apps/mobile/.env`.
-2. **Notifications on iPhone.** The app registers its push token as `apns`, but the server has no APNs sender, so
-   iPhones get no notifications. It needs an APNs key (Keys, "Apple Push Notifications service"), the Push
-   Notifications capability, and an APNs provider next to FCM in `apps/api/src/push/providers.ts`.
+2. **Notifications on iPhone.** Done: `ApnsProvider` in `apps/api/src/push/providers.ts` sends to iPhones once
+   `APNS_KEY` and `APNS_KEY_ID` are in the server's `.env` (see `docs/deploy.md`).
 3. **A review account.** Apple has to get past sign-in and the invite. A Google account signing in from Apple's
    network often hits Google's "verify it's you" step, which gets apps rejected. Prefer a Sign in with Apple
    reviewer: give Apple an invite link, or let one reviewer email through without an invite.
@@ -243,8 +241,7 @@ Before resubmitting:
 - **Make the demo account.** A fresh Google account, joined through an invite, with a few chats, a group and a game in
   progress. Don't put it in `ADMIN_EMAILS`.
 - **Make a reusable invite** (no use limit, no expiry) for the Apple sign-in path.
-- **Notifications.** The server has no APNs sender yet (Fix before submitting, item 2). If iPhones get no
-  notifications, take "Apple Push Notification service" out of the list above, and expect the reviewer to notice.
+- **Notifications.** Put the APNs key in the server's `.env` and restart the API before the reviewer signs in.
 
 ## Build and upload
 

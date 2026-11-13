@@ -48,7 +48,7 @@ export default ({ config }: ConfigContext): ExpoConfig =>
     bundleIdentifier: "com.sixfrites.app",
     buildNumber: "3",
     ...(iosGoogleServicesFile && { googleServicesFile: iosGoogleServicesFile }),
-    supportsTablet: true,
+    supportsTablet: false,
     associatedDomains: [`applinks:${APP_LINK_HOST}`],
     usesAppleSignIn: true,
   },

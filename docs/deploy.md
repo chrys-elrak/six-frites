@@ -27,6 +27,10 @@ Fill in the secrets in `.env`. Each of `POSTGRES_PASSWORD`, `JWT_SECRET`, `BACKU
 Never change `BACKUP_PIN_SECRET` once set: message backups protected by a PIN can't be opened without it.
 `FCM_SERVICE_ACCOUNT` is the Firebase service account key for Android push (Firebase console, Project settings >
 Service accounts > Generate new private key), the whole JSON on one line in single quotes.
+`APNS_KEY` and `APNS_KEY_ID` are for iPhone push: in the Apple developer account, Keys > +, tick "Apple Push
+Notifications service (APNs)", environment Production (or Sandbox & Production), and download the .p8 once. Its key ID
+goes in `APNS_KEY_ID`, and the file goes in `APNS_KEY` on one line in single quotes, newlines written as `\n`:
+`awk 'NF {printf "%s\\n", $0}' AuthKey_XXXX.p8`.
 
 In Google Cloud, add `https://six-frites.koera.mg` to the web client's Authorized JavaScript origins, and
 `https://six-frites.koera.mg/auth/google` to its Authorized redirect URIs (iOS signs in through a redirect).

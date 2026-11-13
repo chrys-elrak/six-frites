@@ -21,6 +21,11 @@ const Env = z.object({
   WEB_PUSH_PRIVATE_KEY: z.string().optional(),
   WEB_PUSH_SUBJECT: z.string().default("mailto:admin@example.com"),
   FCM_SERVICE_ACCOUNT: z.string().optional(),
+  /** The APNs auth key (.p8) for iOS push, newlines written as \n; iPhones get no notifications without it. */
+  APNS_KEY: z.string().optional(),
+  APNS_KEY_ID: z.string().optional(),
+  APNS_TEAM_ID: z.string().default("BDJ7N2QQ43"),
+  APNS_TOPIC: z.string().default("com.sixfrites.app"),
   /** The Firebase project whose ID tokens sign people in, the same one the web app signs in with. */
   FIREBASE_PROJECT_ID: z.string().default("akondro"),
   GIPHY_API_KEY: z.string().optional(),
