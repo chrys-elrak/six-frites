@@ -759,7 +759,7 @@ export function Composer({
         )}
 
         {hasSelection && (
-          <div className="pointer-coarse:pb-14">
+          <div className="pointer-coarse:pb-20">
             <FormatBar onFormat={wrap} />
           </div>
         )}

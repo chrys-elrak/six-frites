@@ -1176,7 +1176,7 @@ const styles = StyleSheet.create({
   toolbar: { flexDirection: "row", gap: 6 },
   glass: { flexDirection: "row", alignItems: "center", gap: 2, padding: 4, borderRadius: 14, borderWidth: StyleSheet.hairlineWidth },
   glassItem: { minWidth: 40, height: 40, borderRadius: 10, alignItems: "center", justifyContent: "center" },
-  clearOfSelectionMenu: { marginBottom: 56 },
+  clearOfSelectionMenu: { marginBottom: 80 },
   suggestion: { fontSize: 22 },
   format: {
     width: 36,
