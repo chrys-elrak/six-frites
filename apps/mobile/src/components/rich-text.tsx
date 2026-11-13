@@ -84,7 +84,7 @@ export function Spoiler({
   const near = useAnimatedStyle(() => ({ transform: [{ translateX: drift.value * 6 }, { translateY: drift.value * 4 }] }));
   const far = useAnimatedStyle(() => ({ transform: [{ translateX: 3 - drift.value * 6 }, { translateY: 2 + drift.value * 4 }] }));
   const size = style.fontSize ?? font.fontSize ?? 15;
-  const hidden: TextStyle = { color: "transparent", backgroundColor: "transparent", textShadowRadius: 0, lineHeight: size };
+  const hidden: TextStyle = { opacity: 0, lineHeight: size };
   return text.split(/(\s+)/).map((word, i) =>
     !word ? null : /\s/.test(word) ? (
       <Text key={i} onPress={onPress}>
