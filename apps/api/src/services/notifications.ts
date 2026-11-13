@@ -11,6 +11,8 @@ interface NewNotification {
   kind: NotificationKind;
   chatId?: string | null;
   emoji?: string;
+  storyId?: string;
+  messageId?: string;
   video?: boolean;
 }
 
@@ -50,6 +52,8 @@ export async function listNotifications(userId: string): Promise<NotificationsDT
     user: n.actor && profile(n.actor),
     chatId: n.chatId,
     emoji: n.emoji,
+    storyId: n.storyId,
+    messageId: n.messageId,
     video: n.video,
     unread: n.markedUnread || !seen || n.createdAt > seen,
     createdAt: n.createdAt.toISOString(),

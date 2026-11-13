@@ -125,7 +125,7 @@ function OpenConversation({ chatId }: { chatId: string }) {
   const list = useRef<MessageListHandle>(null);
   const [menu, setMenu] = useState(false);
   const [thread, setThread] = useState<string | null>(null);
-  const { info } = useLocalSearchParams<{ info?: string }>();
+  const { info, message } = useLocalSearchParams<{ info?: string; message?: string }>();
   const [editing, setEditing] = useState(!!info);
   const [shared, setShared] = useState<SharedTab | null>(null);
   const [searchFor, setSearchFor] = useState("");
@@ -184,6 +184,11 @@ function OpenConversation({ chatId }: { chatId: string }) {
     });
     return () => sub.remove();
   }, [selecting, clearSelection]);
+
+  const loaded = !!chat.data && !!messages.data;
+  useEffect(() => {
+    if (message && loaded) list.current?.jumpTo(message);
+  }, [message, loaded]);
 
   const unread = chat.data?.unreadCount ?? 0;
   const onSeen = useCallback(() => {

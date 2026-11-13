@@ -180,7 +180,7 @@ describe("push notifications", () => {
 
     await react("🔥");
     await vi.waitFor(() => expect(mine()).toHaveLength(1));
-    expect(mine()[0]!.payload).toMatchObject({ body: "🔥 Reacted to your story", url: "/", chatId: null });
+    expect(mine()[0]!.payload).toMatchObject({ body: "🔥 Reacted to your story", url: `/?story=${story.id}`, chatId: null });
     await react("🔥");
     await react("❤️");
     await vi.waitFor(() => expect(mine().map((s) => s.payload.body)).toEqual(["🔥 Reacted to your story", "❤️ Reacted to your story"]));

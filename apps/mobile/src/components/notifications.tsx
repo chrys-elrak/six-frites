@@ -1,6 +1,6 @@
-import { type NotificationDTO, notificationText } from "@six/shared";
+import { type NotificationDTO, notificationHref, notificationText } from "@six/shared";
 import { useQueryClient } from "@tanstack/react-query";
-import { router, useFocusEffect } from "expo-router";
+import { type Href, router, useFocusEffect } from "expo-router";
 import { Bell, Mail, MailOpen, PartyPopper, Settings2, Trash2, VenetianMask } from "lucide-react-native";
 import { useCallback, useState } from "react";
 import { FlatList, Pressable, RefreshControl, StyleSheet, View } from "react-native";
@@ -103,8 +103,8 @@ function Row({ n }: { n: NotificationDTO }) {
           <Pressable
             onPress={() => {
               if (n.unread) void markNotification(qc, n.id, false);
-              if (n.kind === "anon_message") router.push("/inbox");
-              else if (n.chatId) router.push(`/chats/${n.chatId}`);
+              const href = notificationHref(n);
+              if (href) router.push(href as Href);
             }}
             accessibilityActions={[
               { name: "delete", label: tr.common.delete },

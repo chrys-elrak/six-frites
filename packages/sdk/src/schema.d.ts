@@ -26825,7 +26825,7 @@ export interface paths {
                             items: {
                                 id: string;
                                 /** @enum {string} */
-                                kind: "joined" | "added" | "story_reaction" | "note_reaction" | "story_reply" | "missed_call" | "anon_message" | "unblocked" | "full_access";
+                                kind: "joined" | "added" | "story_reaction" | "note_reaction" | "story_reply" | "note_reply" | "missed_call" | "anon_message" | "unblocked" | "full_access";
                                 /** @description Who did it; null for anon_message, which never says who sent it */
                                 user: {
                                     id: string;
@@ -26839,6 +26839,10 @@ export interface paths {
                                 chatId: string | null;
                                 /** @description For story_reaction and note_reaction */
                                 emoji: string | null;
+                                /** @description For story_reaction and story_reply: the story, to open with its viewers */
+                                storyId: string | null;
+                                /** @description For story_reply and note_reply: the reply, to scroll to in the chat */
+                                messageId: string | null;
                                 /** @description For missed_call: whether it was a video call */
                                 video: boolean;
                                 /** @description New since you last looked, or marked unread */

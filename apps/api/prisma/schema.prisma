@@ -844,6 +844,10 @@ model Notification {
   kind      String
   chatId    String?
   emoji     String?
+  /// The story a story_reaction or story_reply is about, to open it on tap.
+  storyId   String?
+  /// The reply a story_reply or note_reply is, to scroll to it in the chat.
+  messageId String?
   video     Boolean  @default(false)
   /// Set when they marked it unread again; it stays unread until they open it or mark it read.
   markedUnread Boolean @default(false)

@@ -36,7 +36,8 @@ describe("notifications", () => {
     const story = (await call(host, "POST", "/v1/stories", { text: "hello" })).json();
     await call(guest, "POST", `/v1/stories/${story.id}/react`, { emoji: "🔥" });
     await call(guest, "POST", `/v1/stories/${story.id}/react`, { emoji: "🔥" });
-    expect((await send(guest, chatId, "nice", { storyId: story.id })).statusCode).toBe(201);
+    const reply = await send(guest, chatId, "nice", { storyId: story.id });
+    expect(reply.statusCode).toBe(201);
     await call(guest, "POST", `/v1/chats/${chatId}/calls`, { callId: "call-missed", video: true, durationSecs: null });
     await call(guest, "POST", `/v1/chats/${chatId}/calls`, { callId: "call-answered", video: false, durationSecs: 30 });
 
@@ -49,7 +50,8 @@ describe("notifications", () => {
       `joined:${guest.user.id}`,
     ]);
     expect(list.items[0]).toMatchObject({ chatId, video: true, unread: true });
-    expect(list.items[2].emoji).toBe("🔥");
+    expect(list.items[2]).toMatchObject({ emoji: "🔥", storyId: story.id, messageId: null });
+    expect(list.items[1]).toMatchObject({ storyId: story.id, messageId: reply.json().id });
     expect(list.unread).toBe(5);
 
     expect((await call(host, "POST", "/v1/notifications/seen")).statusCode).toBe(204);

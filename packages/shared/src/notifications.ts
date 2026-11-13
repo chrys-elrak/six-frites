@@ -3,7 +3,7 @@ import { IsoDate } from "./common.js";
 import { PublicUser } from "./invites.js";
 import type { Dict } from "./i18n/index.js";
 
-export const NOTIFICATION_KINDS = ["joined", "added", "story_reaction", "note_reaction", "story_reply", "missed_call", "anon_message", "unblocked", "full_access"] as const;
+export const NOTIFICATION_KINDS = ["joined", "added", "story_reaction", "note_reaction", "story_reply", "note_reply", "missed_call", "anon_message", "unblocked", "full_access"] as const;
 export type NotificationKind = (typeof NOTIFICATION_KINDS)[number];
 
 export const NotificationDTO = z.object({
@@ -12,6 +12,8 @@ export const NotificationDTO = z.object({
   user: PublicUser.nullable().describe("Who did it; null for anon_message, which never says who sent it"),
   chatId: z.string().nullable().describe("The direct chat with them, to open on tap"),
   emoji: z.string().nullable().describe("For story_reaction and note_reaction"),
+  storyId: z.string().nullable().describe("For story_reaction and story_reply: the story, to open with its viewers"),
+  messageId: z.string().nullable().describe("For story_reply and note_reply: the reply, to scroll to in the chat"),
   video: z.boolean().describe("For missed_call: whether it was a video call"),
   unread: z.boolean().describe("New since you last looked, or marked unread"),
   createdAt: IsoDate,
@@ -25,6 +27,14 @@ export const NotificationsDTO = z.object({
 export type NotificationsDTO = z.infer<typeof NotificationsDTO>;
 
 export const UpdateNotificationInput = z.object({ unread: z.boolean() });
+
+/** Where tapping a notification leads: the story with its viewers, the story reply in its chat, the chat, or nowhere. */
+export function notificationHref(n: NotificationDTO) {
+  if (n.kind === "anon_message") return "/inbox";
+  if (n.kind === "story_reaction" && n.storyId) return `/?story=${n.storyId}`;
+  if (n.chatId) return n.messageId ? `/chats/${n.chatId}?message=${n.messageId}` : `/chats/${n.chatId}`;
+  return null;
+}
 
 /** The line a notification shows, in the app's language. */
 export function notificationText(t: Dict["notifications"], n: NotificationDTO) {
@@ -40,6 +50,8 @@ export function notificationText(t: Dict["notifications"], n: NotificationDTO) {
       return t.noteReaction(name, n.emoji ?? "");
     case "story_reply":
       return t.storyReply(name);
+    case "note_reply":
+      return t.noteReply(name);
     case "missed_call":
       return n.video ? t.missedVideoCall(name) : t.missedCall(name);
     case "anon_message":

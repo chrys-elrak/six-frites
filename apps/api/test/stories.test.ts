@@ -137,6 +137,13 @@ describe("stories", () => {
 
     const reply = await call(guest, "POST", `/v1/chats/${chatId}/messages`, { clientId: "note-reply", text: "I'm in", storyId: note.id });
     expect(reply.json().story).toEqual({ id: note.id, ownerId: host.user.id, kind: "note", text: "Beach at 5", background: null, imageUrl: null });
+    expect((await get(host, "/v1/notifications")).items[0]).toMatchObject({
+      kind: "note_reply",
+      user: { id: guest.user.id },
+      chatId,
+      storyId: null,
+      messageId: reply.json().id,
+    });
 
     await call(host, "DELETE", "/v1/notes");
     expect((await get(guest, "/v1/notes")).items).toEqual([]);

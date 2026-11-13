@@ -308,10 +308,10 @@ export async function reactToStory(viewerId: string, storyId: string, emoji: Sto
   const viewer = await prisma.user.findUniqueOrThrow({ where: { id: viewerId } });
   const user = (await profilesFor(prisma, story.userId, [viewerId]))(viewer);
   broadcaster().to(rooms.user(story.userId)).emit("story:reacted", { storyId, user, emoji });
-  void deliverStoryReactionPush(story.userId, user, emoji).catch(() => null);
+  void deliverStoryReactionPush(story.userId, user, emoji, storyId).catch(() => null);
   const chat = await prisma.chat.findUnique({ where: { directKey: [viewerId, story.userId].sort().join(":") }, select: { id: true } });
   await withEvents((tx, emit) =>
-    notify(tx, emit, { userId: story.userId, actorId: viewerId, kind: "story_reaction", chatId: chat?.id, emoji }),
+    notify(tx, emit, { userId: story.userId, actorId: viewerId, kind: "story_reaction", chatId: chat?.id, emoji, storyId }),
   );
 }
 
@@ -465,7 +465,7 @@ export async function reactToNote(viewerId: string, noteId: string, emoji: Story
   const viewer = await prisma.user.findUniqueOrThrow({ where: { id: viewerId } });
   const user = (await profilesFor(prisma, note.userId, [viewerId]))(viewer);
   broadcaster().to(rooms.user(note.userId)).emit("story:reacted", { storyId: noteId, user, emoji, note: true });
-  void deliverStoryReactionPush(note.userId, user, emoji, true).catch(() => null);
+  void deliverStoryReactionPush(note.userId, user, emoji).catch(() => null);
   const chat = await prisma.chat.findUnique({ where: { directKey: [viewerId, note.userId].sort().join(":") }, select: { id: true } });
   await withEvents((tx, emit) =>
     notify(tx, emit, { userId: note.userId, actorId: viewerId, kind: "note_reaction", chatId: chat?.id, emoji }),

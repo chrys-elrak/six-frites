@@ -89577,6 +89577,7 @@
                               "story_reaction",
                               "note_reaction",
                               "story_reply",
+                              "note_reply",
                               "missed_call",
                               "anon_message",
                               "unblocked",
@@ -89622,6 +89623,16 @@
                             "description": "For story_reaction and note_reaction",
                             "type": "string"
                           },
+                          "storyId": {
+                            "nullable": true,
+                            "description": "For story_reaction and story_reply: the story, to open with its viewers",
+                            "type": "string"
+                          },
+                          "messageId": {
+                            "nullable": true,
+                            "description": "For story_reply and note_reply: the reply, to scroll to in the chat",
+                            "type": "string"
+                          },
                           "video": {
                             "type": "boolean",
                             "description": "For missed_call: whether it was a video call"
@@ -89642,6 +89653,8 @@
                           "user",
                           "chatId",
                           "emoji",
+                          "storyId",
+                          "messageId",
                           "video",
                           "unread",
                           "createdAt"

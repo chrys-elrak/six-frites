@@ -563,8 +563,10 @@ export async function createMessage(
     },
   });
 
-  if (story && story.kind !== "note") {
-    await notify(tx, emit, { userId: story.ownerId, actorId: userId, kind: "story_reply", chatId });
+  if (story?.kind === "note") {
+    await notify(tx, emit, { userId: story.ownerId, actorId: userId, kind: "note_reply", chatId, messageId: message.id });
+  } else if (story) {
+    await notify(tx, emit, { userId: story.ownerId, actorId: userId, kind: "story_reply", chatId, storyId: story.id, messageId: message.id });
   }
   for (const id of members) emit(id, "message.new", shownTo(id));
   if (started) {

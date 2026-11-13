@@ -134,7 +134,7 @@ export async function deliverPush(messageId: string, userId: string) {
     icon: group ? (group.photoKey ? presignGet(group.photoKey) : null) : sender.avatarUrl,
     chatId: m.chatId,
     messageId: m.id,
-    url: `/chats/${m.chatId}`,
+    url: m.story ? `/chats/${m.chatId}?message=${m.id}` : `/chats/${m.chatId}`,
   }));
 }
 
@@ -222,17 +222,20 @@ export async function deliverAnonPush(userId: string, text: string, kind: "image
   }));
 }
 
-/** Tells someone a contact reacted to their story, on the devices they aren't using right now, unless their chat is archived. */
-export async function deliverStoryReactionPush(userId: string, from: PublicUser, emoji: string, note = false) {
+/**
+ * Tells someone a contact reacted to their story, on the devices they aren't using right now, unless their chat is
+ * archived. Without a `storyId` it was their note.
+ */
+export async function deliverStoryReactionPush(userId: string, from: PublicUser, emoji: string, storyId?: string) {
   if (await archivedWith(userId, from.id)) return 0;
   const targets = await targetsFor(userId);
   return sendToAll(targets, (t) => ({
     title: from.displayName,
-    body: `${emoji} ${note ? t.stories.reactedToYourNote : t.stories.reactedToYours}`,
+    body: `${emoji} ${storyId ? t.stories.reactedToYours : t.stories.reactedToYourNote}`,
     icon: from.avatarUrl,
     chatId: null,
     messageId: null,
-    url: "/",
+    url: storyId ? `/?story=${storyId}` : "/",
   }));
 }
 

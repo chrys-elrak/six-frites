@@ -49,7 +49,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { six } from "@/lib/six";
-import { useEffect, useRef, useState } from "react";
+import { Suspense, useEffect, useRef, useState } from "react";
 import { setArchiveOpen, useAppLock } from "@/lib/app-lock";
 import { useHiddenByArchive } from "@/lib/archive-lock";
 import { ensureBotChat, useChats } from "@/lib/chats";
@@ -568,7 +568,11 @@ export function ChatList({
 
   const top = !rail && (
     <div className="flex flex-col gap-2 px-4 pt-3 pb-2">
-      {filtering && view === "chats" && !needle && <StoriesBar />}
+      {filtering && view === "chats" && !needle && (
+        <Suspense>
+          <StoriesBar />
+        </Suspense>
+      )}
       <label
         className="flex w-full items-center gap-2 rounded-xl bg-black/5 px-3 py-2 text-stone-500 focus-within:ring-2 focus-within:ring-brand dark:bg-white/10"
       >

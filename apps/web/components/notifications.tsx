@@ -1,6 +1,6 @@
 "use client";
 
-import { type NotificationDTO, notificationText } from "@six/shared";
+import { type NotificationDTO, notificationHref, notificationText } from "@six/shared";
 import { useQueryClient } from "@tanstack/react-query";
 import { Bell, Mail, MailOpen, PartyPopper, Settings2, Trash2, VenetianMask } from "lucide-react";
 import Link from "next/link";
@@ -95,7 +95,7 @@ function Row({ n }: { n: NotificationDTO }) {
       </div>
       <div ref={swipe.moving} className="relative">
         <Link
-          href={n.kind === "anon_message" ? "/inbox" : n.chatId ? `/chats/${n.chatId}` : "/notifications"}
+          href={notificationHref(n) ?? "/notifications"}
           onClick={() => n.unread && void markNotification(qc, n.id, false)}
           {...press}
           className={`flex items-center gap-3 px-4 py-3 transition [-webkit-touch-callout:none] pointer-coarse:select-none hover:bg-black/[0.03] active:bg-black/5 dark:hover:bg-white/5 dark:active:bg-white/10 ${

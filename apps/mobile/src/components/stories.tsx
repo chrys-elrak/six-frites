@@ -50,6 +50,7 @@ import {
   VenetianMask,
   X,
 } from "lucide-react-native";
+import { router, useLocalSearchParams } from "expo-router";
 import { type ComponentRef, useCallback, useEffect, useRef, useState } from "react";
 import { ActivityIndicator, FlatList, Keyboard, Linking, Pressable, ScrollView, StyleSheet, View } from "react-native";
 import { KeyboardStickyView } from "react-native-keyboard-controller";
@@ -453,6 +454,7 @@ export function StoriesBar() {
   const stories = useStories();
   const notes = useNotes().data;
   const [open, setOpen] = useState<number | null>(null);
+  const { story: linked } = useLocalSearchParams<{ story?: string }>();
   const [composing, setComposing] = useState(false);
   const [writingNote, setWritingNote] = useState(false);
   const [reading, setReading] = useState<{ user: PublicUser; note: NoteDTO } | null>(null);
@@ -463,6 +465,14 @@ export function StoriesBar() {
   const latest = groups[mineAt]?.stories[groups[mineAt]!.stories.length - 1];
   const cover = latest && (latest.media?.thumbUrl ?? (latest.type === "image" ? latest.media?.url : null));
   const noteOf = new Map(noteItems.map((n) => [n.user.id, n]));
+  const linkedAt = linked ? groups.findIndex((g) => g.stories.some((s) => s.id === linked)) : -1;
+  useEffect(() => {
+    if (linkedAt >= 0) setOpen(linkedAt);
+  }, [linkedAt]);
+  const close = () => {
+    setOpen(null);
+    if (linked) router.setParams({ story: undefined });
+  };
   const people = [
     ...groups.flatMap((g, i) => (g.user.id === me.id ? [] : [{ user: g.user, at: i as number | null, unseen: g.stories.some((s) => !s.seen) }])),
     ...noteItems.filter((n) => !groups.some((g) => g.user.id === n.user.id)).map((n) => ({ user: n.user, at: null, unseen: false })),
@@ -534,7 +544,7 @@ export function StoriesBar() {
           );
         })}
       </ScrollView>
-      {open !== null && groups[open] && <StoryViewer groups={groups} start={open} onClose={() => setOpen(null)} />}
+      {open !== null && groups[open] && <StoryViewer groups={groups} start={open} storyId={linked} onClose={close} />}
       {composing && <StoryComposer onClose={() => setComposing(false)} />}
       {writingNote && <NoteEditor note={notes?.mine ?? null} onClose={() => setWritingNote(false)} />}
       {reading && <NoteReader user={reading.user} note={reading.note} onClose={() => setReading(null)} />}
@@ -718,13 +728,27 @@ function ReplyBar({ story, owner, onTyping }: { story: StoryDTO; owner: PublicUs
  * Full-screen stories, one person after the other. Tap the right side for the next story, the left
  * for the previous one, and hold to pause.
  */
-export function StoryViewer({ groups, start, onClose }: { groups: StoryGroupDTO[]; start: number; onClose: () => void }) {
+/** Shows the stories from `start`'s group on; with `storyId`, from that story with its viewers open. */
+export function StoryViewer({
+  groups,
+  start,
+  storyId,
+  onClose,
+}: {
+  groups: StoryGroupDTO[];
+  start: number;
+  storyId?: string;
+  onClose: () => void;
+}) {
   const tr = useT();
   const qc = useQueryClient();
   const insets = useSafeAreaInsets();
   const meId = useSession((s) => s.user!.id);
   const [gi, setGi] = useState(start);
-  const [si, setSi] = useState(() => firstUnseen(groups[start]!));
+  const [si, setSi] = useState(() => {
+    const at = groups[start]!.stories.findIndex((s) => s.id === storyId);
+    return at >= 0 ? at : firstUnseen(groups[start]!);
+  });
   const [elapsed, setElapsed] = useState(0);
   const progress = useRef(0);
   const show = useCallback((ms: number) => {
@@ -734,7 +758,7 @@ export function StoryViewer({ groups, start, onClose }: { groups: StoryGroupDTO[
   const [videoMs, setVideoMs] = useState<number | null>(null);
   const [paused, setPaused] = useState(false);
   const [held, setHeld] = useState(false);
-  const [showViewers, setShowViewers] = useState(false);
+  const [showViewers, setShowViewers] = useState(!!storyId);
   const [deleting, setDeleting] = useState(false);
   const [replying, setReplying] = useState(false);
   const [width, setWidth] = useState(1);

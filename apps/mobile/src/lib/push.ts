@@ -96,8 +96,8 @@ export function usePush() {
 
   useEffect(() => {
     const data = response?.notification.request.content.data;
-    if (typeof data?.chatId === "string") router.push(`/chats/${data.chatId}`);
-    else if (typeof data?.url === "string" && data.url.startsWith("/")) router.push(data.url as Href);
+    if (typeof data?.url === "string" && data.url.startsWith("/")) router.push(data.url as Href);
+    else if (typeof data?.chatId === "string") router.push(`/chats/${data.chatId}`);
     else if (typeof data?.url === "string" && data.url.startsWith("https://")) void Linking.openURL(data.url);
     else return;
     Notifications.clearLastNotificationResponse();

@@ -3,7 +3,7 @@
 import { type ClientDevice, type MessageDTO, chatFace, durationLabel, isFrozen, isMuted, previewText, readOnlyGroup } from "@six/shared";
 import { useQueryClient } from "@tanstack/react-query";
 import { ChevronLeft, ChevronsUpDown, Globe, Lock, type LucideIcon, Monitor, MoreVertical, Phone, PinOff, ShieldAlert, Smartphone, Trash2, Video, X } from "lucide-react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { BackLink, useCloseOnBack, useGoUp } from "@/lib/back";
 import { useMedia } from "@/lib/viewport";
@@ -132,6 +132,13 @@ function OpenConversation({ chatId }: { chatId: string }) {
     setEditing(true);
     router.replace(`/chats/${chatId}`);
   }, [chatId, router]);
+  const linked = useSearchParams().get("message");
+  const loaded = !!chat.data && !!messages.data;
+  useEffect(() => {
+    if (!linked || !loaded) return;
+    list.current?.jumpTo(linked);
+    router.replace(`/chats/${chatId}`);
+  }, [linked, loaded, chatId, router]);
   const support = !!chat.data?.withSupport;
   useEffect(() => {
     if (support) return;

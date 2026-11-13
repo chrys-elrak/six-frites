@@ -51,6 +51,7 @@ import {
   VenetianMask,
   X,
 } from "lucide-react";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useCloseOnBack } from "@/lib/back";
 import { clockTime, shortDate, timeAgo } from "@/lib/format";
@@ -408,11 +409,22 @@ export function StoriesBar() {
   const stories = useStories();
   const notes = useNotes().data;
   const [open, setOpen] = useState<number | null>(null);
+  const linked = useSearchParams().get("story") ?? undefined;
+  const router = useRouter();
+  const pathname = usePathname();
   const [composing, setComposing] = useState(false);
   const [writingNote, setWritingNote] = useState(false);
   const [reading, setReading] = useState<{ user: PublicUser; note: NoteDTO } | null>(null);
   const hidden = useHiddenByArchive().userIds;
   const groups = (stories.data ?? []).filter((g) => !hidden.has(g.user.id));
+  const linkedAt = linked ? groups.findIndex((g) => g.stories.some((s) => s.id === linked)) : -1;
+  useEffect(() => {
+    if (linkedAt >= 0) setOpen(linkedAt);
+  }, [linkedAt]);
+  const close = () => {
+    setOpen(null);
+    if (linked) router.replace(pathname);
+  };
   const noteItems = (notes?.items ?? []).filter((n) => !hidden.has(n.user.id));
   const mineAt = groups.findIndex((g) => g.user.id === me.id);
   const latest = groups[mineAt]?.stories[groups[mineAt]!.stories.length - 1];
@@ -489,7 +501,7 @@ export function StoriesBar() {
           );
         })}
       </div>
-      {open !== null && groups[open] && <StoryViewer groups={groups} start={open} onClose={() => setOpen(null)} />}
+      {open !== null && groups[open] && <StoryViewer groups={groups} start={open} storyId={linked} onClose={close} />}
       {composing && <StoryComposer onClose={() => setComposing(false)} />}
       {writingNote && <NoteEditor note={notes?.mine ?? null} onClose={() => setWritingNote(false)} />}
       {reading && <NoteReader user={reading.user} note={reading.note} onClose={() => setReading(null)} />}
@@ -644,12 +656,25 @@ function ReplyBar({ story, owner, onTyping }: { story: StoryDTO; owner: PublicUs
  * Full-screen stories, one person after the other. Tap the right side for the next story, the left
  * for the previous one, and hold to pause.
  */
-export function StoryViewer({ groups, start, onClose }: { groups: StoryGroupDTO[]; start: number; onClose: () => void }) {
+export function StoryViewer({
+  groups,
+  start,
+  storyId,
+  onClose,
+}: {
+  groups: StoryGroupDTO[];
+  start: number;
+  storyId?: string;
+  onClose: () => void;
+}) {
   const tr = useT();
   const qc = useQueryClient();
   const meId = useSession((s) => s.user!.id);
   const [gi, setGi] = useState(start);
-  const [si, setSi] = useState(() => firstUnseen(groups[start]!));
+  const [si, setSi] = useState(() => {
+    const at = groups[start]!.stories.findIndex((s) => s.id === storyId);
+    return at >= 0 ? at : firstUnseen(groups[start]!);
+  });
   const [elapsed, setElapsed] = useState(0);
   const progress = useRef(0);
   const show = useCallback((ms: number) => {
@@ -658,7 +683,7 @@ export function StoryViewer({ groups, start, onClose }: { groups: StoryGroupDTO[
   }, []);
   const [paused, setPaused] = useState(false);
   const [held, setHeld] = useState(false);
-  const [showViewers, setShowViewers] = useState(false);
+  const [showViewers, setShowViewers] = useState(!!storyId);
   const [deleting, setDeleting] = useState(false);
   const [replying, setReplying] = useState(false);
   const [videoMs, setVideoMs] = useState<number | null>(null);
