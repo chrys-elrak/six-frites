@@ -4149,16 +4149,11 @@
                           "announcement",
                           "release"
                         ],
-                        "description": "release: a version's notes, posted when it was published"
-                      },
-                      "version": {
-                        "nullable": true,
-                        "description": "For a release",
-                        "type": "string"
+                        "description": "release: the release notes posted after a deploy"
                       },
                       "text": {
                         "type": "string",
-                        "description": "For a release, the English notes; each member got them in their own language"
+                        "description": "For a release, the notes as their first reader got them; each member got them in their own language"
                       },
                       "entities": {
                         "type": "array",
@@ -4219,7 +4214,6 @@
                     },
                     "required": [
                       "kind",
-                      "version",
                       "text",
                       "entities",
                       "sentAt",

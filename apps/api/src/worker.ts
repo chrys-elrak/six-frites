@@ -18,6 +18,7 @@ import { ensureBucket } from "./lib/storage.js";
 import { processUpload } from "./media/process.js";
 import { runStickerImport } from "./services/sticker-import.js";
 import { liftExpiredBans } from "./services/admin.js";
+import { postDeployNotes } from "./services/bot.js";
 import { sendDueBotAnon } from "./services/ask.js";
 import { deleteExpiredMessages, expireMessage, purgeMessage } from "./services/messages.js";
 import { deliverPush, deliverReactionPush } from "./services/push.js";
@@ -101,6 +102,7 @@ await timersQueue().upsertJobScheduler(
   { name: "mail-sweep", data: { mailSweep: true }, opts: { attempts: 1, removeOnComplete: 100, removeOnFail: 100 } },
 );
 console.log("media worker ready");
+void postDeployNotes().catch((err: Error) => console.error("release notes not posted:", err.message));
 
 const shutdown = async () => {
   await Promise.all([worker.close(), timers.close(), pushes.close()]);

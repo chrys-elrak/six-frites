@@ -1,11 +1,11 @@
 import { createHash } from "node:crypto";
+import { readFileSync } from "node:fs";
 import { createId } from "@paralleldrive/cuid2";
 import {
   APP_ACCOUNT_IDS,
   type AnnounceInput,
   type AnnouncementDTO,
   type BotGame,
-  CHANGELOG,
   FRITE_BOT_ID,
   type LiveGame,
   type Locale,
@@ -14,6 +14,7 @@ import {
   botGame,
   dict,
   isLocale,
+  parseReleaseNotes,
   releaseAnnouncement,
 } from "@six/shared";
 import { env } from "../env.js";
@@ -110,24 +111,35 @@ export async function announce({ text, entities, email }: AnnounceInput) {
 }
 
 /**
- * Posts a published version's notes to every member, each in their language, once per version. `storeNotes` are the
- * ones Koera Store has, for a version this server's changelog doesn't know yet.
+ * Posts the sections of RELEASE_NOTES.md that members haven't had yet, as one message each in their language. The
+ * worker calls it when it starts, so once per deploy.
+ *
+ * ponytail: the heading posted last is the bookmark, so a section added below it is never sent; keep a table of
+ * posted headings if notes start landing out of order.
  */
-export const postReleaseNotes = (version: string, storeNotes: string) =>
-  postNews(`release:${version}`, (locale) => releaseAnnouncement(version, locale, storeNotes));
+export async function postDeployNotes(markdown = readFileSync(new URL("../../../../RELEASE_NOTES.md", import.meta.url), "utf8")) {
+  const last = await prisma.message.findFirst({
+    where: { senderId: SIX_FRITES_ID, clientId: { startsWith: "release:" } },
+    orderBy: { createdAt: "desc" },
+    select: { clientId: true },
+  });
+  const bookmark = last?.clientId?.split(":")[1] ?? "";
+  const pending = parseReleaseNotes(markdown).filter((s) => s.id > bookmark).reverse();
+  if (!pending.length) return null;
+  return postNews(`release:${pending.at(-1)!.id}`, (locale) => releaseAnnouncement(pending.flatMap((s) => s.notes[locale]), locale));
+}
 
 /**
  * What Six Frites News posted, newest first, read back from the messages themselves: one that every member has
- * since deleted is gone from here too. A release shows its English notes.
+ * since deleted is gone from here too. Release notes show as their first reader got them.
  *
  * ponytail: the newest 100, with no paging; page it when the list gets that long.
  */
 export async function listAnnouncements(): Promise<AnnouncementDTO[]> {
   const rows = await prisma.$queryRaw<
-    { kind: string; key: string; sentAt: Date; members: number; text: string; entities: MessageEntity[] | null }[]
+    { kind: string; sentAt: Date; members: number; text: string; entities: MessageEntity[] | null }[]
   >`
     SELECT split_part("clientId", ':', 1) AS kind,
-           split_part("clientId", ':', 2) AS key,
            min("createdAt") AS "sentAt",
            count(*)::int AS members,
            (array_agg("text" ORDER BY "createdAt"))[1] AS text,
@@ -137,22 +149,16 @@ export async function listAnnouncements(): Promise<AnnouncementDTO[]> {
       AND ("clientId" LIKE 'announce:%' OR "clientId" LIKE 'release:%')
       AND "text" IS NOT NULL
       AND "deletedAt" IS NULL
-    GROUP BY 1, 2
+    GROUP BY 1, split_part("clientId", ':', 2)
     ORDER BY "sentAt" DESC
     LIMIT 100`;
-  return rows.map((r) => {
-    const release = r.kind === "release";
-    const known = release && CHANGELOG.some((c) => c.version === r.key);
-    return {
-      kind: release ? "release" : "announcement",
-      version: release ? r.key : null,
-      text: r.text,
-      entities: r.entities ?? [],
-      ...(known && releaseAnnouncement(r.key, "en")),
-      sentAt: r.sentAt.toISOString(),
-      members: r.members,
-    };
-  });
+  return rows.map((r) => ({
+    kind: r.kind === "release" ? "release" : "announcement",
+    text: r.text,
+    entities: r.entities ?? [],
+    sentAt: r.sentAt.toISOString(),
+    members: r.members,
+  }));
 }
 
 /** Frite Bot sends a new game of `kind` to the user's chat with it, the way it plays them on the phone. */

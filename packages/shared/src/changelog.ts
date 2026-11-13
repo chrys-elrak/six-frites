@@ -1,5 +1,5 @@
 import type { MessageEntity } from "./chats.js";
-import { type Locale, dict } from "./i18n/index.js";
+import { LOCALES, type Locale, dict } from "./i18n/index.js";
 
 export interface Release {
   version: string;
@@ -8,9 +8,9 @@ export interface Release {
 }
 
 /**
- * What each release brought, newest first. Six Frites News posts a version's notes in every member's chat with it
- * once that version is published. Every Android release needs an entry for the version in
- * apps/mobile/app.config.ts, or the release build stops; its English notes are what goes to Koera Store.
+ * What each Android release brought, newest first. Every release needs an entry for the version in
+ * apps/mobile/app.config.ts, or the release build stops; its English notes are what goes to Koera Store. What
+ * members read in Six Frites News comes from RELEASE_NOTES.md instead.
  */
 export const CHANGELOG: Release[] = [
   {
@@ -246,13 +246,29 @@ export const CHANGELOG: Release[] = [
   },
 ];
 
+export interface ReleaseNotes {
+  id: string;
+  notes: Record<Locale, string[]>;
+}
+
 /**
- * What Six Frites News posts when a version is published: a bold title, then that version's notes in the member's
- * language. `fallback` stands in for the notes of a version the changelog doesn't have.
+ * RELEASE_NOTES.md as its sections, newest first: a `## ` heading, then the notes as `- ` lines under `### en`,
+ * `### fr` and `### mg`. A language a section doesn't have gets its English notes.
  */
-export function releaseAnnouncement(version: string, locale: Locale, fallback = ""): { text: string; entities: MessageEntity[] } {
-  const title = `${dict[locale].common.whatsNew} · ${dict[locale].common.version(version)}`;
-  const release = CHANGELOG.find((r) => r.version === version);
-  const notes = release ? release.notes[locale].map((note) => `• ${note}`).join("\n") : fallback;
-  return { text: `${title}\n\n${notes}`.trim(), entities: [{ type: "bold", offset: 0, length: title.length }] };
+export function parseReleaseNotes(markdown: string): ReleaseNotes[] {
+  return markdown
+    .split(/^## /m)
+    .slice(1)
+    .map((section) => {
+      const [head, ...parts] = section.split(/^### /m);
+      const by = new Map(parts.map((p) => [p.split("\n")[0]!.trim(), [...p.matchAll(/^- (.+)$/gm)].map((m) => m[1]!.trim())]));
+      const notes = Object.fromEntries(LOCALES.map((l) => [l, by.get(l) ?? by.get("en") ?? []])) as Record<Locale, string[]>;
+      return { id: head!.split("\n")[0]!.trim(), notes };
+    });
+}
+
+/** What Six Frites News posts after a deploy: a bold title, then the notes in the member's language. */
+export function releaseAnnouncement(notes: string[], locale: Locale): { text: string; entities: MessageEntity[] } {
+  const title = dict[locale].common.whatsNew;
+  return { text: `${title}\n\n${notes.map((note) => `• ${note}`).join("\n")}`, entities: [{ type: "bold", offset: 0, length: title.length }] };
 }

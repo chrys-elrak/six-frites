@@ -27,7 +27,7 @@ function History() {
         <article key={`${a.kind}:${a.sentAt}`} className={`${fill} space-y-1 px-3 py-2.5`}>
           <p className="text-xs text-stone-500">
             {new Date(a.sentAt).toLocaleString("en", { dateStyle: "medium", timeStyle: "short" })} ·{" "}
-            {a.kind === "release" ? `Release ${a.version}, each member in their language` : "Announcement"} · {a.members}{" "}
+            {a.kind === "release" ? "Release notes, each member in their language" : "Announcement"} · {a.members}{" "}
             {a.members === 1 ? "member" : "members"}
           </p>
           <p className="text-sm break-words whitespace-pre-wrap">

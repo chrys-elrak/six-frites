@@ -1792,13 +1792,11 @@ export interface paths {
                     content: {
                         "application/json": {
                             /**
-                             * @description release: a version's notes, posted when it was published
+                             * @description release: the release notes posted after a deploy
                              * @enum {string}
                              */
                             kind: "announcement" | "release";
-                            /** @description For a release */
-                            version: string | null;
-                            /** @description For a release, the English notes; each member got them in their own language */
+                            /** @description For a release, the notes as their first reader got them; each member got them in their own language */
                             text: string;
                             entities: {
                                 /** @enum {string} */

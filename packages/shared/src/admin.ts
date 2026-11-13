@@ -234,9 +234,8 @@ export const AnnounceResult = z.object({
 export type AnnounceResult = z.infer<typeof AnnounceResult>;
 
 export const AnnouncementDTO = z.object({
-  kind: z.enum(["announcement", "release"]).describe("release: a version's notes, posted when it was published"),
-  version: z.string().nullable().describe("For a release"),
-  text: z.string().describe("For a release, the English notes; each member got them in their own language"),
+  kind: z.enum(["announcement", "release"]).describe("release: the release notes posted after a deploy"),
+  text: z.string().describe("For a release, the notes as their first reader got them; each member got them in their own language"),
   entities: z.array(MessageEntity),
   sentAt: IsoDate,
   members: z.number().int().describe("Members who have it in their chat with Six Frites News"),

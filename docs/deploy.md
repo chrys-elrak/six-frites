@@ -91,10 +91,12 @@ key to read history on a new device.
 Build the release APK against production with `npm run build:android`. It points the app at
 `https://six-frites.koera.mg`, regenerates `apps/mobile/android` and prints the APK's path, version and sha256.
 Bump `version` and `android.versionCode` in `apps/mobile/app.config.ts` first, and put that version's notes at the
-top of `packages/shared/src/changelog.ts` in all three languages. The build stops without them and ends by printing
-the English notes for Koera Store. Deploy the server with those notes before publishing: when Koera Store says the
-version is live, Six Frites News posts them in every member's chat with it, each in their language. If the server
-doesn't have that version's notes yet, everyone gets the English ones from the store instead.
+top of `packages/shared/src/changelog.ts`. The build stops without them and ends by printing the English notes for
+Koera Store.
+
+What members read comes from `RELEASE_NOTES.md` instead. Every commit that changes something for them adds a section
+there, and after each deploy the worker has Six Frites News post the sections not sent yet in every member's chat
+with it, as one message in their language.
 
 For push notifications on Android, register the `com.sixfrites.app` Android app in the same Firebase project as
 `FCM_SERVICE_ACCOUNT` and put its `google-services.json` in `apps/mobile/`. Builds without that file still work,

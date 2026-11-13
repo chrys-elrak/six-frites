@@ -2,7 +2,6 @@ import { createHmac, timingSafeEqual } from "node:crypto";
 import { AppError, type LatestAppDTO } from "@six/shared";
 import { z } from "zod";
 import { env } from "../env.js";
-import { postReleaseNotes } from "./bot.js";
 import { deliverReleasePush } from "./push.js";
 
 const STORE_APP = "six-frites";
@@ -34,8 +33,7 @@ export async function latestRelease(): Promise<LatestAppDTO | null> {
 
 /**
  * Koera Store calls this the first time a version goes live, signing the raw body with the app's webhook secret.
- * Once the signature checks out, every Android phone hears about the new version in the background, and Six Frites
- * News posts its notes in every member's chat with it.
+ * Once the signature checks out, every Android phone hears about the new version in the background.
  */
 export function announceRelease(body: string, signature: string | undefined) {
   if (!env.STORE_WEBHOOK_SECRET) throw new AppError("FORBIDDEN", "STORE_WEBHOOK_SECRET is not set");
@@ -47,5 +45,4 @@ export function announceRelease(body: string, signature: string | undefined) {
   const release = StoreRelease.parse(JSON.parse(body));
   if (release.app !== STORE_APP) return;
   void deliverReleasePush(release.version, storePage).catch(() => null);
-  void postReleaseNotes(release.version, release.notes).catch((err: Error) => console.error("release notes not posted:", err.message));
 }
