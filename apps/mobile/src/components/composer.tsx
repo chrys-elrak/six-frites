@@ -900,6 +900,7 @@ export function Composer({
             showsHorizontalScrollIndicator={false}
             accessibilityRole="toolbar"
             accessibilityLabel={tr.composer.formatting}
+            style={styles.clearOfSelectionMenu}
             contentContainerStyle={[styles.glass, { backgroundColor: t.surface, borderColor: t.border }]}
           >
             {formats.map(({ type, Icon }) => (
@@ -1185,6 +1186,7 @@ const styles = StyleSheet.create({
   toolbar: { flexDirection: "row", gap: 6 },
   glass: { flexDirection: "row", alignItems: "center", gap: 2, padding: 4, borderRadius: 14, borderWidth: StyleSheet.hairlineWidth },
   glassItem: { minWidth: 40, height: 40, borderRadius: 10, alignItems: "center", justifyContent: "center" },
+  clearOfSelectionMenu: { marginBottom: 56 },
   suggestion: { fontSize: 22 },
   format: {
     width: 36,

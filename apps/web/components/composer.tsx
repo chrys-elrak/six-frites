@@ -778,7 +778,11 @@ export function Composer({
           </p>
         )}
 
-        {hasSelection && <FormatBar onFormat={wrap} />}
+        {hasSelection && (
+          <div className="pointer-coarse:pb-14">
+            <FormatBar onFormat={wrap} />
+          </div>
+        )}
 
         {recorder.error && (
           <p role="alert" className="px-1 text-sm text-red-600 dark:text-red-400">
