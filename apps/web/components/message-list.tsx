@@ -981,7 +981,7 @@ function Bubble({
         <div className={`flex items-center gap-1 ${compact ? "min-w-0 flex-1 gap-2" : "max-w-[80%] md:max-w-[65%]"} ${right ? "flex-row-reverse" : ""}`}>
           {sender && (
             <span className={`w-9 shrink-0 ${compact ? "self-start pt-6" : "self-end"}`}>
-              {(compact ? groupStart : groupEnd) && <Avatar user={sender} />}
+              {(compact ? groupStart : groupEnd) && <Avatar user={mine ? { ...sender, displayName: "#" } : sender} />}
             </span>
           )}
           <div className={`flex min-w-0 flex-col gap-1 ${compact ? "items-start" : "items-end"}`}>

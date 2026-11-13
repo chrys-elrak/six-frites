@@ -2,8 +2,9 @@ import { aliasAvatar, type PublicUser } from "@six/shared";
 import { Image } from "expo-image";
 import { StyleSheet, View } from "react-native";
 import { Text } from "./text";
+import { useBubbleColors } from "@/lib/bubble-colors";
 import { useT } from "@/lib/i18n";
-import { brand, brandInk, useTheme } from "@/lib/theme";
+import { brand, useTheme } from "@/lib/theme";
 
 const sizes = { sm: 36, md: 56, lg: 80, xl: 120 };
 
@@ -18,6 +19,7 @@ export function Avatar({
 }) {
   const t = useTheme();
   const tr = useT();
+  const bubble = useBubbleColors();
   const side = sizes[size];
   const box = { width: side, height: side, borderRadius: side / 2 };
   const dot = Math.round(side * 0.28);
@@ -31,8 +33,8 @@ export function Avatar({
           <Text style={[styles.food, { fontSize: side * 0.52, lineHeight: side * 0.66 }]}>{alias.food}</Text>
         </View>
       ) : (
-        <View style={[styles.initial, box]}>
-          <Text style={[styles.letter, { fontSize: side * 0.38 }]}>{user.displayName.slice(0, 1).toUpperCase()}</Text>
+        <View style={[styles.initial, box, { backgroundColor: bubble.bg }]}>
+          <Text style={[styles.letter, { color: bubble.ink, fontSize: side * 0.38 }]}>{user.displayName.slice(0, 1).toUpperCase()}</Text>
         </View>
       )}
       {online && (
@@ -50,7 +52,7 @@ export function Avatar({
 
 const styles = StyleSheet.create({
   initial: { backgroundColor: brand, alignItems: "center", justifyContent: "center" },
-  letter: { color: brandInk, fontWeight: "600" },
+  letter: { fontWeight: "600" },
   food: { textAlign: "center", includeFontPadding: false },
   dot: { position: "absolute", right: 0, bottom: 0, backgroundColor: "#22c55e" },
 });

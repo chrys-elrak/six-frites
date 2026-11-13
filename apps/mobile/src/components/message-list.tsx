@@ -1061,7 +1061,7 @@ function Bubble({
       </Animated.View>
       {sender && (
         <View style={{ width: 36, alignSelf: compact ? "flex-start" : "flex-end", paddingTop: compact ? 21 : 0 }}>
-          {(compact ? groupStart : groupEnd) && <Avatar user={sender} />}
+          {(compact ? groupStart : groupEnd) && <Avatar user={row.mine ? { ...sender, displayName: "#" } : sender} />}
         </View>
       )}
       <Animated.View style={[styles.side, { alignItems: right ? "flex-end" : "flex-start" }, swipe.moving]}>
