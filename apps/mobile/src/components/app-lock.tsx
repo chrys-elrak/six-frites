@@ -257,11 +257,13 @@ export function LockScreen({
               style={{ alignSelf: "center" }}
             />
           )}
-          {onCancel ? (
-            <TextButton title={tr.common.cancel} onPress={onCancel} />
-          ) : (
-            <TextButton title={tr.settings.appLock.forgot} onPress={() => void logout()} />
-          )}
+          <View style={{ alignItems: "center" }}>
+            {onCancel ? (
+              <TextButton title={tr.common.cancel} onPress={onCancel} />
+            ) : (
+              <TextButton title={tr.settings.appLock.forgot} onPress={() => void logout()} />
+            )}
+          </View>
         </View>
       </KeyboardAvoidingView>
     </Modal>
