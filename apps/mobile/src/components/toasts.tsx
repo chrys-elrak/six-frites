@@ -1,5 +1,5 @@
 import { type Href, router } from "expo-router";
-import { Check, MessageCircle, X } from "lucide-react-native";
+import { Check, MessageCircle, TriangleAlert, X } from "lucide-react-native";
 import { useEffect } from "react";
 import { Pressable, StyleSheet, View } from "react-native";
 import { Text } from "./text";
@@ -17,19 +17,21 @@ function SentPill({ toast, onDismiss }: { toast: Toast; onDismiss: () => void })
       <Pressable
         onPress={() => {
           onDismiss();
-          router.push(toast.href as Href);
+          if (toast.href) router.push(toast.href as Href);
         }}
-        style={({ pressed }) => [styles.pill, { backgroundColor: t.dark ? "rgba(255,255,255,0.92)" : "rgba(28,25,23,0.88)" }, pressed && { opacity: 0.7 }]}
+        style={({ pressed }) => [styles.pill, { backgroundColor: t.surface, borderColor: t.border }, pressed && { opacity: 0.7 }]}
       >
-        <View style={styles.check}>
-          <Check size={14} strokeWidth={3} color="#fff" />
+        <View style={[styles.check, toast.failed && { backgroundColor: "#dc2626" }]}>
+          {toast.failed ? <TriangleAlert size={13} strokeWidth={2.6} color="#fff" /> : <Check size={14} strokeWidth={3} color="#fff" />}
         </View>
-        <Text numberOfLines={1} style={{ color: t.dark ? "#1c1917" : "#fff", fontSize: 14, fontWeight: "700", flexShrink: 0 }}>
+        <Text numberOfLines={toast.body ? 1 : 2} style={{ color: t.text, fontSize: 14, fontWeight: "700", flexShrink: toast.body ? 0 : 1 }}>
           {toast.title}
         </Text>
-        <Text numberOfLines={1} style={{ color: t.dark ? "#1c1917" : "#fff", fontSize: 14, opacity: 0.7, flexShrink: 1 }}>
-          {toast.body}
-        </Text>
+        {!!toast.body && (
+          <Text numberOfLines={1} style={{ color: t.textSoft, fontSize: 14, flexShrink: 1 }}>
+            {toast.body}
+          </Text>
+        )}
       </Pressable>
     </Animated.View>
   );
@@ -54,7 +56,7 @@ function ToastCard({ toast, onDismiss }: { toast: Toast; onDismiss: () => void }
       <Pressable
         onPress={() => {
           onDismiss();
-          router.push(toast.href as Href);
+          if (toast.href) router.push(toast.href as Href);
         }}
         style={({ pressed }) => [styles.body, pressed && { opacity: 0.7 }]}
       >
@@ -134,6 +136,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     gap: 8,
     borderRadius: 999,
+    borderWidth: StyleSheet.hairlineWidth,
     paddingVertical: 8,
     paddingLeft: 8,
     paddingRight: 16,

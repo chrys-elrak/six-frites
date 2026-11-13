@@ -39,7 +39,7 @@ function SentPill({ toast: t }: { toast: Toast }) {
         dismiss(t.id);
         router.push(t.href);
       }}
-      className="pointer-events-auto flex max-w-sm animate-[toast-in_320ms_cubic-bezier(0.2,0.9,0.3,1.15)] items-center gap-2 rounded-full bg-stone-900/85 py-2 pr-4 pl-2 text-sm text-white shadow-lg backdrop-blur-xl dark:bg-white/90 dark:text-stone-900"
+      className="pointer-events-auto flex max-w-sm animate-[toast-in_320ms_cubic-bezier(0.2,0.9,0.3,1.15)] items-center gap-2 rounded-full bg-white/80 py-2 pr-4 pl-2 text-sm text-stone-900 shadow-lg ring-1 ring-black/5 backdrop-blur-xl backdrop-saturate-150 dark:bg-stone-900/80 dark:text-stone-100 dark:ring-white/10"
     >
       <span className="grid size-6 shrink-0 place-items-center rounded-full bg-emerald-500 text-white">
         <Check className="size-3.5" strokeWidth={3} />

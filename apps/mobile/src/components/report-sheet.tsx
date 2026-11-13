@@ -1,6 +1,6 @@
 import { ReportReason } from "@six/shared";
-import { Alert } from "react-native";
 import { useT } from "@/lib/i18n";
+import { toastDone } from "@/lib/notify";
 import { six } from "@/lib/six";
 import { Sheet } from "./sheet";
 
@@ -10,7 +10,7 @@ export function ReportSheet({ target, onClose }: { target: { messageId: string }
 
   async function report(reason: ReportReason) {
     const res = await six.api.POST("/v1/reports", { body: { ...target, reason } }).catch(() => null);
-    Alert.alert(res?.response.ok ? tr.chat.reportThanks : tr.chat.reportFailed);
+    toastDone(res?.response.ok ? tr.chat.reportThanks : tr.chat.reportFailed, !res?.response.ok);
   }
 
   return (

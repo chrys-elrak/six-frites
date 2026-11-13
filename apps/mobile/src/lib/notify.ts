@@ -20,12 +20,15 @@ export { type NotifyPrefs, useNotifyPrefs } from "./notify-prefs";
 
 export interface Toast {
   id: string;
-  href: string;
+  /** Where tapping it leads; a pill without one just goes away. */
+  href?: string;
   title: string;
   body: string;
   avatar: { displayName: string; avatarUrl: string | null };
   /** A confirmation of something I sent, drawn as a small pill so it can't pass for an incoming message. */
   sent?: boolean;
+  /** A pill saying something went wrong, marked in red instead of with a check. */
+  failed?: boolean;
 }
 
 export const useToasts = create<{ toasts: Toast[]; push: (t: Toast) => void; dismiss: (id: string) => void }>(
@@ -48,6 +51,18 @@ export function toastSent(chatId: string, to: { displayName: string; avatarUrl: 
     body: what,
     avatar: { displayName: to.displayName, avatarUrl: to.avatarUrl },
     sent: true,
+  });
+}
+
+/** A small pill confirming something was done, or that it failed, in the app's own style instead of a system alert. */
+export function toastDone(text: string, failed = false) {
+  useToasts.getState().push({
+    id: `done-${Date.now()}`,
+    title: text,
+    body: "",
+    avatar: { displayName: "", avatarUrl: null },
+    sent: true,
+    failed,
   });
 }
 
