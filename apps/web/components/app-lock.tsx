@@ -1,15 +1,17 @@
 "use client";
 
 import { unwrap } from "@six/sdk";
+import { chatTheme } from "@six/shared";
 import { useMutation } from "@tanstack/react-query";
-import { Delete, Lock } from "lucide-react";
-import { useState } from "react";
+import { Check, Delete, Lock } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
 import { useCloseOnBack } from "@/lib/back";
 import { codeLength, setCodeLength, unlock } from "@/lib/app-lock";
 import { e2ee, signOut } from "@/lib/e2ee";
 import { useT } from "@/lib/i18n";
 import { useSession } from "@/lib/session";
 import { six } from "@/lib/six";
+import { Wallpaper } from "./chat-background";
 import { Dialog } from "./dialog";
 import { useHasRecoveryKey } from "./encryption-settings";
 import { Logo } from "./logo";
@@ -125,13 +127,13 @@ function TurnOnDialog({ onClose }: { onClose: () => void }) {
   );
 }
 
-/** On-screen digits for mouse users; touch screens get the numeric keyboard instead. */
-function Keypad({ value, onChange }: { value: string; onChange: (v: string) => void }) {
+/** On-screen digits, so no keyboard is needed. With `onSubmit`, the empty corner key sends a code of 4 digits or more. */
+function Keypad({ value, onChange, onSubmit }: { value: string; onChange: (v: string) => void; onSubmit?: () => void }) {
   const tr = useT();
-  const key = "grid size-16 place-items-center rounded-full text-2xl font-medium hover:bg-stone-200 active:scale-95 dark:hover:bg-stone-800";
+  const key = "grid size-16 place-items-center rounded-full text-2xl font-medium transition active:scale-95";
 
   return (
-    <div className="hidden grid-cols-3 justify-items-center gap-3 pointer-fine:grid">
+    <div className="mx-auto grid w-fit grid-cols-3 gap-x-5 gap-y-3">
       {[..."123456789", "", "0"].map((d) =>
         d ? (
           <button
@@ -139,9 +141,20 @@ function Keypad({ value, onChange }: { value: string; onChange: (v: string) => v
             type="button"
             onMouseDown={(e) => e.preventDefault()}
             onClick={() => onChange((value + d).slice(0, 8))}
-            className={`${key} bg-stone-100 dark:bg-stone-900`}
+            className={`${key} bg-white/60 shadow-sm ring-1 ring-black/5 backdrop-blur-sm hover:bg-white/80 dark:bg-white/10 dark:ring-white/10 dark:hover:bg-white/20`}
           >
             {d}
+          </button>
+        ) : onSubmit ? (
+          <button
+            key="ok"
+            type="button"
+            onClick={onSubmit}
+            disabled={value.length < 4}
+            aria-label={tr.settings.appLock.unlock}
+            className={`${key} text-brand disabled:opacity-30`}
+          >
+            <Check className="size-7" />
           </button>
         ) : (
           <span key="gap" />
@@ -157,6 +170,25 @@ function Keypad({ value, onChange }: { value: string; onChange: (v: string) => v
       >
         <Delete className="size-6" />
       </button>
+    </div>
+  );
+}
+
+/** One dot per digit of the code, each taking the brand colour once typed. They shake each time `shake` goes up. */
+function CodeDots({ count, filled, shake }: { count: number; filled: number; shake: number }) {
+  const row = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (shake) row.current?.animate([0, -10, 10, -7, 7, -3, 0].map((x) => ({ transform: `translateX(${x}px)` })), 360);
+  }, [shake]);
+  return (
+    <div ref={row} className="flex h-8 items-center justify-center gap-4" aria-hidden>
+      {Array.from({ length: count }, (_, i) =>
+        i < filled ? (
+          <span key={`on${i}`} className="size-3.5 rounded-full border-2 border-brand bg-brand" style={{ animation: "piece-pop 220ms ease-out" }} />
+        ) : (
+          <span key={`off${i}`} className="size-3.5 rounded-full border-2 border-stone-900/40 dark:border-white/50" />
+        ),
+      )}
     </div>
   );
 }
@@ -179,7 +211,10 @@ export function LockScreen({
 }) {
   const tr = useT();
   const [code, setCode] = useState("");
-  const [length, setLength] = useState(codeLength);
+  const pin = useSession((s) => !!s.user?.appLockIsPin);
+  const [length] = useState(() => (pin ? 6 : codeLength()));
+  const [auto, setAuto] = useState(true);
+  const [fails, setFails] = useState(0);
   const [confirmSignOut, setConfirmSignOut] = useState(false);
   const hasKey = useHasRecoveryKey();
   useCloseOnBack(() => onCancel?.(), !!onCancel);
@@ -196,19 +231,24 @@ export function LockScreen({
     },
     onError: () => {
       setCode("");
-      setLength(0);
+      setAuto(pin);
+      setFails((n) => n + 1);
     },
   });
 
   const type = (v: string) => {
     setCode(v);
-    if (v.length === length && !check.isPending) check.mutate(v);
+    if (check.isError) check.reset();
+    if (auto && length && v.length === length && !check.isPending) check.mutate(v);
   };
 
   return (
-    <div className="fixed inset-0 z-[100] grid place-items-center bg-stone-50 p-6 dark:bg-stone-950">
+    <div className="fixed inset-0 z-[100] grid place-items-center overflow-hidden bg-stone-50 p-6 dark:bg-stone-950">
+      <div className="pointer-events-none absolute inset-0">
+        <Wallpaper theme={chatTheme(null)} id="lock" />
+      </div>
       <form
-        className="w-full max-w-xs space-y-4"
+        className="relative w-full max-w-xs space-y-4"
         onSubmit={(e) => {
           e.preventDefault();
           if (code.length >= 4) check.mutate(code);
@@ -216,16 +256,16 @@ export function LockScreen({
       >
         <Logo className="mx-auto size-14" />
         <h1 className="text-center text-xl font-semibold">{title ?? tr.settings.appLock.locked}</h1>
-        <CodeInput label={tr.settings.appLock.enterCode} value={code} onChange={type} autoFocus />
-        <Keypad value={code} onChange={type} />
-        {check.isError && (
-          <p className="text-sm text-red-600 dark:text-red-400">
-            {codeError(check.error, tr, tr.settings.appLock.errors)}
-          </p>
-        )}
-        <PrimaryButton type="submit" className="w-full" disabled={code.length < 4 || check.isPending}>
-          {tr.settings.appLock.unlock}
-        </PrimaryButton>
+        <p
+          role="alert"
+          className={`-mt-2 flex min-h-10 items-center justify-center text-center text-sm ${
+            check.isError ? "text-red-600 dark:text-red-400" : "text-stone-600 dark:text-stone-300"
+          }`}
+        >
+          {check.isError ? codeError(check.error, tr, tr.settings.appLock.errors) : tr.settings.appLock.enterCode}
+        </p>
+        <CodeDots count={Math.max(length || 4, code.length)} filled={code.length} shake={fails} />
+        <Keypad value={code} onChange={type} onSubmit={auto && length ? undefined : () => check.mutate(code)} />
         <button
           type="button"
           onClick={onCancel ?? (() => setConfirmSignOut(true))}

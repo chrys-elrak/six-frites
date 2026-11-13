@@ -1,7 +1,9 @@
 import { unwrap } from "@six/sdk";
-import { Fingerprint, Lock } from "lucide-react-native";
-import { useEffect, useEffectEvent, useState } from "react";
-import { StyleSheet, View } from "react-native";
+import { chatTheme } from "@six/shared";
+import { Check, Delete, Fingerprint, Lock } from "lucide-react-native";
+import { useEffect, useEffectEvent, useRef, useState } from "react";
+import { Animated, Pressable, StyleSheet, View } from "react-native";
+import { Wallpaper } from "./chat-background";
 import { Modal } from "./modal";
 import { Text } from "./text";
 import { KeyboardAvoidingView } from "react-native-keyboard-controller";
@@ -180,7 +182,10 @@ export function LockScreen({
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [auto, setAuto] = useState(true);
-  const length = useCodeLength((s) => s.length);
+  const shake = useRef(new Animated.Value(0)).current;
+  const pin = useSession((s) => !!s.user?.appLockIsPin);
+  const remembered = useCodeLength((s) => s.length);
+  const length = pin ? 6 : remembered;
   const biometric = useBiometricUnlock((s) => s.on) && !verify;
   const hasKey = useHasRecoveryKey().data === true;
 
@@ -208,7 +213,10 @@ export function LockScreen({
       }
     } catch (err) {
       setCode("");
-      setAuto(false);
+      setAuto(pin);
+      Animated.sequence(
+        [-10, 10, -7, 7, -3, 0].map((toValue) => Animated.timing(shake, { toValue, duration: 60, useNativeDriver: true })),
+      ).start();
       setError(codeError(err, tr, tr.settings.appLock.errors));
     } finally {
       setBusy(false);
@@ -217,7 +225,8 @@ export function LockScreen({
 
   function type(value: string) {
     setCode(value);
-    if (auto && value.length === length) void check(value);
+    setError(null);
+    if (auto && length && value.length === length) void check(value);
   }
 
   return (
@@ -226,25 +235,25 @@ export function LockScreen({
         behavior="padding"
         style={[styles.lock, { backgroundColor: t.bg, paddingTop: insets.top, paddingBottom: insets.bottom }]}
       >
+        <Wallpaper theme={chatTheme(null)} dark={t.dark} id="lock" />
         <View style={styles.body}>
           <View style={{ alignItems: "center", gap: 12 }}>
             <Logo size={56} />
             <Text style={[styles.title, { color: t.text }]}>{title ?? tr.settings.appLock.locked}</Text>
           </View>
-          <CodeInput
-            label={tr.settings.appLock.enterCode}
-            value={code}
-            onChange={type}
-            autoFocus={!biometric}
-            onSubmit={() => void check()}
-          />
-          {error && <Notice tone="error">{error}</Notice>}
-          <PrimaryButton
-            title={tr.settings.appLock.unlock}
-            busy={busy}
-            disabled={code.length < 4 || busy}
-            onPress={() => void check()}
-          />
+          <View style={{ minHeight: 40, justifyContent: "center", marginTop: -6 }}>
+            <Text accessibilityRole="alert" style={{ color: error ? t.danger : t.textSoft, fontSize: 14, textAlign: "center" }}>
+              {error ?? tr.settings.appLock.enterCode}
+            </Text>
+          </View>
+          <Animated.View style={[styles.dots, { transform: [{ translateX: shake }] }]} accessible accessibilityLabel={`${code.length}/${Math.max(length || 4, code.length)}`}>
+            {Array.from({ length: Math.max(length || 4, code.length) }, (_, i) =>
+              i < code.length ? <FilledDot key={`on${i}`} /> : (
+                <View key={`off${i}`} style={[styles.dot, { borderColor: t.dark ? "rgba(255,255,255,0.5)" : "rgba(28,25,23,0.4)" }]} />
+              ),
+            )}
+          </Animated.View>
+          <Keypad value={code} onChange={type} onSubmit={auto && length ? undefined : () => void check()} />
           {biometric && (
             <IconButton
               Icon={Fingerprint}
@@ -266,7 +275,67 @@ export function LockScreen({
   );
 }
 
+/** A typed digit: its dot popping into the brand colour. */
+function FilledDot() {
+  const scale = useRef(new Animated.Value(0.3)).current;
+  useEffect(() => {
+    Animated.spring(scale, { toValue: 1, friction: 4, tension: 160, useNativeDriver: true }).start();
+  }, [scale]);
+  return (
+    <Animated.View style={[styles.dot, { backgroundColor: brand, borderColor: brand, transform: [{ scale }] }]} />
+  );
+}
+
+/** On-screen digits, so the phone's keyboard never opens. With `onSubmit`, the empty corner key sends a code of 4 digits or more. */
+function Keypad({ value, onChange, onSubmit }: { value: string; onChange: (v: string) => void; onSubmit?: () => void }) {
+  const t = useTheme();
+  const tr = useT();
+  return (
+    <View style={styles.keypad}>
+      {[..."123456789", "", "0"].map((d) =>
+        d ? (
+          <Pressable
+            key={d}
+            onPress={() => onChange((value + d).slice(0, 8))}
+            accessibilityRole="button"
+            style={({ pressed }) => [styles.key, styles.glass, { backgroundColor: t.dark ? "rgba(255,255,255,0.1)" : "rgba(255,255,255,0.6)", opacity: pressed ? 0.5 : 1 }]}
+          >
+            <Text style={{ color: t.text, fontSize: 26, fontWeight: "500" }}>{d}</Text>
+          </Pressable>
+        ) : onSubmit ? (
+          <Pressable
+            key="ok"
+            onPress={onSubmit}
+            disabled={value.length < 4}
+            accessibilityRole="button"
+            accessibilityLabel={tr.settings.appLock.unlock}
+            style={[styles.key, { opacity: value.length < 4 ? 0.3 : 1 }]}
+          >
+            <Check size={30} color={brand} />
+          </Pressable>
+        ) : (
+          <View key="gap" style={styles.key} />
+        ),
+      )}
+      <Pressable
+        onPress={() => onChange(value.slice(0, -1))}
+        disabled={!value}
+        accessibilityRole="button"
+        accessibilityLabel={tr.settings.appLock.eraseDigit}
+        style={[styles.key, { opacity: value ? 1 : 0.3 }]}
+      >
+        <Delete size={26} color={t.muted} />
+      </Pressable>
+    </View>
+  );
+}
+
 const styles = StyleSheet.create({
+  dots: { flexDirection: "row", justifyContent: "center", alignItems: "center", gap: 16, height: 32 },
+  dot: { width: 14, height: 14, borderRadius: 7, borderWidth: 2 },
+  glass: { borderWidth: StyleSheet.hairlineWidth, borderColor: "rgba(0,0,0,0.06)" },
+  keypad: { flexDirection: "row", flexWrap: "wrap", justifyContent: "center", gap: 12, width: 3 * 68 + 2 * 12, alignSelf: "center" },
+  key: { width: 68, height: 68, borderRadius: 34, alignItems: "center", justifyContent: "center" },
   lock: { flex: 1, justifyContent: "center", paddingHorizontal: 24 },
   body: { width: "100%", maxWidth: 360, alignSelf: "center", gap: 14 },
   title: { fontSize: 20, fontWeight: "700", textAlign: "center" },

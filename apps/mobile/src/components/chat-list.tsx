@@ -64,6 +64,7 @@ import { calendarDate, formatDuration, listTime } from "@/lib/format";
 import { useT } from "@/lib/i18n";
 import { useRealtime } from "@/lib/realtime";
 import { useHiddenByArchive } from "@/lib/archive-lock";
+import { useAppLock } from "@/lib/app-lock";
 import { useSession } from "@/lib/session";
 import { brand, brandInk, flame, stone, useTheme } from "@/lib/theme";
 import { presenceLabel, usePresence, usePresenceStore, useWatchPresence } from "@/lib/presence";
@@ -464,6 +465,7 @@ export function ChatList({ archived = false, contacts = false }: { archived?: bo
   };
   const meId = useSession((s) => s.user!.id);
   const isSupport = useSession((s) => s.user!.support);
+  const hasAppLock = useSession((s) => s.user!.hasAppLock);
   const chats = useChats(archived);
   const archivedChats = useChats(true);
   const qc = useQueryClient();
@@ -584,6 +586,14 @@ export function ChatList({ archived = false, contacts = false }: { archived?: bo
           )}
           <IconButton Icon={Share2} color={brand} label={tr.contacts.inviteFriend} onPress={() => setDialog("invite")} />
           <IconButton Icon={UserPlus} color={brand} label={tr.contacts.addContact} onPress={() => setDialog("add")} />
+          {hasAppLock && (
+            <IconButton
+              Icon={Lock}
+              color={brand}
+              label={tr.settings.appLock.lockNow}
+              onPress={() => useAppLock.setState({ locked: true, archiveOpen: false })}
+            />
+          )}
         </BrandBar>
       )}
       {!scrollTools && tools}

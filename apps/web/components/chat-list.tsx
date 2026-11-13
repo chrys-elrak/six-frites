@@ -667,6 +667,16 @@ export function ChatList({
             >
               <UserPlus className="size-5" />
             </button>
+            {hasAppLock && (
+              <button
+                onClick={() => useAppLock.setState({ locked: true, archiveOpen: false })}
+                aria-label={tr.settings.appLock.lockNow}
+                title={tr.settings.appLock.lockNow}
+                className="grid size-9 place-items-center rounded-full text-brand hover:bg-stone-200 dark:hover:bg-stone-800"
+              >
+                <Lock className="size-5" />
+              </button>
+            )}
           </BrandActions>
         )
       )}
