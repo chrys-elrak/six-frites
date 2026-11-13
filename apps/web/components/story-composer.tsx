@@ -532,7 +532,7 @@ export function StoryComposer({
               <X className="size-6" />
             </button>
             <div className="pointer-events-auto -m-1 flex max-h-[calc(100dvh-11rem)] flex-col gap-2.5 overflow-y-auto p-1 [scrollbar-width:none] md:max-h-[calc(min(92dvh,52rem)-11rem)] [&::-webkit-scrollbar]:hidden">
-              {tools.map(({ label, icon: Icon, on, onClick }) => (
+              {tools.filter((t) => !drawingOn || t.icon === Pencil).map(({ label, icon: Icon, on, onClick }) => (
                 <button key={label} type="button" onClick={onClick} aria-label={label} aria-pressed={on} title={label} className={tool(on)}>
                   <Icon className={`size-5 ${Icon === Loader2 ? "animate-spin" : ""}`} />
                 </button>

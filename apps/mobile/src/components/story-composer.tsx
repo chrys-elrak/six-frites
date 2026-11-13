@@ -607,47 +607,53 @@ export function StoryComposer({
               contentContainerStyle={styles.tools}
               showsVerticalScrollIndicator={false}
             >
-              {file && <Tool on={false} Icon={ImageOff} label={tr.stories.removeMedia} onPress={() => setFile(null)} />}
-              <Tool on={!!file} Icon={ImagePlus} label={`${tr.stories.photo} / ${tr.stories.video}`} onPress={() => void pick("library")} />
-              <Tool on={false} Icon={Camera} label={tr.stories.photo} onPress={() => void pick("camera")} />
-              <Tool on={false} Icon={Video} label={tr.stories.video} onPress={() => void pick("video")} />
-            {file?.kind !== "video" && !fromChat && (
-              <Tool on={photos.length > 0} Icon={Images} label={tr.stories.photoSticker} onPress={() => void addPhotos()} />
-            )}
-              {canPaste && <Tool on={false} Icon={ClipboardPaste} label={tr.stories.pasteImage} onPress={() => void paste()} />}
-              <Tool on={gifs.length > 0 || pickingGif} Icon={Sticker} label={tr.stories.gif} onPress={() => setPickingGif(!pickingGif)} />
-              <Tool
-                on={!!link}
-                Icon={Link2}
-                label={tr.stories.link}
-                onPress={() => {
-                  setLink(link ? null : { url: "", label: "" });
-                  if (!link) setTimeout(() => linkField.current?.focus(), 50);
-                }}
-              />
-              <Tool
-                on={askLink}
-                Icon={MessageCircleQuestionMark}
-                label={tr.stories.askLink}
-                onPress={() => {
-                  setAskLink(!askLink);
-                  if (!askLink) setTimeout(() => askField.current?.focus(), 50);
-                }}
-              />
-              <Tool on={asks.length > 0 || pickingAsks} Icon={VenetianMask} label={tr.ask.title} onPress={() => setPickingAsks(!pickingAsks)} />
-              <Tool on={!!location} busy={locating} Icon={MapPin} label={tr.stories.location} onPress={() => void locate()} />
-              <Tool on={showDate} Icon={CalendarDays} label={tr.stories.date} onPress={() => setShowDate(!showDate)} />
-              <Tool on={showTime} Icon={Clock} label={tr.stories.time} onPress={() => setShowTime(!showTime)} />
+              {!drawingOn && (
+                <>
+                  {file && <Tool on={false} Icon={ImageOff} label={tr.stories.removeMedia} onPress={() => setFile(null)} />}
+                  <Tool on={!!file} Icon={ImagePlus} label={`${tr.stories.photo} / ${tr.stories.video}`} onPress={() => void pick("library")} />
+                  <Tool on={false} Icon={Camera} label={tr.stories.photo} onPress={() => void pick("camera")} />
+                  <Tool on={false} Icon={Video} label={tr.stories.video} onPress={() => void pick("video")} />
+                {file?.kind !== "video" && !fromChat && (
+                  <Tool on={photos.length > 0} Icon={Images} label={tr.stories.photoSticker} onPress={() => void addPhotos()} />
+                )}
+                  {canPaste && <Tool on={false} Icon={ClipboardPaste} label={tr.stories.pasteImage} onPress={() => void paste()} />}
+                  <Tool on={gifs.length > 0 || pickingGif} Icon={Sticker} label={tr.stories.gif} onPress={() => setPickingGif(!pickingGif)} />
+                  <Tool
+                    on={!!link}
+                    Icon={Link2}
+                    label={tr.stories.link}
+                    onPress={() => {
+                      setLink(link ? null : { url: "", label: "" });
+                      if (!link) setTimeout(() => linkField.current?.focus(), 50);
+                    }}
+                  />
+                  <Tool
+                    on={askLink}
+                    Icon={MessageCircleQuestionMark}
+                    label={tr.stories.askLink}
+                    onPress={() => {
+                      setAskLink(!askLink);
+                      if (!askLink) setTimeout(() => askField.current?.focus(), 50);
+                    }}
+                  />
+                  <Tool on={asks.length > 0 || pickingAsks} Icon={VenetianMask} label={tr.ask.title} onPress={() => setPickingAsks(!pickingAsks)} />
+                  <Tool on={!!location} busy={locating} Icon={MapPin} label={tr.stories.location} onPress={() => void locate()} />
+                  <Tool on={showDate} Icon={CalendarDays} label={tr.stories.date} onPress={() => setShowDate(!showDate)} />
+                  <Tool on={showTime} Icon={Clock} label={tr.stories.time} onPress={() => setShowTime(!showTime)} />
+                </>
+              )}
               <Tool on={drawingOn} Icon={Pencil} label={tr.composer.editTools.draw} onPress={() => setDrawingOn(!drawingOn)} />
-              <Tool
-                on={false}
-                Icon={CaseSensitive}
-                label={tr.stories.addText}
-                onPress={() => {
-                  setDrawingOn(false);
-                  if (drawing.texts.length < 10) setWriting({ index: -1, text: "", color: EDIT_COLORS[0]!, font: "classic", look: "plain" });
-                }}
-              />
+              {!drawingOn && (
+                <Tool
+                  on={false}
+                  Icon={CaseSensitive}
+                  label={tr.stories.addText}
+                  onPress={() => {
+                    setDrawingOn(false);
+                    if (drawing.texts.length < 10) setWriting({ index: -1, text: "", color: EDIT_COLORS[0]!, font: "classic", look: "plain" });
+                  }}
+                />
+              )}
             </ScrollView>
           </View>
 
