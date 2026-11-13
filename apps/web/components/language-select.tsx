@@ -1,6 +1,6 @@
 "use client";
 
-import { LOCALES, LOCALE_NAMES, isLocale } from "@six/shared";
+import { LOCALES, isLocale } from "@six/shared";
 import { Globe } from "lucide-react";
 import { useLocale, useT } from "@/lib/i18n";
 
@@ -19,7 +19,7 @@ export function LanguageSelect() {
       >
         {LOCALES.map((l) => (
           <option key={l} value={l}>
-            {LOCALE_NAMES[l]}
+            {l.toUpperCase()}
           </option>
         ))}
       </select>
