@@ -4,6 +4,7 @@ import { prisma } from "../lib/prisma.js";
 import { broadcaster, rooms } from "../lib/realtime.js";
 import { blockedWith } from "./blocks.js";
 import { profilesFor } from "./contacts.js";
+import { seenIn } from "./push.js";
 
 interface NewNotification {
   userId: string;
@@ -45,11 +46,16 @@ export async function listNotifications(userId: string): Promise<NotificationsDT
   ]);
   const shown = rows.filter((n) => !n.actorId || !blocked.has(n.actorId));
   const profile = await profilesFor(prisma, userId, shown.flatMap((n) => n.actorId ?? []));
+  const inGroups = new Map(
+    await Promise.all(
+      shown.filter((n) => n.kind === "mention" && n.chatId && n.actor).map(async (n) => [n.id, await seenIn(n.chatId!, userId, n.actor!)] as const),
+    ),
+  );
   const seen = me.notificationsSeenAt;
   const items = shown.map((n) => ({
     id: n.id,
     kind: n.kind as NotificationKind,
-    user: n.actor && profile(n.actor),
+    user: inGroups.get(n.id) ?? (n.actor && profile(n.actor)),
     chatId: n.chatId,
     emoji: n.emoji,
     storyId: n.storyId,

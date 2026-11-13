@@ -102,6 +102,7 @@ model User {
   devices        Device[]
   messageBackups MessageBackup[]
   checklistMarks ChecklistMark[]
+  pollVotes      PollVote[]
   gameMoves      GameMove[]
   anonReceived   AnonMessage[]      @relation("anonRecipient")
   anonSent       AnonMessage[]      @relation("anonSender")
@@ -336,6 +337,8 @@ model Chat {
   membersCanWrite Boolean   @default(true)
   /// Off: only a group's owner and admins see its link, so only they can bring people in.
   membersCanInvite Boolean  @default(true)
+  /// Until then only the owner and admins send messages, as with membersCanWrite off.
+  closedUntil     DateTime?
 
   members   ChatMember[]
   messages  Message[]
@@ -422,6 +425,11 @@ model Message {
   action            Json?
   location          Json?
   checklist         Json?
+  poll              Json?
+  /// The poll shows who chose what; off, votes are anonymous and only counts show.
+  pollVisible       Boolean   @default(false)
+  /// Group members mentioned with @, notified even if they muted the group.
+  mentions          String[]  @default([])
   /// The story this answers, as it was then: { id, ownerId, kind, text, background }.
   story             Json?
   game              Json?
@@ -457,6 +465,7 @@ model Message {
   envelopes        MessageEnvelope[]
   backups          MessageBackup[]
   marks            ChecklistMark[]
+  votes            PollVote[]
   moves            GameMove[]
 
   @@unique([senderId, clientId])
@@ -475,6 +484,20 @@ model ChecklistMark {
   user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@id([messageId, item])
+  @@index([userId])
+}
+
+/// One person's anonymous vote on a poll; they can change or take it back.
+model PollVote {
+  messageId String
+  userId    String
+  option    Int
+  createdAt DateTime @default(now())
+
+  message Message @relation(fields: [messageId], references: [id], onDelete: Cascade)
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([messageId, userId])
   @@index([userId])
 }
 

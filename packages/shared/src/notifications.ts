@@ -3,17 +3,17 @@ import { IsoDate } from "./common.js";
 import { PublicUser } from "./invites.js";
 import type { Dict } from "./i18n/index.js";
 
-export const NOTIFICATION_KINDS = ["joined", "added", "story_reaction", "note_reaction", "story_reply", "note_reply", "missed_call", "anon_message", "unblocked", "full_access"] as const;
+export const NOTIFICATION_KINDS = ["joined", "added", "story_reaction", "note_reaction", "story_reply", "note_reply", "missed_call", "anon_message", "unblocked", "full_access", "mention"] as const;
 export type NotificationKind = (typeof NOTIFICATION_KINDS)[number];
 
 export const NotificationDTO = z.object({
   id: z.string(),
   kind: z.enum(NOTIFICATION_KINDS),
   user: PublicUser.nullable().describe("Who did it; null for anon_message, which never says who sent it"),
-  chatId: z.string().nullable().describe("The direct chat with them, to open on tap"),
+  chatId: z.string().nullable().describe("The direct chat with them, or for mention the group, to open on tap"),
   emoji: z.string().nullable().describe("For story_reaction and note_reaction"),
   storyId: z.string().nullable().describe("For story_reaction and story_reply: the story, to open with its viewers"),
-  messageId: z.string().nullable().describe("For story_reply and note_reply: the reply, to scroll to in the chat"),
+  messageId: z.string().nullable().describe("For story_reply, note_reply and mention: the message, to scroll to in the chat"),
   video: z.boolean().describe("For missed_call: whether it was a video call"),
   unread: z.boolean().describe("New since you last looked, or marked unread"),
   createdAt: IsoDate,
@@ -60,5 +60,7 @@ export function notificationText(t: Dict["notifications"], n: NotificationDTO) {
       return t.unblocked(name);
     case "full_access":
       return t.fullAccess;
+    case "mention":
+      return t.mention(name);
   }
 }

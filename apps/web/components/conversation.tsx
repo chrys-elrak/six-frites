@@ -127,6 +127,14 @@ function OpenConversation({ chatId }: { chatId: string }) {
   const [menu, setMenu] = useState(false);
   const [thread, setThread] = useState<string | null>(null);
   const [editing, setEditing] = useState(false);
+  const [, reopened] = useState(0);
+  const closedUntil = chat.data?.group?.closedUntil;
+  useEffect(() => {
+    const wait = closedUntil ? Date.parse(closedUntil) - Date.now() + 500 : -1;
+    if (wait < 0 || wait > 2 ** 31 - 1) return;
+    const timer = setTimeout(() => reopened((n) => n + 1), wait);
+    return () => clearTimeout(timer);
+  }, [closedUntil]);
   useEffect(() => {
     if (!new URLSearchParams(window.location.search).has("info")) return;
     setEditing(true);

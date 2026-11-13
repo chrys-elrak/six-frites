@@ -110,6 +110,7 @@ export async function scheduleMessage(
   if (await prisma.message.findUnique({ where: key, select: { id: true } })) {
     throw new AppError("CONFLICT", "A message with this clientId was already sent");
   }
+  if (input.poll || input.type === "poll") throw new AppError("VALIDATION_FAILED", "Polls are sent right away, not scheduled");
   input = await resolveGif(userId, chatId, input);
 
   return withEvents(async (tx, emit) => {

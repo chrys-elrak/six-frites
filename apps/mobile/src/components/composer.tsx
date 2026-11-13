@@ -8,6 +8,8 @@ import {
   type TypingKind,
   albumIds,
   emojiQuery,
+  mentionQuery,
+  nicknameOf,
   emojifyEnd,
   emojifyTyped,
   maskSpoilers,
@@ -55,6 +57,7 @@ import {
   ImagePlus,
   Italic,
   ListChecks,
+  ChartBar,
   MapPin,
   Music,
   NotebookPen,
@@ -102,6 +105,8 @@ import { six } from "@/lib/six";
 import { flame, useTheme } from "@/lib/theme";
 import { AttachDialog, type PickedFile } from "./attach-dialog";
 import { NewChecklist } from "./checklist";
+import { Avatar } from "./avatar";
+import { NewPoll } from "./poll";
 import { NewGame } from "./game";
 import { LocationPicker, currentPosition } from "./location-card";
 import { CommandBar, type CommandBarHandle } from "./command-bar";
@@ -230,6 +235,7 @@ export function Composer({
   const [attachMenu, setAttachMenu] = useState(false);
   const [askLocation, setAskLocation] = useState(false);
   const [writingChecklist, setWritingChecklist] = useState(false);
+  const [writingPoll, setWritingPoll] = useState(false);
   const [startingGame, setStartingGame] = useState(false);
   const [recMode, setRecMode] = useState<RecordMode>("voice");
   const [capture, setCapture] = useState<{ kind: RecordMode; muted?: boolean; spoiler?: boolean } | null>(null);
@@ -389,6 +395,20 @@ export function Composer({
   const typed = query?.query;
   const suggestions = useMemo(() => (typed ? suggestEmoji(allEmoji, typed) : []), [typed]);
 
+  const mentioning = chat?.group ? mentionQuery(text, caret) : null;
+  const mentionable = mentioning
+    ? chat!.members.filter((m) => m.user.id !== meId && nicknameOf(m.user).slice(1).startsWith(mentioning.query)).slice(0, 8)
+    : [];
+
+  function pickMention(user: (typeof mentionable)[number]["user"]) {
+    if (!mentioning) return;
+    const mention = `@${nicknameOf(user)} `;
+    const at = mentioning.start + mention.length;
+    change(text.slice(0, mentioning.start) + mention + text.slice(caret));
+    setForced({ start: at, end: at });
+    setCaret(at);
+  }
+
   function pickSuggestion(emoji: string) {
     if (!query) return;
     const at = query.start + emoji.length;
@@ -540,7 +560,7 @@ export function Composer({
     reset();
   }
 
-  function sendSpecial(extra: Pick<Draft, "location" | "checklist" | "game" | "ephemeral">) {
+  function sendSpecial(extra: Pick<Draft, "location" | "checklist" | "poll" | "pollVisible" | "game" | "ephemeral">) {
     if (!realtime) return;
     queue({
       text: "",
@@ -795,6 +815,30 @@ export function Composer({
                 style={[styles.format, { backgroundColor: t.surface, borderColor: t.border }]}
               >
                 <Text style={styles.suggestion}>{x.e}</Text>
+              </Pressable>
+            ))}
+          </ScrollView>
+        )}
+
+        {mentionable.length > 0 && (
+          <ScrollView
+            horizontal
+            keyboardShouldPersistTaps="always"
+            showsHorizontalScrollIndicator={false}
+            accessibilityLabel={tr.composer.mentionSuggestions}
+            contentContainerStyle={styles.toolbar}
+          >
+            {mentionable.map((m) => (
+              <Pressable
+                key={m.user.id}
+                onPress={() => pickMention(m.user)}
+                accessibilityLabel={m.user.displayName}
+                style={[styles.mention, { backgroundColor: t.surface, borderColor: t.border }]}
+              >
+                <Avatar user={m.user} size="sm" />
+                <Text numberOfLines={1} style={{ color: t.text, fontSize: 14, fontWeight: "600", maxWidth: 140 }}>
+                  {m.user.displayName}
+                </Text>
               </Pressable>
             ))}
           </ScrollView>
@@ -1118,6 +1162,7 @@ export function Composer({
             { label: tr.composer.audio, icon: Music, onSelect: () => void pick(() => pickFiles("audio/*")) },
             { label: tr.composer.location, icon: MapPin, onSelect: () => setAskLocation(true) },
             { label: tr.composer.checklist, icon: ListChecks, onSelect: () => setWritingChecklist(true) },
+            ...(chat?.group ? [{ label: tr.composer.poll, icon: ChartBar, onSelect: () => setWritingPoll(true) }] : []),
             { label: tr.composer.game, icon: Gamepad2, onSelect: () => setStartingGame(true) },
             { label: tr.composer.scheduleMessage, icon: CalendarClock, onSelect: () => setScheduling("next") },
             ...attachCommands(!!chat?.group).map((name) => ({
@@ -1142,6 +1187,7 @@ export function Composer({
           }}
         />
       )}
+      {writingPoll && <NewPoll onClose={() => setWritingPoll(false)} onSend={(poll, pollVisible) => sendSpecial({ poll, pollVisible })} />}
       {writingChecklist && (
         <NewChecklist onClose={() => setWritingChecklist(false)} onSend={(checklist) => sendSpecial({ checklist })} />
       )}
@@ -1178,6 +1224,16 @@ const styles = StyleSheet.create({
   glassItem: { minWidth: 40, height: 40, borderRadius: 10, alignItems: "center", justifyContent: "center" },
   clearOfSelectionMenu: { marginBottom: 80 },
   suggestion: { fontSize: 22 },
+  mention: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    paddingLeft: 2,
+    paddingRight: 12,
+    height: 40,
+    borderRadius: 20,
+    borderWidth: StyleSheet.hairlineWidth,
+  },
   format: {
     width: 36,
     height: 36,

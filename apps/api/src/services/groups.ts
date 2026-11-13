@@ -178,6 +178,9 @@ export async function updateGroup(userId: string, chatId: string, input: UpdateG
           ...(input.maxMembers !== undefined && { maxMembers: input.maxMembers }),
           ...(input.membersCanWrite !== undefined && { membersCanWrite: input.membersCanWrite }),
           ...(input.membersCanInvite !== undefined && { membersCanInvite: input.membersCanInvite }),
+          ...(input.closeForSecs !== undefined && {
+            closedUntil: input.closeForSecs === null ? null : new Date(Date.now() + input.closeForSecs * 1000),
+          }),
         },
       });
       if (input.title !== undefined && input.title !== member.chat.title) {

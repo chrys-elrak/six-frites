@@ -1,4 +1,4 @@
-import type { ChatDTO } from "@six/shared";
+import { type ChatDTO, groupClosed } from "@six/shared";
 import { useQueryClient } from "@tanstack/react-query";
 import { Ban, Megaphone, UserX } from "lucide-react-native";
 import { useState } from "react";
@@ -7,6 +7,7 @@ import { Text } from "./text";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { setBlocked } from "@/lib/actions";
 import { isNewsChat } from "@/lib/chats";
+import { sendAtLabel } from "@/lib/format";
 import { useT } from "@/lib/i18n";
 import { useTheme } from "@/lib/theme";
 
@@ -29,7 +30,9 @@ export function ChatBlocked({ chat, peerId, peerName }: { chat: ChatDTO; peerId:
   const message = news
     ? tr.chat.onlySixFrites
     : chat.group
-      ? tr.groups.adminsOnly
+      ? chat.group.membersCanWrite && groupClosed(chat.group)
+        ? tr.groups.closedUntil(sendAtLabel(chat.group.closedUntil!))
+        : tr.groups.adminsOnly
       : chat.peerDeleted
         ? tr.chat.peerDeleted
         : chat.blockedByMe

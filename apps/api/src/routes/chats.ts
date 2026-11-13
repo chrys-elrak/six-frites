@@ -10,6 +10,7 @@ import {
   ChatListQuery,
   ChatReadDTO,
   CHECKLIST,
+  POLL,
   CheckItemInput,
   GameMove,
   AddContactInput,
@@ -58,6 +59,7 @@ import { blockUser, unblockUser } from "../services/blocks.js";
 import { addContact, findUser } from "../services/discovery.js";
 import {
   checkItem,
+  votePoll,
   deleteMessages,
   deleteMessagesBetween,
   editMessage,
@@ -320,6 +322,24 @@ const chatRoutes: FastifyPluginAsyncZod = async (app) => {
       },
     },
     (req) => checkItem(req.auth.userId, req.params.id, req.params.item, req.body.done),
+  );
+
+  app.put(
+    "/messages/:id/vote",
+    {
+      config: { rateLimit: { max: 120, timeWindow: "1 minute" } },
+      schema: {
+        tags: ["messages"],
+        summary: "Vote on a poll",
+        description:
+          "`option` is the index in the poll's options; voting again changes your vote, and null takes it back. Everyone gets message.edited with the new `votes` counts; on an anonymous poll only you see your `myVote`, and on one with `pollVisible`, `voters` says who chose what.",
+        security,
+        params: z.object({ id: Id }),
+        body: z.object({ option: z.number().int().min(0).max(POLL.options - 1).nullable() }),
+        response: { 200: MessageDTO },
+      },
+    },
+    (req) => votePoll(req.auth.userId, req.params.id, req.body.option),
   );
 
   app.post(

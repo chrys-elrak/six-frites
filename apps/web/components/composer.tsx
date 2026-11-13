@@ -36,6 +36,7 @@ import {
   Image as ImageIcon,
   ImagePlus,
   ListChecks,
+  ChartBar,
   MapPin,
   Music,
   NotebookPen,
@@ -65,6 +66,8 @@ import { ExpressionPanel } from "./expression-panel";
 import { AttachPanel, type PanelItem } from "./attach-panel";
 import { AttachDialog, type PickedFile } from "./attach-dialog";
 import { ChecklistDialog } from "./checklist";
+import { MentionSuggestions, useMentionSuggestions } from "./mention-suggestions";
+import { PollDialog } from "./poll";
 import { GameDialog } from "./game";
 import { LocationPicker, currentPosition } from "./location-card";
 import { EmojiSuggestions, useEmojiSuggestions } from "./emoji-suggestions";
@@ -193,6 +196,7 @@ export function Composer({
   const [attachMenu, setAttachMenu] = useState(false);
   const [askLocation, setAskLocation] = useState(false);
   const [writingChecklist, setWritingChecklist] = useState(false);
+  const [writingPoll, setWritingPoll] = useState(false);
   const [startingGame, setStartingGame] = useState(false);
   const [camera, setCamera] = useState(false);
   const recorder = useRecorder({ raw: true });
@@ -264,7 +268,7 @@ export function Composer({
     onSent();
   }
 
-  function sendSpecial(extra: Pick<Draft, "location" | "checklist" | "game" | "ephemeral">) {
+  function sendSpecial(extra: Pick<Draft, "location" | "checklist" | "poll" | "pollVisible" | "game" | "ephemeral">) {
     if (!realtime) return;
     queue({
       text: "",
@@ -296,6 +300,7 @@ export function Composer({
     { label: tr.composer.audio, icon: Music, color: "#f97316", onSelect: () => audioInput.current?.click() },
     { label: tr.composer.location, icon: MapPin, color: "#22c55e", onSelect: () => setAskLocation(true) },
     { label: tr.composer.checklist, icon: ListChecks, color: "#14b8a6", onSelect: () => setWritingChecklist(true) },
+    ...(chat?.group ? [{ label: tr.composer.poll, icon: ChartBar, color: "#0ea5e9", onSelect: () => setWritingPoll(true) }] : []),
     { label: tr.composer.game, icon: Gamepad2, color: "#a855f7", onSelect: () => setStartingGame(true) },
     { label: tr.composer.scheduleMessage, icon: CalendarClock, color: "#eab308", onSelect: () => setScheduling("next") },
   ];
@@ -361,6 +366,12 @@ export function Composer({
     },
     !(parseCommand(text) && silentMessage(text) === null),
   );
+
+  const mention = useMentionSuggestions(text, caret, chat?.group ? chat.members : null, meId, (value, at) => {
+    change(value);
+    setCaret(at);
+    requestAnimationFrame(() => ref.current?.setSelectionRange(at, at));
+  });
 
   /** Puts an emoji where the caret is, replacing any selection, and leaves the caret after it. */
   function insertEmoji(e: string) {
@@ -888,6 +899,7 @@ export function Composer({
               />
             )}
             <EmojiSuggestions {...emoji} className="absolute bottom-full left-0 z-30 mb-2" />
+            <MentionSuggestions {...mention} className="absolute bottom-full left-0 z-30 mb-2" />
             {expressions && !narrow && !editing && !limited && (beside && sidebar ? createPortal(
               <ExpressionPanel
                 onEmoji={insertEmoji}
@@ -927,7 +939,7 @@ export function Composer({
                 void sendPasted(files);
               }}
               onKeyDown={(e) => {
-                if (commands.current?.key(e) || emoji.onKey(e) || shortcut(e)) return;
+                if (commands.current?.key(e) || mention.onKey(e) || emoji.onKey(e) || shortcut(e)) return;
                 if (e.key === "Escape" && mode) {
                   e.preventDefault();
                   cancel();
@@ -1133,6 +1145,7 @@ export function Composer({
       {writingChecklist && (
         <ChecklistDialog onClose={() => setWritingChecklist(false)} onSend={(checklist) => sendSpecial({ checklist })} />
       )}
+      {writingPoll && <PollDialog onClose={() => setWritingPoll(false)} onSend={(poll, pollVisible) => sendSpecial({ poll, pollVisible })} />}
       {startingGame && <GameDialog onClose={() => setStartingGame(false)} onSend={(game) => sendSpecial({ game })} />}
       {scheduling && (
         <ScheduleDialog

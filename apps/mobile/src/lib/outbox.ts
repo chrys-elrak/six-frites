@@ -1,6 +1,7 @@
 import type {
   ChatGame,
   Checklist,
+  Poll,
   EncryptedFile,
   EphemeralInput,
   GeoPoint,
@@ -47,6 +48,8 @@ export interface PendingMessage {
   sticker?: StickerDTO;
   location?: GeoPoint;
   checklist?: Checklist;
+  poll?: Poll;
+  pollVisible?: boolean;
   game?: ChatGame;
   groupId?: string;
   /** In a group: the message this one comments on, and what an admin set for its comments. */

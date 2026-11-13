@@ -2,6 +2,8 @@ import { type Message, Prisma } from "../generated/prisma/client.js";
 import {
   AppError,
   CHECKLIST,
+  POLL,
+  type Poll,
   type ChatGame,
   type Checklist,
   type DeleteChatQuery,
@@ -55,6 +57,7 @@ export const messageInclude = {
   envelopes: { include: { device: { select: { userId: true } } } },
   backups: true,
   marks: { orderBy: { item: "asc" } },
+  votes: { select: { userId: true, option: true }, orderBy: { createdAt: "asc" } },
   moves: { orderBy: [{ createdAt: "asc" }, { id: "asc" }] },
 } satisfies Prisma.MessageInclude;
 export type MessageRow = Prisma.MessageGetPayload<{ include: typeof messageInclude }>;
@@ -197,6 +200,12 @@ export function toMessageDTO(m: MessageRow, viewerId: string, opts: { reveal?: b
     location: hideContent ? null : ((m.location as GeoPoint | null) ?? null),
     checklist: hideContent ? null : ((m.checklist as Checklist | null) ?? null),
     checks: hideContent ? [] : m.marks.map((k) => ({ item: k.item, userId: k.userId, at: k.createdAt.toISOString() })),
+    poll: hideContent ? null : ((m.poll as Poll | null) ?? null),
+    votes: hideContent ? [] : pollCounts(m.votes),
+    myVote: hideContent ? null : (m.votes.find((v) => v.userId === viewerId)?.option ?? null),
+    pollVisible: m.pollVisible,
+    voters: hideContent || !m.pollVisible ? [] : m.votes.map((v) => ({ option: v.option, userId: v.userId })),
+    mentions: m.mentions,
     game: hideContent ? null : ((m.game as ChatGame | null) ?? null),
     moves: hideContent
       ? []
@@ -327,6 +336,7 @@ export function checkEncryption(
     (content.text !== undefined ||
       content.location ||
       content.checklist ||
+      content.poll ||
       content.game ||
       (upload && upload.kind !== "gif"))
   ) {
@@ -457,6 +467,8 @@ export async function createMessage(
     throw new AppError("FORBIDDEN", "Six Frites News doesn't read replies");
   }
   if ((content?.game || content?.type === "game") && chat.type === "group") throw new AppError("NOT_IN_GROUPS", "Games aren't available in groups");
+  if ((content?.poll || content?.type === "poll") && chat.type !== "group") throw new AppError("VALIDATION_FAILED", "Polls are for groups");
+  const mentions = content?.mentions?.length && chat.type === "group" ? await mentionable(tx, chatId, userId, content.mentions) : [];
   const thread = content?.threadId ? await threadToCommentOn(tx, chat, content.threadId) : null;
   if ((content?.commentsClosed || content?.commentsLimit || content?.commentsCloseIn) && (chat.type !== "group" || member.role === "member" || thread)) {
     throw new AppError("NOT_GROUP_ADMIN", "Only a group's owner and admins can post with comments closed");
@@ -519,6 +531,9 @@ export async function createMessage(
       ...("action" in input && { action: input.action }),
       ...(content?.location && { location: content.location }),
       ...(content?.checklist && { checklist: content.checklist }),
+      ...(content?.poll && { poll: content.poll }),
+      pollVisible: !!content?.pollVisible && (!!content.poll || content.type === "poll"),
+      mentions,
       ...(content?.game && { game: content.game }),
       encrypted: !!encrypted,
       senderDevice,
@@ -568,6 +583,7 @@ export async function createMessage(
   } else if (story) {
     await notify(tx, emit, { userId: story.ownerId, actorId: userId, kind: "story_reply", chatId, storyId: story.id, messageId: message.id });
   }
+  for (const id of mentions) await notify(tx, emit, { userId: id, actorId: userId, kind: "mention", chatId, messageId: message.id });
   for (const id of members) emit(id, "message.new", shownTo(id));
   if (started) {
     const { getChat } = await import("./chats.js");
@@ -577,7 +593,7 @@ export async function createMessage(
 }
 
 const kindOf = (c: SendMessageInput) =>
-  c.type ?? (c.location ? "location" : c.checklist ? "checklist" : c.game ? "game" : "text");
+  c.type ?? (c.location ? "location" : c.checklist ? "checklist" : c.poll ? "poll" : c.game ? "game" : "text");
 
 /** Swaps a `gifId` for a stored copy of that GIF, checking membership first so only members trigger downloads. */
 export async function resolveGif<T extends SendMessageInput>(userId: string, chatId: string, input: T): Promise<T> {
@@ -623,7 +639,7 @@ export async function editMessage(userId: string, messageId: string, input: Edit
     if (
       message.deletedAt ||
       isEphemeral(message) ||
-      ["service", "sticker", "location", "checklist", "game"].includes(message.type)
+      ["service", "sticker", "location", "checklist", "poll", "game"].includes(message.type)
     ) {
       throw new AppError("MESSAGE_NOT_EDITABLE");
     }
@@ -774,6 +790,43 @@ export async function checkItem(userId: string, messageId: string, item: number,
     const key = { messageId_item: { messageId, item } };
     if (done) await tx.checklistMark.upsert({ where: key, create: { messageId, item, userId }, update: {} });
     else await tx.checklistMark.deleteMany({ where: { messageId, item } });
+
+    const updated = await tx.message.findUniqueOrThrow({ where: { id: messageId }, include: messageInclude });
+    for (const id of await memberIds(tx, message.chatId)) emit(id, "message.edited", toMessageDTO(updated, id));
+    return toMessageDTO(updated, userId);
+  });
+}
+
+/** How many votes each option got, by index, up to the highest one chosen; the apps pad it to the poll's options. */
+const pollCounts = (votes: { option: number }[]) => {
+  const counts: number[] = [];
+  for (const { option } of votes) {
+    while (counts.length <= option) counts.push(0);
+    counts[option]!++;
+  }
+  return counts;
+};
+
+/** Of the people a message mentions, the other members of its group. */
+async function mentionable(tx: Tx, chatId: string, userId: string, ids: string[]) {
+  const members = await tx.chatMember.findMany({ where: { chatId, userId: { in: ids, not: userId } }, select: { userId: true } });
+  return members.map((m) => m.userId);
+}
+
+/**
+ * Votes for one option of a group poll, or takes the vote back with null. Unless the poll shows who voted, votes
+ * are anonymous: everyone sees only the counts, and their own choice. Encrypted polls keep their options in the envelopes, so the server only bounds
+ * the index by the largest poll.
+ */
+export async function votePoll(userId: string, messageId: string, option: number | null) {
+  return withEvents(async (tx, emit) => {
+    const message = await reactableMessage(tx, userId, messageId);
+    const options = (message.poll as Poll | null)?.options.length ?? POLL.options;
+    if (message.type !== "poll" || (option !== null && option >= options)) throw new AppError("NOT_FOUND", "No such poll option");
+
+    const key = { messageId_userId: { messageId, userId } };
+    if (option === null) await tx.pollVote.deleteMany({ where: { messageId, userId } });
+    else await tx.pollVote.upsert({ where: key, create: { messageId, userId, option }, update: { option } });
 
     const updated = await tx.message.findUniqueOrThrow({ where: { id: messageId }, include: messageInclude });
     for (const id of await memberIds(tx, message.chatId)) emit(id, "message.edited", toMessageDTO(updated, id));
@@ -996,7 +1049,7 @@ export async function makeEphemeral(userId: string, messageId: string, rule: Eph
       throw new AppError("MESSAGE_NOT_FOUND");
     });
     if (m.senderId !== userId) throw new AppError("NOT_MESSAGE_SENDER", "Only the sender can make it self-destruct");
-    if (isEphemeral(m) || ["service", "sticker", "checklist", "game"].includes(m.type)) {
+    if (isEphemeral(m) || ["service", "sticker", "checklist", "poll", "game"].includes(m.type)) {
       throw new AppError("MESSAGE_NOT_EDITABLE", "This message can't be made to self-destruct");
     }
 

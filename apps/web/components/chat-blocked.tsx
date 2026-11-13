@@ -1,11 +1,12 @@
 "use client";
 
-import type { ChatDTO } from "@six/shared";
+import { type ChatDTO, groupClosed } from "@six/shared";
 import { useQueryClient } from "@tanstack/react-query";
 import { Ban, Megaphone, UserX } from "lucide-react";
 import { useState } from "react";
 import { setBlocked } from "@/lib/actions";
 import { isNewsChat } from "@/lib/chats";
+import { sendAtLabel } from "@/lib/format";
 import { useT } from "@/lib/i18n";
 
 /** Takes the composer's place when nobody can write in this chat, saying why. */
@@ -25,7 +26,9 @@ export function ChatBlocked({ chat, peerId, peerName }: { chat: ChatDTO; peerId:
   const text = news
     ? tr.chat.onlySixFrites
     : chat.group
-      ? tr.groups.adminsOnly
+      ? chat.group.membersCanWrite && groupClosed(chat.group)
+        ? tr.groups.closedUntil(sendAtLabel(chat.group.closedUntil!))
+        : tr.groups.adminsOnly
       : chat.peerDeleted
         ? tr.chat.peerDeleted
         : chat.blockedByMe

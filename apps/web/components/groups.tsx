@@ -1,13 +1,25 @@
 "use client";
 
 import { SixApiError } from "@six/sdk";
-import { type ChatDTO, type ChatMemberDTO, type Dict, GROUP_MAX_PLACES, GROUP_MIN_PLACES, chatFace, randomAlias, randomGender } from "@six/shared";
+import {
+  type ChatDTO,
+  type ChatMemberDTO,
+  type Dict,
+  GROUP_MAX_PLACES,
+  GROUP_MIN_PLACES,
+  MUTE_PRESETS,
+  chatFace,
+  durationLabel,
+  groupClosed,
+  randomAlias,
+  randomGender,
+} from "@six/shared";
 import { useQueryClient } from "@tanstack/react-query";
-import { Copy, LogOut, MoreHorizontal, Pencil, RefreshCw, Share2, Shuffle } from "lucide-react";
+import { Copy, LockKeyhole, LogOut, MoreHorizontal, Pencil, RefreshCw, Share2, Shuffle } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { useGoUp } from "@/lib/back";
-import { groupUrl, shareGroup } from "@/lib/format";
+import { groupUrl, sendAtLabel, shareGroup } from "@/lib/format";
 import {
   createGroup,
   leaveGroup,
@@ -21,6 +33,7 @@ import { useT } from "@/lib/i18n";
 import { useSession } from "@/lib/session";
 import { Avatar } from "./avatar";
 import { Dialog } from "./dialog";
+import { ScheduleDialog } from "./scheduled";
 import { PhotoPicker } from "./photo-picker";
 import { Sheet } from "./sheet";
 import { PrimaryButton, Toggle } from "./ui";
@@ -310,7 +323,7 @@ function EditMeDialog({ chat, me, onClose }: { chat: ChatDTO; me: ChatMemberDTO;
   );
 }
 
-type View = "info" | "edit" | "me" | "reset" | "leave" | { member: ChatMemberDTO } | { removing: ChatMemberDTO };
+type View = "info" | "edit" | "me" | "reset" | "leave" | "close" | "closeAt" | { member: ChatMemberDTO } | { removing: ChatMemberDTO };
 
 /** Everything about a group: its link, its members and what you may do with them, and the way out. */
 export function GroupInfo({ chat, onClose }: { chat: ChatDTO; onClose: () => void }) {
@@ -357,6 +370,31 @@ export function GroupInfo({ chat, onClose }: { chat: ChatDTO; onClose: () => voi
               ),
           },
         ]}
+      />
+    );
+  }
+  if (view === "close") {
+    const close = (secs: number) => run(updateGroup(qc, chat.id, { closeForSecs: secs }));
+    return (
+      <Sheet
+        title={tr.groups.closeGroup}
+        onClose={() => setView("info")}
+        actions={[
+          ...MUTE_PRESETS.map((p) => ({ label: tr.groups.closeFor(durationLabel(p.secs, tr)), onSelect: () => close(p.secs) })),
+          { label: tr.groups.closeUntil, keepOpen: true, onSelect: () => setView("closeAt") },
+        ]}
+      />
+    );
+  }
+  if (view === "closeAt") {
+    return (
+      <ScheduleDialog
+        title={tr.groups.closeGroup}
+        onPick={(at) => {
+          run(updateGroup(qc, chat.id, { closeForSecs: Math.max(60, Math.round((at.getTime() - Date.now()) / 1000)) }));
+          setView("info");
+        }}
+        onClose={() => setView("info")}
       />
     );
   }
@@ -461,6 +499,21 @@ export function GroupInfo({ chat, onClose }: { chat: ChatDTO; onClose: () => voi
               checked={group.membersCanInvite}
               onChange={(on) => run(updateGroup(qc, chat.id, { membersCanInvite: on }))}
             />
+            {group.membersCanWrite && (
+              <button
+                type="button"
+                onClick={() => (groupClosed(group) ? run(updateGroup(qc, chat.id, { closeForSecs: null })) : setView("close"))}
+                className="flex w-full items-center gap-3 border-t border-black/5 px-4 py-3 text-left hover:bg-black/5 dark:border-white/10 dark:hover:bg-white/5"
+              >
+                <LockKeyhole className="size-5 shrink-0 text-stone-500" />
+                <span className="min-w-0 flex-1">
+                  <span className="block text-sm font-medium">{groupClosed(group) ? tr.groups.reopen : tr.groups.closeGroup}</span>
+                  <span className="block text-xs text-stone-500">
+                    {groupClosed(group) ? tr.groups.closedUntil(sendAtLabel(group.closedUntil!)) : tr.groups.closeGroupHint}
+                  </span>
+                </span>
+              </button>
+            )}
           </section>
         )}
 

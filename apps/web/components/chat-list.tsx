@@ -13,6 +13,7 @@ import {
   chatFace,
   lastMessageDelivery,
   maskSpoilers,
+  mentionAsYou,
   senderName,
   serviceSentence,
   serviceText,
@@ -156,8 +157,9 @@ function Preview({ chat, meId }: { chat: ChatDTO; meId: string }) {
         {voiceLength}
         {m.type === "file" && m.attachment && !m.text && <span className="truncate">· {m.attachment.name}</span>}
         {m.type === "checklist" && m.checklist && <span className="truncate">· {m.checklist.title}</span>}
+        {m.type === "poll" && m.poll && <span className="truncate">· {m.poll.question}</span>}
         {m.type === "game" && m.game && <span className="truncate">· {tr.calls[m.game.game]}</span>}
-        {m.text && <span className="truncate">· {maskSpoilers(m.text, m.entities)}</span>}
+        {m.text && <span className="truncate">· {mentionAsYou(maskSpoilers(m.text, m.entities), chat, meId, tr.common.you)}</span>}
       </span>
     );
   }
@@ -169,7 +171,7 @@ function Preview({ chat, meId }: { chat: ChatDTO; meId: string }) {
           <EyeOff className="size-3.5" /> {tr.summary.spoiler}
         </span>
       ) : (
-        maskSpoilers(m.text ?? "", m.entities)
+        mentionAsYou(maskSpoilers(m.text ?? "", m.entities), chat, meId, tr.common.you)
       )}
     </>
   );

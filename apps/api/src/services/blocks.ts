@@ -35,13 +35,16 @@ export async function blockedWith(db: Tx, userId: string) {
  * Refuses to post into a chat where either person blocked the other or the other person deleted
  * their account. Covers sending, scheduled sends, edits, reactions and timer or theme changes. A support chat stays
  * open whatever the blocks, so help is always one message away. In a group
- * that only admins write in, refuses members `writing` a message, but not their reactions or what the group
- * announces for them.
+ * that only admins write in, for good or until `closedUntil`, refuses members `writing` a message, but not their
+ * reactions or what the group announces for them.
  */
 export async function assertCanMessage(db: Tx, chatId: string, userId: string, writing = true) {
-  const chat = await db.chat.findUnique({ where: { id: chatId }, select: { type: true, membersCanWrite: true, supportUserId: true } });
+  const chat = await db.chat.findUnique({
+    where: { id: chatId },
+    select: { type: true, membersCanWrite: true, closedUntil: true, supportUserId: true },
+  });
   if (chat?.type === "group") {
-    if (!writing || chat.membersCanWrite) return;
+    if (!writing || (chat.membersCanWrite && !(chat.closedUntil && chat.closedUntil > new Date()))) return;
     const me = await db.chatMember.findUnique({ where: { chatId_userId: { chatId, userId } }, select: { role: true } });
     if (me?.role === "member") throw new AppError("GROUP_ADMINS_ONLY", "Only admins can send messages in this group");
     return;

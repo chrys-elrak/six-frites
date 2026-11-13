@@ -21,6 +21,7 @@ export const MessageType = z.enum([
   "location",
   "checklist",
   "game",
+  "poll",
 ]);
 export type MessageType = z.infer<typeof MessageType>;
 
@@ -91,6 +92,7 @@ export function mapTiles(p: GeoPoint, width: number, height: number, zoom = 15) 
 }
 
 export const CHECKLIST = { title: 128, item: 200, items: 30 } as const;
+export const POLL = { question: 200, option: 100, options: 12 } as const;
 
 /** Most photos and videos one album holds, as on Telegram. */
 export const MAX_ALBUM = 10;
@@ -120,6 +122,15 @@ export const Checklist = z.object({
   items: z.array(z.string().trim().min(1).max(CHECKLIST.item)).min(1).max(CHECKLIST.items),
 });
 export type Checklist = z.infer<typeof Checklist>;
+
+export const Poll = z.object({
+  question: z.string().trim().min(1).max(POLL.question),
+  options: z.array(z.string().trim().min(1).max(POLL.option)).min(2).max(POLL.options),
+});
+export type Poll = z.infer<typeof Poll>;
+
+/** A group nickname written as a mention, like @#3FA2C1. */
+export const MENTION = /@#[0-9A-F]{6}\b/g;
 
 export const ChecklistMark = z.object({
   item: z.number().int().describe("Index in the checklist's items"),
@@ -461,6 +472,14 @@ export const MessageDTO = z.object({
   location: GeoPoint.nullable(),
   checklist: Checklist.nullable(),
   checks: z.array(ChecklistMark).describe("The checklist items marked done; either person can tick them"),
+  poll: Poll.nullable(),
+  votes: z.array(z.number().int()).describe("How many people chose each of the poll's options, by index"),
+  myVote: z.number().int().nullable().describe("The option you chose, if you voted"),
+  pollVisible: z.boolean().describe("The poll shows who chose what; off, votes are anonymous and only counts show"),
+  voters: z
+    .array(z.object({ option: z.number().int(), userId: Id }))
+    .describe("Who chose which option, on a poll with `pollVisible`; empty on anonymous polls"),
+  mentions: z.array(Id).describe("In a group, the members mentioned with @, who are notified even if they muted it"),
   game: ChatGame.nullable(),
   moves: z.array(GameMoveDTO).describe("Answers to the game, oldest first; anyone but the sender can play"),
   createdAt: IsoDate,
@@ -574,11 +593,14 @@ export const SendMessageInput = z
     stickerId: Id.optional().describe("Send this sticker, on its own"),
     location: GeoPoint.optional().describe("Share a place, on its own"),
     checklist: Checklist.optional().describe("Send a checklist, on its own"),
+    poll: Poll.optional().describe("In a group, ask a question with options to vote on, on its own"),
+    pollVisible: z.boolean().optional().describe("With a poll: everyone sees who chose what, instead of only the counts"),
+    mentions: z.array(Id).max(50).optional().describe("In a group, members this message mentions, as @ and their nickname"),
     game: ChatGame.optional().describe("Send a game with your move, on its own"),
     type: z
-      .enum(["location", "checklist", "game"])
+      .enum(["location", "checklist", "game", "poll"])
       .optional()
-      .describe("With `encrypted`: the content is a location, a checklist or a game rather than text or a file"),
+      .describe("With `encrypted`: the content is a location, a checklist, a game or a poll rather than text or a file"),
     replyToId: Id.optional(),
     storyId: Id.optional().describe("Answer this story or note of the other person's: it shows above the message"),
     groupId: z
@@ -607,6 +629,7 @@ export const SendMessageInput = z
       v.stickerId ||
       v.location ||
       v.checklist ||
+      v.poll ||
       v.game ||
       v.encrypted ||
       v.bump,
@@ -622,6 +645,7 @@ export const SendMessageInput = z
         !v.stickerId &&
         !v.location &&
         !v.checklist &&
+        !v.poll &&
         !v.game &&
         !v.ephemeral),
     { message: "A bump needs `replyToId` and carries nothing else", path: ["bump"] },
@@ -636,6 +660,7 @@ export const SendMessageInput = z
         !v.stickerId &&
         !v.location &&
         !v.checklist &&
+        !v.poll &&
         !v.game),
     {
       message:
@@ -646,8 +671,8 @@ export const SendMessageInput = z
   .refine((v) => !v.type || v.encrypted, { message: "`type` is only for encrypted content", path: ["type"] })
   .refine(
     (v) =>
-      [v.location, v.checklist, v.game, v.type].filter(Boolean).length === 0 ||
-      ([v.location, v.checklist, v.game].filter(Boolean).length <= 1 &&
+      [v.location, v.checklist, v.poll, v.game, v.type].filter(Boolean).length === 0 ||
+      ([v.location, v.checklist, v.poll, v.game].filter(Boolean).length <= 1 &&
         v.text === undefined &&
         !v.attachmentId &&
         !v.gifId &&
@@ -696,6 +721,7 @@ export const ChatDTO = z.object({
         .describe("The code in the group's link, the only way in; null for members when only admins may share it"),
       maxMembers: z.number().int(),
       membersCanWrite: z.boolean().describe("Off: only the owner and admins send messages; members read and react"),
+      closedUntil: IsoDate.nullable().describe("Until then only the owner and admins send messages, as with membersCanWrite off"),
       membersCanInvite: z.boolean().describe("Off: only the owner and admins see the group's link"),
       myRole: z.enum(GROUP_ROLES),
     })

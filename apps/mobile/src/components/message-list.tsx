@@ -3,6 +3,7 @@ import {
   type ChatDTO,
   type ChatGame,
   type Checklist,
+  type Poll,
   type ChecklistMark,
   EPHEMERAL_RESEND,
   type GameMove,
@@ -27,6 +28,7 @@ import {
   isBotGame,
   shareTargets,
   chatTheme,
+  nicknameOf,
 } from "@six/shared";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import * as Haptics from "expo-haptics";
@@ -77,7 +79,7 @@ import {
   Image as ImageIcon,
   Users,
 } from "lucide-react-native";
-import { type ComponentRef, forwardRef, type ReactElement, useCallback, useEffect, useImperativeHandle, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { type ComponentRef, createContext, forwardRef, type ReactElement, useCallback, useContext, useEffect, useImperativeHandle, useLayoutEffect, useMemo, useRef, useState } from "react";
 import {
   ActivityIndicator,
   FlatList,
@@ -99,6 +101,7 @@ import Animated from "react-native-reanimated";
 import {
   applyEdited,
   check,
+  vote,
   deleteMessage,
   deleteMessages,
   markOpenedLocally,
@@ -145,6 +148,7 @@ import { ChatPicker } from "./chat-picker";
 import { StoryComposer } from "./story-composer";
 import { NoteEditor } from "./notes";
 import { ChecklistView } from "./checklist";
+import { PollView } from "./poll";
 import { GameView } from "./game";
 import { LocationCard } from "./location-card";
 import { EphemeralViewer } from "./ephemeral-viewer";
@@ -185,6 +189,11 @@ interface MsgRow {
   location: GeoPoint | null;
   checklist: Checklist | null;
   checks: ChecklistMark[];
+  poll: Poll | null;
+  votes: number[];
+  myVote: number | null;
+  pollVisible: boolean;
+  voters: MessageDTO["voters"];
   game: ChatGame | null;
   moves: GameMoveDTO[];
   type: MessageDTO["type"];
@@ -293,6 +302,11 @@ function buildRows(
         location: m.location ?? null,
         checklist: m.checklist ?? null,
         checks: m.checks ?? [],
+        poll: m.poll ?? null,
+        votes: m.votes ?? [],
+        myVote: m.myVote ?? null,
+        pollVisible: m.pollVisible ?? false,
+        voters: m.voters ?? [],
         game: m.game ?? null,
         moves: m.moves ?? [],
         type: m.type,
@@ -330,6 +344,11 @@ function buildRows(
           location: p.location ?? null,
           checklist: p.checklist ?? null,
           checks: [],
+          poll: p.poll ?? null,
+          votes: [],
+          myVote: null,
+          pollVisible: p.pollVisible ?? false,
+          voters: [],
           game: p.game ?? null,
           moves: [],
           type: (p.sticker
@@ -338,7 +357,9 @@ function buildRows(
             ? "location"
             : p.checklist
               ? "checklist"
-              : p.game
+              : p.poll
+                ? "poll"
+                : p.game
                 ? "game"
                 : (p.attachment?.kind ?? "text")) as MessageDTO["type"],
           locked: null,
@@ -580,8 +601,15 @@ function MessageText({ row, selecting, color }: { row: MsgRow; selecting: boolea
   );
 }
 
-/** Text with its links and animated emoji; the emoji grow with the text's size when it has one. */
+const MENTION_SPLIT = /(@#[0-9A-F]{6}\b)/;
+
+/** In a group, how I'm written when someone mentions me, like @#3FA2C1, to show as "@You" instead. */
+const MyMention = createContext<string | null>(null);
+
+/** Text with its links, mentions and animated emoji; the emoji grow with the text's size when it has one. */
 export function Linked({ text, selecting, size, onOpen }: { text: string; selecting: boolean; size?: string; onOpen?: () => void }) {
+  const tr = useT();
+  const me = useContext(MyMention);
   const emoji = Math.round((textSize(size) ?? 16) * 1.25);
   return (
     <>
@@ -602,7 +630,15 @@ export function Linked({ text, selecting, size, onOpen }: { text: string; select
             {part.text}
           </Text>
         ) : (
-          splitEmoji(part.text).map((s, j) => (j % 2 ? <AnimatedEmoji key={`${i}:${j}`} emoji={s} size={emoji} inline /> : s))
+          part.text.split(MENTION_SPLIT).map((piece, k) =>
+            k % 2 ? (
+              <Text key={`${i}@${k}`} style={[styles.mention, piece === me && styles.mentionMe]}>
+                {piece === me ? `@${tr.common.you}` : piece}
+              </Text>
+            ) : (
+              splitEmoji(piece).map((s, j) => (j % 2 ? <AnimatedEmoji key={`${i}:${k}:${j}`} emoji={s} size={emoji} inline /> : s))
+            ),
+          )
         ),
       )}
     </>
@@ -865,6 +901,7 @@ function Bubble({
   meId,
   onReact,
   onCheck,
+  onVote,
   onPlay,
   onSendGame,
   onOpenAlbum,
@@ -898,6 +935,7 @@ function Bubble({
   meId: string;
   onReact: (emoji: string) => void;
   onCheck: (item: number) => void;
+  onVote: (option: number) => void;
   onPlay: (move: GameMove) => void;
   onSendGame: (game: ChatGame) => void;
   onOpenAlbum: (items: ShownAttachment[], start: number) => void;
@@ -1161,6 +1199,9 @@ function Bubble({
               onCheck={row.message && !frozen && !selecting ? onCheck : undefined}
             />
           )}
+          {row.poll && !row.deleted && (
+            <PollView poll={row.poll} votes={row.votes} myVote={row.myVote} visible={row.pollVisible} voters={row.voters} nameOf={nameOf} mine={mine} onVote={row.message && !frozen && !selecting ? onVote : undefined} />
+          )}
           {row.game && !row.deleted && (
             <GameView
               game={row.game}
@@ -1292,6 +1333,8 @@ export const MessageList = forwardRef<
   }
 >(
   function MessageList({ chat, meId, onSeen, threadId, onOpenThread, after }, handle) {
+    const meMember = chat.group ? chat.members.find((m) => m.user.id === meId) : undefined;
+    const myMention = meMember ? `@${nicknameOf(meMember.user)}` : null;
     useFonts(FONT_FILES);
     const t = useTheme();
     const tr = useT();
@@ -1672,7 +1715,7 @@ export const MessageList = forwardRef<
         ...(m.ephemeral && canResend(m.ephemeral)
           ? [{ label: tr.messages.resendAgain, icon: RotateCcw, onSelect: () => void resendEphemeral(m) }]
           : []),
-        ...(!m.ephemeral && row.mine && !frozen && !["sticker", "checklist", "game"].includes(m.type)
+        ...(!m.ephemeral && row.mine && !frozen && !["sticker", "checklist", "poll", "game"].includes(m.type)
           ? [{ label: tr.messages.makeSelfDestruct, icon: Flame, onSelect: () => setDestructFor(m) }]
           : []),
         { label: tr.messages.timing, icon: Info, onSelect: () => setTimingFor(m.id) },
@@ -1697,6 +1740,7 @@ export const MessageList = forwardRef<
     const maxWidth = compact ? width - 80 - (selecting ? 28 : 0) : Math.round(width * (selecting ? 0.72 : 0.8));
 
     return (
+      <MyMention.Provider value={myMention}>
       <View
         ref={listFrame}
         style={{ flex: 1 }}
@@ -1843,6 +1887,7 @@ export const MessageList = forwardRef<
                   meId={meId}
                   onReact={(emoji) => row.message && void react(qc, row.message, meId, emoji)}
                   onCheck={(item) => row.message && void check(qc, row.message, meId, item)}
+                  onVote={(option) => row.message && void vote(qc, row.message, meId, option)}
                   onPlay={(move) => row.message && void play(qc, row.message, meId, move)}
                   onSendGame={(game) =>
                     isBotChat(chat) && isBotGame(game.game)
@@ -2002,11 +2047,14 @@ export const MessageList = forwardRef<
           </Pressable>
         )}
       </View>
+      </MyMention.Provider>
     );
   },
 );
 
 const styles = StyleSheet.create({
+  mention: { fontWeight: "700", backgroundColor: "rgba(127,127,127,0.18)", borderRadius: 4 },
+  mentionMe: { backgroundColor: "rgba(245,158,11,0.35)" },
   commentsDivider: { flexDirection: "row", alignItems: "center", gap: 10, paddingHorizontal: 16, paddingVertical: 10 },
   commentsLine: { flex: 1, height: StyleSheet.hairlineWidth, backgroundColor: "rgba(0,0,0,0.25)" },
   commentsLink: { flexDirection: "row", alignItems: "center", gap: 4, paddingHorizontal: 8, paddingTop: 2 },

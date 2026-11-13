@@ -108,15 +108,16 @@ async function sendToAll(targets: Awaited<ReturnType<typeof targetsFor>>, payloa
 const PUSH_BODY_MAX = 1000;
 
 /**
- * Sends one recipient a notification for a message, unless it was sent silently, the chat is muted or
- * archived for them, they already read it, or the device is in active use. Returns how many devices were notified.
+ * Sends one recipient a notification for a message, unless it was sent silently, the chat is muted for them (and
+ * the message doesn't mention them) or archived, they already read it, or the device is in active use. Returns how
+ * many devices were notified.
  */
 export async function deliverPush(messageId: string, userId: string) {
   const m = await prisma.message.findUnique({ where: { id: messageId }, include: { ...messageInclude, sender: true } });
   if (!m || m.silent || m.deletedAt || m.expiredAt || m.senderId === userId) return 0;
 
   const member = await prisma.chatMember.findUnique({ where: { chatId_userId: { chatId: m.chatId, userId } } });
-  if (!member || memberMuted(member) || member.archived || member.hidden) return 0;
+  if (!member || (memberMuted(member) && !m.mentions.includes(userId)) || member.archived || member.hidden) return 0;
   if (member.lastReadAt && member.lastReadAt >= m.createdAt) return 0;
 
   const targets = await targetsFor(userId);
@@ -125,11 +126,18 @@ export async function deliverPush(messageId: string, userId: string) {
   const sender = await seenIn(m.chatId, userId, m.sender);
   const dto = toMessageDTO(m, userId);
   const group = await prisma.chat.findFirst({ where: { id: m.chatId, type: "group" }, select: { title: true, photoKey: true } });
+  const mentioned = m.mentions.includes(userId);
+  const preview = (t: Dict) => {
+    const text = previewText(dto, t);
+    return member.nickname ? text.replaceAll(`@${member.nickname}`, `@${t.common.you}`) : text;
+  };
   return sendToAll(targets, (t) => ({
     title: group?.title ?? sender.displayName,
-    body: (group
-      ? `${sender.displayName}: ${previewText(dto, t) || t.summary.newMessage}`
-      : previewText(dto, t) || t.summary.newMessage
+    body: (mentioned
+      ? `${t.notifications.mention(sender.displayName)}${preview(t) ? ` ${preview(t)}` : ""}`
+      : group
+        ? `${sender.displayName}: ${preview(t) || t.summary.newMessage}`
+        : preview(t) || t.summary.newMessage
     ).slice(0, PUSH_BODY_MAX),
     icon: group ? (group.photoKey ? presignGet(group.photoKey) : null) : sender.avatarUrl,
     chatId: m.chatId,

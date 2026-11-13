@@ -128,6 +128,14 @@ function OpenConversation({ chatId }: { chatId: string }) {
   const { info, message } = useLocalSearchParams<{ info?: string; message?: string }>();
   const [editing, setEditing] = useState(!!info);
   const [shared, setShared] = useState<SharedTab | null>(null);
+  const [, reopened] = useState(0);
+  const closedUntil = chat.data?.group?.closedUntil;
+  useEffect(() => {
+    const wait = closedUntil ? Date.parse(closedUntil) - Date.now() + 500 : -1;
+    if (wait < 0 || wait > 2 ** 31 - 1) return;
+    const timer = setTimeout(() => reopened((n) => n + 1), wait);
+    return () => clearTimeout(timer);
+  }, [closedUntil]);
   const [searchFor, setSearchFor] = useState("");
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [pinIndex, setPinIndex] = useState(0);

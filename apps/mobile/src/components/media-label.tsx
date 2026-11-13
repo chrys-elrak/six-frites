@@ -5,6 +5,7 @@ import {
   Gamepad2,
   Image as ImageIcon,
   ListChecks,
+  ChartBar,
   type LucideIcon,
   MapPin,
   MessageSquare,
@@ -27,6 +28,7 @@ const mediaIcons: Record<string, LucideIcon> = {
   service: Timer,
   location: MapPin,
   checklist: ListChecks,
+  poll: ChartBar,
   game: Gamepad2,
 };
 

@@ -129,6 +129,7 @@ async function toChatDTO(db: Tx, chat: ChatWithRelations, viewerId: string): Pro
             inviteCode: me.role === "member" && !chat.membersCanInvite ? null : chat.inviteCode,
             maxMembers: chat.maxMembers ?? 0,
             membersCanWrite: chat.membersCanWrite,
+            closedUntil: chat.closedUntil && chat.closedUntil > new Date() ? chat.closedUntil.toISOString() : null,
             membersCanInvite: chat.membersCanInvite,
             myRole: me.role as GroupRole,
           }

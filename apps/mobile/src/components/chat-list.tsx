@@ -8,6 +8,7 @@ import {
   isGroupAction,
   lastMessageDelivery,
   maskSpoilers,
+  mentionAsYou,
   senderName,
   serviceSentence,
   serviceText,
@@ -165,10 +166,12 @@ function Preview({ chat, meId, color, bold }: { chat: ChatDTO; meId: string; col
         ? ` · ${m.attachment.name}`
         : m.type === "checklist" && m.checklist
           ? ` · ${m.checklist.title}`
-          : m.type === "game" && m.game
+          : m.type === "poll" && m.poll
+            ? ` · ${m.poll.question}`
+            : m.type === "game" && m.game
             ? ` · ${tr.calls[m.game.game]}`
             : m.text
-              ? ` · ${maskSpoilers(m.text, m.entities)}`
+              ? ` · ${mentionAsYou(maskSpoilers(m.text, m.entities), chat, meId, tr.common.you)}`
               : "";
     return line(
       <>
@@ -188,7 +191,7 @@ function Preview({ chat, meId, color, bold }: { chat: ChatDTO; meId: string; col
       true,
     );
   }
-  return line(null, you + maskSpoilers(m.text ?? "", m.entities).replace(/\s+/g, " "));
+  return line(null, you + mentionAsYou(maskSpoilers(m.text ?? "", m.entities), chat, meId, tr.common.you).replace(/\s+/g, " "));
 }
 
 function ChatRow({ chat, meId }: { chat: ChatDTO; meId: string }) {

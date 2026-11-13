@@ -1,12 +1,24 @@
 import { SixApiError } from "@six/sdk";
-import { type ChatDTO, type ChatMemberDTO, type Dict, GROUP_MAX_PLACES, GROUP_MIN_PLACES, chatFace, randomAlias, randomGender } from "@six/shared";
+import {
+  type ChatDTO,
+  type ChatMemberDTO,
+  type Dict,
+  GROUP_MAX_PLACES,
+  GROUP_MIN_PLACES,
+  MUTE_PRESETS,
+  chatFace,
+  durationLabel,
+  groupClosed,
+  randomAlias,
+  randomGender,
+} from "@six/shared";
 import { useQueryClient } from "@tanstack/react-query";
 import * as Clipboard from "expo-clipboard";
 import { router } from "expo-router";
-import { Copy, LogOut, MoreHorizontal, Pencil, RefreshCw, Share2, Shuffle } from "lucide-react-native";
+import { Copy, LockKeyhole, LogOut, MoreHorizontal, Pencil, RefreshCw, Share2, Shuffle } from "lucide-react-native";
 import { useState } from "react";
 import { Pressable, StyleSheet, View } from "react-native";
-import { groupUrl, shareGroup } from "@/lib/format";
+import { groupUrl, sendAtLabel, shareGroup } from "@/lib/format";
 import {
   createGroup,
   leaveGroup,
@@ -21,6 +33,7 @@ import { useSession } from "@/lib/session";
 import { brand, brandInk, useTheme } from "@/lib/theme";
 import { Avatar } from "./avatar";
 import { PhotoPicker } from "./photo-picker";
+import { ScheduleDialog } from "./scheduled";
 import { Sheet } from "./sheet";
 import { Text, TextInput } from "./text";
 import { Popup, PrimaryButton, Toggle } from "./ui";
@@ -270,7 +283,7 @@ function EditMe({ chat, me, onClose }: { chat: ChatDTO; me: ChatMemberDTO; onClo
   );
 }
 
-type View_ = "info" | "edit" | "me" | "reset" | "leave" | { member: ChatMemberDTO } | { removing: ChatMemberDTO };
+type View_ = "info" | "edit" | "me" | "reset" | "leave" | "close" | "closeAt" | { member: ChatMemberDTO } | { removing: ChatMemberDTO };
 
 /** Everything about a group: its link, its members and what you may do with them, and the way out. */
 export function GroupInfo({ chat, onClose }: { chat: ChatDTO; onClose: () => void }) {
@@ -291,6 +304,31 @@ export function GroupInfo({ chat, onClose }: { chat: ChatDTO; onClose: () => voi
 
   if (view === "edit") return <EditGroup chat={chat} onClose={back} />;
   if (view === "me") return <EditMe chat={chat} me={me} onClose={back} />;
+  if (view === "close") {
+    const close = (secs: number) => run(updateGroup(qc, chat.id, { closeForSecs: secs }));
+    return (
+      <Sheet
+        title={tr.groups.closeGroup}
+        onClose={back}
+        actions={[
+          ...MUTE_PRESETS.map((p) => ({ label: tr.groups.closeFor(durationLabel(p.secs, tr)), onSelect: () => close(p.secs) })),
+          { label: tr.groups.closeUntil, keepOpen: true, onSelect: () => setView("closeAt") },
+        ]}
+      />
+    );
+  }
+  if (view === "closeAt") {
+    return (
+      <ScheduleDialog
+        title={tr.groups.closeGroup}
+        onPick={(at) => {
+          run(updateGroup(qc, chat.id, { closeForSecs: Math.max(60, Math.round((at.getTime() - Date.now()) / 1000)) }));
+          back();
+        }}
+        onClose={back}
+      />
+    );
+  }
   if (view === "reset") {
     return (
       <Sheet
@@ -413,6 +451,21 @@ export function GroupInfo({ chat, onClose }: { chat: ChatDTO; onClose: () => voi
             value={group.membersCanInvite}
             onChange={(on) => run(updateGroup(qc, chat.id, { membersCanInvite: on }))}
           />
+          {group.membersCanWrite && (
+            <Pressable
+              onPress={() => (groupClosed(group) ? run(updateGroup(qc, chat.id, { closeForSecs: null })) : setView("close"))}
+              accessibilityRole="button"
+              style={[styles.closeRow, { borderTopColor: t.border }]}
+            >
+              <LockKeyhole size={20} color={t.muted} />
+              <View style={{ flex: 1 }}>
+                <Text style={{ color: t.text, fontSize: 15, fontWeight: "600" }}>{groupClosed(group) ? tr.groups.reopen : tr.groups.closeGroup}</Text>
+                <Text style={{ color: t.muted, fontSize: 13 }}>
+                  {groupClosed(group) ? tr.groups.closedUntil(sendAtLabel(group.closedUntil!)) : tr.groups.closeGroupHint}
+                </Text>
+              </View>
+            </Pressable>
+          )}
         </View>
       )}
 
@@ -450,6 +503,7 @@ export function GroupInfo({ chat, onClose }: { chat: ChatDTO; onClose: () => voi
 }
 
 const styles = StyleSheet.create({
+  closeRow: { flexDirection: "row", alignItems: "center", gap: 12, paddingHorizontal: 16, paddingVertical: 12, borderTopWidth: StyleSheet.hairlineWidth },
   heading: { fontSize: 20, fontWeight: "700", textAlign: "center" },
   input: { borderRadius: 12, paddingHorizontal: 12, paddingVertical: 10, fontSize: 16 },
   row: { flexDirection: "row", alignItems: "center", gap: 8 },

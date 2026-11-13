@@ -81,6 +81,29 @@ export async function react(
   }
 }
 
+/** Votes for a poll option, or takes the vote back when it's the one already chosen, showing it before the server answers. */
+export async function vote(qc: QueryClient, m: MessageDTO, meId: string, option: number) {
+  const next = m.myVote === option ? null : option;
+  const votes = [...m.votes];
+  const bump = (i: number | null, by: number) => {
+    if (i === null) return;
+    while (votes.length <= i) votes.push(0);
+    votes[i] = Math.max(0, votes[i]! + by);
+  };
+  bump(m.myVote, -1);
+  bump(next, 1);
+  const voters = m.pollVisible
+    ? [...m.voters.filter((v) => v.userId !== meId), ...(next === null ? [] : [{ option: next, userId: meId }])]
+    : m.voters;
+  applyEdited(qc, { ...m, votes, myVote: next, voters });
+  try {
+    const params = { path: { id: m.id } };
+    applyEdited(qc, unwrap(await six.api.PUT("/v1/messages/{id}/vote", { params, body: { option: next } })));
+  } catch {
+    void qc.invalidateQueries({ queryKey: ["messages", m.chatId] });
+  }
+}
+
 /** Ticks or unticks a checklist item, showing the change before the server answers. */
 export async function check(qc: QueryClient, m: MessageDTO, meId: string, item: number) {
   const done = !m.checks.some((c) => c.item === item);

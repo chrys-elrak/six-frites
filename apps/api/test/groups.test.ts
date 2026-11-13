@@ -264,4 +264,82 @@ describe("groups", () => {
     expect(seen.members.find((m: { user: { id: string } }) => m.user.id === guest.user.id).user.displayName).toBe("Little bro");
     expect(chatId).toBeTruthy();
   });
+
+  it("closes a group to members for a while, then lets them write again", async () => {
+    const owner = await signUp("owner");
+    const group = await newGroup(owner, { maxMembers: 10 });
+    const ana = await signUp("ana");
+    await join(ana, group.group.inviteCode, "#A0A0A0");
+
+    expect((await call(ana, "PATCH", `/v1/groups/${group.id}`, { closeForSecs: 3600 })).statusCode).toBe(403);
+    const closed = (await call(owner, "PATCH", `/v1/groups/${group.id}`, { closeForSecs: 3600 })).json();
+    expect(Date.parse(closed.group.closedUntil) - Date.now()).toBeGreaterThan(3500_000);
+    expect((await send(ana, group.id, "hello?")).json().error.code).toBe("GROUP_ADMINS_ONLY");
+    expect((await send(owner, group.id, "back in an hour")).statusCode).toBe(201);
+
+    await prisma.chat.update({ where: { id: group.id }, data: { closedUntil: new Date(Date.now() - 1000) } });
+    expect((await get(ana, `/v1/chats/${group.id}`)).group.closedUntil).toBeNull();
+    expect((await send(ana, group.id, "open again")).statusCode).toBe(201);
+
+    await call(owner, "PATCH", `/v1/groups/${group.id}`, { closeForSecs: 600 });
+    expect((await call(owner, "PATCH", `/v1/groups/${group.id}`, { closeForSecs: null })).json().group.closedUntil).toBeNull();
+    expect((await send(ana, group.id, "reopened early")).statusCode).toBe(201);
+  });
+
+  it("counts poll votes without saying who voted, and lets people change or take back their vote", async () => {
+    const owner = await signUp("owner");
+    const group = await newGroup(owner, { maxMembers: 10 });
+    const [ana, bo] = await Promise.all([signUp("ana"), signUp("bo")]);
+    await join(ana, group.group.inviteCode, "#A0A0A0");
+    await join(bo, group.group.inviteCode, "#B0B0B0");
+
+    const poll = (await call(owner, "POST", `/v1/chats/${group.id}/messages`, {
+      clientId: "poll-1",
+      poll: { question: "Where to?", options: ["Beach", "Mountain", "Home"] },
+    })).json();
+    expect(poll).toMatchObject({ type: "poll", poll: { question: "Where to?" }, votes: [], myVote: null });
+
+    const vote = (who: Who, option: number | null) => call(who, "PUT", `/v1/messages/${poll.id}/vote`, { option });
+    await vote(ana, 1);
+    await vote(bo, 1);
+    expect((await vote(owner, 0)).json()).toMatchObject({ votes: [1, 2], myVote: 0 });
+    expect((await vote(ana, 2)).json()).toMatchObject({ votes: [1, 1, 1], myVote: 2 });
+    expect((await vote(bo, null)).json()).toMatchObject({ votes: [1, 0, 1], myVote: null });
+    expect((await vote(bo, 3)).json().error.code).toBe("NOT_FOUND");
+    expect(JSON.stringify(await get(bo, `/v1/chats/${group.id}/messages`))).not.toContain(ana.user.id);
+
+    const open = (await call(owner, "POST", `/v1/chats/${group.id}/messages`, {
+      clientId: "poll-open",
+      poll: { question: "Who's in?", options: ["Me", "Not me"] },
+      pollVisible: true,
+    })).json();
+    expect(open).toMatchObject({ pollVisible: true, voters: [] });
+    await call(ana, "PUT", `/v1/messages/${open.id}/vote`, { option: 0 });
+    expect((await call(bo, "PUT", `/v1/messages/${open.id}/vote`, { option: 1 })).json().voters).toEqual([
+      { option: 0, userId: ana.user.id },
+      { option: 1, userId: bo.user.id },
+    ]);
+    expect((await vote(ana, 0)).json()).toMatchObject({ pollVisible: false, voters: [] });
+
+    const { host, chatId } = await makeFriends();
+    const direct = await call(host, "POST", `/v1/chats/${chatId}/messages`, { clientId: "poll-2", poll: { question: "?", options: ["a", "b"] } });
+    expect(direct.json().error.code).toBe("VALIDATION_FAILED");
+  });
+
+  it("keeps only the other members a message mentions", async () => {
+    const owner = await signUp("owner");
+    const group = await newGroup(owner, { maxMembers: 10 });
+    const [ana, stranger] = await Promise.all([signUp("ana"), signUp("stranger")]);
+    await join(ana, group.group.inviteCode, "#A0A0A0");
+    const sent = (await call(owner, "POST", `/v1/chats/${group.id}/messages`, {
+      clientId: "mention-1",
+      text: "@#A0A0A0 look",
+      mentions: [ana.user.id, stranger.user.id, owner.user.id],
+    })).json();
+    expect(sent.mentions).toEqual([ana.user.id]);
+    const [note] = (await get(ana, "/v1/notifications")).items;
+    expect(note).toMatchObject({ kind: "mention", chatId: group.id, messageId: sent.id, user: { displayName: "#CAFE00" } });
+    expect((await get(stranger, "/v1/notifications")).items).toEqual([]);
+  });
 });
+

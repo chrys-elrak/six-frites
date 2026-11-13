@@ -4,6 +4,8 @@ import {
   type ChatDTO,
   type ChatGame,
   type Checklist,
+  type Poll,
+  mentionsIn,
   ENCRYPT_MAX_BYTES,
   type EncryptedFile,
   type EphemeralInput,
@@ -25,6 +27,7 @@ import { useDataSaver } from "./data-saver";
 import { lighterPhoto } from "./image";
 import { mediaMeta } from "./media-meta";
 import { type PendingMessage, pendingFiles, sealedFiles, useOutbox } from "./outbox";
+import { useSession } from "./session";
 import { six } from "./six";
 
 export interface Draft {
@@ -41,6 +44,8 @@ export interface Draft {
   sticker?: StickerDTO;
   location?: GeoPoint;
   checklist?: Checklist;
+  poll?: Poll;
+  pollVisible?: boolean;
   game?: ChatGame;
   groupId?: string;
   threadId?: string;
@@ -142,12 +147,16 @@ export async function deliver(qc: QueryClient, realtime: Realtime, pending: Pend
       ...pending.comments,
       silent: pending.silent,
       bump: pending.bump,
+      pollVisible: pending.pollVisible || undefined,
+      mentions: chat?.group && pending.text ? mentionsIn(pending.text, chat.members, useSession.getState().user?.id ?? "") : undefined,
     };
     const type = pending.location
       ? ("location" as const)
       : pending.checklist
         ? ("checklist" as const)
-        : pending.game
+        : pending.poll
+          ? ("poll" as const)
+          : pending.game
           ? ("game" as const)
           : undefined;
     const later = pending.sendAt && Date.parse(pending.sendAt) > Date.now() + 5000 ? pending.sendAt : null;
@@ -170,6 +179,7 @@ export async function deliver(qc: QueryClient, realtime: Realtime, pending: Pend
             file,
             location: pending.location,
             checklist: pending.checklist,
+            poll: pending.poll,
             game: pending.game,
           },
           (encrypted) => post({ ...base, encrypted, type }),
@@ -183,6 +193,7 @@ export async function deliver(qc: QueryClient, realtime: Realtime, pending: Pend
           spoiler: pending.spoiler || undefined,
           location: pending.location,
           checklist: pending.checklist,
+          poll: pending.poll,
           game: pending.game,
         });
     if (sent) {
@@ -287,6 +298,8 @@ export async function queueMessage(qc: QueryClient, realtime: Realtime, chatId: 
     sticker: draft.sticker ?? null,
     location: draft.location,
     checklist: draft.checklist,
+    poll: draft.poll,
+    pollVisible: draft.pollVisible,
     game: draft.game,
     groupId: draft.groupId,
     threadId: draft.threadId,
