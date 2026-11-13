@@ -345,6 +345,57 @@ export function StoryStickers({
   );
 }
 
+/**
+ * A chat message's copy of the story or note it answers: while that's still up, tapping it opens it right there,
+ * the story in the viewer, a contact's note to read, or my own note to edit.
+ */
+export function StoryReplyLink({ id, note, children }: { id: string; note: boolean; children: React.ReactNode }) {
+  const tr = useT();
+  const groups = useStories().data ?? [];
+  const notes = useNotes().data;
+  const [open, setOpen] = useState(false);
+  const at = note ? -1 : groups.findIndex((g) => g.stories.some((s) => s.id === id));
+  const theirs = note ? notes?.items.find((n) => n.note.id === id) : undefined;
+  const mine = note && notes?.mine?.id === id ? notes.mine : null;
+  if (at < 0 && !theirs && !mine) return children;
+  const stop = (e: React.SyntheticEvent) => e.stopPropagation();
+  const close = () => setOpen(false);
+  return (
+    <>
+      <span
+        role="button"
+        tabIndex={0}
+        aria-label={note ? tr.stories.openNote : tr.stories.openStory}
+        onClick={(e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          setOpen(true);
+        }}
+        onKeyDown={(e) => {
+          if (e.key !== "Enter" && e.key !== " ") return;
+          e.preventDefault();
+          e.stopPropagation();
+          setOpen(true);
+        }}
+        className="block cursor-pointer"
+      >
+        {children}
+      </span>
+      {open && (
+        <span className="contents" onClick={stop} onPointerDown={stop} onPointerUp={stop} onContextMenu={stop} onKeyDown={stop}>
+          {at >= 0 ? (
+            <StoryViewer groups={groups} start={at} storyId={id} onClose={close} />
+          ) : theirs ? (
+            <NoteReader user={theirs.user} note={theirs.note} onClose={close} />
+          ) : (
+            <NoteEditor note={mine} onClose={close} />
+          )}
+        </span>
+      )}
+    </>
+  );
+}
+
 function Ring({ unseen, children }: { unseen: boolean; children: React.ReactNode }) {
   return (
     <span
@@ -501,7 +552,7 @@ export function StoriesBar() {
           );
         })}
       </div>
-      {open !== null && groups[open] && <StoryViewer groups={groups} start={open} storyId={linked} onClose={close} />}
+      {open !== null && groups[open] && <StoryViewer groups={groups} start={open} storyId={linked} viewers={!!linked} onClose={close} />}
       {composing && <StoryComposer onClose={() => setComposing(false)} />}
       {writingNote && <NoteEditor note={notes?.mine ?? null} onClose={() => setWritingNote(false)} />}
       {reading && <NoteReader user={reading.user} note={reading.note} onClose={() => setReading(null)} />}
@@ -660,11 +711,13 @@ export function StoryViewer({
   groups,
   start,
   storyId,
+  viewers = false,
   onClose,
 }: {
   groups: StoryGroupDTO[];
   start: number;
   storyId?: string;
+  viewers?: boolean;
   onClose: () => void;
 }) {
   const tr = useT();
@@ -683,7 +736,7 @@ export function StoryViewer({
   }, []);
   const [paused, setPaused] = useState(false);
   const [held, setHeld] = useState(false);
-  const [showViewers, setShowViewers] = useState(!!storyId);
+  const [showViewers, setShowViewers] = useState(viewers);
   const [deleting, setDeleting] = useState(false);
   const [replying, setReplying] = useState(false);
   const [videoMs, setVideoMs] = useState<number | null>(null);

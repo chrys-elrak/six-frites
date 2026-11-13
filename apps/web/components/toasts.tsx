@@ -1,7 +1,7 @@
 "use client";
 
 import { useQueryClient } from "@tanstack/react-query";
-import { MessageCircle, Reply, SendHorizontal, X } from "lucide-react";
+import { Check, MessageCircle, Reply, SendHorizontal, X } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useRef, useState } from "react";
 import { useT } from "@/lib/i18n";
@@ -21,15 +21,34 @@ export function Toasts() {
         className="pointer-events-none fixed inset-x-0 top-0 z-[60] flex flex-col items-center gap-2.5 p-3 pt-[max(0.75rem,env(safe-area-inset-top))] md:items-end md:p-4"
         aria-live="polite"
       >
-        {toasts.map((t) => (
-          <ToastCard key={t.id} toast={t} />
-        ))}
+        {toasts.map((t) => (t.sent ? <SentPill key={t.id} toast={t} /> : <ToastCard key={t.id} toast={t} />))}
       </div>
     </Portal>
   );
 }
 
 const SWIPE_AWAY = 90;
+
+function SentPill({ toast: t }: { toast: Toast }) {
+  const router = useRouter();
+  const { dismiss } = useToasts();
+  return (
+    <button
+      type="button"
+      onClick={() => {
+        dismiss(t.id);
+        router.push(t.href);
+      }}
+      className="pointer-events-auto flex max-w-sm animate-[toast-in_320ms_cubic-bezier(0.2,0.9,0.3,1.15)] items-center gap-2 rounded-full bg-stone-900/85 py-2 pr-4 pl-2 text-sm text-white shadow-lg backdrop-blur-xl dark:bg-white/90 dark:text-stone-900"
+    >
+      <span className="grid size-6 shrink-0 place-items-center rounded-full bg-emerald-500 text-white">
+        <Check className="size-3.5" strokeWidth={3} />
+      </span>
+      <span className="shrink-0 font-semibold">{t.title}</span>
+      <span className="min-w-0 truncate opacity-70">{t.body}</span>
+    </button>
+  );
+}
 
 /** One popup: tap to open, swipe it sideways or up to put it away, or answer a message right from it. */
 function ToastCard({ toast: t }: { toast: Toast }) {

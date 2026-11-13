@@ -154,7 +154,7 @@ import { GradientText, Spoiler, styleFor } from "./rich-text";
 import { playHref } from "./live";
 import { MessageTiming } from "./message-timing";
 import { Sheet, type SheetAction } from "./sheet";
-import { storyFill } from "./stories";
+import { StoryReplyLink, storyFill } from "./stories";
 
 type Delivery = "sending" | "waiting" | "failed" | "sent" | "delivered" | "read";
 
@@ -1096,7 +1096,9 @@ function Bubble({
             />
           )}
           {row.story && !row.deleted && (
-            <StoryQuote story={row.story} mine={mine} color={fg} reaction={!!row.text && !!emojiOnly(row.text)} />
+            <StoryReplyLink id={row.story.id} note={row.story.kind === "note"}>
+              <StoryQuote story={row.story} mine={mine} color={fg} reaction={!!row.text && !!emojiOnly(row.text)} />
+            </StoryReplyLink>
           )}
           {e && mine && !e.purged && !row.deleted && <SenderBadge e={e} color={fg} onResend={onResend} />}
           {sticker && <StickerView sticker={sticker} size={160} />}

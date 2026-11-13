@@ -1,5 +1,5 @@
 import { type Href, router } from "expo-router";
-import { MessageCircle, X } from "lucide-react-native";
+import { Check, MessageCircle, X } from "lucide-react-native";
 import { useEffect } from "react";
 import { Pressable, StyleSheet, View } from "react-native";
 import { Text } from "./text";
@@ -9,6 +9,31 @@ import { useT } from "@/lib/i18n";
 import { type Toast, useToasts } from "@/lib/notify";
 import { brand, brandInk, useTheme } from "@/lib/theme";
 import { Avatar } from "./avatar";
+
+function SentPill({ toast, onDismiss }: { toast: Toast; onDismiss: () => void }) {
+  const t = useTheme();
+  return (
+    <Animated.View entering={FadeInUp.springify().damping(16)} exiting={FadeOutUp.duration(160)}>
+      <Pressable
+        onPress={() => {
+          onDismiss();
+          router.push(toast.href as Href);
+        }}
+        style={({ pressed }) => [styles.pill, { backgroundColor: t.dark ? "rgba(255,255,255,0.92)" : "rgba(28,25,23,0.88)" }, pressed && { opacity: 0.7 }]}
+      >
+        <View style={styles.check}>
+          <Check size={14} strokeWidth={3} color="#fff" />
+        </View>
+        <Text numberOfLines={1} style={{ color: t.dark ? "#1c1917" : "#fff", fontSize: 14, fontWeight: "700", flexShrink: 0 }}>
+          {toast.title}
+        </Text>
+        <Text numberOfLines={1} style={{ color: t.dark ? "#1c1917" : "#fff", fontSize: 14, opacity: 0.7, flexShrink: 1 }}>
+          {toast.body}
+        </Text>
+      </Pressable>
+    </Animated.View>
+  );
+}
 
 function ToastCard({ toast, onDismiss }: { toast: Toast; onDismiss: () => void }) {
   const t = useTheme();
@@ -63,9 +88,13 @@ export function Toasts() {
 
   return (
     <View pointerEvents="box-none" style={[styles.wrap, { paddingTop: insets.top + 8 }]} accessibilityLiveRegion="polite">
-      {toasts.map((toast) => (
-        <ToastCard key={toast.id} toast={toast} onDismiss={() => dismiss(toast.id)} />
-      ))}
+      {toasts.map((toast) =>
+        toast.sent ? (
+          <SentPill key={toast.id} toast={toast} onDismiss={() => dismiss(toast.id)} />
+        ) : (
+          <ToastCard key={toast.id} toast={toast} onDismiss={() => dismiss(toast.id)} />
+        ),
+      )}
     </View>
   );
 }
@@ -99,6 +128,22 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
+  pill: {
+    maxWidth: 420,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    borderRadius: 999,
+    paddingVertical: 8,
+    paddingLeft: 8,
+    paddingRight: 16,
+    elevation: 8,
+    shadowColor: "#000",
+    shadowOpacity: 0.2,
+    shadowRadius: 12,
+    shadowOffset: { width: 0, height: 4 },
+  },
+  check: { width: 24, height: 24, borderRadius: 12, backgroundColor: "#10b981", alignItems: "center", justifyContent: "center" },
   close: { width: 28, height: 28, borderRadius: 14, alignItems: "center", justifyContent: "center", margin: 10 },
   bar: { position: "absolute", left: 0, right: 0, bottom: 0, height: 3, backgroundColor: brand, transformOrigin: "left" },
 });

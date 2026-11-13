@@ -427,6 +427,37 @@ export function StoryAvatar({ userId, name, children }: { userId: string; name: 
   );
 }
 
+/**
+ * A chat message's copy of the story or note it answers: while that's still up, tapping it opens it right there,
+ * the story in the viewer, a contact's note to read, or my own note to edit.
+ */
+export function StoryReplyLink({ id, note, children }: { id: string; note: boolean; children: React.ReactNode }) {
+  const tr = useT();
+  const groups = useStories().data ?? [];
+  const notes = useNotes().data;
+  const [open, setOpen] = useState(false);
+  const at = note ? -1 : groups.findIndex((g) => g.stories.some((s) => s.id === id));
+  const theirs = note ? notes?.items.find((n) => n.note.id === id) : undefined;
+  const mine = note && notes?.mine?.id === id ? notes.mine : null;
+  if (at < 0 && !theirs && !mine) return children;
+  const close = () => setOpen(false);
+  return (
+    <>
+      <Pressable onPress={() => setOpen(true)} accessibilityRole="button" accessibilityLabel={note ? tr.stories.openNote : tr.stories.openStory}>
+        {children}
+      </Pressable>
+      {open &&
+        (at >= 0 ? (
+          <StoryViewer groups={groups} start={at} storyId={id} onClose={close} />
+        ) : theirs ? (
+          <NoteReader user={theirs.user} note={theirs.note} onClose={close} />
+        ) : (
+          <NoteEditor note={mine} onClose={close} />
+        ))}
+    </>
+  );
+}
+
 function Ring({ unseen, children }: { unseen: boolean; children: React.ReactNode }) {
   const t = useTheme();
   return (
@@ -544,7 +575,7 @@ export function StoriesBar() {
           );
         })}
       </ScrollView>
-      {open !== null && groups[open] && <StoryViewer groups={groups} start={open} storyId={linked} onClose={close} />}
+      {open !== null && groups[open] && <StoryViewer groups={groups} start={open} storyId={linked} viewers={!!linked} onClose={close} />}
       {composing && <StoryComposer onClose={() => setComposing(false)} />}
       {writingNote && <NoteEditor note={notes?.mine ?? null} onClose={() => setWritingNote(false)} />}
       {reading && <NoteReader user={reading.user} note={reading.note} onClose={() => setReading(null)} />}
@@ -728,16 +759,18 @@ function ReplyBar({ story, owner, onTyping }: { story: StoryDTO; owner: PublicUs
  * Full-screen stories, one person after the other. Tap the right side for the next story, the left
  * for the previous one, and hold to pause.
  */
-/** Shows the stories from `start`'s group on; with `storyId`, from that story with its viewers open. */
+/** Shows the stories from `start`'s group on; with `storyId`, from that story, and with `viewers`, its viewers open. */
 export function StoryViewer({
   groups,
   start,
   storyId,
+  viewers = false,
   onClose,
 }: {
   groups: StoryGroupDTO[];
   start: number;
   storyId?: string;
+  viewers?: boolean;
   onClose: () => void;
 }) {
   const tr = useT();
@@ -758,7 +791,7 @@ export function StoryViewer({
   const [videoMs, setVideoMs] = useState<number | null>(null);
   const [paused, setPaused] = useState(false);
   const [held, setHeld] = useState(false);
-  const [showViewers, setShowViewers] = useState(!!storyId);
+  const [showViewers, setShowViewers] = useState(viewers);
   const [deleting, setDeleting] = useState(false);
   const [replying, setReplying] = useState(false);
   const [width, setWidth] = useState(1);

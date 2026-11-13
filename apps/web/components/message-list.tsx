@@ -130,6 +130,7 @@ import { AnimatedEmoji } from "./animated-emoji";
 import { AlbumViewer, AttachmentView, Lightbox, type LightboxItem, type ShownAttachment } from "./attachment";
 import { ChatPicker } from "./chat-picker";
 import { StoryComposer } from "./story-composer";
+import { StoryReplyLink } from "./stories";
 import { NoteEditor } from "./notes";
 import { ChecklistView } from "./checklist";
 import { GameView } from "./game";
@@ -1012,7 +1013,11 @@ function Bubble({
                   earlier={quoteEarlier}
                 />
               )}
-              {row.story && !row.deleted && <StoryQuote story={row.story} mine={mine} reaction={!!row.text && !!emojiOnly(row.text)} />}
+              {row.story && !row.deleted && (
+                <StoryReplyLink id={row.story.id} note={row.story.kind === "note"}>
+                  <StoryQuote story={row.story} mine={mine} reaction={!!row.text && !!emojiOnly(row.text)} />
+                </StoryReplyLink>
+              )}
               {e && mine && !e.purged && !row.deleted && <SenderBadge e={e} onResend={onResend} />}
               {row.album && !row.deleted && !sealed ? (
                 <AlbumGrid

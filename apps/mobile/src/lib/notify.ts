@@ -24,6 +24,8 @@ export interface Toast {
   title: string;
   body: string;
   avatar: { displayName: string; avatarUrl: string | null };
+  /** A confirmation of something I sent, drawn as a small pill so it can't pass for an incoming message. */
+  sent?: boolean;
 }
 
 export const useToasts = create<{ toasts: Toast[]; push: (t: Toast) => void; dismiss: (id: string) => void }>(
@@ -37,14 +39,15 @@ export const useToasts = create<{ toasts: Toast[]; push: (t: Toast) => void; dis
   }),
 );
 
-/** A small popup saying a story or note reply went to `to`; tapping it opens the chat. */
+/** A small pill saying a story or note reply went to `to`; tapping it opens the chat. */
 export function toastSent(chatId: string, to: { displayName: string; avatarUrl: string | null }, what: string) {
   useToasts.getState().push({
     id: `sent-${Date.now()}`,
     href: `/chats/${chatId}`,
-    title: getT().stories.sent,
-    body: `${to.displayName} · ${what}`,
+    title: getT().stories.sentTo(to.displayName),
+    body: what,
     avatar: { displayName: to.displayName, avatarUrl: to.avatarUrl },
+    sent: true,
   });
 }
 
