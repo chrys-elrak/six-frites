@@ -4,6 +4,7 @@ import { kindFor, unwrap } from "@six/sdk";
 import {
   type AnonMessageDTO,
   type StoryDTO,
+  chatTheme,
   EDIT_COLORS,
   EMPTY_DRAWING,
   STORY_PEN_SIZES,
@@ -56,6 +57,8 @@ import { useEffect, useRef, useState } from "react";
 import { useCloseOnBack } from "@/lib/back";
 import { getLocale, useT } from "@/lib/i18n";
 import { mediaMeta } from "@/lib/media-meta";
+import { chatCardJpeg } from "@/lib/chat-card";
+import { clockTime, shortDate } from "@/lib/format";
 import { useSession } from "@/lib/session";
 import { six } from "@/lib/six";
 import { postStory } from "@/lib/story-post";
@@ -131,6 +134,7 @@ export function StoryComposer({
   const [askText, setAskText] = useState("");
   const askField = useRef<HTMLInputElement>(null);
   const askCode = useSession((s) => s.user!.askCode);
+  const me = useSession((s) => s.user!.id);
   const linkField = useRef<HTMLInputElement>(null);
   const [asks, setAsks] = useState<AnonMessageDTO[]>(anon ? [anon] : []);
   const [pickingAsks, setPickingAsks] = useState(false);
@@ -308,6 +312,34 @@ export function StoryComposer({
 
   function share() {
     if (!ready) return;
+    const live = {
+      gifIds: gifs.length ? gifs.map((g) => g.id) : undefined,
+      link: href ? { url: href, label: link!.label.trim() || undefined } : undefined,
+      askLink: askLink || undefined,
+      askText: (askLink && askText.trim()) || undefined,
+      askIds: asks.length ? asks.map((m) => m.id) : undefined,
+      location: location ? { ...location, name: location.name?.trim() || undefined } : undefined,
+      showDate,
+      showTime,
+      positions,
+      drawing: drawn ? drawing : undefined,
+      durationSecs,
+    };
+    if (fromChat) {
+      const own = quote?.from.id === me;
+      void chatCardJpeg({
+        text,
+        bubble: bubble ?? `${chatTheme(null).light.bubble},${chatTheme(null).light.bubbleInk}`,
+        background,
+        from: quote ? (own ? { displayName: "#", avatarUrl: null } : quote.from) : null,
+        name: quote ? (own ? tr.common.you : quote.from.displayName) : "",
+        when: quote ? `${shortDate(quote.sentAt)} · ${clockTime(quote.sentAt)}` : null,
+        label: tr.stories.fromChat,
+      }).then((blob) =>
+        postStory(qc, { ...live, fromChat: true, messageId: quote?.messageId }, { blob, kind: "image", name: "story.jpg", mime: "image/jpeg" }),
+      );
+      return onClose();
+    }
     const words = text.trim();
     const asDrawn = styled && !file && !fromChat && !!words && words.length <= STORY_LIMITS.drawnText && drawing.texts.length < 10;
     void postStory(

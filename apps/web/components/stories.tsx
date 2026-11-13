@@ -1006,13 +1006,15 @@ export const backgroundAround = (bubble: string | undefined) =>
   STORY_BACKGROUNDS.find((b) => !b.startsWith((bubble ?? DEFAULT_BUBBLE).split(",")[0]!)) ?? STORY_BACKGROUNDS[0];
 
 export function ChatBubbleCard({ text, bubble, quote }: { text: string; bubble: string | null; quote: StoryDTO["quote"] }) {
+  const tr = useT();
+  const me = useSession((s) => s.user?.id);
   const [background, color] = (bubble ?? DEFAULT_BUBBLE).split(",");
   return (
     <div className="mx-8 flex max-w-[calc(100%-4rem)] flex-col items-start gap-2 select-none">
       {quote && (
         <div className="flex max-w-full items-center gap-2 text-white drop-shadow">
-          <Avatar user={quote.from} size="sm" />
-          <span className="truncate text-sm font-semibold">{quote.from.displayName}</span>
+          <Avatar user={quote.from.id === me ? { displayName: "#", avatarUrl: null } : quote.from} size="sm" />
+          <span className="truncate text-sm font-semibold">{quote.from.id === me ? tr.common.you : quote.from.displayName}</span>
         </div>
       )}
       <div style={{ background, color }} className="max-w-full rounded-[1.75rem] px-5 py-3 shadow-lg ring-1 ring-white/20">

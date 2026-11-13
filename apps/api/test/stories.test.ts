@@ -1,6 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
 import { deleteExpiredStories } from "../src/services/stories.js";
-import { pairAlias } from "../src/services/users.js";
 import { type Auth, chatHelpers, prisma, useApp } from "./helpers.js";
 
 const ctx = useApp();
@@ -352,7 +351,7 @@ describe("stories", () => {
     expect((await latest()).id).toBe(mine.id);
   });
 
-  it("shows the sender of a shared message to each viewer as they would see them, not as the poster does", async () => {
+  it("shows the sender of a shared message only to the poster, and to everyone else as #", async () => {
     const { host, guest, chatId } = await makeFriends();
     await prisma.chatMember.update({ where: { chatId_userId: { chatId, userId: guest.user.id } }, data: { showProfile: true } });
     const sent = (await send(guest, chatId, "on arrive")).json();
@@ -361,10 +360,10 @@ describe("stories", () => {
 
     const quoteSeenBy = async (who: Auth) =>
       (await get(who, "/v1/stories")).items.find((g: { user: { id: string } }) => g.user.id === host.user.id).stories[0].quote;
-    expect((await quoteSeenBy(third)).from).toEqual({ id: guest.user.id, displayName: pairAlias(third.user.id, guest.user.id), avatarUrl: null });
+    expect((await quoteSeenBy(third)).from).toEqual({ id: guest.user.id, displayName: "#", avatarUrl: null });
+    expect((await quoteSeenBy(guest)).from).toEqual({ id: guest.user.id, displayName: "#", avatarUrl: null });
     const real = (await prisma.user.findUniqueOrThrow({ where: { id: guest.user.id } })).displayName;
     expect((await quoteSeenBy(host)).from.displayName).toBe(real);
-    expect(real).not.toBe(pairAlias(third.user.id, guest.user.id));
   });
 
   it("shows who sent a message made into a note, and keeps it when only its colour changes", async () => {

@@ -34,6 +34,7 @@ import { useEffect, useState } from "react";
 import { useChats } from "@/lib/chats";
 import { clockTime, shortDate, timeAgo } from "@/lib/format";
 import { getLocale, useT } from "@/lib/i18n";
+import { useSession } from "@/lib/session";
 import { toastSent } from "@/lib/notify";
 import { useRealtime } from "@/lib/realtime";
 import { queueMessage } from "@/lib/send";
@@ -542,16 +543,17 @@ function Linked({ text }: { text: string }) {
 /** A note made from a chat message, drawn as that message: a sent bubble next to who wrote it, with when. */
 function ChatNote({ note }: { note: Pick<NoteDTO, "text" | "background" | "font" | "gif" | "quote"> }) {
   const tr = useT();
+  const me = useSession((s) => s.user?.id);
   const { quote } = note;
   return (
     <div className="flex max-w-full flex-col items-center gap-3">
       {note.gif && <Loop src={note.gif.url} className="max-h-48 rounded-[1.25rem]" />}
       <div className="flex max-w-full items-end gap-2">
-        {quote && <Avatar user={quote.from} size="sm" />}
+        {quote && <Avatar user={quote.from.id === me ? { displayName: "#", avatarUrl: null } : quote.from} size="sm" />}
         <div className="flex min-w-0 flex-col items-start gap-1">
           {quote && (
             <p className="max-w-full truncate px-3 text-xs text-stone-500 dark:text-stone-400">
-              <span className="font-semibold text-stone-700 dark:text-stone-200">{quote.from.displayName}</span> · {shortDate(quote.sentAt)}
+              <span className="font-semibold text-stone-700 dark:text-stone-200">{quote.from.id === me ? tr.common.you : quote.from.displayName}</span> · {shortDate(quote.sentAt)}
             </p>
           )}
           <p

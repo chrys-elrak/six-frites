@@ -1133,14 +1133,16 @@ export const backgroundAround = (bubble: string | undefined) =>
   STORY_BACKGROUNDS.find((b) => !b.startsWith((bubble ?? DEFAULT_BUBBLE).split(",")[0]!)) ?? STORY_BACKGROUNDS[0];
 
 export function ChatBubbleCard({ text, bubble, quote }: { text: string; bubble: string | null; quote: StoryDTO["quote"] }) {
+  const tr = useT();
+  const me = useSession((s) => s.user?.id);
   const [backgroundColor, color] = (bubble ?? DEFAULT_BUBBLE).split(",");
   return (
     <View style={styles.chatCard}>
       {quote && (
         <View style={styles.chatFrom}>
-          <Avatar user={quote.from} size="sm" />
+          <Avatar user={quote.from.id === me ? { displayName: "#", avatarUrl: null } : quote.from} size="sm" />
           <Text numberOfLines={1} style={styles.chatFromName}>
-            {quote.from.displayName}
+            {quote.from.id === me ? tr.common.you : quote.from.displayName}
           </Text>
         </View>
       )}

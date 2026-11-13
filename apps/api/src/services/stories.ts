@@ -77,7 +77,7 @@ const tooLong = (s: StoryRow) =>
 /** Others only see a story once its photo or video is ready, and never a video over 30 seconds. */
 const showable = (s: StoryRow) => !s.uploadId || (s.upload?.status === "ready" && !tooLong(s));
 
-function toStoryDTO(s: StoryRow, viewerId: string, senders: Senders = new Map()): StoryDTO {
+function toStoryDTO(s: StoryRow, viewerId: string): StoryDTO {
   const mine = s.userId === viewerId;
   return {
     id: s.id,
@@ -85,7 +85,7 @@ function toStoryDTO(s: StoryRow, viewerId: string, senders: Senders = new Map())
     text: s.text,
     fromChat: s.fromChat,
     bubble: s.bubble,
-    quote: quoteFor(s, viewerId, senders),
+    quote: quoteFor(s, viewerId),
     background: s.background,
     media: s.upload ? toAttachmentDTO(s.upload) : null,
     ...withGifs(s),
@@ -115,13 +115,12 @@ export async function listStories(viewerId: string): Promise<{ items: StoryGroup
   });
   const visible = rows.filter((s) => s.userId === viewerId || showable(s));
   const userIds = [...new Set(visible.map((s) => s.userId))];
-  const [users, profile, senders] = await Promise.all([
+  const [users, profile] = await Promise.all([
     prisma.user.findMany({ where: { id: { in: userIds } } }),
     profilesFor(prisma, viewerId, userIds),
-    quoteSenders(viewerId, visible),
   ]);
   const groups = users.map((u) => {
-    const stories = visible.filter((s) => s.userId === u.id).map((s) => toStoryDTO(s, viewerId, senders));
+    const stories = visible.filter((s) => s.userId === u.id).map((s) => toStoryDTO(s, viewerId));
     return { user: profile(u), stories };
   });
   const rank = (g: StoryGroupDTO) => (g.user.id === viewerId ? 0 : g.stories.some((s) => !s.seen) ? 1 : 2);
@@ -193,22 +192,12 @@ async function claimUpload(userId: string, uploadId: string) {
 }
 
 type Quote = NonNullable<StoryDTO["quote"]>;
-type Senders = Map<string, PublicUser>;
-
-/** The people behind the chat messages on these stories or notes, as `viewerId` sees them, not as the poster did. */
-async function quoteSenders(viewerId: string, rows: { userId: string; fromChat: boolean; quote: Prisma.JsonValue }[]): Promise<Senders> {
-  const ids = [...new Set(rows.flatMap((r) => (r.fromChat && r.quote && r.userId !== viewerId ? [(r.quote as Quote).from.id] : [])))];
-  if (!ids.length) return new Map();
-  const [users, profile] = await Promise.all([prisma.user.findMany({ where: { id: { in: ids } } }), profilesFor(prisma, viewerId, ids)]);
-  return new Map(users.map((u) => [u.id, profile(u)]));
-}
-
-/** The poster sees who sent the message as they did when sharing it; anyone else sees that person as they themselves would. */
-function quoteFor(r: { userId: string; fromChat: boolean; quote: Prisma.JsonValue }, viewerId: string, senders: Senders): Quote | null {
+/** The poster sees who sent the message as they did when sharing it; to anyone else the sender is just "#". */
+function quoteFor(r: { userId: string; fromChat: boolean; quote: Prisma.JsonValue }, viewerId: string): Quote | null {
   if (!r.fromChat || !r.quote) return null;
   const q = r.quote as Quote;
   if (r.userId === viewerId) return q;
-  return { from: senders.get(q.from.id) ?? { id: q.from.id, displayName: pairAlias(viewerId, q.from.id), avatarUrl: null }, sentAt: q.sentAt };
+  return { from: { id: q.from.id, displayName: "#", avatarUrl: null }, sentAt: q.sentAt };
 }
 
 /** Who sent a message in one of `userId`'s chats, as they see them there, and when. */
@@ -239,7 +228,8 @@ export async function createStory(userId: string, input: CreateStoryInput): Prom
     height,
   }));
   const asks = await Promise.all((input.askIds ?? (input.askId ? [input.askId] : [])).map((id) => askCard(userId, id)));
-  const quote = input.fromChat && input.messageId && input.text && !input.uploadId ? await quoteOf(userId, input.messageId) : null;
+  const shared = input.fromChat && input.messageId ? await quoteOf(userId, input.messageId) : null;
+  const quote = shared && input.text && !input.uploadId ? shared : null;
 
   const story = await prisma.story.create({
     data: {
@@ -265,7 +255,7 @@ export async function createStory(userId: string, input: CreateStoryInput): Prom
     include: storyInclude(userId),
   });
   await announceStories(userId);
-  if (quote && input.messageId) await announceShare(userId, input.messageId, "story");
+  if (shared && input.messageId) await announceShare(userId, input.messageId, "story");
   return toStoryDTO(story, userId);
 }
 
@@ -381,11 +371,11 @@ export async function listNotes(userId: string): Promise<NotesDTO> {
     include: { user: true, _count: { select: { views: true } } },
     orderBy: { createdAt: "desc" },
   });
-  const [profile, senders] = await Promise.all([profilesFor(prisma, userId, ids), quoteSenders(userId, rows)]);
+  const profile = await profilesFor(prisma, userId, ids);
   const mine = rows.find((n) => n.userId === userId);
   return {
-    mine: mine ? toNoteDTO(mine, mine._count.views, quoteFor(mine, userId, senders)) : null,
-    items: rows.filter((n) => n !== mine).map((n) => ({ user: profile(n.user), note: toNoteDTO(n, null, quoteFor(n, userId, senders)) })),
+    mine: mine ? toNoteDTO(mine, mine._count.views, quoteFor(mine, userId)) : null,
+    items: rows.filter((n) => n !== mine).map((n) => ({ user: profile(n.user), note: toNoteDTO(n, null, quoteFor(n, userId)) })),
   };
 }
 
@@ -435,7 +425,7 @@ export async function setNote(
   });
   await announceStories(userId);
   if (fromChat && clean.text && messageId) await announceShare(userId, messageId, "note");
-  return toNoteDTO(note, 0, quoteFor(note, userId, new Map()));
+  return toNoteDTO(note, 0, quoteFor(note, userId));
 }
 
 /** Counts a contact opening a note, or the link in it; opening your own doesn't count. */

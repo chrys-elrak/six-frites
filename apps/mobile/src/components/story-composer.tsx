@@ -406,11 +406,13 @@ export function StoryComposer({
 
   async function share() {
     if (!ready) return;
-    const flat = !fromChat && file?.kind !== "video" ? await flatten() : null;
+    const flat = file?.kind !== "video" ? await flatten() : null;
     if (flat) {
       void postStory(
         qc,
         {
+          fromChat: fromChat || undefined,
+          messageId: fromChat ? quote?.messageId : undefined,
           gifIds: gifs.length ? gifs.map((g) => g.id) : undefined,
           link: href ? { url: href, label: link!.label.trim() || undefined } : undefined,
           askLink: askLink || undefined,

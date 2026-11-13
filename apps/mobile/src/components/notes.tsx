@@ -39,6 +39,7 @@ import { FONT_FILES, Fonts, familyOf } from "./photo-editor";
 import { useChats } from "@/lib/chats";
 import { clockTime, shortDate, timeAgo } from "@/lib/format";
 import { getLocale, useT } from "@/lib/i18n";
+import { useSession } from "@/lib/session";
 import { toastSent } from "@/lib/notify";
 import { useRealtime } from "@/lib/realtime";
 import { queueMessage } from "@/lib/send";
@@ -557,6 +558,7 @@ const styles = StyleSheet.create({
 function ChatNote({ note, onOpen }: { note: Pick<NoteDTO, "text" | "background" | "font" | "gif" | "quote">; onOpen: () => void }) {
   const t = useTheme();
   const tr = useT();
+  const me = useSession((s) => s.user?.id);
   const { quote } = note;
   const bg = note.background ?? brand;
   const ink = note.background ? inkOn(note.background) : brandInk;
@@ -564,11 +566,11 @@ function ChatNote({ note, onOpen }: { note: Pick<NoteDTO, "text" | "background" 
     <View style={{ alignItems: "center", gap: 12, maxWidth: "100%" }}>
       {note.gif && <Loop gif={note.gif} height={180} maxWidth={280} radius={18} />}
       <View style={styles.chatNote}>
-        {quote && <Avatar user={quote.from} size="sm" />}
+        {quote && <Avatar user={quote.from.id === me ? { displayName: "#", avatarUrl: null } : quote.from} size="sm" />}
         <View style={styles.chatNoteColumn}>
           {quote && (
             <Text numberOfLines={1} style={{ color: t.muted, fontSize: 12, paddingHorizontal: 12 }}>
-              <Text style={{ color: t.text, fontWeight: "700" }}>{quote.from.displayName}</Text> · {shortDate(quote.sentAt)}
+              <Text style={{ color: t.text, fontWeight: "700" }}>{quote.from.id === me ? tr.common.you : quote.from.displayName}</Text> · {shortDate(quote.sentAt)}
             </Text>
           )}
           <View style={[styles.chatNoteBubble, { backgroundColor: bg }]}>
