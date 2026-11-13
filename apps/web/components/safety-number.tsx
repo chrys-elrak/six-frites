@@ -18,6 +18,7 @@ export function SafetyNumber({ userId, name }: { userId: string; name: string })
       return client.safetyNumber(userId);
     },
     enabled: open,
+    staleTime: Infinity,
   });
 
   return (

@@ -3,7 +3,7 @@ import { LABEL_MAX, NAME_MAX } from "@six/shared";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { router } from "expo-router";
 import { Lock, Shuffle, Trash2, X } from "lucide-react-native";
-import { type ComponentRef, useRef, useState } from "react";
+import { type ComponentRef, useEffect, useRef, useState } from "react";
 import { Pressable, ScrollView, StyleSheet, View } from "react-native";
 import { Modal } from "./modal";
 import { Text, TextInput } from "./text";
@@ -37,7 +37,11 @@ export function ContactEditor({ userId, onClose }: { userId: string; onClose: ()
   const [photo, setPhoto] = useState<string | null | undefined>(undefined);
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
-  const [suggestions, setSuggestions] = useState(() => suggestAvatars());
+  const [suggestions, setSuggestions] = useState<string[]>([]);
+  useEffect(() => {
+    const timer = setTimeout(() => setSuggestions(suggestAvatars()), 250);
+    return () => clearTimeout(timer);
+  }, []);
   const [picked, setPicked] = useState<number | null>(null);
   const [rendering, setRendering] = useState<string | null>(null);
   const shot = useRef<ComponentRef<typeof View>>(null);

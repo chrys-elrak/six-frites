@@ -1,7 +1,7 @@
 import { SixApiError, unwrap } from "@six/sdk";
 import type { Dict } from "@six/shared";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { KeyRound, ShieldAlert, ShieldCheck, X } from "lucide-react-native";
+import { ChevronDown, KeyRound, ShieldAlert, ShieldCheck, X } from "lucide-react-native";
 import { useState } from "react";
 import { Pressable, StyleSheet, View, ScrollView } from "react-native";
 import { Modal } from "./modal";
@@ -293,19 +293,53 @@ function RestoreKey({ onClose }: { onClose: () => void }) {
 }
 
 /** The 12 emoji two people compare in person to make sure nobody is in the middle. */
+/**
+ * The security code shared with someone, behind a row to open: working it out takes thousands of hashes and holds the
+ * app for a moment, so it only runs when asked, after "Calculating" has had a frame to show, and is kept afterwards.
+ */
 export function SafetyNumber({ userId }: { userId: string }) {
   const t = useTheme();
   const tr = useT();
   const meId = useSession((s) => s.user!.id);
+  const [open, setOpen] = useState(false);
   const number = useQuery({
     queryKey: ["safety-number", userId],
-    queryFn: () => e2eeFor(meId)!.safetyNumber(userId),
+    queryFn: async () => {
+      await new Promise((r) => setTimeout(r, 50));
+      return e2eeFor(meId)!.safetyNumber(userId);
+    },
+    enabled: open,
+    staleTime: Infinity,
   });
-  if (number.isError) return null;
-  if (!number.data) {
+  return (
+    <View style={{ borderRadius: 14, backgroundColor: t.field }}>
+      <Pressable
+        onPress={() => setOpen((v) => !v)}
+        accessibilityRole="button"
+        accessibilityState={{ expanded: open }}
+        style={{ flexDirection: "row", alignItems: "center", gap: 8, paddingHorizontal: 12, paddingVertical: 12 }}
+      >
+        <ShieldCheck size={18} color={brand} />
+        <Text style={{ flex: 1, color: t.text, fontWeight: "600", fontSize: 14 }}>{tr.chat.verifyEncryption}</Text>
+        <ChevronDown size={18} color={t.muted} style={open ? { transform: [{ rotate: "180deg" }] } : undefined} />
+      </Pressable>
+      {open && (
+        <View style={{ paddingHorizontal: 12, paddingBottom: 12 }}>
+          <SafetyCode number={number.data} failed={number.isError} />
+        </View>
+      )}
+    </View>
+  );
+}
+
+function SafetyCode({ number, failed }: { number: string | undefined; failed: boolean }) {
+  const t = useTheme();
+  const tr = useT();
+  if (failed) return null;
+  if (!number) {
     return <Text style={{ color: t.muted, fontSize: 13, textAlign: "center" }}>{tr.settings.calculatingSafetyNumber}</Text>;
   }
-  const groups = number.data.split(" ");
+  const groups = number.split(" ");
   return (
     <View style={{ gap: 8 }}>
       <Text style={{ color: t.text, fontWeight: "700", fontSize: 15 }}>{tr.settings.safetyNumber}</Text>
