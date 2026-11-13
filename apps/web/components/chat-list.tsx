@@ -195,6 +195,7 @@ function ChatRow({ chat, meId, active, rail }: { chat: ChatDTO; meId: string; ac
   const frozen = isFrozen(chat);
   const online = usePresence(chat.group || peer.id === meId || frozen ? undefined : peer.id)?.online;
   const unread = chat.unreadCount > 0;
+  const loud = unread && !isMuted(chat);
   const look = active ? chatTheme(chat.theme) : null;
   const wash = look && chat.theme && chat.theme !== DEFAULT_CHAT_THEME ? look : null;
   const badge = unread && (
@@ -241,7 +242,9 @@ function ChatRow({ chat, meId, active, rail }: { chat: ChatDTO; meId: string; ac
               ? "bg-(image:--wash) dark:bg-(image:--wash-dark)"
               : active
                 ? "bg-black/5 dark:bg-white/10"
-                : "hover:bg-black/[0.03] dark:hover:bg-white/5"
+                : loud
+                  ? "bg-brand/10 hover:bg-brand/15"
+                  : "hover:bg-black/[0.03] dark:hover:bg-white/5"
           }`}
         >
           {look && (
@@ -283,7 +286,7 @@ function ChatRow({ chat, meId, active, rail }: { chat: ChatDTO; meId: string; ac
                   typing
                     ? "font-medium text-brand"
                     : unread
-                      ? "text-stone-900 dark:text-stone-100"
+                      ? `text-stone-900 dark:text-stone-100 ${loud ? "font-semibold" : ""}`
                       : "text-stone-500 dark:text-stone-400"
                 }`}
               >

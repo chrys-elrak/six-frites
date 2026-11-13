@@ -2,6 +2,17 @@
 
 What Six Frites News tells members after each deploy, newest first. CLAUDE.md says when to add a section and how.
 
+## 2026-11-13 21h35
+
+### en
+- Chats with unread messages now stand out in the list, with a light tint and bold text.
+
+### fr
+- Les discussions avec des messages non lus ressortent maintenant dans la liste, avec un fond légèrement coloré et un texte en gras.
+
+### mg
+- Miavaka kokoa ao amin'ny lisitra izao ny resaka misy hafatra tsy voavaky, miaraka amin'ny loko maivana sy soratra matevina.
+
 ## 2026-11-13 21h17
 
 ### en

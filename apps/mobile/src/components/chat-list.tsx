@@ -86,15 +86,16 @@ import { BrandBar } from "./brand-bar";
 import { EmptyState, IconButton, Popup, PrimaryButton, ScreenHeader } from "./ui";
 import { UpdateBanner } from "./update-banner";
 
-function Preview({ chat, meId, color }: { chat: ChatDTO; meId: string; color: string }) {
+function Preview({ chat, meId, color, bold }: { chat: ChatDTO; meId: string; color: string; bold: boolean }) {
   const tr = useT();
+  const ink = { color, fontWeight: bold ? "600" : "400" } as const;
   const m = useHydratedMessage(meId, chat.lastMessage) as
     | (NonNullable<ChatDTO["lastMessage"]> & { undecryptable?: boolean; decrypting?: boolean })
     | null;
   const line = (icon: React.ReactNode, text: string, italic = false) => (
     <View style={styles.previewRow}>
       {icon}
-      <Text numberOfLines={1} style={[styles.preview, { color }, italic && { fontStyle: "italic" }]}>
+      <Text numberOfLines={1} style={[styles.preview, ink, italic && { fontStyle: "italic" }]}>
         {text}
       </Text>
     </View>
@@ -145,7 +146,7 @@ function Preview({ chat, meId, color }: { chat: ChatDTO; meId: string; color: st
   if (m.ephemeral) {
     return line(
       <>
-        {you ? <Text style={[styles.preview, { color }]}>{you}</Text> : null}
+        {you ? <Text style={[styles.preview, ink]}>{you}</Text> : null}
         <Flame size={14} color={flame} />
       </>,
       m.ephemeral.expired ? tr.chats.opened : tr.chats.selfDestructing[m.type],
@@ -168,7 +169,7 @@ function Preview({ chat, meId, color }: { chat: ChatDTO; meId: string; color: st
               : "";
     return line(
       <>
-        {you ? <Text style={[styles.preview, { color }]}>{you}</Text> : null}
+        {you ? <Text style={[styles.preview, ink]}>{you}</Text> : null}
         <MediaIcon type={type} color={color} />
       </>,
       `${mediaLabel(type, tr)}${voiceLength}${extra}`,
@@ -177,7 +178,7 @@ function Preview({ chat, meId, color }: { chat: ChatDTO; meId: string; color: st
   if (m.spoiler) {
     return line(
       <>
-        {you ? <Text style={[styles.preview, { color }]}>{you}</Text> : null}
+        {you ? <Text style={[styles.preview, ink]}>{you}</Text> : null}
         <EyeOff size={14} color={color} />
       </>,
       tr.summary.spoiler,
@@ -202,6 +203,7 @@ function ChatRow({ chat, meId }: { chat: ChatDTO; meId: string }) {
   const peer = chatFace(chat, meId);
   const online = usePresence(chat.group || peer.id === meId || isFrozen(chat) ? undefined : peer.id)?.online;
   const unread = chat.unreadCount > 0;
+  const loud = unread && !chat.muted;
   const qc = useQueryClient();
   const settings = (input: Parameters<typeof updateChatSettings>[2]) =>
     void updateChatSettings(qc, chat.id, input).catch(() => null);
@@ -231,7 +233,7 @@ function ChatRow({ chat, meId }: { chat: ChatDTO; meId: string }) {
                 void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
                 setMenu(true);
               }}
-              style={({ pressed }) => [styles.row, pressed && { backgroundColor: t.pressed }]}
+              style={({ pressed }) => [styles.row, loud && { backgroundColor: `${brand}1A` }, pressed && { backgroundColor: t.pressed }]}
             >
               {chat.group ? (
                 <Avatar user={peer} size="md" />
@@ -268,7 +270,7 @@ function ChatRow({ chat, meId }: { chat: ChatDTO; meId: string }) {
                         <Text style={{ color: t.danger }}>{tr.chats.draft}</Text> {draft.replace(/\s+/g, " ")}
                       </Text>
                     ) : (
-                      <Preview chat={chat} meId={meId} color={unread ? t.text : t.muted} />
+                      <Preview chat={chat} meId={meId} color={unread ? t.text : t.muted} bold={loud} />
                     )}
                   </View>
                   {chat.pinned && !unread && (
