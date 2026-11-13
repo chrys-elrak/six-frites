@@ -2,6 +2,17 @@
 
 What Six Frites News tells members after each deploy, newest first. CLAUDE.md says when to add a section and how.
 
+## 2026-11-13 22h22
+
+### en
+- The chat list now shows how far your last message got: one tick when sent, two when delivered, two blue ones when read.
+
+### fr
+- La liste des discussions indique maintenant où en est votre dernier message : une coche quand il est envoyé, deux quand il est distribué, deux bleues quand il est lu.
+
+### mg
+- Asehon'ny lisitry ny resaka izao ny toeran'ny hafatra farany nalefanao: marika iray rehefa lasa, roa rehefa tonga, roa manga rehefa voavaky.
+
 ## 2026-11-13 21h57
 
 ### en

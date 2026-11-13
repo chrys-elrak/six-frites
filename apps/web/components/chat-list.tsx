@@ -11,6 +11,7 @@ import {
   isFrozen,
   isMuted,
   chatFace,
+  lastMessageDelivery,
   maskSpoilers,
   senderName,
   serviceSentence,
@@ -22,6 +23,8 @@ import {
 } from "@six/shared";
 import {
   AlertCircle,
+  Check,
+  CheckCheck,
   QrCode,
   Archive,
   ArchiveRestore,
@@ -196,6 +199,8 @@ function ChatRow({ chat, meId, active, rail }: { chat: ChatDTO; meId: string; ac
   const online = usePresence(chat.group || peer.id === meId || frozen ? undefined : peer.id)?.online;
   const unread = chat.unreadCount > 0;
   const loud = unread && !isMuted(chat);
+  const delivery = unsent || draft ? null : lastMessageDelivery(chat, meId);
+  const Tick = delivery === "sent" ? Check : CheckCheck;
   const look = active ? chatTheme(chat.theme) : null;
   const wash = look && chat.theme && chat.theme !== DEFAULT_CHAT_THEME ? look : null;
   const badge = unread && (
@@ -276,6 +281,13 @@ function ChatRow({ chat, meId, active, rail }: { chat: ChatDTO; meId: string; ac
               )}
               <span className="flex-1" />
               {isMuted(chat) && <BellOff aria-label={tr.common.muted} className="size-3.5 shrink-0 text-stone-400" />}
+              {delivery && (
+                <Tick
+                  aria-label={tr.messages.status[delivery]}
+                  strokeWidth={2.5}
+                  className={`size-4 shrink-0 ${delivery === "read" ? "text-sky-500" : "text-stone-400"}`}
+                />
+              )}
               <span className={`shrink-0 text-xs ${unread ? "font-semibold text-brand" : "text-stone-500"}`}>
                 {listTime(chat.lastActivityAt)}
               </span>

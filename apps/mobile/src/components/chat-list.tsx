@@ -6,6 +6,7 @@ import {
   inChatFilter,
   chatFace,
   isGroupAction,
+  lastMessageDelivery,
   maskSpoilers,
   senderName,
   serviceSentence,
@@ -26,6 +27,8 @@ import {
   Ban,
   AlertCircle,
   BellOff,
+  Check,
+  CheckCheck,
   ChevronLeft,
   Clock,
   EyeOff,
@@ -204,6 +207,8 @@ function ChatRow({ chat, meId }: { chat: ChatDTO; meId: string }) {
   const online = usePresence(chat.group || peer.id === meId || isFrozen(chat) ? undefined : peer.id)?.online;
   const unread = chat.unreadCount > 0;
   const loud = unread && !chat.muted;
+  const delivery = unsent || draft ? null : lastMessageDelivery(chat, meId);
+  const Tick = delivery === "sent" ? Check : CheckCheck;
   const qc = useQueryClient();
   const settings = (input: Parameters<typeof updateChatSettings>[2]) =>
     void updateChatSettings(qc, chat.id, input).catch(() => null);
@@ -250,6 +255,9 @@ function ChatRow({ chat, meId }: { chat: ChatDTO; meId: string }) {
                   {chat.supportDesk && <Text style={styles.supportTag}>{tr.support.title}</Text>}
                   <View style={{ flex: 1 }} />
                   {chat.muted && <BellOff size={14} color={t.faint} accessibilityLabel={tr.common.muted} />}
+                  {delivery && (
+                    <Tick size={16} strokeWidth={2.5} color={delivery === "read" ? t.read : t.faint} accessibilityLabel={tr.messages.status[delivery]} />
+                  )}
                   <Text style={[styles.time, unread ? { color: brand, fontWeight: "600" } : { color: t.muted }]}>
                     {listTime(chat.lastActivityAt)}
                   </Text>

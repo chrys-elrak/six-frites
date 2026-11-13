@@ -762,6 +762,20 @@ export type ChatDTO = z.infer<typeof ChatDTO>;
 /** Nobody can write here: one of you blocked the other, or they deleted their account. */
 export const isFrozen = (c: ChatDTO) => c.blockedByMe || c.blockedByThem || c.peerDeleted;
 
+/**
+ * How far my last message in a chat got, for the chat list: read or delivered once every other member has it.
+ * Null when the last message isn't one of mine that could be read.
+ */
+export function lastMessageDelivery(c: ChatDTO, meId: string): "sent" | "delivered" | "read" | null {
+  const m = c.lastMessage;
+  const peers = c.members.filter((p) => p.user.id !== meId);
+  if (!m || m.senderId !== meId || m.deletedAt || m.type === "service" || !peers.length) return null;
+  const sentAt = Date.parse(m.createdAt);
+  const reached = (at: (typeof peers)[number]["lastReadAt"]) => !!at && Date.parse(at) >= sentAt;
+  if (peers.every((p) => reached(p.lastReadAt))) return "read";
+  return peers.every((p) => reached(p.lastDeliveredAt)) ? "delivered" : "sent";
+}
+
 export const CHAT_FILTERS = ["all", "unread", "read"] as const;
 export type ChatFilter = (typeof CHAT_FILTERS)[number];
 
