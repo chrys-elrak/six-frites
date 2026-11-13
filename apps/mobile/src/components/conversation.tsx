@@ -351,8 +351,8 @@ function OpenConversation({ chatId }: { chatId: string }) {
         </Pressable>
       )}
       <KeyboardAvoidingView behavior="padding" style={{ flex: 1 }}>
-        <View style={{ flex: 1 }}>
-          <BubbleColorsContext.Provider value={bubble}>
+        <BubbleColorsContext.Provider value={bubble}>
+          <View style={{ flex: 1 }}>
             <MessageList
               ref={list}
               chat={c}
@@ -361,31 +361,31 @@ function OpenConversation({ chatId }: { chatId: string }) {
               onOpenThread={(m) => setThread(m.id)}
               after={typing && !selecting ? <TypingBubble kind={typing} /> : undefined}
             />
-          </BubbleColorsContext.Provider>
-        </View>
-        {!selecting && c.supportClosedAt && (
-          <Text style={[styles.closed, { color: t.muted, borderColor: t.border }]}>
-            {c.supportDesk ? tr.support.closedDesk : tr.support.closed}
-          </Text>
-        )}
-        {!selecting &&
-          (frozen || readOnlyGroup(c) || isNewsChat(c) ? (
-            <ChatBlocked chat={c} peerId={peer.id} peerName={peer.displayName} />
-          ) : isBotChat(c) ? (
-            <BotGames />
-          ) : (
-            <Composer
-              chatId={chatId}
-              nameOf={nameOf}
-              scheduledCount={c.scheduledCount}
-              limited={c.support || c.withSupport}
-              onSent={() => list.current?.scrollToBottom()}
-              onSearch={(q) => {
-                setSearchFor(q);
-                setShared("search");
-              }}
-            />
-          ))}
+          </View>
+          {!selecting && c.supportClosedAt && (
+            <Text style={[styles.closed, { color: t.muted, borderColor: t.border }]}>
+              {c.supportDesk ? tr.support.closedDesk : tr.support.closed}
+            </Text>
+          )}
+          {!selecting &&
+            (frozen || readOnlyGroup(c) || isNewsChat(c) ? (
+              <ChatBlocked chat={c} peerId={peer.id} peerName={peer.displayName} />
+            ) : isBotChat(c) ? (
+              <BotGames />
+            ) : (
+              <Composer
+                chatId={chatId}
+                nameOf={nameOf}
+                scheduledCount={c.scheduledCount}
+                limited={c.support || c.withSupport}
+                onSent={() => list.current?.scrollToBottom()}
+                onSearch={(q) => {
+                  setSearchFor(q);
+                  setShared("search");
+                }}
+              />
+            ))}
+        </BubbleColorsContext.Provider>
       </KeyboardAvoidingView>
 
       {menu && (

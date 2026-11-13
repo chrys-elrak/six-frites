@@ -91,6 +91,7 @@ import { useComposerMode } from "@/lib/composer";
 import { receiveDraft, useDrafts } from "@/lib/drafts";
 import { shortRule } from "@/lib/ephemeral";
 import { formatDuration, inviteUrl, sendAtLabel } from "@/lib/format";
+import { useBubbleColors } from "@/lib/bubble-colors";
 import { useT } from "@/lib/i18n";
 import { markupMap, parseMarkup, parseRaw, plainAt, toMarkup, toggleFormat } from "@/lib/markup";
 import { muteVideo, pickFiles, pickMedia, receivedImage, takePhoto } from "@/lib/media";
@@ -98,7 +99,7 @@ import { useRealtime } from "@/lib/realtime";
 import { type Draft, type LocalFile, queueMessage } from "@/lib/send";
 import { useSession } from "@/lib/session";
 import { six } from "@/lib/six";
-import { brand, brandInk, flame, useTheme } from "@/lib/theme";
+import { flame, useTheme } from "@/lib/theme";
 import { AttachDialog, type PickedFile } from "./attach-dialog";
 import { NewChecklist } from "./checklist";
 import { NewGame } from "./game";
@@ -133,11 +134,12 @@ interface Range {
 function ModeBar({ label, text, photo, onCancel }: { label: string; text: string; photo?: LocalFile; onCancel: () => void }) {
   const t = useTheme();
   const tr = useT();
+  const accent = useBubbleColors();
   return (
-    <View style={styles.modeBar}>
+    <View style={[styles.modeBar, { borderLeftColor: accent.bg }]}>
       {photo && <Image source={{ uri: photo.uri }} style={{ width: 40, height: 40, borderRadius: 6 }} contentFit="cover" />}
       <View style={{ flex: 1 }}>
-        <Text style={{ color: brand, fontSize: 12, fontWeight: "700" }}>{label}</Text>
+        <Text style={{ color: accent.bg, fontSize: 12, fontWeight: "700" }}>{label}</Text>
         <Text numberOfLines={1} style={{ color: t.textSoft, fontSize: 14 }}>
           {text}
         </Text>
@@ -182,6 +184,8 @@ export function Composer({
   threadId?: string;
 }) {
   const slot = threadId ? `${chatId}:${threadId}` : chatId;
+  const accent = useBubbleColors();
+  const [focused, setFocused] = useState(false);
   const t = useTheme();
   const tr = useT();
   const admin = useQuery({
@@ -722,15 +726,15 @@ export function Composer({
         )}
         {chat?.vanish && !editing && (
           <View style={styles.ephemeralBar}>
-            <Ghost size={16} color={brand} />
-            <Text style={{ flex: 1, color: brand, fontSize: 14 }}>{tr.composer.vanishBanner}</Text>
+            <Ghost size={16} color={accent.bg} />
+            <Text style={{ flex: 1, color: accent.bg, fontSize: 14 }}>{tr.composer.vanishBanner}</Text>
             <Pressable
               onPress={() => void updateChatSettings(qc, chatId, { vanish: false }).catch(() => null)}
               accessibilityLabel={tr.composer.turnOffVanish}
               hitSlop={8}
               style={styles.round32}
             >
-              <X size={16} color={brand} />
+              <X size={16} color={accent.bg} />
             </Pressable>
           </View>
         )}
@@ -749,12 +753,12 @@ export function Composer({
         )}
         {sendAt && !editing && (
           <View style={styles.ephemeralBar}>
-            <CalendarClock size={16} color={brand} />
-            <Text style={{ flex: 1, color: brand, fontSize: 14 }}>
+            <CalendarClock size={16} color={accent.bg} />
+            <Text style={{ flex: 1, color: accent.bg, fontSize: 14 }}>
               {tr.composer.scheduledFor(sendAtLabel(sendAt.toISOString()))}
             </Text>
             <Pressable onPress={() => setSendAt(null)} accessibilityLabel={tr.composer.dontSchedule} hitSlop={8} style={styles.round32}>
-              <X size={16} color={brand} />
+              <X size={16} color={accent.bg} />
             </Pressable>
           </View>
         )}
@@ -825,15 +829,15 @@ export function Composer({
                   key={i}
                   onPress={() => stop !== null && setStop(i as 0 | 1)}
                   accessibilityLabel={`${tr.composer.customColor} ${i + 1}`}
-                  style={{ width: 30, height: 30, borderRadius: 15, backgroundColor: stops[i], borderWidth: 2, borderColor: (stop ?? 0) === i ? brand : "transparent" }}
+                  style={{ width: 30, height: 30, borderRadius: 15, backgroundColor: stops[i], borderWidth: 2, borderColor: (stop ?? 0) === i ? accent.bg : "transparent" }}
                 />
               ))}
               <Pressable
                 onPress={() => setStop(stop === null ? 1 : null)}
                 accessibilityState={{ checked: stop !== null }}
-                style={{ borderRadius: 999, paddingHorizontal: 12, paddingVertical: 6, backgroundColor: stop !== null ? brand : t.field }}
+                style={{ borderRadius: 999, paddingHorizontal: 12, paddingVertical: 6, backgroundColor: stop !== null ? accent.bg : t.field }}
               >
-                <Text style={{ color: stop !== null ? brandInk : t.text, fontSize: 13, fontWeight: "600" }}>{tr.composer.gradient}</Text>
+                <Text style={{ color: stop !== null ? accent.ink : t.text, fontSize: 13, fontWeight: "600" }}>{tr.composer.gradient}</Text>
               </Pressable>
               <Pressable
                 onPress={() => wrap(paint, stop !== null ? `${stops[0]}-${stops[1]}` : stops[0])}
@@ -946,14 +950,15 @@ export function Composer({
               accessibilityLabel={tr.composer.scheduledCount(scheduledCount)}
               style={styles.round40}
             >
-              <CalendarClock size={22} color={brand} />
+              <CalendarClock size={22} color={accent.bg} />
             </Pressable>
           )}
           <View
             style={[
               styles.field,
               { backgroundColor: t.surface, borderColor: t.border },
-              chat?.vanish && styles.vanishField,
+              focused && { borderColor: accent.bg },
+              chat?.vanish && [styles.vanishField, { borderColor: accent.bg }],
               (capture || preview) && styles.gone,
               tall && styles.tallField,
             ]}
@@ -971,7 +976,13 @@ export function Composer({
                 if (forced) setForced(undefined);
               }}
               multiline
-              onFocus={() => setExpressions(false)}
+              onFocus={() => {
+                setFocused(true);
+                setExpressions(false);
+              }}
+              onBlur={() => setFocused(false)}
+              cursorColor={accent.bg}
+              selectionColor={accent.bg}
               maxLength={4000}
               placeholder={tr.common.message}
               placeholderTextColor={t.muted}
@@ -999,7 +1010,7 @@ export function Composer({
                 accessibilityState={{ expanded: expressions }}
                 style={styles.round40}
               >
-                <Smile size={22} color={expressions ? brand : t.faint} />
+                <Smile size={22} color={expressions ? accent.bg : t.faint} />
               </Pressable>
             )}
             {!editing && !threadId && chat?.group && chat.group.myRole !== "member" && (
@@ -1076,12 +1087,12 @@ export function Composer({
               accessibilityHint={editing ? undefined : tr.composer.holdToSchedule}
               disabled={!canSubmit}
               accessibilityLabel={editing ? tr.common.save : tr.common.send}
-              style={[styles.round40, { backgroundColor: brand, opacity: canSubmit ? 1 : 0.4 }]}
+              style={[styles.round40, { backgroundColor: accent.bg, opacity: canSubmit ? 1 : 0.4 }]}
             >
               {editing ? (
-                <Check size={20} strokeWidth={2.6} color={brandInk} />
+                <Check size={20} strokeWidth={2.6} color={accent.ink} />
               ) : (
-                <SendHorizontal size={20} color={brandInk} />
+                <SendHorizontal size={20} color={accent.ink} />
               )}
             </Pressable>
           )}
@@ -1160,7 +1171,7 @@ export function Composer({
 
 const styles = StyleSheet.create({
   bar: { borderTopWidth: StyleSheet.hairlineWidth, paddingHorizontal: 10, paddingTop: 8, gap: 8 },
-  modeBar: { flexDirection: "row", alignItems: "center", gap: 12, borderLeftWidth: 4, borderLeftColor: brand, paddingLeft: 12 },
+  modeBar: { flexDirection: "row", alignItems: "center", gap: 12, borderLeftWidth: 4, paddingLeft: 12 },
   ephemeralBar: { flexDirection: "row", alignItems: "center", gap: 8, paddingHorizontal: 4 },
   toolbar: { flexDirection: "row", gap: 6 },
   glass: { flexDirection: "row", alignItems: "center", gap: 2, padding: 4, borderRadius: 14, borderWidth: StyleSheet.hairlineWidth },
@@ -1185,7 +1196,7 @@ const styles = StyleSheet.create({
     borderWidth: StyleSheet.hairlineWidth,
   },
   recordingField: { alignItems: "center", gap: 8, paddingHorizontal: 16 },
-  vanishField: { borderWidth: 1.5, borderStyle: "dashed", borderColor: brand },
+  vanishField: { borderWidth: 1.5, borderStyle: "dashed" },
   gone: { display: "none" },
   redDot: { width: 10, height: 10, borderRadius: 5, backgroundColor: "#ef4444" },
   input: { flex: 1, fontSize: 16, lineHeight: 22, maxHeight: 160, paddingTop: 9, paddingBottom: 9, paddingLeft: 16 },

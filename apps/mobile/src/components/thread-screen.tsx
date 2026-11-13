@@ -75,26 +75,26 @@ export function ThreadScreen({
           )}
         </ScreenHeader>
         <KeyboardAvoidingView behavior="padding" style={{ flex: 1 }}>
-          <View style={{ flex: 1 }}>
-            <BubbleColorsContext.Provider value={bubble}>
+          <BubbleColorsContext.Provider value={bubble}>
+            <View style={{ flex: 1 }}>
               <MessageList ref={list} chat={chat} meId={meId} onSeen={noop} threadId={threadId} />
-            </BubbleColorsContext.Provider>
-          </View>
-          {closed ? (
-            <View style={[styles.closed, { backgroundColor: t.bar, borderColor: t.border, paddingBottom: Math.max(insets.bottom, 12) }]}>
-              <Lock size={16} color={t.muted} />
-              <Text style={{ color: t.muted, fontSize: 14 }}>{tr.groups.commentsClosedHint}</Text>
             </View>
-          ) : (
-            <Composer
-              chatId={chat.id}
-              threadId={threadId}
-              nameOf={nameOf}
-              scheduledCount={0}
-              onSent={() => list.current?.scrollToBottom()}
-              onSearch={noop}
-            />
-          )}
+            {closed ? (
+              <View style={[styles.closed, { backgroundColor: t.bar, borderColor: t.border, paddingBottom: Math.max(insets.bottom, 12) }]}>
+                <Lock size={16} color={t.muted} />
+                <Text style={{ color: t.muted, fontSize: 14 }}>{tr.groups.commentsClosedHint}</Text>
+              </View>
+            ) : (
+              <Composer
+                chatId={chat.id}
+                threadId={threadId}
+                nameOf={nameOf}
+                scheduledCount={0}
+                onSent={() => list.current?.scrollToBottom()}
+                onSearch={noop}
+              />
+            )}
+          </BubbleColorsContext.Provider>
         </KeyboardAvoidingView>
         {menu && (
           <CommentRuleMenu

@@ -4,7 +4,8 @@ import { useEffect, useState } from "react";
 import { Pressable, StyleSheet, View } from "react-native";
 import { Text } from "./text";
 import { useT } from "@/lib/i18n";
-import { brand, brandInk, useTheme } from "@/lib/theme";
+import { useBubbleColors } from "@/lib/bubble-colors";
+import { useTheme } from "@/lib/theme";
 
 export type RecordMode = "voice" | "video";
 
@@ -23,6 +24,7 @@ interface Props {
  */
 export function RecordButton({ mode, active, disabled, onToggle, onStart, onSend }: Props) {
   const t = useTheme();
+  const accent = useBubbleColors();
   const tr = useT();
   const [hint, setHint] = useState(false);
 
@@ -67,16 +69,16 @@ export function RecordButton({ mode, active, disabled, onToggle, onStart, onSend
         }}
         style={({ pressed }) => [
           styles.button,
-          { opacity: disabled ? 0.4 : 1 },
+          { backgroundColor: accent.bg, opacity: disabled ? 0.4 : 1 },
           pressed && { transform: [{ scale: 0.95 }] },
         ]}
       >
         {active ? (
-          <SendHorizontal size={20} color={brandInk} />
+          <SendHorizontal size={20} color={accent.ink} />
         ) : mode === "voice" ? (
-          <Mic size={20} color={brandInk} />
+          <Mic size={20} color={accent.ink} />
         ) : (
-          <Video size={20} color={brandInk} />
+          <Video size={20} color={accent.ink} />
         )}
       </Pressable>
     </View>
@@ -84,6 +86,6 @@ export function RecordButton({ mode, active, disabled, onToggle, onStart, onSend
 }
 
 const styles = StyleSheet.create({
-  button: { width: 40, height: 40, borderRadius: 20, alignItems: "center", justifyContent: "center", backgroundColor: brand },
+  button: { width: 40, height: 40, borderRadius: 20, alignItems: "center", justifyContent: "center" },
   hint: { position: "absolute", bottom: 48, right: 0, width: 220, borderRadius: 12, paddingHorizontal: 12, paddingVertical: 8 },
 });
