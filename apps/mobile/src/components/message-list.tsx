@@ -48,6 +48,7 @@ import {
   Circle,
   Clock,
   EyeOff,
+  Flag,
   Flame,
   Forward,
   CircleFadingPlus,
@@ -153,6 +154,7 @@ import { ReactionBar, ReactionChips, ReactionPicker, type Anchor, useQuickReacti
 import { GradientText, Spoiler, styleFor } from "./rich-text";
 import { playHref } from "./live";
 import { MessageTiming } from "./message-timing";
+import { ReportSheet } from "./report-sheet";
 import { Sheet, type SheetAction } from "./sheet";
 import { StoryReplyLink, storyFill } from "./stories";
 
@@ -1329,6 +1331,7 @@ export const MessageList = forwardRef<
     const [album, setAlbum] = useState<{ items: LightboxItem[]; start: number } | null>(null);
     const [destructFor, setDestructFor] = useState<MessageDTO | null>(null);
     const [timingFor, setTimingFor] = useState<string | null>(null);
+    const [reporting, setReporting] = useState<string | null>(null);
     const [markingUp, setMarkingUp] = useState<{ message: MessageDTO; file: LocalFile } | null>(null);
     const [reactingTo, setReactingTo] = useState<MessageDTO | null>(null);
     const [viewing, setViewing] = useState<ViewMessageResult | null>(null);
@@ -1663,6 +1666,7 @@ export const MessageList = forwardRef<
           ? [{ label: tr.messages.makeSelfDestruct, icon: Flame, onSelect: () => setDestructFor(m) }]
           : []),
         { label: tr.messages.timing, icon: Info, onSelect: () => setTimingFor(m.id) },
+        ...(row.mine || m.type === "service" ? [] : [{ label: tr.common.report, icon: Flag, onSelect: () => setReporting(m.id) }]),
         {
           label: tr.common.delete,
           icon: Trash2,
@@ -1876,6 +1880,7 @@ export const MessageList = forwardRef<
         {lightbox && <Lightbox item={lightbox} onClose={() => setLightbox(null)} />}
         {album && <AlbumViewer items={album.items} start={album.start} onClose={() => setAlbum(null)} />}
         {timingFor && <MessageTiming messageId={timingFor} onClose={() => setTimingFor(null)} />}
+        {reporting && <ReportSheet target={{ messageId: reporting }} onClose={() => setReporting(null)} />}
         {markingUp && (
           <PhotoEditor
             file={markingUp.file}

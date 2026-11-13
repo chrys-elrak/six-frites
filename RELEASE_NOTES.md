@@ -2,6 +2,17 @@
 
 What Six Frites News tells members after each deploy, newest first. CLAUDE.md says when to add a section and how.
 
+## 2026-11-13 20h14
+
+### en
+- With the latest version of the app, you can report a message or a person: press and hold a message, or a chat in the list, then Report.
+
+### fr
+- Avec la dernière version de l'app, vous pouvez signaler un message ou une personne : appuyez longuement sur un message, ou sur une discussion dans la liste, puis Signaler.
+
+### mg
+- Amin'ny dika farany an'ny app, afaka mitatitra hafatra na olona ianao: tsindrio ela ny hafatra iray, na resaka iray ao amin'ny lisitra, dia Tatero.
+
 ## 2026-11-13 19h12
 
 ### en

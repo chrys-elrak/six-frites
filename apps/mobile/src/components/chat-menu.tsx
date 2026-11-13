@@ -25,6 +25,7 @@ import { PrimaryButton } from "./ui";
 import { AutoDeleteCustom } from "./auto-delete-custom";
 import { CustomThemePicker } from "./custom-theme";
 import { DateRangeDialog } from "./scheduled";
+import { ReportSheet } from "./report-sheet";
 import { Sheet } from "./sheet";
 
 type Range = { from?: string; to?: string };
@@ -65,6 +66,7 @@ export function ChatMenu({
     | "deleteScope"
     | "dates"
     | "block"
+    | "report"
     | "autoDelete"
     | "custom"
     | "theme"
@@ -83,6 +85,8 @@ export function ChatMenu({
       void qc.invalidateQueries({ queryKey: ["chats"] });
     }
   }
+
+  if (view === "report") return <ReportSheet target={{ userId: peerId }} onClose={onClose} />;
 
   if (view === "poke") return <PokeSheet peerId={peerId} peerName={peerName} onClose={onClose} />;
 
@@ -290,6 +294,7 @@ export function ChatMenu({
                         : chat.blockedByThem
                           ? []
                           : [{ label: tr.common.block, destructive: true, keepOpen: true, onSelect: () => setView("block") }]),
+                    ...(direct ? [{ label: tr.common.report, destructive: true, keepOpen: true, onSelect: () => setView("report") }] : []),
                     { label: tr.chat.deleteChat, destructive: true, keepOpen: true, onSelect: () => setView("delete") },
                   ]),
             ]
