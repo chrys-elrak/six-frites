@@ -43,7 +43,6 @@ import { UpdateCard } from "./update-banner";
 import { BrandBar } from "./brand-bar";
 import { AllTips } from "./tip-card";
 import { TourAgain } from "./tour";
-import { WhatsNew } from "./whats-new";
 
 function ProfileCard() {
   const t = useTheme();
@@ -668,7 +667,6 @@ export function SettingsPanel() {
       <ScrollView ref={scroller} contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
         <UpdateCard />
         <ProfileCard />
-        <WhatsNew />
         <TourAgain />
         <AllTips />
         <LanguagePicker />

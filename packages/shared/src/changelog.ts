@@ -1,4 +1,5 @@
-import type { Locale } from "./i18n/index.js";
+import type { MessageEntity } from "./chats.js";
+import { type Locale, dict } from "./i18n/index.js";
 
 export interface Release {
   version: string;
@@ -7,9 +8,9 @@ export interface Release {
 }
 
 /**
- * What each release brought, newest first, read in "What's new" on the web and in the Android app. Every Android
- * release needs an entry for the version in apps/mobile/app.config.ts, or the release build stops; its English
- * notes are what goes to Koera Store.
+ * What each release brought, newest first. Six Frites News posts a version's notes in every member's chat with it
+ * once that version is published. Every Android release needs an entry for the version in
+ * apps/mobile/app.config.ts, or the release build stops; its English notes are what goes to Koera Store.
  */
 export const CHANGELOG: Release[] = [
   {
@@ -245,8 +246,13 @@ export const CHANGELOG: Release[] = [
   },
 ];
 
-/** The releases newer than the one last read, or only the newest when that one is unknown, as on a first visit. */
-export function unseenReleases(seen: string | null, changelog = CHANGELOG) {
-  const at = changelog.findIndex((r) => r.version === seen);
-  return at === -1 ? changelog.slice(0, 1) : changelog.slice(0, at);
+/**
+ * What Six Frites News posts when a version is published: a bold title, then that version's notes in the member's
+ * language. `fallback` stands in for the notes of a version the changelog doesn't have.
+ */
+export function releaseAnnouncement(version: string, locale: Locale, fallback = ""): { text: string; entities: MessageEntity[] } {
+  const title = `${dict[locale].common.whatsNew} · ${dict[locale].common.version(version)}`;
+  const release = CHANGELOG.find((r) => r.version === version);
+  const notes = release ? release.notes[locale].map((note) => `• ${note}`).join("\n") : fallback;
+  return { text: `${title}\n\n${notes}`.trim(), entities: [{ type: "bold", offset: 0, length: title.length }] };
 }

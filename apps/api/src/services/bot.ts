@@ -1,6 +1,21 @@
 import { createHash } from "node:crypto";
 import { createId } from "@paralleldrive/cuid2";
-import { APP_ACCOUNT_IDS, type AnnounceInput, type BotGame, FRITE_BOT_ID, type LiveGame, type Locale, SIX_FRITES_ID, botGame, dict } from "@six/shared";
+import {
+  APP_ACCOUNT_IDS,
+  type AnnounceInput,
+  type AnnouncementDTO,
+  type BotGame,
+  CHANGELOG,
+  FRITE_BOT_ID,
+  type LiveGame,
+  type Locale,
+  type MessageEntity,
+  SIX_FRITES_ID,
+  botGame,
+  dict,
+  isLocale,
+  releaseAnnouncement,
+} from "@six/shared";
 import { env } from "../env.js";
 import { prisma } from "../lib/prisma.js";
 import { getChat } from "./chats.js";
@@ -51,29 +66,27 @@ export async function openBotChat(userId: string, locale: Locale, open: boolean)
 }
 
 /**
- * Posts `text` from Six Frites News in every member's chat with it, bringing that chat back for those who deleted it, so
- * it arrives like any message, with its notification. Guests, banned and waiting accounts can't open chats, so they
- * are left out. One member failing doesn't stop the others, and sending the same text again the same day only
- * reaches the members it missed; the same goes for the email, by its subject.
+ * Six Frites News posts in every member's chat with it, bringing that chat back for those who deleted it, so it
+ * arrives like any message, with its notification. `post` writes it for a member's language. Guests, banned and
+ * waiting accounts can't open chats, so they are left out. One member failing doesn't stop the others, and posting
+ * under the same `key` again only reaches the members it missed.
  *
- * ponytail: goes through members one by one inside the request, fine for a few hundred; move it to the timers queue
+ * ponytail: goes through members one by one in this process, fine for a few hundred; move it to the timers queue
  * past a few thousand.
  */
-export async function announce({ text, entities, email }: AnnounceInput) {
+async function postNews(key: string, post: (locale: Locale) => { text: string; entities?: MessageEntity[] }) {
   await ensureAccount(SIX_FRITES_ID, { displayName: "Six Frites News", avatarUrl: `${env.WEB_ORIGIN.split(",")[0]}/six-frites-news.png` });
   const members = await prisma.user.findMany({
     where: { deletedAt: null, bannedAt: null, queuedAt: null, guest: false, id: { notIn: APP_ACCOUNT_IDS } },
-    select: { id: true },
+    select: { id: true, locale: true },
   });
-  const day = new Date().toISOString().slice(0, 10);
-  const key = createHash("sha256").update(`${day}:${text}:${JSON.stringify(entities ?? [])}`).digest("base64url").slice(0, 16);
   const chats = new Map<string, string>();
   let sent = 0;
-  for (const { id } of members) {
+  for (const { id, locale } of members) {
     const ok = await botChat(id, false, SIX_FRITES_ID)
       .then((chatId) => {
         chats.set(id, chatId);
-        return sendMessage(SIX_FRITES_ID, chatId, { clientId: `announce:${key}:${id}`, text, entities });
+        return sendMessage(SIX_FRITES_ID, chatId, { clientId: `${key}:${id}`, ...post(isLocale(locale) ? locale : "en") });
       })
       .then(
         () => true,
@@ -81,8 +94,65 @@ export async function announce({ text, entities, email }: AnnounceInput) {
       );
     if (ok) sent++;
   }
+  return { sent, members: members.length, chats };
+}
+
+/**
+ * Posts an admin's `text` to every member. Sending the same text again the same day only reaches the members it
+ * missed; the same goes for the email, by its subject.
+ */
+export async function announce({ text, entities, email }: AnnounceInput) {
+  const day = new Date().toISOString().slice(0, 10);
+  const key = createHash("sha256").update(`${day}:${text}:${JSON.stringify(entities ?? [])}`).digest("base64url").slice(0, 16);
+  const { chats, ...result } = await postNews(`announce:${key}`, () => ({ text, entities }));
   const emails = email ? await emailAnnouncement(text, entities, email.subject, chats) : null;
-  return { sent, members: members.length, emails };
+  return { ...result, emails };
+}
+
+/**
+ * Posts a published version's notes to every member, each in their language, once per version. `storeNotes` are the
+ * ones Koera Store has, for a version this server's changelog doesn't know yet.
+ */
+export const postReleaseNotes = (version: string, storeNotes: string) =>
+  postNews(`release:${version}`, (locale) => releaseAnnouncement(version, locale, storeNotes));
+
+/**
+ * What Six Frites News posted, newest first, read back from the messages themselves: one that every member has
+ * since deleted is gone from here too. A release shows its English notes.
+ *
+ * ponytail: the newest 100, with no paging; page it when the list gets that long.
+ */
+export async function listAnnouncements(): Promise<AnnouncementDTO[]> {
+  const rows = await prisma.$queryRaw<
+    { kind: string; key: string; sentAt: Date; members: number; text: string; entities: MessageEntity[] | null }[]
+  >`
+    SELECT split_part("clientId", ':', 1) AS kind,
+           split_part("clientId", ':', 2) AS key,
+           min("createdAt") AS "sentAt",
+           count(*)::int AS members,
+           (array_agg("text" ORDER BY "createdAt"))[1] AS text,
+           (array_agg("entities" ORDER BY "createdAt"))[1] AS entities
+    FROM "Message"
+    WHERE "senderId" = ${SIX_FRITES_ID}
+      AND ("clientId" LIKE 'announce:%' OR "clientId" LIKE 'release:%')
+      AND "text" IS NOT NULL
+      AND "deletedAt" IS NULL
+    GROUP BY 1, 2
+    ORDER BY "sentAt" DESC
+    LIMIT 100`;
+  return rows.map((r) => {
+    const release = r.kind === "release";
+    const known = release && CHANGELOG.some((c) => c.version === r.key);
+    return {
+      kind: release ? "release" : "announcement",
+      version: release ? r.key : null,
+      text: r.text,
+      entities: r.entities ?? [],
+      ...(known && releaseAnnouncement(r.key, "en")),
+      sentAt: r.sentAt.toISOString(),
+      members: r.members,
+    };
+  });
 }
 
 /** Frite Bot sends a new game of `kind` to the user's chat with it, the way it plays them on the phone. */

@@ -1,11 +1,12 @@
 import { createHmac } from "node:crypto";
-import type { PushPayload } from "@six/shared";
+import { CHANGELOG, type PushPayload, SIX_FRITES_ID, releaseAnnouncement } from "@six/shared";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { setPushProviders } from "../src/push/providers.js";
-import { chatHelpers, useApp } from "./helpers.js";
+import { postReleaseNotes } from "../src/services/bot.js";
+import { asAdmin, chatHelpers, prisma, useApp } from "./helpers.js";
 
 const ctx = useApp();
-const { signUp, call } = chatHelpers(ctx);
+const { signUp, call, get } = chatHelpers(ctx);
 
 const published = {
   app: "six-frites",
@@ -69,4 +70,34 @@ describe("android releases on Koera Store", () => {
       url: "https://store.test/six-frites",
     });
   });
+
+  it("has Six Frites News post a published version's notes to members in their language, once, and lists it for admins", async () => {
+    const reader = await signUp("french-reader");
+    await call(reader, "POST", "/v1/bot", { locale: "fr", open: false });
+    const version = CHANGELOG[0]!.version;
+    const body = JSON.stringify({ ...published, version });
+    const res = await ctx.app.inject({
+      method: "POST",
+      url: "/v1/app/android/published",
+      headers: { "content-type": "application/json", "x-koera-signature": `sha256=${createHmac("sha256", "test-store-secret").update(body).digest("hex")}` },
+      payload: body,
+    });
+    expect(res.statusCode, res.body).toBe(204);
+
+    const french = releaseAnnouncement(version, "fr");
+    const got = () =>
+      prisma.message.findMany({
+        where: { senderId: SIX_FRITES_ID, clientId: `release:${version}:${reader.user.id}` },
+        select: { text: true, entities: true },
+      });
+    await vi.waitFor(async () => expect(await got()).toEqual([french]), { timeout: 60_000, interval: 500 });
+    await postReleaseNotes(version, "");
+    expect(await got()).toHaveLength(1);
+
+    type Posted = { kind: string; version: string | null; text: string; members: number };
+    const history: Posted[] = await get(await asAdmin(ctx.app), "/v1/admin/announcements");
+    const posted = history.find((a) => a.version === version)!;
+    expect(posted).toMatchObject({ kind: "release", text: releaseAnnouncement(version, "en").text });
+    expect(posted.members).toBeGreaterThan(0);
+  }, 120_000);
 });

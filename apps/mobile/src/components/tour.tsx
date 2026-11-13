@@ -93,6 +93,26 @@ export function Tour({ onClose, upgraded }: { onClose: () => void; upgraded?: bo
   );
 }
 
+/** The quick tour for someone new, once they've accepted the terms, and again for a guest who becomes a member. */
+export function TourPrompt() {
+  const user = useSession((s) => (s.status === "authed" ? s.user : null));
+  const upgraded = useSession((s) => s.upgraded);
+  const clearUpgraded = useSession((s) => s.clearUpgraded);
+  if (!user || user.guest) return null;
+  if (upgraded) {
+    return (
+      <Tour
+        upgraded
+        onClose={() => {
+          clearUpgraded();
+          markTourSeen();
+        }}
+      />
+    );
+  }
+  return user.tourSeen || !user.termsAccepted ? null : <Tour onClose={markTourSeen} />;
+}
+
 export function TourAgain() {
   const t = useTheme();
   const tr = useT();

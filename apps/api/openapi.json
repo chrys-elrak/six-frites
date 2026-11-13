@@ -4089,6 +4089,117 @@
             }
           }
         }
+      },
+      "get": {
+        "summary": "What Six Frites News has posted",
+        "tags": [
+          "admin"
+        ],
+        "description": "Newest first, up to 100: the announcements admins sent and the release notes posted when a version was published. Read back from members' chats, so one that every member has deleted no longer shows.",
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "kind": {
+                        "type": "string",
+                        "enum": [
+                          "announcement",
+                          "release"
+                        ],
+                        "description": "release: a version's notes, posted when it was published"
+                      },
+                      "version": {
+                        "nullable": true,
+                        "description": "For a release",
+                        "type": "string"
+                      },
+                      "text": {
+                        "type": "string",
+                        "description": "For a release, the English notes; each member got them in their own language"
+                      },
+                      "entities": {
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "properties": {
+                            "type": {
+                              "type": "string",
+                              "enum": [
+                                "bold",
+                                "italic",
+                                "underline",
+                                "strike",
+                                "code",
+                                "spoiler",
+                                "color",
+                                "font",
+                                "size",
+                                "highlight",
+                                "outline"
+                              ]
+                            },
+                            "offset": {
+                              "type": "integer",
+                              "minimum": 0,
+                              "maximum": 9007199254740991
+                            },
+                            "length": {
+                              "type": "integer",
+                              "minimum": 1,
+                              "maximum": 9007199254740991
+                            },
+                            "value": {
+                              "description": "For color, highlight (a background behind the text) and outline (a line around its letters): a TEXT_COLORS or TEXT_GRADIENTS name, #rrggbb, or #rrggbb-#rrggbb; for font: a TEXT_FONTS name; for size: a whole size in points, 8 to 48",
+                              "type": "string",
+                              "maxLength": 16
+                            }
+                          },
+                          "required": [
+                            "type",
+                            "offset",
+                            "length"
+                          ],
+                          "additionalProperties": false
+                        }
+                      },
+                      "sentAt": {
+                        "type": "string",
+                        "format": "date-time",
+                        "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                      },
+                      "members": {
+                        "type": "integer",
+                        "minimum": -9007199254740991,
+                        "maximum": 9007199254740991,
+                        "description": "Members who have it in their chat with Six Frites News"
+                      }
+                    },
+                    "required": [
+                      "kind",
+                      "version",
+                      "text",
+                      "entities",
+                      "sentAt",
+                      "members"
+                    ],
+                    "additionalProperties": false
+                  }
+                }
+              }
+            }
+          }
+        }
       }
     },
     "/v1/admin/users/ads": {

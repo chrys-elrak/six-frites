@@ -92,7 +92,9 @@ Build the release APK against production with `npm run build:android`. It points
 `https://six-frites.koera.mg`, regenerates `apps/mobile/android` and prints the APK's path, version and sha256.
 Bump `version` and `android.versionCode` in `apps/mobile/app.config.ts` first, and put that version's notes at the
 top of `packages/shared/src/changelog.ts` in all three languages. The build stops without them and ends by printing
-the English notes for Koera Store. Web and app users see new notes once, and all of them under What's new in settings.
+the English notes for Koera Store. Deploy the server with those notes before publishing: when Koera Store says the
+version is live, Six Frites News posts them in every member's chat with it, each in their language. If the server
+doesn't have that version's notes yet, everyone gets the English ones from the store instead.
 
 For push notifications on Android, register the `com.sixfrites.app` Android app in the same Firebase project as
 `FCM_SERVICE_ACCOUNT` and put its `google-services.json` in `apps/mobile/`. Builds without that file still work,

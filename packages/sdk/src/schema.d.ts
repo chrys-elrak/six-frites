@@ -1763,7 +1763,52 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get?: never;
+        /**
+         * What Six Frites News has posted
+         * @description Newest first, up to 100: the announcements admins sent and the release notes posted when a version was published. Read back from members' chats, so one that every member has deleted no longer shows.
+         */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /**
+                             * @description release: a version's notes, posted when it was published
+                             * @enum {string}
+                             */
+                            kind: "announcement" | "release";
+                            /** @description For a release */
+                            version: string | null;
+                            /** @description For a release, the English notes; each member got them in their own language */
+                            text: string;
+                            entities: {
+                                /** @enum {string} */
+                                type: "bold" | "italic" | "underline" | "strike" | "code" | "spoiler" | "color" | "font" | "size" | "highlight" | "outline";
+                                offset: number;
+                                length: number;
+                                /** @description For color, highlight (a background behind the text) and outline (a line around its letters): a TEXT_COLORS or TEXT_GRADIENTS name, #rrggbb, or #rrggbb-#rrggbb; for font: a TEXT_FONTS name; for size: a whole size in points, 8 to 48 */
+                                value?: string;
+                            }[];
+                            /** Format: date-time */
+                            sentAt: string;
+                            /** @description Members who have it in their chat with Six Frites News */
+                            members: number;
+                        }[];
+                    };
+                };
+            };
+        };
         put?: never;
         /**
          * Send a message to every member

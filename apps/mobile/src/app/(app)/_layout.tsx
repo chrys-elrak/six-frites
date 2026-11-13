@@ -9,8 +9,8 @@ import { StoryPostBar } from "@/components/story-post-bar";
 import { SharedLink } from "@/components/shared-link";
 import { StorageFullPrompt } from "@/components/storage-full";
 import { Toasts } from "@/components/toasts";
+import { TourPrompt } from "@/components/tour";
 import { LiveInvites, UnfinishedGame } from "@/components/live";
-import { WhatsNewPrompt } from "@/components/whats-new";
 import { useAppLock, useAutoLock } from "@/lib/app-lock";
 import { usePush } from "@/lib/push";
 import { RealtimeProvider } from "@/lib/realtime";
@@ -38,7 +38,7 @@ export default function AppLayout() {
         {!locked && <LiveInvites />}
         {!locked && <UnfinishedGame />}
         {!locked && <BackupPinPrompt />}
-        {!locked && <WhatsNewPrompt />}
+        {!locked && <TourPrompt />}
         {!locked && <SharedLink />}
         <CallScreen />
         {locked && <LockScreen />}

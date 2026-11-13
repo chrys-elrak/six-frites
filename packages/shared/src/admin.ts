@@ -233,6 +233,16 @@ export const AnnounceResult = z.object({
 });
 export type AnnounceResult = z.infer<typeof AnnounceResult>;
 
+export const AnnouncementDTO = z.object({
+  kind: z.enum(["announcement", "release"]).describe("release: a version's notes, posted when it was published"),
+  version: z.string().nullable().describe("For a release"),
+  text: z.string().describe("For a release, the English notes; each member got them in their own language"),
+  entities: z.array(MessageEntity),
+  sentAt: IsoDate,
+  members: z.number().int().describe("Members who have it in their chat with Six Frites News"),
+});
+export type AnnouncementDTO = z.infer<typeof AnnouncementDTO>;
+
 export const BanUserInput = z.object({
   reason: z.string().trim().min(1).max(500),
   hours: BanHours,

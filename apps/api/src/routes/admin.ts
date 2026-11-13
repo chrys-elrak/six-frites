@@ -5,6 +5,7 @@ import {
   AdminAnonDTO,
   AnnounceInput,
   AnnounceResult,
+  AnnouncementDTO,
   AdminAnonQuery,
   AdminCodeInput,
   AdminMeDTO,
@@ -67,7 +68,7 @@ import { cancelStickerImport, dropUnfinishedZip, latestStickerImport, startStick
 import { createReport, listReports, resolveReport } from "../services/reports.js";
 import { listMailLog, mailStats } from "../services/emails.js";
 import { usageOf } from "../services/usage.js";
-import { announce } from "../services/bot.js";
+import { announce, listAnnouncements } from "../services/bot.js";
 
 const Params = z.object({ id: Id });
 const security = [{ bearer: [] }];
@@ -292,6 +293,21 @@ const adminRoutes: FastifyPluginAsyncZod = async (app) => {
       },
     },
     async (req) => announce(req.body),
+  );
+
+  app.get(
+    "/admin/announcements",
+    {
+      schema: {
+        tags,
+        summary: "What Six Frites News has posted",
+        description:
+          "Newest first, up to 100: the announcements admins sent and the release notes posted when a version was published. Read back from members' chats, so one that every member has deleted no longer shows.",
+        security,
+        response: { 200: z.array(AnnouncementDTO) },
+      },
+    },
+    () => listAnnouncements(),
   );
 
   app.post(

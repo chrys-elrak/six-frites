@@ -1,17 +1,21 @@
 import { describe, expect, it } from "vitest";
-import { CHANGELOG, LOCALES, type Release, isNewerVersion, unseenReleases } from "../src/index.js";
+import { CHANGELOG, LOCALES, MessageEntity, isNewerVersion, releaseAnnouncement } from "../src/index.js";
 
-const notes = { en: [], fr: [], mg: [] };
-const log: Release[] = ["1.6.0", "1.5.0", "1.4.0"].map((version) => ({ version, date: "2026-10-30", notes }));
-
-describe("unseenReleases", () => {
-  it("lists what came out after the last release read", () => {
-    expect(unseenReleases("1.4.0", log).map((r) => r.version)).toEqual(["1.6.0", "1.5.0"]);
-    expect(unseenReleases("1.6.0", log)).toEqual([]);
+describe("releaseAnnouncement", () => {
+  it("gives every version a message short enough to send, titled in bold, with its notes in that language", () => {
+    for (const r of CHANGELOG) {
+      for (const l of LOCALES) {
+        const { text, entities } = releaseAnnouncement(r.version, l);
+        expect(text.length).toBeLessThanOrEqual(4000);
+        expect(MessageEntity.array().parse(entities)).toHaveLength(1);
+        expect(text.slice(0, entities[0]!.length)).toContain(r.version);
+        expect(text.endsWith(`• ${r.notes[l].at(-1)}`)).toBe(true);
+      }
+    }
   });
 
-  it("shows only the newest when nothing was read yet", () => {
-    expect(unseenReleases(null, log).map((r) => r.version)).toEqual(["1.6.0"]);
+  it("falls back to the notes it is given for a version the changelog doesn't have", () => {
+    expect(releaseAnnouncement("0.0.1", "fr", "• From the store").text).toBe("Nouveautés · Version 0.0.1\n\n• From the store");
   });
 });
 

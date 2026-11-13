@@ -1,18 +1,46 @@
 "use client";
 
 import { unwrap } from "@six/sdk";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useRef, useState } from "react";
-import { parseMarkup } from "@/lib/markup";
+import { parseMarkup, toMarkup } from "@/lib/markup";
 import { six } from "@/lib/six";
 import { FormatBar, formatShortcut } from "../format-bar";
-import { RichInput, type RichInputHandle } from "../rich-input";
+import { DraftText, RichInput, type RichInputHandle } from "../rich-input";
 import { Sheet } from "../sheet";
 
 const fill = "rounded-xl bg-stone-100 dark:bg-stone-800";
 const pad = "px-3 py-2.5 text-[16px] md:text-sm";
 
+function History() {
+  const posted = useQuery({
+    queryKey: ["admin", "announcements"],
+    queryFn: async () => unwrap(await six.api.GET("/v1/admin/announcements")),
+  });
+
+  return (
+    <section className="space-y-2">
+      <h2 className="text-sm font-semibold">History</h2>
+      {posted.isError && <p className="text-sm text-red-600 dark:text-red-400">Couldn't load the history.</p>}
+      {posted.data?.length === 0 && <p className="text-sm text-stone-500">Nothing posted yet.</p>}
+      {posted.data?.map((a) => (
+        <article key={`${a.kind}:${a.sentAt}`} className={`${fill} space-y-1 px-3 py-2.5`}>
+          <p className="text-xs text-stone-500">
+            {new Date(a.sentAt).toLocaleString("en", { dateStyle: "medium", timeStyle: "short" })} ·{" "}
+            {a.kind === "release" ? `Release ${a.version}, each member in their language` : "Announcement"} · {a.members}{" "}
+            {a.members === 1 ? "member" : "members"}
+          </p>
+          <p className="text-sm break-words whitespace-pre-wrap">
+            <DraftText markup={toMarkup(a.text, a.entities)} />
+          </p>
+        </article>
+      ))}
+    </section>
+  );
+}
+
 export function Announce() {
+  const qc = useQueryClient();
   const input = useRef<RichInputHandle>(null);
   const [markup, setMarkup] = useState("");
   const [email, setEmail] = useState(false);
@@ -28,6 +56,7 @@ export function Announce() {
       setMarkup((now) => (now === sent ? "" : now));
       setSubject("");
     },
+    onSettled: () => qc.invalidateQueries({ queryKey: ["admin", "announcements"] }),
   });
   const ready = !!parseMarkup(markup).text && (!email || !!subject.trim()) && !send.isPending;
 
@@ -109,6 +138,7 @@ export function Announce() {
           onClose={() => setConfirm(false)}
         />
       )}
+      <History />
     </div>
   );
 }
