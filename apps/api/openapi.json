@@ -139,6 +139,13 @@
                           "type": "boolean",
                           "description": "Whether your app lock code is your backup PIN, so one code does both"
                         },
+                        "appLockLength": {
+                          "nullable": true,
+                          "description": "Digits in your app lock code, null when it's off or not known yet",
+                          "type": "integer",
+                          "minimum": -9007199254740991,
+                          "maximum": 9007199254740991
+                        },
                         "ads": {
                           "type": "boolean",
                           "description": "Whether the apps show you ads; admins can turn them off for you"
@@ -214,6 +221,7 @@
                         "hasBackupPin",
                         "hasAppLock",
                         "appLockIsPin",
+                        "appLockLength",
                         "ads",
                         "anonBot",
                         "quickReactions",
@@ -366,6 +374,13 @@
                           "type": "boolean",
                           "description": "Whether your app lock code is your backup PIN, so one code does both"
                         },
+                        "appLockLength": {
+                          "nullable": true,
+                          "description": "Digits in your app lock code, null when it's off or not known yet",
+                          "type": "integer",
+                          "minimum": -9007199254740991,
+                          "maximum": 9007199254740991
+                        },
                         "ads": {
                           "type": "boolean",
                           "description": "Whether the apps show you ads; admins can turn them off for you"
@@ -441,6 +456,7 @@
                         "hasBackupPin",
                         "hasAppLock",
                         "appLockIsPin",
+                        "appLockLength",
                         "ads",
                         "anonBot",
                         "quickReactions",
@@ -662,6 +678,13 @@
                               "type": "boolean",
                               "description": "Whether your app lock code is your backup PIN, so one code does both"
                             },
+                            "appLockLength": {
+                              "nullable": true,
+                              "description": "Digits in your app lock code, null when it's off or not known yet",
+                              "type": "integer",
+                              "minimum": -9007199254740991,
+                              "maximum": 9007199254740991
+                            },
                             "ads": {
                               "type": "boolean",
                               "description": "Whether the apps show you ads; admins can turn them off for you"
@@ -737,6 +760,7 @@
                             "hasBackupPin",
                             "hasAppLock",
                             "appLockIsPin",
+                            "appLockLength",
                             "ads",
                             "anonBot",
                             "quickReactions",
@@ -867,6 +891,13 @@
                           "type": "boolean",
                           "description": "Whether your app lock code is your backup PIN, so one code does both"
                         },
+                        "appLockLength": {
+                          "nullable": true,
+                          "description": "Digits in your app lock code, null when it's off or not known yet",
+                          "type": "integer",
+                          "minimum": -9007199254740991,
+                          "maximum": 9007199254740991
+                        },
                         "ads": {
                           "type": "boolean",
                           "description": "Whether the apps show you ads; admins can turn them off for you"
@@ -942,6 +973,7 @@
                         "hasBackupPin",
                         "hasAppLock",
                         "appLockIsPin",
+                        "appLockLength",
                         "ads",
                         "anonBot",
                         "quickReactions",
@@ -7618,6 +7650,13 @@
                       "type": "boolean",
                       "description": "Whether your app lock code is your backup PIN, so one code does both"
                     },
+                    "appLockLength": {
+                      "nullable": true,
+                      "description": "Digits in your app lock code, null when it's off or not known yet",
+                      "type": "integer",
+                      "minimum": -9007199254740991,
+                      "maximum": 9007199254740991
+                    },
                     "ads": {
                       "type": "boolean",
                       "description": "Whether the apps show you ads; admins can turn them off for you"
@@ -7693,6 +7732,7 @@
                     "hasBackupPin",
                     "hasAppLock",
                     "appLockIsPin",
+                    "appLockLength",
                     "ads",
                     "anonBot",
                     "quickReactions",
@@ -7826,6 +7866,13 @@
                       "type": "boolean",
                       "description": "Whether your app lock code is your backup PIN, so one code does both"
                     },
+                    "appLockLength": {
+                      "nullable": true,
+                      "description": "Digits in your app lock code, null when it's off or not known yet",
+                      "type": "integer",
+                      "minimum": -9007199254740991,
+                      "maximum": 9007199254740991
+                    },
                     "ads": {
                       "type": "boolean",
                       "description": "Whether the apps show you ads; admins can turn them off for you"
@@ -7901,6 +7948,7 @@
                     "hasBackupPin",
                     "hasAppLock",
                     "appLockIsPin",
+                    "appLockLength",
                     "ads",
                     "anonBot",
                     "quickReactions",
@@ -8032,6 +8080,13 @@
                       "type": "boolean",
                       "description": "Whether your app lock code is your backup PIN, so one code does both"
                     },
+                    "appLockLength": {
+                      "nullable": true,
+                      "description": "Digits in your app lock code, null when it's off or not known yet",
+                      "type": "integer",
+                      "minimum": -9007199254740991,
+                      "maximum": 9007199254740991
+                    },
                     "ads": {
                       "type": "boolean",
                       "description": "Whether the apps show you ads; admins can turn them off for you"
@@ -8107,6 +8162,7 @@
                     "hasBackupPin",
                     "hasAppLock",
                     "appLockIsPin",
+                    "appLockLength",
                     "ads",
                     "anonBot",
                     "quickReactions",
@@ -8188,6 +8244,13 @@
                       "type": "boolean",
                       "description": "Whether your app lock code is your backup PIN, so one code does both"
                     },
+                    "appLockLength": {
+                      "nullable": true,
+                      "description": "Digits in your app lock code, null when it's off or not known yet",
+                      "type": "integer",
+                      "minimum": -9007199254740991,
+                      "maximum": 9007199254740991
+                    },
                     "ads": {
                       "type": "boolean",
                       "description": "Whether the apps show you ads; admins can turn them off for you"
@@ -8263,6 +8326,7 @@
                     "hasBackupPin",
                     "hasAppLock",
                     "appLockIsPin",
+                    "appLockLength",
                     "ads",
                     "anonBot",
                     "quickReactions",
@@ -8566,6 +8630,13 @@
                       "type": "boolean",
                       "description": "Whether your app lock code is your backup PIN, so one code does both"
                     },
+                    "appLockLength": {
+                      "nullable": true,
+                      "description": "Digits in your app lock code, null when it's off or not known yet",
+                      "type": "integer",
+                      "minimum": -9007199254740991,
+                      "maximum": 9007199254740991
+                    },
                     "ads": {
                       "type": "boolean",
                       "description": "Whether the apps show you ads; admins can turn them off for you"
@@ -8641,6 +8712,7 @@
                     "hasBackupPin",
                     "hasAppLock",
                     "appLockIsPin",
+                    "appLockLength",
                     "ads",
                     "anonBot",
                     "quickReactions",
@@ -8719,6 +8791,13 @@
                       "type": "boolean",
                       "description": "Whether your app lock code is your backup PIN, so one code does both"
                     },
+                    "appLockLength": {
+                      "nullable": true,
+                      "description": "Digits in your app lock code, null when it's off or not known yet",
+                      "type": "integer",
+                      "minimum": -9007199254740991,
+                      "maximum": 9007199254740991
+                    },
                     "ads": {
                       "type": "boolean",
                       "description": "Whether the apps show you ads; admins can turn them off for you"
@@ -8794,6 +8873,7 @@
                     "hasBackupPin",
                     "hasAppLock",
                     "appLockIsPin",
+                    "appLockLength",
                     "ads",
                     "anonBot",
                     "quickReactions",
@@ -77866,6 +77946,13 @@
                                     "type": "boolean",
                                     "description": "Whether your app lock code is your backup PIN, so one code does both"
                                   },
+                                  "appLockLength": {
+                                    "nullable": true,
+                                    "description": "Digits in your app lock code, null when it's off or not known yet",
+                                    "type": "integer",
+                                    "minimum": -9007199254740991,
+                                    "maximum": 9007199254740991
+                                  },
                                   "ads": {
                                     "type": "boolean",
                                     "description": "Whether the apps show you ads; admins can turn them off for you"
@@ -77941,6 +78028,7 @@
                                   "hasBackupPin",
                                   "hasAppLock",
                                   "appLockIsPin",
+                                  "appLockLength",
                                   "ads",
                                   "anonBot",
                                   "quickReactions",
@@ -78992,6 +79080,13 @@
                       "type": "boolean",
                       "description": "Whether your app lock code is your backup PIN, so one code does both"
                     },
+                    "appLockLength": {
+                      "nullable": true,
+                      "description": "Digits in your app lock code, null when it's off or not known yet",
+                      "type": "integer",
+                      "minimum": -9007199254740991,
+                      "maximum": 9007199254740991
+                    },
                     "ads": {
                       "type": "boolean",
                       "description": "Whether the apps show you ads; admins can turn them off for you"
@@ -79067,6 +79162,7 @@
                     "hasBackupPin",
                     "hasAppLock",
                     "appLockIsPin",
+                    "appLockLength",
                     "ads",
                     "anonBot",
                     "quickReactions",
@@ -79218,6 +79314,13 @@
                       "type": "boolean",
                       "description": "Whether your app lock code is your backup PIN, so one code does both"
                     },
+                    "appLockLength": {
+                      "nullable": true,
+                      "description": "Digits in your app lock code, null when it's off or not known yet",
+                      "type": "integer",
+                      "minimum": -9007199254740991,
+                      "maximum": 9007199254740991
+                    },
                     "ads": {
                       "type": "boolean",
                       "description": "Whether the apps show you ads; admins can turn them off for you"
@@ -79293,6 +79396,7 @@
                     "hasBackupPin",
                     "hasAppLock",
                     "appLockIsPin",
+                    "appLockLength",
                     "ads",
                     "anonBot",
                     "quickReactions",
@@ -89071,6 +89175,13 @@
                       "type": "boolean",
                       "description": "Whether your app lock code is your backup PIN, so one code does both"
                     },
+                    "appLockLength": {
+                      "nullable": true,
+                      "description": "Digits in your app lock code, null when it's off or not known yet",
+                      "type": "integer",
+                      "minimum": -9007199254740991,
+                      "maximum": 9007199254740991
+                    },
                     "ads": {
                       "type": "boolean",
                       "description": "Whether the apps show you ads; admins can turn them off for you"
@@ -89146,6 +89257,7 @@
                     "hasBackupPin",
                     "hasAppLock",
                     "appLockIsPin",
+                    "appLockLength",
                     "ads",
                     "anonBot",
                     "quickReactions",
@@ -89245,6 +89357,13 @@
                       "type": "boolean",
                       "description": "Whether your app lock code is your backup PIN, so one code does both"
                     },
+                    "appLockLength": {
+                      "nullable": true,
+                      "description": "Digits in your app lock code, null when it's off or not known yet",
+                      "type": "integer",
+                      "minimum": -9007199254740991,
+                      "maximum": 9007199254740991
+                    },
                     "ads": {
                       "type": "boolean",
                       "description": "Whether the apps show you ads; admins can turn them off for you"
@@ -89320,6 +89439,7 @@
                     "hasBackupPin",
                     "hasAppLock",
                     "appLockIsPin",
+                    "appLockLength",
                     "ads",
                     "anonBot",
                     "quickReactions",

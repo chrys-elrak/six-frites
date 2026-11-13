@@ -72,6 +72,8 @@ export interface paths {
                                 hasAppLock: boolean;
                                 /** @description Whether your app lock code is your backup PIN, so one code does both */
                                 appLockIsPin: boolean;
+                                /** @description Digits in your app lock code, null when it's off or not known yet */
+                                appLockLength: number | null;
                                 /** @description Whether the apps show you ads; admins can turn them off for you */
                                 ads: boolean;
                                 /** @description Whether the Six Frites bot sends you a question in your anonymous inbox now and then */
@@ -179,6 +181,8 @@ export interface paths {
                                 hasAppLock: boolean;
                                 /** @description Whether your app lock code is your backup PIN, so one code does both */
                                 appLockIsPin: boolean;
+                                /** @description Digits in your app lock code, null when it's off or not known yet */
+                                appLockLength: number | null;
                                 /** @description Whether the apps show you ads; admins can turn them off for you */
                                 ads: boolean;
                                 /** @description Whether the Six Frites bot sends you a question in your anonymous inbox now and then */
@@ -335,6 +339,8 @@ export interface paths {
                                 hasAppLock: boolean;
                                 /** @description Whether your app lock code is your backup PIN, so one code does both */
                                 appLockIsPin: boolean;
+                                /** @description Digits in your app lock code, null when it's off or not known yet */
+                                appLockLength: number | null;
                                 /** @description Whether the apps show you ads; admins can turn them off for you */
                                 ads: boolean;
                                 /** @description Whether the Six Frites bot sends you a question in your anonymous inbox now and then */
@@ -435,6 +441,8 @@ export interface paths {
                                 hasAppLock: boolean;
                                 /** @description Whether your app lock code is your backup PIN, so one code does both */
                                 appLockIsPin: boolean;
+                                /** @description Digits in your app lock code, null when it's off or not known yet */
+                                appLockLength: number | null;
                                 /** @description Whether the apps show you ads; admins can turn them off for you */
                                 ads: boolean;
                                 /** @description Whether the Six Frites bot sends you a question in your anonymous inbox now and then */
@@ -3532,6 +3540,8 @@ export interface paths {
                             hasAppLock: boolean;
                             /** @description Whether your app lock code is your backup PIN, so one code does both */
                             appLockIsPin: boolean;
+                            /** @description Digits in your app lock code, null when it's off or not known yet */
+                            appLockLength: number | null;
                             /** @description Whether the apps show you ads; admins can turn them off for you */
                             ads: boolean;
                             /** @description Whether the Six Frites bot sends you a question in your anonymous inbox now and then */
@@ -3658,6 +3668,8 @@ export interface paths {
                             hasAppLock: boolean;
                             /** @description Whether your app lock code is your backup PIN, so one code does both */
                             appLockIsPin: boolean;
+                            /** @description Digits in your app lock code, null when it's off or not known yet */
+                            appLockLength: number | null;
                             /** @description Whether the apps show you ads; admins can turn them off for you */
                             ads: boolean;
                             /** @description Whether the Six Frites bot sends you a question in your anonymous inbox now and then */
@@ -3738,6 +3750,8 @@ export interface paths {
                             hasAppLock: boolean;
                             /** @description Whether your app lock code is your backup PIN, so one code does both */
                             appLockIsPin: boolean;
+                            /** @description Digits in your app lock code, null when it's off or not known yet */
+                            appLockLength: number | null;
                             /** @description Whether the apps show you ads; admins can turn them off for you */
                             ads: boolean;
                             /** @description Whether the Six Frites bot sends you a question in your anonymous inbox now and then */
@@ -3822,6 +3836,8 @@ export interface paths {
                             hasAppLock: boolean;
                             /** @description Whether your app lock code is your backup PIN, so one code does both */
                             appLockIsPin: boolean;
+                            /** @description Digits in your app lock code, null when it's off or not known yet */
+                            appLockLength: number | null;
                             /** @description Whether the apps show you ads; admins can turn them off for you */
                             ads: boolean;
                             /** @description Whether the Six Frites bot sends you a question in your anonymous inbox now and then */
@@ -4047,6 +4063,8 @@ export interface paths {
                             hasAppLock: boolean;
                             /** @description Whether your app lock code is your backup PIN, so one code does both */
                             appLockIsPin: boolean;
+                            /** @description Digits in your app lock code, null when it's off or not known yet */
+                            appLockLength: number | null;
                             /** @description Whether the apps show you ads; admins can turn them off for you */
                             ads: boolean;
                             /** @description Whether the Six Frites bot sends you a question in your anonymous inbox now and then */
@@ -4114,6 +4132,8 @@ export interface paths {
                             hasAppLock: boolean;
                             /** @description Whether your app lock code is your backup PIN, so one code does both */
                             appLockIsPin: boolean;
+                            /** @description Digits in your app lock code, null when it's off or not known yet */
+                            appLockLength: number | null;
                             /** @description Whether the apps show you ads; admins can turn them off for you */
                             ads: boolean;
                             /** @description Whether the Six Frites bot sends you a question in your anonymous inbox now and then */
@@ -21877,6 +21897,8 @@ export interface paths {
                                     hasAppLock: boolean;
                                     /** @description Whether your app lock code is your backup PIN, so one code does both */
                                     appLockIsPin: boolean;
+                                    /** @description Digits in your app lock code, null when it's off or not known yet */
+                                    appLockLength: number | null;
                                     /** @description Whether the apps show you ads; admins can turn them off for you */
                                     ads: boolean;
                                     /** @description Whether the Six Frites bot sends you a question in your anonymous inbox now and then */
@@ -22446,6 +22468,8 @@ export interface paths {
                             hasAppLock: boolean;
                             /** @description Whether your app lock code is your backup PIN, so one code does both */
                             appLockIsPin: boolean;
+                            /** @description Digits in your app lock code, null when it's off or not known yet */
+                            appLockLength: number | null;
                             /** @description Whether the apps show you ads; admins can turn them off for you */
                             ads: boolean;
                             /** @description Whether the Six Frites bot sends you a question in your anonymous inbox now and then */
@@ -22583,6 +22607,8 @@ export interface paths {
                             hasAppLock: boolean;
                             /** @description Whether your app lock code is your backup PIN, so one code does both */
                             appLockIsPin: boolean;
+                            /** @description Digits in your app lock code, null when it's off or not known yet */
+                            appLockLength: number | null;
                             /** @description Whether the apps show you ads; admins can turn them off for you */
                             ads: boolean;
                             /** @description Whether the Six Frites bot sends you a question in your anonymous inbox now and then */
@@ -26556,6 +26582,8 @@ export interface paths {
                             hasAppLock: boolean;
                             /** @description Whether your app lock code is your backup PIN, so one code does both */
                             appLockIsPin: boolean;
+                            /** @description Digits in your app lock code, null when it's off or not known yet */
+                            appLockLength: number | null;
                             /** @description Whether the apps show you ads; admins can turn them off for you */
                             ads: boolean;
                             /** @description Whether the Six Frites bot sends you a question in your anonymous inbox now and then */
@@ -26645,6 +26673,8 @@ export interface paths {
                             hasAppLock: boolean;
                             /** @description Whether your app lock code is your backup PIN, so one code does both */
                             appLockIsPin: boolean;
+                            /** @description Digits in your app lock code, null when it's off or not known yet */
+                            appLockLength: number | null;
                             /** @description Whether the apps show you ads; admins can turn them off for you */
                             ads: boolean;
                             /** @description Whether the Six Frites bot sends you a question in your anonymous inbox now and then */

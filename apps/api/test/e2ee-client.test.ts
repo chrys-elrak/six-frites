@@ -248,7 +248,7 @@ describe("E2EE client", () => {
       call(phone.auth, method, method === "PUT" ? "/v1/me/app-lock" : "/v1/me/app-lock/unlock", { code });
 
     expect((await lock("PUT", "1234")).json()).toMatchObject({ error: { code: "WRONG_BACKUP_PIN", details: { triesLeft: 9 } } });
-    expect((await lock("PUT", "123456")).json()).toMatchObject({ hasAppLock: true, appLockIsPin: true });
+    expect((await lock("PUT", "123456")).json()).toMatchObject({ hasAppLock: true, appLockIsPin: true, appLockLength: 6 });
     expect((await lock("POST", "000000")).json()).toMatchObject({ error: { code: "WRONG_BACKUP_PIN", details: { triesLeft: 9 } } });
     expect((await lock("POST", "123456")).statusCode).toBe(204);
 

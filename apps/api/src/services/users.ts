@@ -36,6 +36,7 @@ export function toUserDTO(u: User): UserDTO {
     hasBackupPin: u.backupPinHash !== null,
     hasAppLock: u.appLockHash !== null,
     appLockIsPin: u.appLockHash !== null && u.appLockHash === u.backupPinHash,
+    appLockLength: u.appLockHash ? u.appLockLength : null,
     ads: !u.adsDisabled,
     anonBot: !u.anonBotDisabled,
     quickReactions: u.quickReactions,
@@ -240,7 +241,7 @@ export async function pinMatches(stored: string, pin: string) {
 export async function setAppLock(userId: string, input: AppLockInput) {
   const { backupPinHash } = await prisma.user.findUniqueOrThrow({ where: { id: userId }, select: { backupPinHash: true } });
   const appLockHash = backupPinHash ? (await checkBackupPin(userId, input.code)).backupPinHash! : await hashPin(input.code);
-  return toUserDTO(await prisma.user.update({ where: { id: userId }, data: { appLockHash } }));
+  return toUserDTO(await prisma.user.update({ where: { id: userId }, data: { appLockHash, appLockLength: input.code.length } }));
 }
 
 export async function removeAppLock(userId: string) {
@@ -252,10 +253,14 @@ export async function removeAppLock(userId: string) {
  * be used to guess it.
  */
 async function checkAppLock(userId: string, code: string) {
-  const u = await prisma.user.findUniqueOrThrow({ where: { id: userId }, select: { appLockHash: true, backupPinHash: true } });
+  const u = await prisma.user.findUniqueOrThrow({
+    where: { id: userId },
+    select: { appLockHash: true, backupPinHash: true, appLockLength: true },
+  });
   if (!u.appLockHash) return false;
   if (u.appLockHash === u.backupPinHash) await checkBackupPin(userId, code);
   else if (!(await pinMatches(u.appLockHash, code))) throw new AppError("WRONG_APP_LOCK_CODE");
+  if (u.appLockLength !== code.length) await prisma.user.update({ where: { id: userId }, data: { appLockLength: code.length } });
   return true;
 }
 

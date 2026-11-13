@@ -6,7 +6,7 @@ import { useMutation } from "@tanstack/react-query";
 import { Check, Delete, Lock } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { useCloseOnBack } from "@/lib/back";
-import { codeLength, setCodeLength, unlock } from "@/lib/app-lock";
+import { unlock } from "@/lib/app-lock";
 import { e2ee, signOut } from "@/lib/e2ee";
 import { useT } from "@/lib/i18n";
 import { useSession } from "@/lib/session";
@@ -76,7 +76,6 @@ function TurnOnDialog({ onClose }: { onClose: () => void }) {
       return unwrap(await six.api.PUT("/v1/me/app-lock", { body: { code } }));
     },
     onSuccess: (u) => {
-      setCodeLength(code.length);
       unlock();
       setUser(u);
       onClose();
@@ -211,9 +210,7 @@ export function LockScreen({
 }) {
   const tr = useT();
   const [code, setCode] = useState("");
-  const pin = useSession((s) => !!s.user?.appLockIsPin);
-  const [length] = useState(() => (pin ? 6 : codeLength()));
-  const [auto, setAuto] = useState(true);
+  const length = useSession((s) => s.user?.appLockLength ?? 0);
   const [fails, setFails] = useState(0);
   const [confirmSignOut, setConfirmSignOut] = useState(false);
   const hasKey = useHasRecoveryKey();
@@ -222,16 +219,15 @@ export function LockScreen({
     mutationFn: async (value: string) =>
       verify ? verify(value) : unwrap(await six.api.POST("/v1/me/app-lock/unlock", { body: { code: value } })),
     onSuccess: (_, value) => {
-      setCodeLength(value.length);
       onUnlock();
       const { user, setUser } = useSession.getState();
+      if (!verify && user && user.appLockLength !== value.length) setUser({ ...user, appLockLength: value.length });
       if (!verify && hasKey.data && user?.hasAppLock && !user.appLockIsPin) {
         void e2ee()?.setBackupPin(value).then(setUser).catch(() => null);
       }
     },
     onError: () => {
       setCode("");
-      setAuto(pin);
       setFails((n) => n + 1);
     },
   });
@@ -239,7 +235,7 @@ export function LockScreen({
   const type = (v: string) => {
     setCode(v);
     if (check.isError) check.reset();
-    if (auto && length && v.length === length && !check.isPending) check.mutate(v);
+    if (length && v.length === length && !check.isPending) check.mutate(v);
   };
 
   return (
@@ -265,7 +261,7 @@ export function LockScreen({
           {check.isError ? codeError(check.error, tr, tr.settings.appLock.errors) : tr.settings.appLock.enterCode}
         </p>
         <CodeDots count={Math.max(length || 4, code.length)} filled={code.length} shake={fails} />
-        <Keypad value={code} onChange={type} onSubmit={auto && length ? undefined : () => check.mutate(code)} />
+        <Keypad value={code} onChange={type} onSubmit={length ? undefined : () => check.mutate(code)} />
         <button
           type="button"
           onClick={onCancel ?? (() => setConfirmSignOut(true))}

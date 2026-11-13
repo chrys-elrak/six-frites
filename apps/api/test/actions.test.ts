@@ -419,7 +419,7 @@ describe("app lock", () => {
     expect((await call(me, "POST", "/v1/me/app-lock/unlock", { code: "1234" })).statusCode).toBe(204);
 
     expect((await call(me, "DELETE", "/v1/me/app-lock")).json().hasAppLock).toBe(false);
-    expect((await call(me, "PUT", "/v1/me/app-lock", { code: "56789" })).json().hasAppLock).toBe(true);
+    expect((await call(me, "PUT", "/v1/me/app-lock", { code: "56789" })).json()).toMatchObject({ hasAppLock: true, appLockLength: 5 });
     expect((await call(me, "POST", "/v1/me/app-lock/unlock", { code: "1234" })).json().error.code).toBe(
       "WRONG_APP_LOCK_CODE",
     );

@@ -77,7 +77,7 @@ export async function setBackupPin(userId: string, input: SetBackupPinInput) {
       backupPinHash,
       backupWrapped: input.wrapped,
       backupPinTries: 0,
-      ...(user.appLockHash && { appLockHash: backupPinHash }),
+      ...(user.appLockHash && { appLockHash: backupPinHash, appLockLength: input.pin.length }),
     };
     return toUserDTO(await tx.user.update({ where: { id: userId }, data }));
   });

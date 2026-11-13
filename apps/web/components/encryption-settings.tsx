@@ -5,7 +5,6 @@ import type { Dict } from "@six/shared";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { KeyRound, ShieldAlert, ShieldCheck, X } from "lucide-react";
 import { useState } from "react";
-import { setCodeLength } from "@/lib/app-lock";
 import { e2ee } from "@/lib/e2ee";
 import { useT } from "@/lib/i18n";
 import { useSession } from "@/lib/session";
@@ -179,7 +178,6 @@ function PinDialog({ restoring: initial, prompted, onClose }: { restoring: boole
       if (restoring) await client.unlockWithPin(pin);
       else {
         setUser(await client.setBackupPin(pin));
-        if (user.hasAppLock) setCodeLength(pin.length);
       }
     },
     onSuccess: () => {

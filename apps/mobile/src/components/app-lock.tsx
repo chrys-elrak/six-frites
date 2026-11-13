@@ -12,10 +12,8 @@ import {
   canUseBiometrics,
   checkBiometrics,
   setBiometricUnlock,
-  setCodeLength,
   unlock,
   useBiometricUnlock,
-  useCodeLength,
 } from "@/lib/app-lock";
 import { useT } from "@/lib/i18n";
 import { logout, useSession } from "@/lib/session";
@@ -115,7 +113,6 @@ function TurnOnDialog({ onClose }: { onClose: () => void }) {
     try {
       if (makePin) await e2eeFor(user.id)!.setBackupPin(code);
       const updated = unwrap(await six.api.PUT("/v1/me/app-lock", { body: { code } }));
-      setCodeLength(code.length);
       unlock();
       setUser(updated);
       onClose();
@@ -181,11 +178,8 @@ export function LockScreen({
   const [code, setCode] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [auto, setAuto] = useState(true);
   const shake = useRef(new Animated.Value(0)).current;
-  const pin = useSession((s) => !!s.user?.appLockIsPin);
-  const remembered = useCodeLength((s) => s.length);
-  const length = pin ? 6 : remembered;
+  const length = useSession((s) => s.user?.appLockLength ?? 0);
   const biometric = useBiometricUnlock((s) => s.on) && !verify;
   const hasKey = useHasRecoveryKey().data === true;
 
@@ -205,15 +199,14 @@ export function LockScreen({
     try {
       if (verify) await verify(value);
       else unwrap(await six.api.POST("/v1/me/app-lock/unlock", { body: { code: value } }));
-      setCodeLength(value.length);
       onUnlock();
       const { user, setUser } = useSession.getState();
+      if (!verify && user && user.appLockLength !== value.length) setUser({ ...user, appLockLength: value.length });
       if (!verify && hasKey && user?.hasAppLock && !user.appLockIsPin) {
         void e2eeFor(user.id)?.setBackupPin(value).then(setUser).catch(() => null);
       }
     } catch (err) {
       setCode("");
-      setAuto(pin);
       Animated.sequence(
         [-10, 10, -7, 7, -3, 0].map((toValue) => Animated.timing(shake, { toValue, duration: 60, useNativeDriver: true })),
       ).start();
@@ -226,7 +219,7 @@ export function LockScreen({
   function type(value: string) {
     setCode(value);
     setError(null);
-    if (auto && length && value.length === length) void check(value);
+    if (length && value.length === length) void check(value);
   }
 
   return (
@@ -253,7 +246,7 @@ export function LockScreen({
               ),
             )}
           </Animated.View>
-          <Keypad value={code} onChange={type} onSubmit={auto && length ? undefined : () => void check()} />
+          <Keypad value={code} onChange={type} onSubmit={length ? undefined : () => void check()} />
           {biometric && (
             <IconButton
               Icon={Fingerprint}

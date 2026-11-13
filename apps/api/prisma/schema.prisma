@@ -50,6 +50,8 @@ model User {
   backupWrapped   String?
   backupPinTries  Int       @default(0)
   appLockHash     String?
+  /// Digits in the app lock code, so the lock screen shows that many dots and checks the code on the last one.
+  appLockLength   Int?
   inviteLimit     Int       @default(10)
   /// Space their uploads may take, set by an admin; null means no limit.
   storageLimitMb  Int?

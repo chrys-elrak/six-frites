@@ -8,7 +8,6 @@ import { Modal } from "./modal";
 import { Text, TextInput } from "./text";
 import { KeyboardAvoidingView } from "react-native-keyboard-controller";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { setCodeLength } from "@/lib/app-lock";
 import { e2eeFor, retryUndecryptable } from "@/lib/e2ee";
 import { useT } from "@/lib/i18n";
 import { useSession } from "@/lib/session";
@@ -171,7 +170,6 @@ function PinDialog({ restoring: initial, prompted, onClose }: { restoring: boole
       if (restoring) await e.unlockWithPin(pin);
       else {
         setUser(await e.setBackupPin(pin));
-        if (user.hasAppLock) setCodeLength(pin.length);
       }
       void qc.invalidateQueries({ queryKey: ["recovery-key"] });
       retryUndecryptable();
