@@ -6,7 +6,6 @@ import {
   type GifDTO,
   type MenuCommand,
   type StickerDTO,
-  type MessageEffect,
   type TypingKind,
   MAX_UPLOAD_BYTES,
   albumIds,
@@ -44,7 +43,6 @@ import {
   RotateCcw,
   SendHorizontal,
   Smile,
-  Sparkles,
   Square,
   Sticker,
   TicketPlus,
@@ -128,7 +126,6 @@ const COMMAND_ICONS: Record<CommandName, LucideIcon> = {
   giphy: Film,
   sticker: Sticker,
   silent: BellOff,
-  effect: Sparkles,
   emoji: Smile,
   game: Gamepad2,
   play: Dices,
@@ -223,7 +220,6 @@ export function Composer({
     useComposerMode.getState().hand(slot, undefined);
   }, [handed, slot]);
   const [ephemeral, setEphemeral] = useState<EphemeralInput | null>(null);
-  const [messageEffect, setMessageEffect] = useState<MessageEffect | null>(null);
   const closeCamera = useCallback(() => setCamera(false), []);
   const [scheduling, setScheduling] = useState<"now" | "next" | null>(null);
   const [sendAt, setSendAt] = useState<Date | null>(null);
@@ -477,11 +473,9 @@ export function Composer({
       replyTo: mode?.kind === "reply" ? mode.message : undefined,
       ephemeral,
       file,
-      effect: file ? undefined : (messageEffect ?? undefined),
       silent: silent !== null,
     });
     setEphemeral(null);
-    if (!file) setMessageEffect(null);
     useDrafts.getState().set(slot, "");
     setText("");
     if (mode) cancel();
@@ -712,20 +706,6 @@ export function Composer({
             <NotebookPen className="size-4 shrink-0 text-stone-400" />
           </button>
         )}
-        {messageEffect && !editing && (
-          <div className="flex items-center gap-2 px-1 text-sm text-brand">
-            <Sparkles className="size-4" />
-            <span className="flex-1">{tr.composer.withEffect(tr.messages.effectNames[messageEffect])}</span>
-            <button
-              type="button"
-              onClick={() => setMessageEffect(null)}
-              aria-label={tr.composer.noEffect}
-              className="grid size-7 place-items-center rounded-full hover:bg-stone-500/10"
-            >
-              <X className="size-4" />
-            </button>
-          </div>
-        )}
         {chat?.vanish && !editing && (
           <div className="flex items-center gap-2 px-1 text-sm text-brand">
             <Ghost className="size-4" />
@@ -904,10 +884,6 @@ export function Composer({
                 onLocation={() => {
                   change("");
                   void sendLocation();
-                }}
-                onEffect={(chosen) => {
-                  change("");
-                  setMessageEffect(chosen);
                 }}
               />
             )}

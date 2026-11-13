@@ -422,11 +422,6 @@ export const MessageListQuery = PageQuery.extend({
 });
 export type MessageListQuery = z.infer<typeof MessageListQuery>;
 
-export const MessageEffect = z
-  .enum(["fire", "gift", "hearts", "confetti"])
-  .describe("How a text message shows: in flames, gift-wrapped until opened, or with hearts or confetti when it arrives");
-export type MessageEffect = z.infer<typeof MessageEffect>;
-
 export const ReactionGif = z.object({
   url: z.string().url(),
   width: z.number().int().nullable(),
@@ -443,7 +438,6 @@ export const MessageDTO = z.object({
   text: z.string().nullable(),
   entities: z.array(MessageEntity),
   spoiler: z.boolean(),
-  effect: MessageEffect.nullable(),
   silent: z.boolean().describe("Sent with `/silent`: it arrives without a notification or sound"),
   bump: z.boolean().describe("A bump: it brings the message in `replyTo` back to the bottom of the chat, as Messenger does"),
   vanish: z.boolean().describe("Sent in vanish mode: it disappears once the other person has read it and left the chat"),
@@ -486,7 +480,7 @@ export const MessageDTO = z.object({
     )
     .describe("One entry per emoji, sticker or GIF, oldest first; a person can add several different ones"),
   encryption: EncryptionDTO.nullable().describe(
-    "Set for end-to-end encrypted messages: `text`, `entities`, `spoiler` and `effect` are then empty and the content is in your device's envelope",
+    "Set for end-to-end encrypted messages: `text`, `entities` and `spoiler` are then empty and the content is in your device's envelope",
   ),
 });
 export type MessageDTO = z.infer<typeof MessageDTO>;
@@ -597,7 +591,6 @@ export const SendMessageInput = z
     commentsLimit: CommentsLimit.optional().describe("In a group, for its owner and admins: comments close after this many from other people"),
     commentsCloseIn: CommentsCloseIn.optional().describe("In a group, for its owner and admins: comments close this many seconds after posting"),
     spoiler: z.boolean().optional(),
-    effect: MessageEffect.optional().describe("Only with text"),
     silent: z.boolean().optional().describe("Deliver it without a notification or sound"),
     bump: z.boolean().optional().describe("Bump the message in `replyToId`: bring it back to the bottom of the chat, on its own"),
     ephemeral: EphemeralInput.optional().describe("Self-destruct after viewing, like Telegram's view-once and timers"),
@@ -630,8 +623,7 @@ export const SendMessageInput = z
         !v.location &&
         !v.checklist &&
         !v.game &&
-        !v.ephemeral &&
-        !v.effect),
+        !v.ephemeral),
     { message: "A bump needs `replyToId` and carries nothing else", path: ["bump"] },
   )
   .refine(
@@ -640,7 +632,6 @@ export const SendMessageInput = z
       (v.text === undefined &&
         v.entities === undefined &&
         v.spoiler === undefined &&
-        v.effect === undefined &&
         !v.gifId &&
         !v.stickerId &&
         !v.location &&
@@ -669,7 +660,6 @@ export const SendMessageInput = z
     path: ["attachmentId"],
   })
   .refine((v) => !v.stickerId || v.text === undefined, { message: "Stickers have no caption", path: ["text"] })
-  .refine((v) => !v.effect || v.text !== undefined, { message: "Effects are for text messages", path: ["effect"] })
   .refine((v) => entitiesFit(v.text ?? "", v.entities), {
     message: "Entities fall outside the text",
     path: ["entities"],

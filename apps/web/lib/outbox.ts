@@ -5,7 +5,6 @@ import type {
   EphemeralInput,
   GeoPoint,
   GifDTO,
-  MessageEffect,
   MessageEntity,
   ReplyPreview,
   StickerDTO,
@@ -38,7 +37,6 @@ export interface PendingMessage {
   replyTo: ReplyPreview | null;
   story?: StoryReply;
   spoiler: boolean;
-  effect?: MessageEffect;
   silent?: boolean;
   bump?: boolean;
   ephemeral: EphemeralInput | null;

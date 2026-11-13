@@ -40,7 +40,6 @@ describe("support chat", () => {
 
     const location = { location: { lat: -18.9, lng: 47.5 } };
     expect((await send(guest, chat.id, "I am here", location)).statusCode).toBe(400);
-    expect((await send(boss, chat.id, "Look", { effect: "confetti" })).statusCode).toBe(400);
     expect((await send(boss, chat.id, "Sure, here's a link")).statusCode).toBe(201);
   });
 

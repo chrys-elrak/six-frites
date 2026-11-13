@@ -12,7 +12,6 @@ import {
   type GameMoveDTO,
   type GeoPoint,
   type MessageDTO,
-  type MessageEffect,
   type MessageEntity,
   type MessageType,
   type GroupRole,
@@ -140,7 +139,6 @@ import { PackDialog } from "./pack-dialog";
 import { ReportDialog } from "./report-dialog";
 import { Styled } from "./rich-text";
 import { ReactionBar, ReactionChips, ReactionPicker, ReactionPopover, useQuickReactions } from "./reactions";
-import { EffectLayer } from "./message-effects";
 import { MessageMenu } from "./message-menu";
 import { MessageTiming } from "./message-timing";
 import { Sheet, type SheetAction } from "./sheet";
@@ -158,7 +156,6 @@ interface MsgRow {
   text: string | null;
   entities: MessageEntity[];
   spoiler: boolean;
-  effect: MessageEffect | null;
   replyTo: ReplyPreview | null;
   story: StoryReply | null;
   bump: boolean;
@@ -261,7 +258,6 @@ function buildRows(
         text: m.text,
         entities: m.entities,
         spoiler: m.spoiler,
-        effect: m.effect ?? null,
         replyTo: fresh(m.replyTo),
         story: m.story ?? null,
         bump: m.bump,
@@ -297,7 +293,6 @@ function buildRows(
           text: p.text,
           entities: p.entities,
           spoiler: p.spoiler,
-          effect: p.effect ?? null,
           replyTo: fresh(p.replyTo),
           story: p.story ?? null,
           bump: p.bump ?? false,
@@ -897,7 +892,6 @@ function Bubble({
   const chip = (spoiler: boolean) => (spoiler ? undefined : tr.messages.tapToShow);
   const note = !sealed && row.attachment?.data.kind === "video_note" && !row.deleted;
   const sticker = !sealed && !row.deleted ? row.sticker : null;
-  const fx = !sealed && !row.deleted && row.type === "text" ? row.effect : null;
   const loose = !sealed && !row.deleted && row.attachment?.source === "server" && !!row.attachment.file?.sticker;
   const hasText = !!row.text || row.deleted || row.locked;
   const deletedBy = row.message?.deletedBy;
@@ -999,11 +993,10 @@ function Bubble({
               {...press}
               onClick={onTap}
               onMouseDown={(e) => reactable && e.detail > 1 && e.preventDefault()}
-              className={`${fx || ((visual || loose) && !hasText) ? "relative " : ""}${radius} ${tone} ${dashes} ${jumbo || note || sticker || loose ? "" : visual ? "p-1" : "px-3 py-1.5"} max-w-full transition-shadow [-webkit-touch-callout:none] pointer-coarse:select-none ${
+              className={`${(visual || loose) && !hasText ? "relative " : ""}${radius} ${tone} ${dashes} ${jumbo || note || sticker || loose ? "" : visual ? "p-1" : "px-3 py-1.5"} max-w-full transition-shadow [-webkit-touch-callout:none] pointer-coarse:select-none ${
                 row.delivery === "failed" ? "opacity-60" : ""
               } ${highlighted ? "ring-4 ring-sky-400/60" : ""}`}
             >
-              {fx && <EffectLayer effect={fx} id={row.key} />}
               {row.bump && !row.deleted && (
                 <span className="mb-1 flex items-center gap-1 text-xs font-medium opacity-80">
                   <ArrowUp className="size-3.5" />

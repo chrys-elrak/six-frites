@@ -240,40 +240,6 @@ textarea,
   -webkit-touch-callout: default;
 }
 
-@keyframes fx-glow {
-  0%,
-  100% {
-    box-shadow: 0 0 8px 1px rgb(249 115 22 / 0.55);
-  }
-  50% {
-    box-shadow: 0 0 18px 4px rgb(239 68 68 / 0.75);
-  }
-}
-
-@keyframes fx-flicker {
-  0%,
-  100% {
-    transform: translateY(0) scale(1) rotate(-4deg);
-  }
-  50% {
-    transform: translateY(-3px) scale(1.15) rotate(4deg);
-  }
-}
-
-@keyframes fx-wiggle {
-  0%,
-  70%,
-  100% {
-    transform: rotate(0);
-  }
-  80% {
-    transform: rotate(-12deg) scale(1.1);
-  }
-  90% {
-    transform: rotate(12deg) scale(1.1);
-  }
-}
-
 @keyframes fx-fly {
   0% {
     opacity: 1;

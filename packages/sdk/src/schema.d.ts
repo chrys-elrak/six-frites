@@ -4833,11 +4833,6 @@ export interface paths {
                                     value?: string;
                                 }[];
                                 spoiler: boolean;
-                                /**
-                                 * @description How a text message shows: in flames, gift-wrapped until opened, or with hearts or confetti when it arrives
-                                 * @enum {string|null}
-                                 */
-                                effect: "fire" | "gift" | "hearts" | "confetti" | null;
                                 /** @description Sent with `/silent`: it arrives without a notification or sound */
                                 silent: boolean;
                                 /** @description A bump: it brings the message in `replyTo` back to the bottom of the chat, as Messenger does */
@@ -5208,7 +5203,7 @@ export interface paths {
                                         height: number | null;
                                     } | null;
                                 }[];
-                                /** @description Set for end-to-end encrypted messages: `text`, `entities`, `spoiler` and `effect` are then empty and the content is in your device's envelope */
+                                /** @description Set for end-to-end encrypted messages: `text`, `entities` and `spoiler` are then empty and the content is in your device's envelope */
                                 encryption: {
                                     /** @description The device that encrypted it; open the envelope with your session with it */
                                     senderDeviceId: string | null;
@@ -5286,11 +5281,6 @@ export interface paths {
                                     value?: string;
                                 }[];
                                 spoiler: boolean;
-                                /**
-                                 * @description How a text message shows: in flames, gift-wrapped until opened, or with hearts or confetti when it arrives
-                                 * @enum {string|null}
-                                 */
-                                effect: "fire" | "gift" | "hearts" | "confetti" | null;
                                 /** @description Sent with `/silent`: it arrives without a notification or sound */
                                 silent: boolean;
                                 /** @description A bump: it brings the message in `replyTo` back to the bottom of the chat, as Messenger does */
@@ -5661,7 +5651,7 @@ export interface paths {
                                         height: number | null;
                                     } | null;
                                 }[];
-                                /** @description Set for end-to-end encrypted messages: `text`, `entities`, `spoiler` and `effect` are then empty and the content is in your device's envelope */
+                                /** @description Set for end-to-end encrypted messages: `text`, `entities` and `spoiler` are then empty and the content is in your device's envelope */
                                 encryption: {
                                     /** @description The device that encrypted it; open the envelope with your session with it */
                                     senderDeviceId: string | null;
@@ -5798,11 +5788,6 @@ export interface paths {
                                 value?: string;
                             }[];
                             spoiler: boolean;
-                            /**
-                             * @description How a text message shows: in flames, gift-wrapped until opened, or with hearts or confetti when it arrives
-                             * @enum {string|null}
-                             */
-                            effect: "fire" | "gift" | "hearts" | "confetti" | null;
                             /** @description Sent with `/silent`: it arrives without a notification or sound */
                             silent: boolean;
                             /** @description A bump: it brings the message in `replyTo` back to the bottom of the chat, as Messenger does */
@@ -6173,7 +6158,7 @@ export interface paths {
                                     height: number | null;
                                 } | null;
                             }[];
-                            /** @description Set for end-to-end encrypted messages: `text`, `entities`, `spoiler` and `effect` are then empty and the content is in your device's envelope */
+                            /** @description Set for end-to-end encrypted messages: `text`, `entities` and `spoiler` are then empty and the content is in your device's envelope */
                             encryption: {
                                 /** @description The device that encrypted it; open the envelope with your session with it */
                                 senderDeviceId: string | null;
@@ -6307,11 +6292,6 @@ export interface paths {
                                     value?: string;
                                 }[];
                                 spoiler: boolean;
-                                /**
-                                 * @description How a text message shows: in flames, gift-wrapped until opened, or with hearts or confetti when it arrives
-                                 * @enum {string|null}
-                                 */
-                                effect: "fire" | "gift" | "hearts" | "confetti" | null;
                                 /** @description Sent with `/silent`: it arrives without a notification or sound */
                                 silent: boolean;
                                 /** @description A bump: it brings the message in `replyTo` back to the bottom of the chat, as Messenger does */
@@ -6682,7 +6662,7 @@ export interface paths {
                                         height: number | null;
                                     } | null;
                                 }[];
-                                /** @description Set for end-to-end encrypted messages: `text`, `entities`, `spoiler` and `effect` are then empty and the content is in your device's envelope */
+                                /** @description Set for end-to-end encrypted messages: `text`, `entities` and `spoiler` are then empty and the content is in your device's envelope */
                                 encryption: {
                                     /** @description The device that encrypted it; open the envelope with your session with it */
                                     senderDeviceId: string | null;
@@ -6760,11 +6740,6 @@ export interface paths {
                                     value?: string;
                                 }[];
                                 spoiler: boolean;
-                                /**
-                                 * @description How a text message shows: in flames, gift-wrapped until opened, or with hearts or confetti when it arrives
-                                 * @enum {string|null}
-                                 */
-                                effect: "fire" | "gift" | "hearts" | "confetti" | null;
                                 /** @description Sent with `/silent`: it arrives without a notification or sound */
                                 silent: boolean;
                                 /** @description A bump: it brings the message in `replyTo` back to the bottom of the chat, as Messenger does */
@@ -7135,7 +7110,7 @@ export interface paths {
                                         height: number | null;
                                     } | null;
                                 }[];
-                                /** @description Set for end-to-end encrypted messages: `text`, `entities`, `spoiler` and `effect` are then empty and the content is in your device's envelope */
+                                /** @description Set for end-to-end encrypted messages: `text`, `entities` and `spoiler` are then empty and the content is in your device's envelope */
                                 encryption: {
                                     /** @description The device that encrypted it; open the envelope with your session with it */
                                     senderDeviceId: string | null;
@@ -7306,11 +7281,6 @@ export interface paths {
                                     value?: string;
                                 }[];
                                 spoiler: boolean;
-                                /**
-                                 * @description How a text message shows: in flames, gift-wrapped until opened, or with hearts or confetti when it arrives
-                                 * @enum {string|null}
-                                 */
-                                effect: "fire" | "gift" | "hearts" | "confetti" | null;
                                 /** @description Sent with `/silent`: it arrives without a notification or sound */
                                 silent: boolean;
                                 /** @description A bump: it brings the message in `replyTo` back to the bottom of the chat, as Messenger does */
@@ -7681,7 +7651,7 @@ export interface paths {
                                         height: number | null;
                                     } | null;
                                 }[];
-                                /** @description Set for end-to-end encrypted messages: `text`, `entities`, `spoiler` and `effect` are then empty and the content is in your device's envelope */
+                                /** @description Set for end-to-end encrypted messages: `text`, `entities` and `spoiler` are then empty and the content is in your device's envelope */
                                 encryption: {
                                     /** @description The device that encrypted it; open the envelope with your session with it */
                                     senderDeviceId: string | null;
@@ -7759,11 +7729,6 @@ export interface paths {
                                     value?: string;
                                 }[];
                                 spoiler: boolean;
-                                /**
-                                 * @description How a text message shows: in flames, gift-wrapped until opened, or with hearts or confetti when it arrives
-                                 * @enum {string|null}
-                                 */
-                                effect: "fire" | "gift" | "hearts" | "confetti" | null;
                                 /** @description Sent with `/silent`: it arrives without a notification or sound */
                                 silent: boolean;
                                 /** @description A bump: it brings the message in `replyTo` back to the bottom of the chat, as Messenger does */
@@ -8134,7 +8099,7 @@ export interface paths {
                                         height: number | null;
                                     } | null;
                                 }[];
-                                /** @description Set for end-to-end encrypted messages: `text`, `entities`, `spoiler` and `effect` are then empty and the content is in your device's envelope */
+                                /** @description Set for end-to-end encrypted messages: `text`, `entities` and `spoiler` are then empty and the content is in your device's envelope */
                                 encryption: {
                                     /** @description The device that encrypted it; open the envelope with your session with it */
                                     senderDeviceId: string | null;
@@ -8303,11 +8268,6 @@ export interface paths {
                                         value?: string;
                                     }[];
                                     spoiler: boolean;
-                                    /**
-                                     * @description How a text message shows: in flames, gift-wrapped until opened, or with hearts or confetti when it arrives
-                                     * @enum {string|null}
-                                     */
-                                    effect: "fire" | "gift" | "hearts" | "confetti" | null;
                                     /** @description Sent with `/silent`: it arrives without a notification or sound */
                                     silent: boolean;
                                     /** @description A bump: it brings the message in `replyTo` back to the bottom of the chat, as Messenger does */
@@ -8678,7 +8638,7 @@ export interface paths {
                                             height: number | null;
                                         } | null;
                                     }[];
-                                    /** @description Set for end-to-end encrypted messages: `text`, `entities`, `spoiler` and `effect` are then empty and the content is in your device's envelope */
+                                    /** @description Set for end-to-end encrypted messages: `text`, `entities` and `spoiler` are then empty and the content is in your device's envelope */
                                     encryption: {
                                         /** @description The device that encrypted it; open the envelope with your session with it */
                                         senderDeviceId: string | null;
@@ -8756,11 +8716,6 @@ export interface paths {
                                         value?: string;
                                     }[];
                                     spoiler: boolean;
-                                    /**
-                                     * @description How a text message shows: in flames, gift-wrapped until opened, or with hearts or confetti when it arrives
-                                     * @enum {string|null}
-                                     */
-                                    effect: "fire" | "gift" | "hearts" | "confetti" | null;
                                     /** @description Sent with `/silent`: it arrives without a notification or sound */
                                     silent: boolean;
                                     /** @description A bump: it brings the message in `replyTo` back to the bottom of the chat, as Messenger does */
@@ -9131,7 +9086,7 @@ export interface paths {
                                             height: number | null;
                                         } | null;
                                     }[];
-                                    /** @description Set for end-to-end encrypted messages: `text`, `entities`, `spoiler` and `effect` are then empty and the content is in your device's envelope */
+                                    /** @description Set for end-to-end encrypted messages: `text`, `entities` and `spoiler` are then empty and the content is in your device's envelope */
                                     encryption: {
                                         /** @description The device that encrypted it; open the envelope with your session with it */
                                         senderDeviceId: string | null;
@@ -9301,11 +9256,6 @@ export interface paths {
                                     value?: string;
                                 }[];
                                 spoiler: boolean;
-                                /**
-                                 * @description How a text message shows: in flames, gift-wrapped until opened, or with hearts or confetti when it arrives
-                                 * @enum {string|null}
-                                 */
-                                effect: "fire" | "gift" | "hearts" | "confetti" | null;
                                 /** @description Sent with `/silent`: it arrives without a notification or sound */
                                 silent: boolean;
                                 /** @description A bump: it brings the message in `replyTo` back to the bottom of the chat, as Messenger does */
@@ -9676,7 +9626,7 @@ export interface paths {
                                         height: number | null;
                                     } | null;
                                 }[];
-                                /** @description Set for end-to-end encrypted messages: `text`, `entities`, `spoiler` and `effect` are then empty and the content is in your device's envelope */
+                                /** @description Set for end-to-end encrypted messages: `text`, `entities` and `spoiler` are then empty and the content is in your device's envelope */
                                 encryption: {
                                     /** @description The device that encrypted it; open the envelope with your session with it */
                                     senderDeviceId: string | null;
@@ -9754,11 +9704,6 @@ export interface paths {
                                     value?: string;
                                 }[];
                                 spoiler: boolean;
-                                /**
-                                 * @description How a text message shows: in flames, gift-wrapped until opened, or with hearts or confetti when it arrives
-                                 * @enum {string|null}
-                                 */
-                                effect: "fire" | "gift" | "hearts" | "confetti" | null;
                                 /** @description Sent with `/silent`: it arrives without a notification or sound */
                                 silent: boolean;
                                 /** @description A bump: it brings the message in `replyTo` back to the bottom of the chat, as Messenger does */
@@ -10129,7 +10074,7 @@ export interface paths {
                                         height: number | null;
                                     } | null;
                                 }[];
-                                /** @description Set for end-to-end encrypted messages: `text`, `entities`, `spoiler` and `effect` are then empty and the content is in your device's envelope */
+                                /** @description Set for end-to-end encrypted messages: `text`, `entities` and `spoiler` are then empty and the content is in your device's envelope */
                                 encryption: {
                                     /** @description The device that encrypted it; open the envelope with your session with it */
                                     senderDeviceId: string | null;
@@ -10352,11 +10297,6 @@ export interface paths {
                                     value?: string;
                                 }[];
                                 spoiler: boolean;
-                                /**
-                                 * @description How a text message shows: in flames, gift-wrapped until opened, or with hearts or confetti when it arrives
-                                 * @enum {string|null}
-                                 */
-                                effect: "fire" | "gift" | "hearts" | "confetti" | null;
                                 /** @description Sent with `/silent`: it arrives without a notification or sound */
                                 silent: boolean;
                                 /** @description A bump: it brings the message in `replyTo` back to the bottom of the chat, as Messenger does */
@@ -10727,7 +10667,7 @@ export interface paths {
                                         height: number | null;
                                     } | null;
                                 }[];
-                                /** @description Set for end-to-end encrypted messages: `text`, `entities`, `spoiler` and `effect` are then empty and the content is in your device's envelope */
+                                /** @description Set for end-to-end encrypted messages: `text`, `entities` and `spoiler` are then empty and the content is in your device's envelope */
                                 encryption: {
                                     /** @description The device that encrypted it; open the envelope with your session with it */
                                     senderDeviceId: string | null;
@@ -10805,11 +10745,6 @@ export interface paths {
                                     value?: string;
                                 }[];
                                 spoiler: boolean;
-                                /**
-                                 * @description How a text message shows: in flames, gift-wrapped until opened, or with hearts or confetti when it arrives
-                                 * @enum {string|null}
-                                 */
-                                effect: "fire" | "gift" | "hearts" | "confetti" | null;
                                 /** @description Sent with `/silent`: it arrives without a notification or sound */
                                 silent: boolean;
                                 /** @description A bump: it brings the message in `replyTo` back to the bottom of the chat, as Messenger does */
@@ -11180,7 +11115,7 @@ export interface paths {
                                         height: number | null;
                                     } | null;
                                 }[];
-                                /** @description Set for end-to-end encrypted messages: `text`, `entities`, `spoiler` and `effect` are then empty and the content is in your device's envelope */
+                                /** @description Set for end-to-end encrypted messages: `text`, `entities` and `spoiler` are then empty and the content is in your device's envelope */
                                 encryption: {
                                     /** @description The device that encrypted it; open the envelope with your session with it */
                                     senderDeviceId: string | null;
@@ -11419,11 +11354,6 @@ export interface paths {
                                 value?: string;
                             }[];
                             spoiler: boolean;
-                            /**
-                             * @description How a text message shows: in flames, gift-wrapped until opened, or with hearts or confetti when it arrives
-                             * @enum {string|null}
-                             */
-                            effect: "fire" | "gift" | "hearts" | "confetti" | null;
                             /** @description Sent with `/silent`: it arrives without a notification or sound */
                             silent: boolean;
                             /** @description A bump: it brings the message in `replyTo` back to the bottom of the chat, as Messenger does */
@@ -11794,7 +11724,7 @@ export interface paths {
                                     height: number | null;
                                 } | null;
                             }[];
-                            /** @description Set for end-to-end encrypted messages: `text`, `entities`, `spoiler` and `effect` are then empty and the content is in your device's envelope */
+                            /** @description Set for end-to-end encrypted messages: `text`, `entities` and `spoiler` are then empty and the content is in your device's envelope */
                             encryption: {
                                 /** @description The device that encrypted it; open the envelope with your session with it */
                                 senderDeviceId: string | null;
@@ -11900,11 +11830,6 @@ export interface paths {
                                 value?: string;
                             }[];
                             spoiler: boolean;
-                            /**
-                             * @description How a text message shows: in flames, gift-wrapped until opened, or with hearts or confetti when it arrives
-                             * @enum {string|null}
-                             */
-                            effect: "fire" | "gift" | "hearts" | "confetti" | null;
                             /** @description Sent with `/silent`: it arrives without a notification or sound */
                             silent: boolean;
                             /** @description A bump: it brings the message in `replyTo` back to the bottom of the chat, as Messenger does */
@@ -12275,7 +12200,7 @@ export interface paths {
                                     height: number | null;
                                 } | null;
                             }[];
-                            /** @description Set for end-to-end encrypted messages: `text`, `entities`, `spoiler` and `effect` are then empty and the content is in your device's envelope */
+                            /** @description Set for end-to-end encrypted messages: `text`, `entities` and `spoiler` are then empty and the content is in your device's envelope */
                             encryption: {
                                 /** @description The device that encrypted it; open the envelope with your session with it */
                                 senderDeviceId: string | null;
@@ -12376,11 +12301,6 @@ export interface paths {
                                 value?: string;
                             }[];
                             spoiler: boolean;
-                            /**
-                             * @description How a text message shows: in flames, gift-wrapped until opened, or with hearts or confetti when it arrives
-                             * @enum {string|null}
-                             */
-                            effect: "fire" | "gift" | "hearts" | "confetti" | null;
                             /** @description Sent with `/silent`: it arrives without a notification or sound */
                             silent: boolean;
                             /** @description A bump: it brings the message in `replyTo` back to the bottom of the chat, as Messenger does */
@@ -12751,7 +12671,7 @@ export interface paths {
                                     height: number | null;
                                 } | null;
                             }[];
-                            /** @description Set for end-to-end encrypted messages: `text`, `entities`, `spoiler` and `effect` are then empty and the content is in your device's envelope */
+                            /** @description Set for end-to-end encrypted messages: `text`, `entities` and `spoiler` are then empty and the content is in your device's envelope */
                             encryption: {
                                 /** @description The device that encrypted it; open the envelope with your session with it */
                                 senderDeviceId: string | null;
@@ -12848,11 +12768,6 @@ export interface paths {
                                 value?: string;
                             }[];
                             spoiler: boolean;
-                            /**
-                             * @description How a text message shows: in flames, gift-wrapped until opened, or with hearts or confetti when it arrives
-                             * @enum {string|null}
-                             */
-                            effect: "fire" | "gift" | "hearts" | "confetti" | null;
                             /** @description Sent with `/silent`: it arrives without a notification or sound */
                             silent: boolean;
                             /** @description A bump: it brings the message in `replyTo` back to the bottom of the chat, as Messenger does */
@@ -13223,7 +13138,7 @@ export interface paths {
                                     height: number | null;
                                 } | null;
                             }[];
-                            /** @description Set for end-to-end encrypted messages: `text`, `entities`, `spoiler` and `effect` are then empty and the content is in your device's envelope */
+                            /** @description Set for end-to-end encrypted messages: `text`, `entities` and `spoiler` are then empty and the content is in your device's envelope */
                             encryption: {
                                 /** @description The device that encrypted it; open the envelope with your session with it */
                                 senderDeviceId: string | null;
@@ -13323,11 +13238,6 @@ export interface paths {
                                 value?: string;
                             }[];
                             spoiler: boolean;
-                            /**
-                             * @description How a text message shows: in flames, gift-wrapped until opened, or with hearts or confetti when it arrives
-                             * @enum {string|null}
-                             */
-                            effect: "fire" | "gift" | "hearts" | "confetti" | null;
                             /** @description Sent with `/silent`: it arrives without a notification or sound */
                             silent: boolean;
                             /** @description A bump: it brings the message in `replyTo` back to the bottom of the chat, as Messenger does */
@@ -13698,7 +13608,7 @@ export interface paths {
                                     height: number | null;
                                 } | null;
                             }[];
-                            /** @description Set for end-to-end encrypted messages: `text`, `entities`, `spoiler` and `effect` are then empty and the content is in your device's envelope */
+                            /** @description Set for end-to-end encrypted messages: `text`, `entities` and `spoiler` are then empty and the content is in your device's envelope */
                             encryption: {
                                 /** @description The device that encrypted it; open the envelope with your session with it */
                                 senderDeviceId: string | null;
@@ -13821,11 +13731,6 @@ export interface paths {
                                 value?: string;
                             }[];
                             spoiler: boolean;
-                            /**
-                             * @description How a text message shows: in flames, gift-wrapped until opened, or with hearts or confetti when it arrives
-                             * @enum {string|null}
-                             */
-                            effect: "fire" | "gift" | "hearts" | "confetti" | null;
                             /** @description Sent with `/silent`: it arrives without a notification or sound */
                             silent: boolean;
                             /** @description A bump: it brings the message in `replyTo` back to the bottom of the chat, as Messenger does */
@@ -14196,7 +14101,7 @@ export interface paths {
                                     height: number | null;
                                 } | null;
                             }[];
-                            /** @description Set for end-to-end encrypted messages: `text`, `entities`, `spoiler` and `effect` are then empty and the content is in your device's envelope */
+                            /** @description Set for end-to-end encrypted messages: `text`, `entities` and `spoiler` are then empty and the content is in your device's envelope */
                             encryption: {
                                 /** @description The device that encrypted it; open the envelope with your session with it */
                                 senderDeviceId: string | null;
@@ -14292,11 +14197,6 @@ export interface paths {
                                     value?: string;
                                 }[];
                                 spoiler: boolean;
-                                /**
-                                 * @description How a text message shows: in flames, gift-wrapped until opened, or with hearts or confetti when it arrives
-                                 * @enum {string|null}
-                                 */
-                                effect: "fire" | "gift" | "hearts" | "confetti" | null;
                                 /** @description Sent with `/silent`: it arrives without a notification or sound */
                                 silent: boolean;
                                 /** @description A bump: it brings the message in `replyTo` back to the bottom of the chat, as Messenger does */
@@ -14667,7 +14567,7 @@ export interface paths {
                                         height: number | null;
                                     } | null;
                                 }[];
-                                /** @description Set for end-to-end encrypted messages: `text`, `entities`, `spoiler` and `effect` are then empty and the content is in your device's envelope */
+                                /** @description Set for end-to-end encrypted messages: `text`, `entities` and `spoiler` are then empty and the content is in your device's envelope */
                                 encryption: {
                                     /** @description The device that encrypted it; open the envelope with your session with it */
                                     senderDeviceId: string | null;
@@ -14768,11 +14668,6 @@ export interface paths {
                                 value?: string;
                             }[];
                             spoiler: boolean;
-                            /**
-                             * @description How a text message shows: in flames, gift-wrapped until opened, or with hearts or confetti when it arrives
-                             * @enum {string|null}
-                             */
-                            effect: "fire" | "gift" | "hearts" | "confetti" | null;
                             /** @description Sent with `/silent`: it arrives without a notification or sound */
                             silent: boolean;
                             /** @description A bump: it brings the message in `replyTo` back to the bottom of the chat, as Messenger does */
@@ -15143,7 +15038,7 @@ export interface paths {
                                     height: number | null;
                                 } | null;
                             }[];
-                            /** @description Set for end-to-end encrypted messages: `text`, `entities`, `spoiler` and `effect` are then empty and the content is in your device's envelope */
+                            /** @description Set for end-to-end encrypted messages: `text`, `entities` and `spoiler` are then empty and the content is in your device's envelope */
                             encryption: {
                                 /** @description The device that encrypted it; open the envelope with your session with it */
                                 senderDeviceId: string | null;
@@ -15238,11 +15133,6 @@ export interface paths {
                                 value?: string;
                             }[];
                             spoiler: boolean;
-                            /**
-                             * @description How a text message shows: in flames, gift-wrapped until opened, or with hearts or confetti when it arrives
-                             * @enum {string|null}
-                             */
-                            effect: "fire" | "gift" | "hearts" | "confetti" | null;
                             /** @description Sent with `/silent`: it arrives without a notification or sound */
                             silent: boolean;
                             /** @description A bump: it brings the message in `replyTo` back to the bottom of the chat, as Messenger does */
@@ -15613,7 +15503,7 @@ export interface paths {
                                     height: number | null;
                                 } | null;
                             }[];
-                            /** @description Set for end-to-end encrypted messages: `text`, `entities`, `spoiler` and `effect` are then empty and the content is in your device's envelope */
+                            /** @description Set for end-to-end encrypted messages: `text`, `entities` and `spoiler` are then empty and the content is in your device's envelope */
                             encryption: {
                                 /** @description The device that encrypted it; open the envelope with your session with it */
                                 senderDeviceId: string | null;
@@ -15708,11 +15598,6 @@ export interface paths {
                                 value?: string;
                             }[];
                             spoiler: boolean;
-                            /**
-                             * @description How a text message shows: in flames, gift-wrapped until opened, or with hearts or confetti when it arrives
-                             * @enum {string|null}
-                             */
-                            effect: "fire" | "gift" | "hearts" | "confetti" | null;
                             /** @description Sent with `/silent`: it arrives without a notification or sound */
                             silent: boolean;
                             /** @description A bump: it brings the message in `replyTo` back to the bottom of the chat, as Messenger does */
@@ -16083,7 +15968,7 @@ export interface paths {
                                     height: number | null;
                                 } | null;
                             }[];
-                            /** @description Set for end-to-end encrypted messages: `text`, `entities`, `spoiler` and `effect` are then empty and the content is in your device's envelope */
+                            /** @description Set for end-to-end encrypted messages: `text`, `entities` and `spoiler` are then empty and the content is in your device's envelope */
                             encryption: {
                                 /** @description The device that encrypted it; open the envelope with your session with it */
                                 senderDeviceId: string | null;
@@ -16209,11 +16094,6 @@ export interface paths {
                                 value?: string;
                             }[];
                             spoiler: boolean;
-                            /**
-                             * @description How a text message shows: in flames, gift-wrapped until opened, or with hearts or confetti when it arrives
-                             * @enum {string|null}
-                             */
-                            effect: "fire" | "gift" | "hearts" | "confetti" | null;
                             /** @description Sent with `/silent`: it arrives without a notification or sound */
                             silent: boolean;
                             /** @description A bump: it brings the message in `replyTo` back to the bottom of the chat, as Messenger does */
@@ -16584,7 +16464,7 @@ export interface paths {
                                     height: number | null;
                                 } | null;
                             }[];
-                            /** @description Set for end-to-end encrypted messages: `text`, `entities`, `spoiler` and `effect` are then empty and the content is in your device's envelope */
+                            /** @description Set for end-to-end encrypted messages: `text`, `entities` and `spoiler` are then empty and the content is in your device's envelope */
                             encryption: {
                                 /** @description The device that encrypted it; open the envelope with your session with it */
                                 senderDeviceId: string | null;
@@ -16689,11 +16569,6 @@ export interface paths {
                                 value?: string;
                             }[];
                             spoiler: boolean;
-                            /**
-                             * @description How a text message shows: in flames, gift-wrapped until opened, or with hearts or confetti when it arrives
-                             * @enum {string|null}
-                             */
-                            effect: "fire" | "gift" | "hearts" | "confetti" | null;
                             /** @description Sent with `/silent`: it arrives without a notification or sound */
                             silent: boolean;
                             /** @description A bump: it brings the message in `replyTo` back to the bottom of the chat, as Messenger does */
@@ -17064,7 +16939,7 @@ export interface paths {
                                     height: number | null;
                                 } | null;
                             }[];
-                            /** @description Set for end-to-end encrypted messages: `text`, `entities`, `spoiler` and `effect` are then empty and the content is in your device's envelope */
+                            /** @description Set for end-to-end encrypted messages: `text`, `entities` and `spoiler` are then empty and the content is in your device's envelope */
                             encryption: {
                                 /** @description The device that encrypted it; open the envelope with your session with it */
                                 senderDeviceId: string | null;
@@ -17211,11 +17086,6 @@ export interface paths {
                                     value?: string;
                                 }[];
                                 spoiler: boolean;
-                                /**
-                                 * @description How a text message shows: in flames, gift-wrapped until opened, or with hearts or confetti when it arrives
-                                 * @enum {string|null}
-                                 */
-                                effect: "fire" | "gift" | "hearts" | "confetti" | null;
                                 /** @description Sent with `/silent`: it arrives without a notification or sound */
                                 silent: boolean;
                                 /** @description A bump: it brings the message in `replyTo` back to the bottom of the chat, as Messenger does */
@@ -17586,7 +17456,7 @@ export interface paths {
                                         height: number | null;
                                     } | null;
                                 }[];
-                                /** @description Set for end-to-end encrypted messages: `text`, `entities`, `spoiler` and `effect` are then empty and the content is in your device's envelope */
+                                /** @description Set for end-to-end encrypted messages: `text`, `entities` and `spoiler` are then empty and the content is in your device's envelope */
                                 encryption: {
                                     /** @description The device that encrypted it; open the envelope with your session with it */
                                     senderDeviceId: string | null;
@@ -17762,11 +17632,6 @@ export interface paths {
                         /** @description In a group, for its owner and admins: comments close this many seconds after posting */
                         commentsCloseIn?: number;
                         spoiler?: boolean;
-                        /**
-                         * @description Only with text
-                         * @enum {string}
-                         */
-                        effect?: "fire" | "gift" | "hearts" | "confetti";
                         /** @description Deliver it without a notification or sound */
                         silent?: boolean;
                         /** @description Bump the message in `replyToId`: bring it back to the bottom of the chat, on its own */
@@ -17839,11 +17704,6 @@ export interface paths {
                                 value?: string;
                             }[];
                             spoiler: boolean;
-                            /**
-                             * @description How a text message shows: in flames, gift-wrapped until opened, or with hearts or confetti when it arrives
-                             * @enum {string|null}
-                             */
-                            effect: "fire" | "gift" | "hearts" | "confetti" | null;
                             /** @description Sent with `/silent`: it arrives without a notification or sound */
                             silent: boolean;
                             /** @description A bump: it brings the message in `replyTo` back to the bottom of the chat, as Messenger does */
@@ -18214,7 +18074,7 @@ export interface paths {
                                     height: number | null;
                                 } | null;
                             }[];
-                            /** @description Set for end-to-end encrypted messages: `text`, `entities`, `spoiler` and `effect` are then empty and the content is in your device's envelope */
+                            /** @description Set for end-to-end encrypted messages: `text`, `entities` and `spoiler` are then empty and the content is in your device's envelope */
                             encryption: {
                                 /** @description The device that encrypted it; open the envelope with your session with it */
                                 senderDeviceId: string | null;
@@ -18537,11 +18397,6 @@ export interface paths {
                         /** @description In a group, for its owner and admins: comments close this many seconds after posting */
                         commentsCloseIn?: number;
                         spoiler?: boolean;
-                        /**
-                         * @description Only with text
-                         * @enum {string}
-                         */
-                        effect?: "fire" | "gift" | "hearts" | "confetti";
                         /** @description Deliver it without a notification or sound */
                         silent?: boolean;
                         /** @description Bump the message in `replyToId`: bring it back to the bottom of the chat, on its own */
@@ -18977,11 +18832,6 @@ export interface paths {
                                 value?: string;
                             }[];
                             spoiler: boolean;
-                            /**
-                             * @description How a text message shows: in flames, gift-wrapped until opened, or with hearts or confetti when it arrives
-                             * @enum {string|null}
-                             */
-                            effect: "fire" | "gift" | "hearts" | "confetti" | null;
                             /** @description Sent with `/silent`: it arrives without a notification or sound */
                             silent: boolean;
                             /** @description A bump: it brings the message in `replyTo` back to the bottom of the chat, as Messenger does */
@@ -19352,7 +19202,7 @@ export interface paths {
                                     height: number | null;
                                 } | null;
                             }[];
-                            /** @description Set for end-to-end encrypted messages: `text`, `entities`, `spoiler` and `effect` are then empty and the content is in your device's envelope */
+                            /** @description Set for end-to-end encrypted messages: `text`, `entities` and `spoiler` are then empty and the content is in your device's envelope */
                             encryption: {
                                 /** @description The device that encrypted it; open the envelope with your session with it */
                                 senderDeviceId: string | null;
@@ -20095,11 +19945,6 @@ export interface paths {
                                         value?: string;
                                     }[];
                                     spoiler: boolean;
-                                    /**
-                                     * @description How a text message shows: in flames, gift-wrapped until opened, or with hearts or confetti when it arrives
-                                     * @enum {string|null}
-                                     */
-                                    effect: "fire" | "gift" | "hearts" | "confetti" | null;
                                     /** @description Sent with `/silent`: it arrives without a notification or sound */
                                     silent: boolean;
                                     /** @description A bump: it brings the message in `replyTo` back to the bottom of the chat, as Messenger does */
@@ -20470,7 +20315,7 @@ export interface paths {
                                             height: number | null;
                                         } | null;
                                     }[];
-                                    /** @description Set for end-to-end encrypted messages: `text`, `entities`, `spoiler` and `effect` are then empty and the content is in your device's envelope */
+                                    /** @description Set for end-to-end encrypted messages: `text`, `entities` and `spoiler` are then empty and the content is in your device's envelope */
                                     encryption: {
                                         /** @description The device that encrypted it; open the envelope with your session with it */
                                         senderDeviceId: string | null;
@@ -20530,11 +20375,6 @@ export interface paths {
                                         value?: string;
                                     }[];
                                     spoiler: boolean;
-                                    /**
-                                     * @description How a text message shows: in flames, gift-wrapped until opened, or with hearts or confetti when it arrives
-                                     * @enum {string|null}
-                                     */
-                                    effect: "fire" | "gift" | "hearts" | "confetti" | null;
                                     /** @description Sent with `/silent`: it arrives without a notification or sound */
                                     silent: boolean;
                                     /** @description A bump: it brings the message in `replyTo` back to the bottom of the chat, as Messenger does */
@@ -20905,7 +20745,7 @@ export interface paths {
                                             height: number | null;
                                         } | null;
                                     }[];
-                                    /** @description Set for end-to-end encrypted messages: `text`, `entities`, `spoiler` and `effect` are then empty and the content is in your device's envelope */
+                                    /** @description Set for end-to-end encrypted messages: `text`, `entities` and `spoiler` are then empty and the content is in your device's envelope */
                                     encryption: {
                                         /** @description The device that encrypted it; open the envelope with your session with it */
                                         senderDeviceId: string | null;
@@ -21035,11 +20875,6 @@ export interface paths {
                                             value?: string;
                                         }[];
                                         spoiler: boolean;
-                                        /**
-                                         * @description How a text message shows: in flames, gift-wrapped until opened, or with hearts or confetti when it arrives
-                                         * @enum {string|null}
-                                         */
-                                        effect: "fire" | "gift" | "hearts" | "confetti" | null;
                                         /** @description Sent with `/silent`: it arrives without a notification or sound */
                                         silent: boolean;
                                         /** @description A bump: it brings the message in `replyTo` back to the bottom of the chat, as Messenger does */
@@ -21410,7 +21245,7 @@ export interface paths {
                                                 height: number | null;
                                             } | null;
                                         }[];
-                                        /** @description Set for end-to-end encrypted messages: `text`, `entities`, `spoiler` and `effect` are then empty and the content is in your device's envelope */
+                                        /** @description Set for end-to-end encrypted messages: `text`, `entities` and `spoiler` are then empty and the content is in your device's envelope */
                                         encryption: {
                                             /** @description The device that encrypted it; open the envelope with your session with it */
                                             senderDeviceId: string | null;
@@ -21488,11 +21323,6 @@ export interface paths {
                                             value?: string;
                                         }[];
                                         spoiler: boolean;
-                                        /**
-                                         * @description How a text message shows: in flames, gift-wrapped until opened, or with hearts or confetti when it arrives
-                                         * @enum {string|null}
-                                         */
-                                        effect: "fire" | "gift" | "hearts" | "confetti" | null;
                                         /** @description Sent with `/silent`: it arrives without a notification or sound */
                                         silent: boolean;
                                         /** @description A bump: it brings the message in `replyTo` back to the bottom of the chat, as Messenger does */
@@ -21863,7 +21693,7 @@ export interface paths {
                                                 height: number | null;
                                             } | null;
                                         }[];
-                                        /** @description Set for end-to-end encrypted messages: `text`, `entities`, `spoiler` and `effect` are then empty and the content is in your device's envelope */
+                                        /** @description Set for end-to-end encrypted messages: `text`, `entities` and `spoiler` are then empty and the content is in your device's envelope */
                                         encryption: {
                                             /** @description The device that encrypted it; open the envelope with your session with it */
                                             senderDeviceId: string | null;
@@ -22949,11 +22779,6 @@ export interface paths {
                                 value?: string;
                             }[];
                             spoiler: boolean;
-                            /**
-                             * @description How a text message shows: in flames, gift-wrapped until opened, or with hearts or confetti when it arrives
-                             * @enum {string|null}
-                             */
-                            effect: "fire" | "gift" | "hearts" | "confetti" | null;
                             /** @description Sent with `/silent`: it arrives without a notification or sound */
                             silent: boolean;
                             /** @description A bump: it brings the message in `replyTo` back to the bottom of the chat, as Messenger does */
@@ -23324,7 +23149,7 @@ export interface paths {
                                     height: number | null;
                                 } | null;
                             }[];
-                            /** @description Set for end-to-end encrypted messages: `text`, `entities`, `spoiler` and `effect` are then empty and the content is in your device's envelope */
+                            /** @description Set for end-to-end encrypted messages: `text`, `entities` and `spoiler` are then empty and the content is in your device's envelope */
                             encryption: {
                                 /** @description The device that encrypted it; open the envelope with your session with it */
                                 senderDeviceId: string | null;
@@ -27221,11 +27046,6 @@ export interface paths {
                                     value?: string;
                                 }[];
                                 spoiler: boolean;
-                                /**
-                                 * @description How a text message shows: in flames, gift-wrapped until opened, or with hearts or confetti when it arrives
-                                 * @enum {string|null}
-                                 */
-                                effect: "fire" | "gift" | "hearts" | "confetti" | null;
                                 /** @description Sent with `/silent`: it arrives without a notification or sound */
                                 silent: boolean;
                                 /** @description A bump: it brings the message in `replyTo` back to the bottom of the chat, as Messenger does */
@@ -27596,7 +27416,7 @@ export interface paths {
                                         height: number | null;
                                     } | null;
                                 }[];
-                                /** @description Set for end-to-end encrypted messages: `text`, `entities`, `spoiler` and `effect` are then empty and the content is in your device's envelope */
+                                /** @description Set for end-to-end encrypted messages: `text`, `entities` and `spoiler` are then empty and the content is in your device's envelope */
                                 encryption: {
                                     /** @description The device that encrypted it; open the envelope with your session with it */
                                     senderDeviceId: string | null;
@@ -27674,11 +27494,6 @@ export interface paths {
                                     value?: string;
                                 }[];
                                 spoiler: boolean;
-                                /**
-                                 * @description How a text message shows: in flames, gift-wrapped until opened, or with hearts or confetti when it arrives
-                                 * @enum {string|null}
-                                 */
-                                effect: "fire" | "gift" | "hearts" | "confetti" | null;
                                 /** @description Sent with `/silent`: it arrives without a notification or sound */
                                 silent: boolean;
                                 /** @description A bump: it brings the message in `replyTo` back to the bottom of the chat, as Messenger does */
@@ -28049,7 +27864,7 @@ export interface paths {
                                         height: number | null;
                                     } | null;
                                 }[];
-                                /** @description Set for end-to-end encrypted messages: `text`, `entities`, `spoiler` and `effect` are then empty and the content is in your device's envelope */
+                                /** @description Set for end-to-end encrypted messages: `text`, `entities` and `spoiler` are then empty and the content is in your device's envelope */
                                 encryption: {
                                     /** @description The device that encrypted it; open the envelope with your session with it */
                                     senderDeviceId: string | null;
@@ -28261,11 +28076,6 @@ export interface paths {
                                     value?: string;
                                 }[];
                                 spoiler: boolean;
-                                /**
-                                 * @description How a text message shows: in flames, gift-wrapped until opened, or with hearts or confetti when it arrives
-                                 * @enum {string|null}
-                                 */
-                                effect: "fire" | "gift" | "hearts" | "confetti" | null;
                                 /** @description Sent with `/silent`: it arrives without a notification or sound */
                                 silent: boolean;
                                 /** @description A bump: it brings the message in `replyTo` back to the bottom of the chat, as Messenger does */
@@ -28636,7 +28446,7 @@ export interface paths {
                                         height: number | null;
                                     } | null;
                                 }[];
-                                /** @description Set for end-to-end encrypted messages: `text`, `entities`, `spoiler` and `effect` are then empty and the content is in your device's envelope */
+                                /** @description Set for end-to-end encrypted messages: `text`, `entities` and `spoiler` are then empty and the content is in your device's envelope */
                                 encryption: {
                                     /** @description The device that encrypted it; open the envelope with your session with it */
                                     senderDeviceId: string | null;
@@ -28714,11 +28524,6 @@ export interface paths {
                                     value?: string;
                                 }[];
                                 spoiler: boolean;
-                                /**
-                                 * @description How a text message shows: in flames, gift-wrapped until opened, or with hearts or confetti when it arrives
-                                 * @enum {string|null}
-                                 */
-                                effect: "fire" | "gift" | "hearts" | "confetti" | null;
                                 /** @description Sent with `/silent`: it arrives without a notification or sound */
                                 silent: boolean;
                                 /** @description A bump: it brings the message in `replyTo` back to the bottom of the chat, as Messenger does */
@@ -29089,7 +28894,7 @@ export interface paths {
                                         height: number | null;
                                     } | null;
                                 }[];
-                                /** @description Set for end-to-end encrypted messages: `text`, `entities`, `spoiler` and `effect` are then empty and the content is in your device's envelope */
+                                /** @description Set for end-to-end encrypted messages: `text`, `entities` and `spoiler` are then empty and the content is in your device's envelope */
                                 encryption: {
                                     /** @description The device that encrypted it; open the envelope with your session with it */
                                     senderDeviceId: string | null;
@@ -29279,11 +29084,6 @@ export interface paths {
                                     value?: string;
                                 }[];
                                 spoiler: boolean;
-                                /**
-                                 * @description How a text message shows: in flames, gift-wrapped until opened, or with hearts or confetti when it arrives
-                                 * @enum {string|null}
-                                 */
-                                effect: "fire" | "gift" | "hearts" | "confetti" | null;
                                 /** @description Sent with `/silent`: it arrives without a notification or sound */
                                 silent: boolean;
                                 /** @description A bump: it brings the message in `replyTo` back to the bottom of the chat, as Messenger does */
@@ -29654,7 +29454,7 @@ export interface paths {
                                         height: number | null;
                                     } | null;
                                 }[];
-                                /** @description Set for end-to-end encrypted messages: `text`, `entities`, `spoiler` and `effect` are then empty and the content is in your device's envelope */
+                                /** @description Set for end-to-end encrypted messages: `text`, `entities` and `spoiler` are then empty and the content is in your device's envelope */
                                 encryption: {
                                     /** @description The device that encrypted it; open the envelope with your session with it */
                                     senderDeviceId: string | null;
@@ -29732,11 +29532,6 @@ export interface paths {
                                     value?: string;
                                 }[];
                                 spoiler: boolean;
-                                /**
-                                 * @description How a text message shows: in flames, gift-wrapped until opened, or with hearts or confetti when it arrives
-                                 * @enum {string|null}
-                                 */
-                                effect: "fire" | "gift" | "hearts" | "confetti" | null;
                                 /** @description Sent with `/silent`: it arrives without a notification or sound */
                                 silent: boolean;
                                 /** @description A bump: it brings the message in `replyTo` back to the bottom of the chat, as Messenger does */
@@ -30107,7 +29902,7 @@ export interface paths {
                                         height: number | null;
                                     } | null;
                                 }[];
-                                /** @description Set for end-to-end encrypted messages: `text`, `entities`, `spoiler` and `effect` are then empty and the content is in your device's envelope */
+                                /** @description Set for end-to-end encrypted messages: `text`, `entities` and `spoiler` are then empty and the content is in your device's envelope */
                                 encryption: {
                                     /** @description The device that encrypted it; open the envelope with your session with it */
                                     senderDeviceId: string | null;
@@ -30274,11 +30069,6 @@ export interface paths {
                                     value?: string;
                                 }[];
                                 spoiler: boolean;
-                                /**
-                                 * @description How a text message shows: in flames, gift-wrapped until opened, or with hearts or confetti when it arrives
-                                 * @enum {string|null}
-                                 */
-                                effect: "fire" | "gift" | "hearts" | "confetti" | null;
                                 /** @description Sent with `/silent`: it arrives without a notification or sound */
                                 silent: boolean;
                                 /** @description A bump: it brings the message in `replyTo` back to the bottom of the chat, as Messenger does */
@@ -30649,7 +30439,7 @@ export interface paths {
                                         height: number | null;
                                     } | null;
                                 }[];
-                                /** @description Set for end-to-end encrypted messages: `text`, `entities`, `spoiler` and `effect` are then empty and the content is in your device's envelope */
+                                /** @description Set for end-to-end encrypted messages: `text`, `entities` and `spoiler` are then empty and the content is in your device's envelope */
                                 encryption: {
                                     /** @description The device that encrypted it; open the envelope with your session with it */
                                     senderDeviceId: string | null;
@@ -30727,11 +30517,6 @@ export interface paths {
                                     value?: string;
                                 }[];
                                 spoiler: boolean;
-                                /**
-                                 * @description How a text message shows: in flames, gift-wrapped until opened, or with hearts or confetti when it arrives
-                                 * @enum {string|null}
-                                 */
-                                effect: "fire" | "gift" | "hearts" | "confetti" | null;
                                 /** @description Sent with `/silent`: it arrives without a notification or sound */
                                 silent: boolean;
                                 /** @description A bump: it brings the message in `replyTo` back to the bottom of the chat, as Messenger does */
@@ -31102,7 +30887,7 @@ export interface paths {
                                         height: number | null;
                                     } | null;
                                 }[];
-                                /** @description Set for end-to-end encrypted messages: `text`, `entities`, `spoiler` and `effect` are then empty and the content is in your device's envelope */
+                                /** @description Set for end-to-end encrypted messages: `text`, `entities` and `spoiler` are then empty and the content is in your device's envelope */
                                 encryption: {
                                     /** @description The device that encrypted it; open the envelope with your session with it */
                                     senderDeviceId: string | null;
@@ -31282,11 +31067,6 @@ export interface paths {
                                     value?: string;
                                 }[];
                                 spoiler: boolean;
-                                /**
-                                 * @description How a text message shows: in flames, gift-wrapped until opened, or with hearts or confetti when it arrives
-                                 * @enum {string|null}
-                                 */
-                                effect: "fire" | "gift" | "hearts" | "confetti" | null;
                                 /** @description Sent with `/silent`: it arrives without a notification or sound */
                                 silent: boolean;
                                 /** @description A bump: it brings the message in `replyTo` back to the bottom of the chat, as Messenger does */
@@ -31657,7 +31437,7 @@ export interface paths {
                                         height: number | null;
                                     } | null;
                                 }[];
-                                /** @description Set for end-to-end encrypted messages: `text`, `entities`, `spoiler` and `effect` are then empty and the content is in your device's envelope */
+                                /** @description Set for end-to-end encrypted messages: `text`, `entities` and `spoiler` are then empty and the content is in your device's envelope */
                                 encryption: {
                                     /** @description The device that encrypted it; open the envelope with your session with it */
                                     senderDeviceId: string | null;
@@ -31735,11 +31515,6 @@ export interface paths {
                                     value?: string;
                                 }[];
                                 spoiler: boolean;
-                                /**
-                                 * @description How a text message shows: in flames, gift-wrapped until opened, or with hearts or confetti when it arrives
-                                 * @enum {string|null}
-                                 */
-                                effect: "fire" | "gift" | "hearts" | "confetti" | null;
                                 /** @description Sent with `/silent`: it arrives without a notification or sound */
                                 silent: boolean;
                                 /** @description A bump: it brings the message in `replyTo` back to the bottom of the chat, as Messenger does */
@@ -32110,7 +31885,7 @@ export interface paths {
                                         height: number | null;
                                     } | null;
                                 }[];
-                                /** @description Set for end-to-end encrypted messages: `text`, `entities`, `spoiler` and `effect` are then empty and the content is in your device's envelope */
+                                /** @description Set for end-to-end encrypted messages: `text`, `entities` and `spoiler` are then empty and the content is in your device's envelope */
                                 encryption: {
                                     /** @description The device that encrypted it; open the envelope with your session with it */
                                     senderDeviceId: string | null;
@@ -32315,11 +32090,6 @@ export interface paths {
                                     value?: string;
                                 }[];
                                 spoiler: boolean;
-                                /**
-                                 * @description How a text message shows: in flames, gift-wrapped until opened, or with hearts or confetti when it arrives
-                                 * @enum {string|null}
-                                 */
-                                effect: "fire" | "gift" | "hearts" | "confetti" | null;
                                 /** @description Sent with `/silent`: it arrives without a notification or sound */
                                 silent: boolean;
                                 /** @description A bump: it brings the message in `replyTo` back to the bottom of the chat, as Messenger does */
@@ -32690,7 +32460,7 @@ export interface paths {
                                         height: number | null;
                                     } | null;
                                 }[];
-                                /** @description Set for end-to-end encrypted messages: `text`, `entities`, `spoiler` and `effect` are then empty and the content is in your device's envelope */
+                                /** @description Set for end-to-end encrypted messages: `text`, `entities` and `spoiler` are then empty and the content is in your device's envelope */
                                 encryption: {
                                     /** @description The device that encrypted it; open the envelope with your session with it */
                                     senderDeviceId: string | null;
@@ -32768,11 +32538,6 @@ export interface paths {
                                     value?: string;
                                 }[];
                                 spoiler: boolean;
-                                /**
-                                 * @description How a text message shows: in flames, gift-wrapped until opened, or with hearts or confetti when it arrives
-                                 * @enum {string|null}
-                                 */
-                                effect: "fire" | "gift" | "hearts" | "confetti" | null;
                                 /** @description Sent with `/silent`: it arrives without a notification or sound */
                                 silent: boolean;
                                 /** @description A bump: it brings the message in `replyTo` back to the bottom of the chat, as Messenger does */
@@ -33143,7 +32908,7 @@ export interface paths {
                                         height: number | null;
                                     } | null;
                                 }[];
-                                /** @description Set for end-to-end encrypted messages: `text`, `entities`, `spoiler` and `effect` are then empty and the content is in your device's envelope */
+                                /** @description Set for end-to-end encrypted messages: `text`, `entities` and `spoiler` are then empty and the content is in your device's envelope */
                                 encryption: {
                                     /** @description The device that encrypted it; open the envelope with your session with it */
                                     senderDeviceId: string | null;

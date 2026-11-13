@@ -5,7 +5,6 @@ import {
   type GifDTO,
   LABEL_FONTS,
   type MenuCommand,
-  type MessageEffect,
   type TypingKind,
   albumIds,
   emojiQuery,
@@ -67,7 +66,6 @@ import {
   RotateCcw,
   SendHorizontal,
   Smile,
-  Sparkles,
   Square,
   Sticker,
   Strikethrough,
@@ -156,7 +154,6 @@ const COMMAND_ICONS: Record<CommandName, LucideIcon> = {
   giphy: Film,
   sticker: Sticker,
   silent: BellOff,
-  effect: Sparkles,
   emoji: Smile,
   game: Gamepad2,
   play: Dices,
@@ -255,7 +252,6 @@ export function Composer({
   const recState = useAudioRecorderState(recorder, 200);
   const [recording, setRecording] = useState(false);
   const [ephemeral, setEphemeral] = useState<EphemeralInput | null>(null);
-  const [messageEffect, setMessageEffect] = useState<MessageEffect | null>(null);
   const [scheduling, setScheduling] = useState<"now" | "next" | null>(null);
   const [sendAt, setSendAt] = useState<Date | null>(null);
   const [showScheduled, setShowScheduled] = useState(false);
@@ -465,7 +461,6 @@ export function Composer({
     useDrafts.getState().set(slot, "");
     setText("");
     setEphemeral(null);
-    setMessageEffect(null);
     if (mode) cancel();
     onSent();
   }
@@ -511,7 +506,6 @@ export function Composer({
       ephemeral: chosen,
       spoiler,
       file,
-      effect: file ? undefined : (messageEffect ?? undefined),
       silent: silent !== null,
     });
     if (file) {
@@ -726,17 +720,6 @@ export function Composer({
             <NotebookPen size={16} color={t.muted} />
           </Pressable>
         )}
-        {messageEffect && !editing && (
-          <View style={styles.ephemeralBar}>
-            <Sparkles size={16} color={brand} />
-            <Text style={{ flex: 1, color: brand, fontSize: 14 }}>
-              {tr.composer.withEffect(tr.messages.effectNames[messageEffect])}
-            </Text>
-            <Pressable onPress={() => setMessageEffect(null)} accessibilityLabel={tr.composer.noEffect} hitSlop={8} style={styles.round32}>
-              <X size={16} color={brand} />
-            </Pressable>
-          </View>
-        )}
         {chat?.vanish && !editing && (
           <View style={styles.ephemeralBar}>
             <Ghost size={16} color={brand} />
@@ -789,10 +772,6 @@ export function Composer({
             onLocation={() => {
               change("");
               void sendLocation();
-            }}
-            onEffect={(chosen) => {
-              change("");
-              setMessageEffect(chosen);
             }}
           />}
 

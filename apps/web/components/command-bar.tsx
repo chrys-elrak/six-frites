@@ -1,7 +1,7 @@
 "use client";
 
 import { SixApiError, unwrap } from "@six/sdk";
-import { COMMANDS, type EmojiEntry, type GifDTO, LIVE_EMOJI, LIVE_GAMES, type LiveGame, MessageEffect, type MenuCommand, type StickerDTO, groupCommands, isMenuCommand, parseCommand, silentMessage, suggestEmoji } from "@six/shared";
+import { COMMANDS, type EmojiEntry, type GifDTO, LIVE_EMOJI, LIVE_GAMES, type LiveGame, type MenuCommand, type StickerDTO, groupCommands, isMenuCommand, parseCommand, silentMessage, suggestEmoji } from "@six/shared";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import { type Ref, useEffect, useImperativeHandle, useState } from "react";
@@ -35,7 +35,7 @@ export interface CommandBarHandle {
 
 /**
  * Slash commands over the composer: `/` lists them, `/giphy love` shows GIFs and `/sticker wave` stickers
- * to send, `/effect`, `/emoji`, `/voice`, `/destruct`, `/location`, `/autodelete`, `/blur`, `/vanish` and
+ * to send, `/emoji`, `/voice`, `/destruct`, `/location`, `/autodelete`, `/blur`, `/vanish` and
  * `/search` offer their choices inline, narrowed by what follows, `/play` starts a live game with the
  * other person, and `/game` or `/schedule` opens that dialog. After `/silent` it steps aside for the
  * message to send without a notification.
@@ -50,7 +50,6 @@ export function CommandBar({
   onPackSticker,
   onMenu,
   onLocation,
-  onEffect,
 }: {
   ref: Ref<CommandBarHandle>;
   chatId: string;
@@ -61,7 +60,6 @@ export function CommandBar({
   onPackSticker: (sticker: StickerDTO) => void;
   onMenu: (name: MenuCommand) => void;
   onLocation: () => void;
-  onEffect: (effect: MessageEffect) => void;
 }) {
   const tr = useT();
   const qc = useQueryClient();
@@ -122,12 +120,6 @@ export function CommandBar({
             setVoice(e);
             onComplete("");
           },
-        })).filter(match);
-      case "effect":
-        return MessageEffect.options.map((e) => ({
-          key: e,
-          label: tr.messages.effectNames[e],
-          pick: () => onEffect(e),
         })).filter(match);
       case "location":
         return [{ key: "here", label: tr.composer.sendLocation, pick: onLocation }].filter(match);

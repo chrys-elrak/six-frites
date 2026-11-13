@@ -3,7 +3,6 @@ export const COMMANDS = [
   "giphy",
   "sticker",
   "silent",
-  "effect",
   "emoji",
   "game",
   "play",

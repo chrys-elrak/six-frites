@@ -10,7 +10,6 @@ import {
   type GifDTO,
   type StickerDTO,
   type MessageDTO,
-  type MessageEffect,
   type MessageEntity,
   type SendMessageInput,
   type UploadKind,
@@ -46,7 +45,6 @@ export interface Draft {
   replyTo?: MessageDTO;
   story?: StoryReply;
   spoiler?: boolean;
-  effect?: MessageEffect;
   silent?: boolean;
   bump?: boolean;
   ephemeral?: EphemeralInput | null;
@@ -155,7 +153,6 @@ export async function deliver(qc: QueryClient, realtime: Realtime, pending: Pend
             text: pending.text || undefined,
             entities: pending.entities.length ? pending.entities : undefined,
             spoiler: pending.spoiler || undefined,
-            effect: pending.effect,
             replyText: pending.replyTo ? pending.replyTo.text : undefined,
             file,
             location: pending.location,
@@ -171,7 +168,6 @@ export async function deliver(qc: QueryClient, realtime: Realtime, pending: Pend
           gifId: pending.gif?.id,
           stickerId: pending.sticker?.id,
           spoiler: pending.spoiler || undefined,
-          effect: pending.effect,
           location: pending.location,
           checklist: pending.checklist,
           game: pending.game,
@@ -231,7 +227,6 @@ export async function queueMessage(qc: QueryClient, realtime: Realtime, chatId: 
       : null,
     story: draft.story,
     spoiler: draft.spoiler ?? false,
-    effect: draft.effect,
     silent: draft.silent,
     bump: draft.bump,
     ephemeral: draft.ephemeral ?? null,

@@ -175,7 +175,6 @@ export async function editMessage(qc: QueryClient, original: Hydrated, text: str
         text,
         entities: entities.length ? entities : undefined,
         spoiler: original.spoiler || undefined,
-        effect: original.effect ?? undefined,
         replyText: original.replyTo ? original.replyTo.text : undefined,
         file: swap?.file ?? original.file,
       },

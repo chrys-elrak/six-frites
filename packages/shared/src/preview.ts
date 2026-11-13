@@ -126,7 +126,6 @@ export function previewText(m: MessageDTO & { file?: { sticker?: boolean } }, t:
   if (m.ephemeral) return t.summary.selfDestructing;
   if (m.deletedAt) return t.summary.messageDeleted;
   if (m.bump) return m.replyTo?.text ? t.summary.bumpedText(m.replyTo.text) : t.summary.bumped;
-  if (m.effect === "gift") return t.summary.gift;
   if (type === "sticker") return m.sticker ? `${m.sticker.emoji} ${t.summary.kinds.sticker}` : t.summary.kinds.sticker;
   const caption = m.text ? (m.spoiler && m.type === "text" ? t.summary.spoiler : maskSpoilers(m.text, m.entities)) : "";
   if (type === "text") return caption;

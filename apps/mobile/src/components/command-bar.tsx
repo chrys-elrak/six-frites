@@ -1,5 +1,5 @@
 import { SixApiError, unwrap } from "@six/sdk";
-import { COMMANDS, groupCommands, type CommandName, type EmojiEntry, type GifDTO, LIVE_EMOJI, LIVE_GAMES, type LiveGame, MessageEffect, type MenuCommand, type StickerDTO, isMenuCommand, parseCommand, silentMessage, suggestEmoji } from "@six/shared";
+import { COMMANDS, groupCommands, type CommandName, type EmojiEntry, type GifDTO, LIVE_EMOJI, LIVE_GAMES, type LiveGame, type MenuCommand, type StickerDTO, isMenuCommand, parseCommand, silentMessage, suggestEmoji } from "@six/shared";
 import emojis from "@six/shared/emojis.json";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Image } from "expo-image";
@@ -37,7 +37,7 @@ export interface CommandBarHandle {
 
 /**
  * Slash commands over the composer: `/` lists them, `/giphy love` shows GIFs and `/sticker wave` stickers
- * to send, `/effect`, `/emoji`, `/destruct`, `/location`, `/autodelete`, `/blur`, `/vanish` and `/search`
+ * to send, `/emoji`, `/destruct`, `/location`, `/autodelete`, `/blur`, `/vanish` and `/search`
  * offer their choices inline, narrowed by what follows, `/play` starts a live game with the other person,
  * and `/game` or `/schedule` opens that dialog. After `/silent` it steps aside for the message to send
  * without a notification.
@@ -52,7 +52,6 @@ export function CommandBar({
   onPackSticker,
   onMenu,
   onLocation,
-  onEffect,
 }: {
   ref: Ref<CommandBarHandle>;
   chatId: string;
@@ -63,7 +62,6 @@ export function CommandBar({
   onPackSticker: (sticker: StickerDTO) => void;
   onMenu: (name: MenuCommand) => void;
   onLocation: () => void;
-  onEffect: (effect: MessageEffect) => void;
 }) {
   const t = useTheme();
   const tr = useT();
@@ -124,12 +122,6 @@ export function CommandBar({
           emoji: true,
           pick: () => onComplete(x.e),
         }));
-      case "effect":
-        return MessageEffect.options.map((e) => ({
-          key: e,
-          label: tr.messages.effectNames[e],
-          pick: () => onEffect(e),
-        })).filter(match);
       case "location":
         return [{ key: "here", label: tr.composer.sendLocation, pick: onLocation }].filter(match);
       case "vanish":

@@ -9977,17 +9977,6 @@
                         "spoiler": {
                           "type": "boolean"
                         },
-                        "effect": {
-                          "nullable": true,
-                          "type": "string",
-                          "enum": [
-                            "fire",
-                            "gift",
-                            "hearts",
-                            "confetti"
-                          ],
-                          "description": "How a text message shows: in flames, gift-wrapped until opened, or with hearts or confetti when it arrives"
-                        },
                         "silent": {
                           "type": "boolean",
                           "description": "Sent with `/silent`: it arrives without a notification or sound"
@@ -11576,7 +11565,7 @@
                         },
                         "encryption": {
                           "nullable": true,
-                          "description": "Set for end-to-end encrypted messages: `text`, `entities`, `spoiler` and `effect` are then empty and the content is in your device's envelope",
+                          "description": "Set for end-to-end encrypted messages: `text`, `entities` and `spoiler` are then empty and the content is in your device's envelope",
                           "type": "object",
                           "properties": {
                             "senderDeviceId": {
@@ -11733,7 +11722,6 @@
                         "text",
                         "entities",
                         "spoiler",
-                        "effect",
                         "silent",
                         "bump",
                         "vanish",
@@ -11897,17 +11885,6 @@
                           },
                           "spoiler": {
                             "type": "boolean"
-                          },
-                          "effect": {
-                            "nullable": true,
-                            "type": "string",
-                            "enum": [
-                              "fire",
-                              "gift",
-                              "hearts",
-                              "confetti"
-                            ],
-                            "description": "How a text message shows: in flames, gift-wrapped until opened, or with hearts or confetti when it arrives"
                           },
                           "silent": {
                             "type": "boolean",
@@ -13497,7 +13474,7 @@
                           },
                           "encryption": {
                             "nullable": true,
-                            "description": "Set for end-to-end encrypted messages: `text`, `entities`, `spoiler` and `effect` are then empty and the content is in your device's envelope",
+                            "description": "Set for end-to-end encrypted messages: `text`, `entities` and `spoiler` are then empty and the content is in your device's envelope",
                             "type": "object",
                             "properties": {
                               "senderDeviceId": {
@@ -13654,7 +13631,6 @@
                           "text",
                           "entities",
                           "spoiler",
-                          "effect",
                           "silent",
                           "bump",
                           "vanish",
@@ -13943,17 +13919,6 @@
                     },
                     "spoiler": {
                       "type": "boolean"
-                    },
-                    "effect": {
-                      "nullable": true,
-                      "type": "string",
-                      "enum": [
-                        "fire",
-                        "gift",
-                        "hearts",
-                        "confetti"
-                      ],
-                      "description": "How a text message shows: in flames, gift-wrapped until opened, or with hearts or confetti when it arrives"
                     },
                     "silent": {
                       "type": "boolean",
@@ -15543,7 +15508,7 @@
                     },
                     "encryption": {
                       "nullable": true,
-                      "description": "Set for end-to-end encrypted messages: `text`, `entities`, `spoiler` and `effect` are then empty and the content is in your device's envelope",
+                      "description": "Set for end-to-end encrypted messages: `text`, `entities` and `spoiler` are then empty and the content is in your device's envelope",
                       "type": "object",
                       "properties": {
                         "senderDeviceId": {
@@ -15700,7 +15665,6 @@
                     "text",
                     "entities",
                     "spoiler",
-                    "effect",
                     "silent",
                     "bump",
                     "vanish",
@@ -15983,17 +15947,6 @@
                         },
                         "spoiler": {
                           "type": "boolean"
-                        },
-                        "effect": {
-                          "nullable": true,
-                          "type": "string",
-                          "enum": [
-                            "fire",
-                            "gift",
-                            "hearts",
-                            "confetti"
-                          ],
-                          "description": "How a text message shows: in flames, gift-wrapped until opened, or with hearts or confetti when it arrives"
                         },
                         "silent": {
                           "type": "boolean",
@@ -17583,7 +17536,7 @@
                         },
                         "encryption": {
                           "nullable": true,
-                          "description": "Set for end-to-end encrypted messages: `text`, `entities`, `spoiler` and `effect` are then empty and the content is in your device's envelope",
+                          "description": "Set for end-to-end encrypted messages: `text`, `entities` and `spoiler` are then empty and the content is in your device's envelope",
                           "type": "object",
                           "properties": {
                             "senderDeviceId": {
@@ -17740,7 +17693,6 @@
                         "text",
                         "entities",
                         "spoiler",
-                        "effect",
                         "silent",
                         "bump",
                         "vanish",
@@ -17904,17 +17856,6 @@
                           },
                           "spoiler": {
                             "type": "boolean"
-                          },
-                          "effect": {
-                            "nullable": true,
-                            "type": "string",
-                            "enum": [
-                              "fire",
-                              "gift",
-                              "hearts",
-                              "confetti"
-                            ],
-                            "description": "How a text message shows: in flames, gift-wrapped until opened, or with hearts or confetti when it arrives"
                           },
                           "silent": {
                             "type": "boolean",
@@ -19504,7 +19445,7 @@
                           },
                           "encryption": {
                             "nullable": true,
-                            "description": "Set for end-to-end encrypted messages: `text`, `entities`, `spoiler` and `effect` are then empty and the content is in your device's envelope",
+                            "description": "Set for end-to-end encrypted messages: `text`, `entities` and `spoiler` are then empty and the content is in your device's envelope",
                             "type": "object",
                             "properties": {
                               "senderDeviceId": {
@@ -19661,7 +19602,6 @@
                           "text",
                           "entities",
                           "spoiler",
-                          "effect",
                           "silent",
                           "bump",
                           "vanish",
@@ -20071,17 +20011,6 @@
                         "spoiler": {
                           "type": "boolean"
                         },
-                        "effect": {
-                          "nullable": true,
-                          "type": "string",
-                          "enum": [
-                            "fire",
-                            "gift",
-                            "hearts",
-                            "confetti"
-                          ],
-                          "description": "How a text message shows: in flames, gift-wrapped until opened, or with hearts or confetti when it arrives"
-                        },
                         "silent": {
                           "type": "boolean",
                           "description": "Sent with `/silent`: it arrives without a notification or sound"
@@ -21670,7 +21599,7 @@
                         },
                         "encryption": {
                           "nullable": true,
-                          "description": "Set for end-to-end encrypted messages: `text`, `entities`, `spoiler` and `effect` are then empty and the content is in your device's envelope",
+                          "description": "Set for end-to-end encrypted messages: `text`, `entities` and `spoiler` are then empty and the content is in your device's envelope",
                           "type": "object",
                           "properties": {
                             "senderDeviceId": {
@@ -21827,7 +21756,6 @@
                         "text",
                         "entities",
                         "spoiler",
-                        "effect",
                         "silent",
                         "bump",
                         "vanish",
@@ -21991,17 +21919,6 @@
                           },
                           "spoiler": {
                             "type": "boolean"
-                          },
-                          "effect": {
-                            "nullable": true,
-                            "type": "string",
-                            "enum": [
-                              "fire",
-                              "gift",
-                              "hearts",
-                              "confetti"
-                            ],
-                            "description": "How a text message shows: in flames, gift-wrapped until opened, or with hearts or confetti when it arrives"
                           },
                           "silent": {
                             "type": "boolean",
@@ -23591,7 +23508,7 @@
                           },
                           "encryption": {
                             "nullable": true,
-                            "description": "Set for end-to-end encrypted messages: `text`, `entities`, `spoiler` and `effect` are then empty and the content is in your device's envelope",
+                            "description": "Set for end-to-end encrypted messages: `text`, `entities` and `spoiler` are then empty and the content is in your device's envelope",
                             "type": "object",
                             "properties": {
                               "senderDeviceId": {
@@ -23748,7 +23665,6 @@
                           "text",
                           "entities",
                           "spoiler",
-                          "effect",
                           "silent",
                           "bump",
                           "vanish",
@@ -24184,17 +24100,6 @@
                               },
                               "spoiler": {
                                 "type": "boolean"
-                              },
-                              "effect": {
-                                "nullable": true,
-                                "type": "string",
-                                "enum": [
-                                  "fire",
-                                  "gift",
-                                  "hearts",
-                                  "confetti"
-                                ],
-                                "description": "How a text message shows: in flames, gift-wrapped until opened, or with hearts or confetti when it arrives"
                               },
                               "silent": {
                                 "type": "boolean",
@@ -25784,7 +25689,7 @@
                               },
                               "encryption": {
                                 "nullable": true,
-                                "description": "Set for end-to-end encrypted messages: `text`, `entities`, `spoiler` and `effect` are then empty and the content is in your device's envelope",
+                                "description": "Set for end-to-end encrypted messages: `text`, `entities` and `spoiler` are then empty and the content is in your device's envelope",
                                 "type": "object",
                                 "properties": {
                                   "senderDeviceId": {
@@ -25941,7 +25846,6 @@
                               "text",
                               "entities",
                               "spoiler",
-                              "effect",
                               "silent",
                               "bump",
                               "vanish",
@@ -26105,17 +26009,6 @@
                                 },
                                 "spoiler": {
                                   "type": "boolean"
-                                },
-                                "effect": {
-                                  "nullable": true,
-                                  "type": "string",
-                                  "enum": [
-                                    "fire",
-                                    "gift",
-                                    "hearts",
-                                    "confetti"
-                                  ],
-                                  "description": "How a text message shows: in flames, gift-wrapped until opened, or with hearts or confetti when it arrives"
                                 },
                                 "silent": {
                                   "type": "boolean",
@@ -27705,7 +27598,7 @@
                                 },
                                 "encryption": {
                                   "nullable": true,
-                                  "description": "Set for end-to-end encrypted messages: `text`, `entities`, `spoiler` and `effect` are then empty and the content is in your device's envelope",
+                                  "description": "Set for end-to-end encrypted messages: `text`, `entities` and `spoiler` are then empty and the content is in your device's envelope",
                                   "type": "object",
                                   "properties": {
                                     "senderDeviceId": {
@@ -27862,7 +27755,6 @@
                                 "text",
                                 "entities",
                                 "spoiler",
-                                "effect",
                                 "silent",
                                 "bump",
                                 "vanish",
@@ -28282,17 +28174,6 @@
                         },
                         "spoiler": {
                           "type": "boolean"
-                        },
-                        "effect": {
-                          "nullable": true,
-                          "type": "string",
-                          "enum": [
-                            "fire",
-                            "gift",
-                            "hearts",
-                            "confetti"
-                          ],
-                          "description": "How a text message shows: in flames, gift-wrapped until opened, or with hearts or confetti when it arrives"
                         },
                         "silent": {
                           "type": "boolean",
@@ -29882,7 +29763,7 @@
                         },
                         "encryption": {
                           "nullable": true,
-                          "description": "Set for end-to-end encrypted messages: `text`, `entities`, `spoiler` and `effect` are then empty and the content is in your device's envelope",
+                          "description": "Set for end-to-end encrypted messages: `text`, `entities` and `spoiler` are then empty and the content is in your device's envelope",
                           "type": "object",
                           "properties": {
                             "senderDeviceId": {
@@ -30039,7 +29920,6 @@
                         "text",
                         "entities",
                         "spoiler",
-                        "effect",
                         "silent",
                         "bump",
                         "vanish",
@@ -30203,17 +30083,6 @@
                           },
                           "spoiler": {
                             "type": "boolean"
-                          },
-                          "effect": {
-                            "nullable": true,
-                            "type": "string",
-                            "enum": [
-                              "fire",
-                              "gift",
-                              "hearts",
-                              "confetti"
-                            ],
-                            "description": "How a text message shows: in flames, gift-wrapped until opened, or with hearts or confetti when it arrives"
                           },
                           "silent": {
                             "type": "boolean",
@@ -31803,7 +31672,7 @@
                           },
                           "encryption": {
                             "nullable": true,
-                            "description": "Set for end-to-end encrypted messages: `text`, `entities`, `spoiler` and `effect` are then empty and the content is in your device's envelope",
+                            "description": "Set for end-to-end encrypted messages: `text`, `entities` and `spoiler` are then empty and the content is in your device's envelope",
                             "type": "object",
                             "properties": {
                               "senderDeviceId": {
@@ -31960,7 +31829,6 @@
                           "text",
                           "entities",
                           "spoiler",
-                          "effect",
                           "silent",
                           "bump",
                           "vanish",
@@ -32456,17 +32324,6 @@
                         "spoiler": {
                           "type": "boolean"
                         },
-                        "effect": {
-                          "nullable": true,
-                          "type": "string",
-                          "enum": [
-                            "fire",
-                            "gift",
-                            "hearts",
-                            "confetti"
-                          ],
-                          "description": "How a text message shows: in flames, gift-wrapped until opened, or with hearts or confetti when it arrives"
-                        },
                         "silent": {
                           "type": "boolean",
                           "description": "Sent with `/silent`: it arrives without a notification or sound"
@@ -34055,7 +33912,7 @@
                         },
                         "encryption": {
                           "nullable": true,
-                          "description": "Set for end-to-end encrypted messages: `text`, `entities`, `spoiler` and `effect` are then empty and the content is in your device's envelope",
+                          "description": "Set for end-to-end encrypted messages: `text`, `entities` and `spoiler` are then empty and the content is in your device's envelope",
                           "type": "object",
                           "properties": {
                             "senderDeviceId": {
@@ -34212,7 +34069,6 @@
                         "text",
                         "entities",
                         "spoiler",
-                        "effect",
                         "silent",
                         "bump",
                         "vanish",
@@ -34376,17 +34232,6 @@
                           },
                           "spoiler": {
                             "type": "boolean"
-                          },
-                          "effect": {
-                            "nullable": true,
-                            "type": "string",
-                            "enum": [
-                              "fire",
-                              "gift",
-                              "hearts",
-                              "confetti"
-                            ],
-                            "description": "How a text message shows: in flames, gift-wrapped until opened, or with hearts or confetti when it arrives"
                           },
                           "silent": {
                             "type": "boolean",
@@ -35976,7 +35821,7 @@
                           },
                           "encryption": {
                             "nullable": true,
-                            "description": "Set for end-to-end encrypted messages: `text`, `entities`, `spoiler` and `effect` are then empty and the content is in your device's envelope",
+                            "description": "Set for end-to-end encrypted messages: `text`, `entities` and `spoiler` are then empty and the content is in your device's envelope",
                             "type": "object",
                             "properties": {
                               "senderDeviceId": {
@@ -36133,7 +35978,6 @@
                           "text",
                           "entities",
                           "spoiler",
-                          "effect",
                           "silent",
                           "bump",
                           "vanish",
@@ -36723,17 +36567,6 @@
                     "spoiler": {
                       "type": "boolean"
                     },
-                    "effect": {
-                      "nullable": true,
-                      "type": "string",
-                      "enum": [
-                        "fire",
-                        "gift",
-                        "hearts",
-                        "confetti"
-                      ],
-                      "description": "How a text message shows: in flames, gift-wrapped until opened, or with hearts or confetti when it arrives"
-                    },
                     "silent": {
                       "type": "boolean",
                       "description": "Sent with `/silent`: it arrives without a notification or sound"
@@ -38322,7 +38155,7 @@
                     },
                     "encryption": {
                       "nullable": true,
-                      "description": "Set for end-to-end encrypted messages: `text`, `entities`, `spoiler` and `effect` are then empty and the content is in your device's envelope",
+                      "description": "Set for end-to-end encrypted messages: `text`, `entities` and `spoiler` are then empty and the content is in your device's envelope",
                       "type": "object",
                       "properties": {
                         "senderDeviceId": {
@@ -38479,7 +38312,6 @@
                     "text",
                     "entities",
                     "spoiler",
-                    "effect",
                     "silent",
                     "bump",
                     "vanish",
@@ -38659,17 +38491,6 @@
                     "spoiler": {
                       "type": "boolean"
                     },
-                    "effect": {
-                      "nullable": true,
-                      "type": "string",
-                      "enum": [
-                        "fire",
-                        "gift",
-                        "hearts",
-                        "confetti"
-                      ],
-                      "description": "How a text message shows: in flames, gift-wrapped until opened, or with hearts or confetti when it arrives"
-                    },
                     "silent": {
                       "type": "boolean",
                       "description": "Sent with `/silent`: it arrives without a notification or sound"
@@ -40258,7 +40079,7 @@
                     },
                     "encryption": {
                       "nullable": true,
-                      "description": "Set for end-to-end encrypted messages: `text`, `entities`, `spoiler` and `effect` are then empty and the content is in your device's envelope",
+                      "description": "Set for end-to-end encrypted messages: `text`, `entities` and `spoiler` are then empty and the content is in your device's envelope",
                       "type": "object",
                       "properties": {
                         "senderDeviceId": {
@@ -40415,7 +40236,6 @@
                     "text",
                     "entities",
                     "spoiler",
-                    "effect",
                     "silent",
                     "bump",
                     "vanish",
@@ -40591,17 +40411,6 @@
                     "spoiler": {
                       "type": "boolean"
                     },
-                    "effect": {
-                      "nullable": true,
-                      "type": "string",
-                      "enum": [
-                        "fire",
-                        "gift",
-                        "hearts",
-                        "confetti"
-                      ],
-                      "description": "How a text message shows: in flames, gift-wrapped until opened, or with hearts or confetti when it arrives"
-                    },
                     "silent": {
                       "type": "boolean",
                       "description": "Sent with `/silent`: it arrives without a notification or sound"
@@ -42190,7 +41999,7 @@
                     },
                     "encryption": {
                       "nullable": true,
-                      "description": "Set for end-to-end encrypted messages: `text`, `entities`, `spoiler` and `effect` are then empty and the content is in your device's envelope",
+                      "description": "Set for end-to-end encrypted messages: `text`, `entities` and `spoiler` are then empty and the content is in your device's envelope",
                       "type": "object",
                       "properties": {
                         "senderDeviceId": {
@@ -42347,7 +42156,6 @@
                     "text",
                     "entities",
                     "spoiler",
-                    "effect",
                     "silent",
                     "bump",
                     "vanish",
@@ -42514,17 +42322,6 @@
                     "spoiler": {
                       "type": "boolean"
                     },
-                    "effect": {
-                      "nullable": true,
-                      "type": "string",
-                      "enum": [
-                        "fire",
-                        "gift",
-                        "hearts",
-                        "confetti"
-                      ],
-                      "description": "How a text message shows: in flames, gift-wrapped until opened, or with hearts or confetti when it arrives"
-                    },
                     "silent": {
                       "type": "boolean",
                       "description": "Sent with `/silent`: it arrives without a notification or sound"
@@ -44113,7 +43910,7 @@
                     },
                     "encryption": {
                       "nullable": true,
-                      "description": "Set for end-to-end encrypted messages: `text`, `entities`, `spoiler` and `effect` are then empty and the content is in your device's envelope",
+                      "description": "Set for end-to-end encrypted messages: `text`, `entities` and `spoiler` are then empty and the content is in your device's envelope",
                       "type": "object",
                       "properties": {
                         "senderDeviceId": {
@@ -44270,7 +44067,6 @@
                     "text",
                     "entities",
                     "spoiler",
-                    "effect",
                     "silent",
                     "bump",
                     "vanish",
@@ -44447,17 +44243,6 @@
                     "spoiler": {
                       "type": "boolean"
                     },
-                    "effect": {
-                      "nullable": true,
-                      "type": "string",
-                      "enum": [
-                        "fire",
-                        "gift",
-                        "hearts",
-                        "confetti"
-                      ],
-                      "description": "How a text message shows: in flames, gift-wrapped until opened, or with hearts or confetti when it arrives"
-                    },
                     "silent": {
                       "type": "boolean",
                       "description": "Sent with `/silent`: it arrives without a notification or sound"
@@ -46046,7 +45831,7 @@
                     },
                     "encryption": {
                       "nullable": true,
-                      "description": "Set for end-to-end encrypted messages: `text`, `entities`, `spoiler` and `effect` are then empty and the content is in your device's envelope",
+                      "description": "Set for end-to-end encrypted messages: `text`, `entities` and `spoiler` are then empty and the content is in your device's envelope",
                       "type": "object",
                       "properties": {
                         "senderDeviceId": {
@@ -46203,7 +45988,6 @@
                     "text",
                     "entities",
                     "spoiler",
-                    "effect",
                     "silent",
                     "bump",
                     "vanish",
@@ -46523,17 +46307,6 @@
                     "spoiler": {
                       "type": "boolean"
                     },
-                    "effect": {
-                      "nullable": true,
-                      "type": "string",
-                      "enum": [
-                        "fire",
-                        "gift",
-                        "hearts",
-                        "confetti"
-                      ],
-                      "description": "How a text message shows: in flames, gift-wrapped until opened, or with hearts or confetti when it arrives"
-                    },
                     "silent": {
                       "type": "boolean",
                       "description": "Sent with `/silent`: it arrives without a notification or sound"
@@ -48122,7 +47895,7 @@
                     },
                     "encryption": {
                       "nullable": true,
-                      "description": "Set for end-to-end encrypted messages: `text`, `entities`, `spoiler` and `effect` are then empty and the content is in your device's envelope",
+                      "description": "Set for end-to-end encrypted messages: `text`, `entities` and `spoiler` are then empty and the content is in your device's envelope",
                       "type": "object",
                       "properties": {
                         "senderDeviceId": {
@@ -48279,7 +48052,6 @@
                     "text",
                     "entities",
                     "spoiler",
-                    "effect",
                     "silent",
                     "bump",
                     "vanish",
@@ -48430,17 +48202,6 @@
                         },
                         "spoiler": {
                           "type": "boolean"
-                        },
-                        "effect": {
-                          "nullable": true,
-                          "type": "string",
-                          "enum": [
-                            "fire",
-                            "gift",
-                            "hearts",
-                            "confetti"
-                          ],
-                          "description": "How a text message shows: in flames, gift-wrapped until opened, or with hearts or confetti when it arrives"
                         },
                         "silent": {
                           "type": "boolean",
@@ -50030,7 +49791,7 @@
                         },
                         "encryption": {
                           "nullable": true,
-                          "description": "Set for end-to-end encrypted messages: `text`, `entities`, `spoiler` and `effect` are then empty and the content is in your device's envelope",
+                          "description": "Set for end-to-end encrypted messages: `text`, `entities` and `spoiler` are then empty and the content is in your device's envelope",
                           "type": "object",
                           "properties": {
                             "senderDeviceId": {
@@ -50187,7 +49948,6 @@
                         "text",
                         "entities",
                         "spoiler",
-                        "effect",
                         "silent",
                         "bump",
                         "vanish",
@@ -50350,17 +50110,6 @@
                     "spoiler": {
                       "type": "boolean"
                     },
-                    "effect": {
-                      "nullable": true,
-                      "type": "string",
-                      "enum": [
-                        "fire",
-                        "gift",
-                        "hearts",
-                        "confetti"
-                      ],
-                      "description": "How a text message shows: in flames, gift-wrapped until opened, or with hearts or confetti when it arrives"
-                    },
                     "silent": {
                       "type": "boolean",
                       "description": "Sent with `/silent`: it arrives without a notification or sound"
@@ -51949,7 +51698,7 @@
                     },
                     "encryption": {
                       "nullable": true,
-                      "description": "Set for end-to-end encrypted messages: `text`, `entities`, `spoiler` and `effect` are then empty and the content is in your device's envelope",
+                      "description": "Set for end-to-end encrypted messages: `text`, `entities` and `spoiler` are then empty and the content is in your device's envelope",
                       "type": "object",
                       "properties": {
                         "senderDeviceId": {
@@ -52106,7 +51855,6 @@
                     "text",
                     "entities",
                     "spoiler",
-                    "effect",
                     "silent",
                     "bump",
                     "vanish",
@@ -52255,17 +52003,6 @@
                     "spoiler": {
                       "type": "boolean"
                     },
-                    "effect": {
-                      "nullable": true,
-                      "type": "string",
-                      "enum": [
-                        "fire",
-                        "gift",
-                        "hearts",
-                        "confetti"
-                      ],
-                      "description": "How a text message shows: in flames, gift-wrapped until opened, or with hearts or confetti when it arrives"
-                    },
                     "silent": {
                       "type": "boolean",
                       "description": "Sent with `/silent`: it arrives without a notification or sound"
@@ -53854,7 +53591,7 @@
                     },
                     "encryption": {
                       "nullable": true,
-                      "description": "Set for end-to-end encrypted messages: `text`, `entities`, `spoiler` and `effect` are then empty and the content is in your device's envelope",
+                      "description": "Set for end-to-end encrypted messages: `text`, `entities` and `spoiler` are then empty and the content is in your device's envelope",
                       "type": "object",
                       "properties": {
                         "senderDeviceId": {
@@ -54011,7 +53748,6 @@
                     "text",
                     "entities",
                     "spoiler",
-                    "effect",
                     "silent",
                     "bump",
                     "vanish",
@@ -54160,17 +53896,6 @@
                     "spoiler": {
                       "type": "boolean"
                     },
-                    "effect": {
-                      "nullable": true,
-                      "type": "string",
-                      "enum": [
-                        "fire",
-                        "gift",
-                        "hearts",
-                        "confetti"
-                      ],
-                      "description": "How a text message shows: in flames, gift-wrapped until opened, or with hearts or confetti when it arrives"
-                    },
                     "silent": {
                       "type": "boolean",
                       "description": "Sent with `/silent`: it arrives without a notification or sound"
@@ -55759,7 +55484,7 @@
                     },
                     "encryption": {
                       "nullable": true,
-                      "description": "Set for end-to-end encrypted messages: `text`, `entities`, `spoiler` and `effect` are then empty and the content is in your device's envelope",
+                      "description": "Set for end-to-end encrypted messages: `text`, `entities` and `spoiler` are then empty and the content is in your device's envelope",
                       "type": "object",
                       "properties": {
                         "senderDeviceId": {
@@ -55916,7 +55641,6 @@
                     "text",
                     "entities",
                     "spoiler",
-                    "effect",
                     "silent",
                     "bump",
                     "vanish",
@@ -56184,17 +55908,6 @@
                     "spoiler": {
                       "type": "boolean"
                     },
-                    "effect": {
-                      "nullable": true,
-                      "type": "string",
-                      "enum": [
-                        "fire",
-                        "gift",
-                        "hearts",
-                        "confetti"
-                      ],
-                      "description": "How a text message shows: in flames, gift-wrapped until opened, or with hearts or confetti when it arrives"
-                    },
                     "silent": {
                       "type": "boolean",
                       "description": "Sent with `/silent`: it arrives without a notification or sound"
@@ -57783,7 +57496,7 @@
                     },
                     "encryption": {
                       "nullable": true,
-                      "description": "Set for end-to-end encrypted messages: `text`, `entities`, `spoiler` and `effect` are then empty and the content is in your device's envelope",
+                      "description": "Set for end-to-end encrypted messages: `text`, `entities` and `spoiler` are then empty and the content is in your device's envelope",
                       "type": "object",
                       "properties": {
                         "senderDeviceId": {
@@ -57940,7 +57653,6 @@
                     "text",
                     "entities",
                     "spoiler",
-                    "effect",
                     "silent",
                     "bump",
                     "vanish",
@@ -58113,17 +57825,6 @@
                     "spoiler": {
                       "type": "boolean"
                     },
-                    "effect": {
-                      "nullable": true,
-                      "type": "string",
-                      "enum": [
-                        "fire",
-                        "gift",
-                        "hearts",
-                        "confetti"
-                      ],
-                      "description": "How a text message shows: in flames, gift-wrapped until opened, or with hearts or confetti when it arrives"
-                    },
                     "silent": {
                       "type": "boolean",
                       "description": "Sent with `/silent`: it arrives without a notification or sound"
@@ -59712,7 +59413,7 @@
                     },
                     "encryption": {
                       "nullable": true,
-                      "description": "Set for end-to-end encrypted messages: `text`, `entities`, `spoiler` and `effect` are then empty and the content is in your device's envelope",
+                      "description": "Set for end-to-end encrypted messages: `text`, `entities` and `spoiler` are then empty and the content is in your device's envelope",
                       "type": "object",
                       "properties": {
                         "senderDeviceId": {
@@ -59869,7 +59570,6 @@
                     "text",
                     "entities",
                     "spoiler",
-                    "effect",
                     "silent",
                     "bump",
                     "vanish",
@@ -60152,17 +59852,6 @@
                           },
                           "spoiler": {
                             "type": "boolean"
-                          },
-                          "effect": {
-                            "nullable": true,
-                            "type": "string",
-                            "enum": [
-                              "fire",
-                              "gift",
-                              "hearts",
-                              "confetti"
-                            ],
-                            "description": "How a text message shows: in flames, gift-wrapped until opened, or with hearts or confetti when it arrives"
                           },
                           "silent": {
                             "type": "boolean",
@@ -61752,7 +61441,7 @@
                           },
                           "encryption": {
                             "nullable": true,
-                            "description": "Set for end-to-end encrypted messages: `text`, `entities`, `spoiler` and `effect` are then empty and the content is in your device's envelope",
+                            "description": "Set for end-to-end encrypted messages: `text`, `entities` and `spoiler` are then empty and the content is in your device's envelope",
                             "type": "object",
                             "properties": {
                               "senderDeviceId": {
@@ -61909,7 +61598,6 @@
                           "text",
                           "entities",
                           "spoiler",
-                          "effect",
                           "silent",
                           "bump",
                           "vanish",
@@ -62495,16 +62183,6 @@
                   "spoiler": {
                     "type": "boolean"
                   },
-                  "effect": {
-                    "description": "Only with text",
-                    "type": "string",
-                    "enum": [
-                      "fire",
-                      "gift",
-                      "hearts",
-                      "confetti"
-                    ]
-                  },
                   "silent": {
                     "description": "Deliver it without a notification or sound",
                     "type": "boolean"
@@ -62763,17 +62441,6 @@
                     },
                     "spoiler": {
                       "type": "boolean"
-                    },
-                    "effect": {
-                      "nullable": true,
-                      "type": "string",
-                      "enum": [
-                        "fire",
-                        "gift",
-                        "hearts",
-                        "confetti"
-                      ],
-                      "description": "How a text message shows: in flames, gift-wrapped until opened, or with hearts or confetti when it arrives"
                     },
                     "silent": {
                       "type": "boolean",
@@ -64363,7 +64030,7 @@
                     },
                     "encryption": {
                       "nullable": true,
-                      "description": "Set for end-to-end encrypted messages: `text`, `entities`, `spoiler` and `effect` are then empty and the content is in your device's envelope",
+                      "description": "Set for end-to-end encrypted messages: `text`, `entities` and `spoiler` are then empty and the content is in your device's envelope",
                       "type": "object",
                       "properties": {
                         "senderDeviceId": {
@@ -64520,7 +64187,6 @@
                     "text",
                     "entities",
                     "spoiler",
-                    "effect",
                     "silent",
                     "bump",
                     "vanish",
@@ -65597,16 +65263,6 @@
                   },
                   "spoiler": {
                     "type": "boolean"
-                  },
-                  "effect": {
-                    "description": "Only with text",
-                    "type": "string",
-                    "enum": [
-                      "fire",
-                      "gift",
-                      "hearts",
-                      "confetti"
-                    ]
                   },
                   "silent": {
                     "description": "Deliver it without a notification or sound",
@@ -67063,17 +66719,6 @@
                     "spoiler": {
                       "type": "boolean"
                     },
-                    "effect": {
-                      "nullable": true,
-                      "type": "string",
-                      "enum": [
-                        "fire",
-                        "gift",
-                        "hearts",
-                        "confetti"
-                      ],
-                      "description": "How a text message shows: in flames, gift-wrapped until opened, or with hearts or confetti when it arrives"
-                    },
                     "silent": {
                       "type": "boolean",
                       "description": "Sent with `/silent`: it arrives without a notification or sound"
@@ -68662,7 +68307,7 @@
                     },
                     "encryption": {
                       "nullable": true,
-                      "description": "Set for end-to-end encrypted messages: `text`, `entities`, `spoiler` and `effect` are then empty and the content is in your device's envelope",
+                      "description": "Set for end-to-end encrypted messages: `text`, `entities` and `spoiler` are then empty and the content is in your device's envelope",
                       "type": "object",
                       "properties": {
                         "senderDeviceId": {
@@ -68819,7 +68464,6 @@
                     "text",
                     "entities",
                     "spoiler",
-                    "effect",
                     "silent",
                     "bump",
                     "vanish",
@@ -70034,17 +69678,6 @@
                                   "spoiler": {
                                     "type": "boolean"
                                   },
-                                  "effect": {
-                                    "nullable": true,
-                                    "type": "string",
-                                    "enum": [
-                                      "fire",
-                                      "gift",
-                                      "hearts",
-                                      "confetti"
-                                    ],
-                                    "description": "How a text message shows: in flames, gift-wrapped until opened, or with hearts or confetti when it arrives"
-                                  },
                                   "silent": {
                                     "type": "boolean",
                                     "description": "Sent with `/silent`: it arrives without a notification or sound"
@@ -71633,7 +71266,7 @@
                                   },
                                   "encryption": {
                                     "nullable": true,
-                                    "description": "Set for end-to-end encrypted messages: `text`, `entities`, `spoiler` and `effect` are then empty and the content is in your device's envelope",
+                                    "description": "Set for end-to-end encrypted messages: `text`, `entities` and `spoiler` are then empty and the content is in your device's envelope",
                                     "type": "object",
                                     "properties": {
                                       "senderDeviceId": {
@@ -71790,7 +71423,6 @@
                                   "text",
                                   "entities",
                                   "spoiler",
-                                  "effect",
                                   "silent",
                                   "bump",
                                   "vanish",
@@ -71929,17 +71561,6 @@
                                   "spoiler": {
                                     "type": "boolean"
                                   },
-                                  "effect": {
-                                    "nullable": true,
-                                    "type": "string",
-                                    "enum": [
-                                      "fire",
-                                      "gift",
-                                      "hearts",
-                                      "confetti"
-                                    ],
-                                    "description": "How a text message shows: in flames, gift-wrapped until opened, or with hearts or confetti when it arrives"
-                                  },
                                   "silent": {
                                     "type": "boolean",
                                     "description": "Sent with `/silent`: it arrives without a notification or sound"
@@ -73528,7 +73149,7 @@
                                   },
                                   "encryption": {
                                     "nullable": true,
-                                    "description": "Set for end-to-end encrypted messages: `text`, `entities`, `spoiler` and `effect` are then empty and the content is in your device's envelope",
+                                    "description": "Set for end-to-end encrypted messages: `text`, `entities` and `spoiler` are then empty and the content is in your device's envelope",
                                     "type": "object",
                                     "properties": {
                                       "senderDeviceId": {
@@ -73685,7 +73306,6 @@
                                   "text",
                                   "entities",
                                   "spoiler",
-                                  "effect",
                                   "silent",
                                   "bump",
                                   "vanish",
@@ -74081,17 +73701,6 @@
                                       },
                                       "spoiler": {
                                         "type": "boolean"
-                                      },
-                                      "effect": {
-                                        "nullable": true,
-                                        "type": "string",
-                                        "enum": [
-                                          "fire",
-                                          "gift",
-                                          "hearts",
-                                          "confetti"
-                                        ],
-                                        "description": "How a text message shows: in flames, gift-wrapped until opened, or with hearts or confetti when it arrives"
                                       },
                                       "silent": {
                                         "type": "boolean",
@@ -75681,7 +75290,7 @@
                                       },
                                       "encryption": {
                                         "nullable": true,
-                                        "description": "Set for end-to-end encrypted messages: `text`, `entities`, `spoiler` and `effect` are then empty and the content is in your device's envelope",
+                                        "description": "Set for end-to-end encrypted messages: `text`, `entities` and `spoiler` are then empty and the content is in your device's envelope",
                                         "type": "object",
                                         "properties": {
                                           "senderDeviceId": {
@@ -75838,7 +75447,6 @@
                                       "text",
                                       "entities",
                                       "spoiler",
-                                      "effect",
                                       "silent",
                                       "bump",
                                       "vanish",
@@ -76002,17 +75610,6 @@
                                         },
                                         "spoiler": {
                                           "type": "boolean"
-                                        },
-                                        "effect": {
-                                          "nullable": true,
-                                          "type": "string",
-                                          "enum": [
-                                            "fire",
-                                            "gift",
-                                            "hearts",
-                                            "confetti"
-                                          ],
-                                          "description": "How a text message shows: in flames, gift-wrapped until opened, or with hearts or confetti when it arrives"
                                         },
                                         "silent": {
                                           "type": "boolean",
@@ -77602,7 +77199,7 @@
                                         },
                                         "encryption": {
                                           "nullable": true,
-                                          "description": "Set for end-to-end encrypted messages: `text`, `entities`, `spoiler` and `effect` are then empty and the content is in your device's envelope",
+                                          "description": "Set for end-to-end encrypted messages: `text`, `entities` and `spoiler` are then empty and the content is in your device's envelope",
                                           "type": "object",
                                           "properties": {
                                             "senderDeviceId": {
@@ -77759,7 +77356,6 @@
                                         "text",
                                         "entities",
                                         "spoiler",
-                                        "effect",
                                         "silent",
                                         "bump",
                                         "vanish",
@@ -79946,17 +79542,6 @@
                     "spoiler": {
                       "type": "boolean"
                     },
-                    "effect": {
-                      "nullable": true,
-                      "type": "string",
-                      "enum": [
-                        "fire",
-                        "gift",
-                        "hearts",
-                        "confetti"
-                      ],
-                      "description": "How a text message shows: in flames, gift-wrapped until opened, or with hearts or confetti when it arrives"
-                    },
                     "silent": {
                       "type": "boolean",
                       "description": "Sent with `/silent`: it arrives without a notification or sound"
@@ -81545,7 +81130,7 @@
                     },
                     "encryption": {
                       "nullable": true,
-                      "description": "Set for end-to-end encrypted messages: `text`, `entities`, `spoiler` and `effect` are then empty and the content is in your device's envelope",
+                      "description": "Set for end-to-end encrypted messages: `text`, `entities` and `spoiler` are then empty and the content is in your device's envelope",
                       "type": "object",
                       "properties": {
                         "senderDeviceId": {
@@ -81702,7 +81287,6 @@
                     "text",
                     "entities",
                     "spoiler",
-                    "effect",
                     "silent",
                     "bump",
                     "vanish",
@@ -90342,17 +89926,6 @@
                         "spoiler": {
                           "type": "boolean"
                         },
-                        "effect": {
-                          "nullable": true,
-                          "type": "string",
-                          "enum": [
-                            "fire",
-                            "gift",
-                            "hearts",
-                            "confetti"
-                          ],
-                          "description": "How a text message shows: in flames, gift-wrapped until opened, or with hearts or confetti when it arrives"
-                        },
                         "silent": {
                           "type": "boolean",
                           "description": "Sent with `/silent`: it arrives without a notification or sound"
@@ -91941,7 +91514,7 @@
                         },
                         "encryption": {
                           "nullable": true,
-                          "description": "Set for end-to-end encrypted messages: `text`, `entities`, `spoiler` and `effect` are then empty and the content is in your device's envelope",
+                          "description": "Set for end-to-end encrypted messages: `text`, `entities` and `spoiler` are then empty and the content is in your device's envelope",
                           "type": "object",
                           "properties": {
                             "senderDeviceId": {
@@ -92098,7 +91671,6 @@
                         "text",
                         "entities",
                         "spoiler",
-                        "effect",
                         "silent",
                         "bump",
                         "vanish",
@@ -92262,17 +91834,6 @@
                           },
                           "spoiler": {
                             "type": "boolean"
-                          },
-                          "effect": {
-                            "nullable": true,
-                            "type": "string",
-                            "enum": [
-                              "fire",
-                              "gift",
-                              "hearts",
-                              "confetti"
-                            ],
-                            "description": "How a text message shows: in flames, gift-wrapped until opened, or with hearts or confetti when it arrives"
                           },
                           "silent": {
                             "type": "boolean",
@@ -93862,7 +93423,7 @@
                           },
                           "encryption": {
                             "nullable": true,
-                            "description": "Set for end-to-end encrypted messages: `text`, `entities`, `spoiler` and `effect` are then empty and the content is in your device's envelope",
+                            "description": "Set for end-to-end encrypted messages: `text`, `entities` and `spoiler` are then empty and the content is in your device's envelope",
                             "type": "object",
                             "properties": {
                               "senderDeviceId": {
@@ -94019,7 +93580,6 @@
                           "text",
                           "entities",
                           "spoiler",
-                          "effect",
                           "silent",
                           "bump",
                           "vanish",
@@ -94534,17 +94094,6 @@
                         "spoiler": {
                           "type": "boolean"
                         },
-                        "effect": {
-                          "nullable": true,
-                          "type": "string",
-                          "enum": [
-                            "fire",
-                            "gift",
-                            "hearts",
-                            "confetti"
-                          ],
-                          "description": "How a text message shows: in flames, gift-wrapped until opened, or with hearts or confetti when it arrives"
-                        },
                         "silent": {
                           "type": "boolean",
                           "description": "Sent with `/silent`: it arrives without a notification or sound"
@@ -96133,7 +95682,7 @@
                         },
                         "encryption": {
                           "nullable": true,
-                          "description": "Set for end-to-end encrypted messages: `text`, `entities`, `spoiler` and `effect` are then empty and the content is in your device's envelope",
+                          "description": "Set for end-to-end encrypted messages: `text`, `entities` and `spoiler` are then empty and the content is in your device's envelope",
                           "type": "object",
                           "properties": {
                             "senderDeviceId": {
@@ -96290,7 +95839,6 @@
                         "text",
                         "entities",
                         "spoiler",
-                        "effect",
                         "silent",
                         "bump",
                         "vanish",
@@ -96454,17 +96002,6 @@
                           },
                           "spoiler": {
                             "type": "boolean"
-                          },
-                          "effect": {
-                            "nullable": true,
-                            "type": "string",
-                            "enum": [
-                              "fire",
-                              "gift",
-                              "hearts",
-                              "confetti"
-                            ],
-                            "description": "How a text message shows: in flames, gift-wrapped until opened, or with hearts or confetti when it arrives"
                           },
                           "silent": {
                             "type": "boolean",
@@ -98054,7 +97591,7 @@
                           },
                           "encryption": {
                             "nullable": true,
-                            "description": "Set for end-to-end encrypted messages: `text`, `entities`, `spoiler` and `effect` are then empty and the content is in your device's envelope",
+                            "description": "Set for end-to-end encrypted messages: `text`, `entities` and `spoiler` are then empty and the content is in your device's envelope",
                             "type": "object",
                             "properties": {
                               "senderDeviceId": {
@@ -98211,7 +97748,6 @@
                           "text",
                           "entities",
                           "spoiler",
-                          "effect",
                           "silent",
                           "bump",
                           "vanish",
@@ -98662,17 +98198,6 @@
                         "spoiler": {
                           "type": "boolean"
                         },
-                        "effect": {
-                          "nullable": true,
-                          "type": "string",
-                          "enum": [
-                            "fire",
-                            "gift",
-                            "hearts",
-                            "confetti"
-                          ],
-                          "description": "How a text message shows: in flames, gift-wrapped until opened, or with hearts or confetti when it arrives"
-                        },
                         "silent": {
                           "type": "boolean",
                           "description": "Sent with `/silent`: it arrives without a notification or sound"
@@ -100261,7 +99786,7 @@
                         },
                         "encryption": {
                           "nullable": true,
-                          "description": "Set for end-to-end encrypted messages: `text`, `entities`, `spoiler` and `effect` are then empty and the content is in your device's envelope",
+                          "description": "Set for end-to-end encrypted messages: `text`, `entities` and `spoiler` are then empty and the content is in your device's envelope",
                           "type": "object",
                           "properties": {
                             "senderDeviceId": {
@@ -100418,7 +99943,6 @@
                         "text",
                         "entities",
                         "spoiler",
-                        "effect",
                         "silent",
                         "bump",
                         "vanish",
@@ -100582,17 +100106,6 @@
                           },
                           "spoiler": {
                             "type": "boolean"
-                          },
-                          "effect": {
-                            "nullable": true,
-                            "type": "string",
-                            "enum": [
-                              "fire",
-                              "gift",
-                              "hearts",
-                              "confetti"
-                            ],
-                            "description": "How a text message shows: in flames, gift-wrapped until opened, or with hearts or confetti when it arrives"
                           },
                           "silent": {
                             "type": "boolean",
@@ -102182,7 +101695,7 @@
                           },
                           "encryption": {
                             "nullable": true,
-                            "description": "Set for end-to-end encrypted messages: `text`, `entities`, `spoiler` and `effect` are then empty and the content is in your device's envelope",
+                            "description": "Set for end-to-end encrypted messages: `text`, `entities` and `spoiler` are then empty and the content is in your device's envelope",
                             "type": "object",
                             "properties": {
                               "senderDeviceId": {
@@ -102339,7 +101852,6 @@
                           "text",
                           "entities",
                           "spoiler",
-                          "effect",
                           "silent",
                           "bump",
                           "vanish",
@@ -102749,17 +102261,6 @@
                         "spoiler": {
                           "type": "boolean"
                         },
-                        "effect": {
-                          "nullable": true,
-                          "type": "string",
-                          "enum": [
-                            "fire",
-                            "gift",
-                            "hearts",
-                            "confetti"
-                          ],
-                          "description": "How a text message shows: in flames, gift-wrapped until opened, or with hearts or confetti when it arrives"
-                        },
                         "silent": {
                           "type": "boolean",
                           "description": "Sent with `/silent`: it arrives without a notification or sound"
@@ -104348,7 +103849,7 @@
                         },
                         "encryption": {
                           "nullable": true,
-                          "description": "Set for end-to-end encrypted messages: `text`, `entities`, `spoiler` and `effect` are then empty and the content is in your device's envelope",
+                          "description": "Set for end-to-end encrypted messages: `text`, `entities` and `spoiler` are then empty and the content is in your device's envelope",
                           "type": "object",
                           "properties": {
                             "senderDeviceId": {
@@ -104505,7 +104006,6 @@
                         "text",
                         "entities",
                         "spoiler",
-                        "effect",
                         "silent",
                         "bump",
                         "vanish",
@@ -104669,17 +104169,6 @@
                           },
                           "spoiler": {
                             "type": "boolean"
-                          },
-                          "effect": {
-                            "nullable": true,
-                            "type": "string",
-                            "enum": [
-                              "fire",
-                              "gift",
-                              "hearts",
-                              "confetti"
-                            ],
-                            "description": "How a text message shows: in flames, gift-wrapped until opened, or with hearts or confetti when it arrives"
                           },
                           "silent": {
                             "type": "boolean",
@@ -106269,7 +105758,7 @@
                           },
                           "encryption": {
                             "nullable": true,
-                            "description": "Set for end-to-end encrypted messages: `text`, `entities`, `spoiler` and `effect` are then empty and the content is in your device's envelope",
+                            "description": "Set for end-to-end encrypted messages: `text`, `entities` and `spoiler` are then empty and the content is in your device's envelope",
                             "type": "object",
                             "properties": {
                               "senderDeviceId": {
@@ -106426,7 +105915,6 @@
                           "text",
                           "entities",
                           "spoiler",
-                          "effect",
                           "silent",
                           "bump",
                           "vanish",
@@ -106857,17 +106345,6 @@
                         "spoiler": {
                           "type": "boolean"
                         },
-                        "effect": {
-                          "nullable": true,
-                          "type": "string",
-                          "enum": [
-                            "fire",
-                            "gift",
-                            "hearts",
-                            "confetti"
-                          ],
-                          "description": "How a text message shows: in flames, gift-wrapped until opened, or with hearts or confetti when it arrives"
-                        },
                         "silent": {
                           "type": "boolean",
                           "description": "Sent with `/silent`: it arrives without a notification or sound"
@@ -108456,7 +107933,7 @@
                         },
                         "encryption": {
                           "nullable": true,
-                          "description": "Set for end-to-end encrypted messages: `text`, `entities`, `spoiler` and `effect` are then empty and the content is in your device's envelope",
+                          "description": "Set for end-to-end encrypted messages: `text`, `entities` and `spoiler` are then empty and the content is in your device's envelope",
                           "type": "object",
                           "properties": {
                             "senderDeviceId": {
@@ -108613,7 +108090,6 @@
                         "text",
                         "entities",
                         "spoiler",
-                        "effect",
                         "silent",
                         "bump",
                         "vanish",
@@ -108777,17 +108253,6 @@
                           },
                           "spoiler": {
                             "type": "boolean"
-                          },
-                          "effect": {
-                            "nullable": true,
-                            "type": "string",
-                            "enum": [
-                              "fire",
-                              "gift",
-                              "hearts",
-                              "confetti"
-                            ],
-                            "description": "How a text message shows: in flames, gift-wrapped until opened, or with hearts or confetti when it arrives"
                           },
                           "silent": {
                             "type": "boolean",
@@ -110377,7 +109842,7 @@
                           },
                           "encryption": {
                             "nullable": true,
-                            "description": "Set for end-to-end encrypted messages: `text`, `entities`, `spoiler` and `effect` are then empty and the content is in your device's envelope",
+                            "description": "Set for end-to-end encrypted messages: `text`, `entities` and `spoiler` are then empty and the content is in your device's envelope",
                             "type": "object",
                             "properties": {
                               "senderDeviceId": {
@@ -110534,7 +109999,6 @@
                           "text",
                           "entities",
                           "spoiler",
-                          "effect",
                           "silent",
                           "bump",
                           "vanish",
@@ -110975,17 +110439,6 @@
                         "spoiler": {
                           "type": "boolean"
                         },
-                        "effect": {
-                          "nullable": true,
-                          "type": "string",
-                          "enum": [
-                            "fire",
-                            "gift",
-                            "hearts",
-                            "confetti"
-                          ],
-                          "description": "How a text message shows: in flames, gift-wrapped until opened, or with hearts or confetti when it arrives"
-                        },
                         "silent": {
                           "type": "boolean",
                           "description": "Sent with `/silent`: it arrives without a notification or sound"
@@ -112574,7 +112027,7 @@
                         },
                         "encryption": {
                           "nullable": true,
-                          "description": "Set for end-to-end encrypted messages: `text`, `entities`, `spoiler` and `effect` are then empty and the content is in your device's envelope",
+                          "description": "Set for end-to-end encrypted messages: `text`, `entities` and `spoiler` are then empty and the content is in your device's envelope",
                           "type": "object",
                           "properties": {
                             "senderDeviceId": {
@@ -112731,7 +112184,6 @@
                         "text",
                         "entities",
                         "spoiler",
-                        "effect",
                         "silent",
                         "bump",
                         "vanish",
@@ -112895,17 +112347,6 @@
                           },
                           "spoiler": {
                             "type": "boolean"
-                          },
-                          "effect": {
-                            "nullable": true,
-                            "type": "string",
-                            "enum": [
-                              "fire",
-                              "gift",
-                              "hearts",
-                              "confetti"
-                            ],
-                            "description": "How a text message shows: in flames, gift-wrapped until opened, or with hearts or confetti when it arrives"
                           },
                           "silent": {
                             "type": "boolean",
@@ -114495,7 +113936,7 @@
                           },
                           "encryption": {
                             "nullable": true,
-                            "description": "Set for end-to-end encrypted messages: `text`, `entities`, `spoiler` and `effect` are then empty and the content is in your device's envelope",
+                            "description": "Set for end-to-end encrypted messages: `text`, `entities` and `spoiler` are then empty and the content is in your device's envelope",
                             "type": "object",
                             "properties": {
                               "senderDeviceId": {
@@ -114652,7 +114093,6 @@
                           "text",
                           "entities",
                           "spoiler",
-                          "effect",
                           "silent",
                           "bump",
                           "vanish",

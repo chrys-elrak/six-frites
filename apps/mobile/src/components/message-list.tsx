@@ -13,7 +13,6 @@ import {
   type MessageDTO,
   type StickerDTO,
   textSize,
-  type MessageEffect,
   type MessageEntity,
   type ReplyPreview,
   type ViewMessageResult,
@@ -89,7 +88,6 @@ import {
   StyleSheet,
   useWindowDimensions,
   View,
-  type LayoutRectangle,
   type ListViewToken,
 } from "react-native";
 import { startBotGame } from "./bot-games";
@@ -154,7 +152,6 @@ import { MessageMenu } from "./message-menu";
 import { ReactionBar, ReactionChips, ReactionPicker, type Anchor, useQuickReactions } from "./reactions";
 import { GradientText, Spoiler, styleFor } from "./rich-text";
 import { playHref } from "./live";
-import { EffectLayer } from "./message-effects";
 import { MessageTiming } from "./message-timing";
 import { Sheet, type SheetAction } from "./sheet";
 import { storyFill } from "./stories";
@@ -170,7 +167,6 @@ interface MsgRow {
   text: string | null;
   entities: MessageEntity[];
   spoiler: boolean;
-  effect: MessageEffect | null;
   replyTo: ReplyPreview | null;
   story: StoryReply | null;
   bump: boolean;
@@ -279,7 +275,6 @@ function buildRows(
         text: m.text,
         entities: m.entities,
         spoiler: m.spoiler,
-        effect: m.effect ?? null,
         replyTo: fresh(m.replyTo),
         story: m.story ?? null,
         bump: m.bump,
@@ -315,7 +310,6 @@ function buildRows(
           text: p.text,
           entities: p.entities,
           spoiler: p.spoiler,
-          effect: p.effect ?? null,
           replyTo: fresh(p.replyTo),
           story: p.story ?? null,
           bump: p.bump ?? false,
@@ -987,8 +981,6 @@ function Bubble({
     row.deleted || bare ? t.muted : mine ? alpha(bubble.ink, 0.7) : bubble.theirInk ? alpha(theirInk, 0.6) : t.muted;
 
   const bubbleRef = useRef<ComponentRef<typeof View>>(null);
-  const fx = !sealed && !row.deleted && row.type === "text" ? row.effect : null;
-  const [fxBox, setFxBox] = useState<LayoutRectangle | null>(null);
   const canReact = !frozen && !gamesOnly && !!row.message && !row.pending && !row.deleted && row.type !== "service" && !row.ephemeral?.purged;
   const favorite = useQuickReactions()[0]!;
   const latest = useLatest({ selectable, selecting, canReact, onToggle, onMenu, onReact, pick, favorite });
@@ -1075,7 +1067,6 @@ function Bubble({
         <View
           ref={bubbleRef}
           collapsable={false}
-          onLayout={fx ? (e) => setFxBox(e.nativeEvent.layout) : undefined}
           pointerEvents={selectable ? "none" : "auto"}
           style={[
             radius,
@@ -1225,7 +1216,6 @@ function Bubble({
             </View>
           )}
         </View>
-        {fx && fxBox && <EffectLayer effect={fx} id={row.key} box={fxBox} radius={radius} />}
         {row.message && !row.deleted && (
           <ReactionChips
             reactions={row.message.reactions ?? []}

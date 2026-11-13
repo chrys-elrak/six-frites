@@ -5,7 +5,7 @@ describe("commands", () => {
   it("lists the commands a name could be", () => {
     expect(parseCommand("/")).toEqual({
       kind: "names",
-      names: ["giphy", "sticker", "silent", "effect", "emoji", "game", "play", "location", "schedule", "voice", "vanish"],
+      names: ["giphy", "sticker", "silent", "emoji", "game", "play", "location", "schedule", "voice", "vanish"],
     });
     expect(parseCommand("/st")).toEqual({ kind: "names", names: ["sticker"] });
     expect(parseCommand("/s")).toEqual({ kind: "names", names: ["sticker", "silent", "schedule"] });
