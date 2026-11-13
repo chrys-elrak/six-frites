@@ -2,6 +2,17 @@
 
 What Six Frites News tells members after each deploy, newest first. CLAUDE.md says when to add a section and how.
 
+## 2026-11-13 21h57
+
+### en
+- Your invite links now sit behind the share button at the top of the list: create one, share it again or revoke it, all in the same place.
+
+### fr
+- Vos liens d'invitation se trouvent maintenant derrière le bouton de partage, en haut de la liste : créez-en un, partagez-le à nouveau ou révoquez-le, au même endroit.
+
+### mg
+- Ao ambadiky ny bokotra fizarana eo an-tampon'ny lisitra izao ny rohy fanasanao: mamorona iray, zarao indray na foano, eo amin'ny toerana iray ihany.
+
 ## 2026-11-13 21h35
 
 ### en

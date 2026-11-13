@@ -58,7 +58,7 @@ export function NewInviteDialog({ onClose }: { onClose: () => void }) {
   return (
     <Dialog onClose={onClose}>
       <div className="flex items-center border-b border-stone-200 px-4 py-3 dark:border-stone-800">
-        <h2 className="flex-1 font-semibold">{tr.settings.newLink}</h2>
+        <h2 className="flex-1 font-semibold">{tr.settings.inviteFriends}</h2>
         <button
           type="button"
           onClick={onClose}
@@ -138,6 +138,9 @@ export function NewInviteDialog({ onClose }: { onClose: () => void }) {
           </PrimaryButton>
         </form>
       )}
+      <div className="px-4 pb-4">
+        <Invites />
+      </div>
     </Dialog>
   );
 }
@@ -189,7 +192,7 @@ function InviteRow({ invite, onRevoke, onDelete }: { invite: InviteDTO; onRevoke
   );
 }
 
-export function Invites() {
+function Invites() {
   const tr = useT();
   const qc = useQueryClient();
   const [revoking, setRevoking] = useState<string | null>(null);
@@ -223,8 +226,7 @@ export function Invites() {
   const note = quota.data && inviteLimitNote(quota.data, tr);
 
   return (
-    <section className="space-y-3">
-      <SectionTitle>{tr.settings.inviteFriends}</SectionTitle>
+    <section>
       <Card className="divide-y divide-surface-line overflow-hidden">
         <div className="flex items-center gap-3 p-4">
           <div className="min-w-0 flex-1 space-y-1">

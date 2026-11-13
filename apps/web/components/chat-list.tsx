@@ -80,7 +80,7 @@ import { BackupPinBanner } from "./encryption-settings";
 import { InstallCard } from "./install-card";
 import { InviteNudge, TipCard } from "./tip-card";
 import { FindMe } from "./find-me";
-import { Invites, NewInviteDialog } from "./invites";
+import { NewInviteDialog } from "./invites";
 import { MediaLabel } from "./message-list";
 import { ServiceIcon, callLabel } from "./service-icon";
 
@@ -416,7 +416,7 @@ const contactsQuery = {
 
 /**
  * Everyone I share a direct chat with, A to Z, by last active or by newest, even the chats I deleted for me, and
- * opens our chat. Below them, my contact codes and invite links, for adding more.
+ * opens our chat.
  */
 function ContactRows({ needle, query }: { needle: string; query: string }) {
   const tr = useT();
@@ -471,11 +471,6 @@ function ContactRows({ needle, query }: { needle: string; query: string }) {
         <p className="p-8 text-center text-sm text-stone-500">{needle ? tr.contacts.noMatch(query) : tr.contacts.none}</p>
       ) : (
         shown.map((c) => <ContactRow key={c.user.id} contact={c} sort={sort} active={pathname === `/chats/${c.chatId}`} />)
-      )}
-      {!needle && (
-        <div className="p-4">
-          <Invites />
-        </div>
       )}
     </>
   );

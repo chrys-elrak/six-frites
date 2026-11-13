@@ -481,7 +481,6 @@ export function Invites() {
 
   return (
     <View>
-      <SectionTitle>{tr.settings.inviteFriends}</SectionTitle>
       <Card>
         <View style={styles.cardRow}>
           <View style={{ flex: 1, gap: 4 }}>

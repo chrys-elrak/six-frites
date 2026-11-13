@@ -371,7 +371,7 @@ const contactsQuery = {
 
 /**
  * Everyone I share a direct chat with, A to Z, by last active or by newest, even the chats I deleted for me, and
- * opens our chat. Below them, my contact codes and invite links, for adding more.
+ * opens our chat.
  */
 function ContactList({ needle, query, top }: { needle: string; query: string; top: React.ReactNode }) {
   const t = useTheme();
@@ -419,13 +419,6 @@ function ContactList({ needle, query, top }: { needle: string; query: string; to
       keyExtractor={(c) => c.user.id}
       keyboardShouldPersistTaps="handled"
       renderItem={({ item }) => <ContactRow contact={item} sort={sort} />}
-      ListFooterComponent={
-        needle ? undefined : (
-          <View style={{ padding: 16 }}>
-            <Invites />
-          </View>
-        )
-      }
       refreshControl={
         <RefreshControl
           refreshing={contacts.isRefetching}
@@ -673,7 +666,11 @@ export function ChatList({ archived = false, contacts = false }: { archived?: bo
       )}
       {dialog === "add" && <AddContact onClose={() => setDialog(null)} />}
       {dialog === "group" && <NewGroup onClose={() => setDialog(null)} />}
-      {dialog === "invite" && <NewInvite onClose={() => setDialog(null)} />}
+      {dialog === "invite" && (
+        <NewInvite onClose={() => setDialog(null)}>
+          <Invites />
+        </NewInvite>
+      )}
       {dialog === "findMe" && (
         <Popup onClose={() => setDialog(null)}>
           <FindMe />

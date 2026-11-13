@@ -75,7 +75,7 @@ function Stepper({
   );
 }
 
-export function NewInvite({ onClose }: { onClose: () => void }) {
+export function NewInvite({ onClose, children }: { onClose: () => void; children?: React.ReactNode }) {
   const t = useTheme();
   const tr = useT();
   const insets = useSafeAreaInsets();
@@ -110,7 +110,7 @@ export function NewInvite({ onClose }: { onClose: () => void }) {
         <View style={[styles.panel, { backgroundColor: t.surface, paddingBottom: Math.max(insets.bottom, 16) + 4 }]}>
           <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={{ gap: 16 }}>
             <View style={styles.head}>
-              <Text style={[styles.title, { color: t.text }]}>{tr.settings.newLink}</Text>
+              <Text style={[styles.title, { color: t.text }]}>{tr.settings.inviteFriends}</Text>
               <IconButton Icon={X} label={tr.common.close} onPress={onClose} />
             </View>
             <View style={{ gap: 6 }}>
@@ -148,6 +148,7 @@ export function NewInvite({ onClose }: { onClose: () => void }) {
               busy={create.isPending}
               disabled={create.isPending || !left}
             />
+            {children}
           </ScrollView>
         </View>
       </KeyboardAvoidingView>
