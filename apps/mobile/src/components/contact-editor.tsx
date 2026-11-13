@@ -115,120 +115,124 @@ export function ContactEditor({ userId, onClose }: { userId: string; onClose: ()
               {contact.isError ? tr.contacts.notFound : tr.common.loading}
             </Text>
           ) : (
-            <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={{ gap: 18 }}>
-              <View style={{ alignItems: "center", gap: 10 }}>
-                <Avatar user={{ displayName: name || c.user.displayName, avatarUrl: shownPhoto, alias: c.originalName }} size="lg" />
-                {hasCustomPhoto && (
-                  <Pressable
-                    onPress={() => {
-                      setPhoto(null);
-                      setPicked(null);
-                    }}
-                    style={styles.removePhoto}
-                  >
-                    <Trash2 size={16} color={t.danger} />
-                    <Text style={{ color: t.danger, fontWeight: "600" }}>{tr.contacts.removePhoto}</Text>
-                  </Pressable>
-                )}
-              </View>
-
-              <View style={{ gap: 8 }}>
-                <View style={styles.suggestHead}>
-                  <Text style={{ color: t.textSoft, fontWeight: "600", fontSize: 14 }}>{tr.contacts.pickPicture}</Text>
-                  <Pressable onPress={() => setSuggestions(suggestAvatars())} style={styles.shuffle} hitSlop={6}>
-                    <Shuffle size={16} color={brand} />
-                    <Text style={{ color: brand, fontWeight: "600" }}>{tr.contacts.shuffle}</Text>
-                  </Pressable>
-                </View>
-                <View style={styles.grid}>
-                  {suggestions.map((svg, i) => (
+            <>
+              <ScrollView keyboardShouldPersistTaps="handled" style={{ flexShrink: 1 }} contentContainerStyle={{ gap: 18, paddingBottom: 12 }}>
+                <View style={{ alignItems: "center", gap: 10 }}>
+                  <Avatar user={{ displayName: name || c.user.displayName, avatarUrl: shownPhoto, alias: c.originalName }} size="lg" />
+                  {hasCustomPhoto && (
                     <Pressable
-                      key={i}
-                      onPress={() => void chooseSuggestion(i)}
-                      accessibilityLabel={tr.contacts.usePicture}
-                      style={[styles.suggestion, picked === i && { borderColor: brand }]}
+                      onPress={() => {
+                        setPhoto(null);
+                        setPicked(null);
+                      }}
+                      style={styles.removePhoto}
                     >
-                      <View style={styles.suggestionClip}>
-                        <SvgXml xml={svg} width="100%" height="100%" />
-                      </View>
-                    </Pressable>
-                  ))}
-                </View>
-              </View>
-
-              <View style={{ gap: 6 }}>
-                <Text style={{ color: t.textSoft, fontWeight: "600", fontSize: 14 }}>{tr.contacts.name}</Text>
-                <TextInput
-                  value={name ?? ""}
-                  onChangeText={setName}
-                  placeholder={tr.contacts.name}
-                  placeholderTextColor={t.muted}
-                  maxLength={NAME_MAX}
-                  style={[styles.input, { backgroundColor: t.field, color: t.text }]}
-                />
-                <View style={styles.suggestHead}>
-                  <Text style={{ color: t.muted, fontSize: 12, flex: 1 }}>{tr.contacts.onlyYouSee}</Text>
-                  <Text style={{ color: t.muted, fontSize: 12, fontVariant: ["tabular-nums"] }}>
-                    {(name ?? "").length}/{NAME_MAX}
-                  </Text>
-                  {!!name && (
-                    <Pressable onPress={() => setName("")} hitSlop={6}>
-                      <Text style={{ color: brand, fontSize: 12, fontWeight: "600" }}>{tr.contacts.useTheirName}</Text>
+                      <Trash2 size={16} color={t.danger} />
+                      <Text style={{ color: t.danger, fontWeight: "600" }}>{tr.contacts.removePhoto}</Text>
                     </Pressable>
                   )}
                 </View>
-              </View>
 
-              {c.customName && (
-                <View style={[styles.reveal, { backgroundColor: t.field }]}>
-                  <Text style={{ color: t.text, fontSize: 14 }}>
-                    <Text style={{ color: t.muted }}>{tr.contacts.realName}</Text>
-                    <Text style={{ fontWeight: "600" }}>{c.originalName}</Text>
-                  </Text>
-                </View>
-              )}
-
-              <View style={[styles.reveal, { backgroundColor: t.field }]}>
-                <View style={styles.labelHead}>
-                  <Lock size={14} color={t.textSoft} />
-                  <Text style={{ color: t.textSoft, fontWeight: "600", fontSize: 14 }}>{tr.contacts.privateLabel}</Text>
-                </View>
-                {label ? (
-                  <TextInput
-                    autoFocus
-                    value={label.text}
-                    onChangeText={(text) => setLabel({ ...label, text })}
-                    placeholder={tr.contacts.labelPlaceholder}
-                    placeholderTextColor={t.muted}
-                    maxLength={LABEL_MAX}
-                    style={[styles.input, { backgroundColor: t.surface, color: t.text }]}
-                  />
-                ) : null}
-                {label ? (
-                  <Text style={{ color: t.muted, fontSize: 12, textAlign: "right", fontVariant: ["tabular-nums"] }}>
-                    {label.text.length}/{LABEL_MAX}
-                  </Text>
-                ) : (
-                  <>
-                    <Text style={{ color: t.muted, fontSize: 12 }}>
-                      {hasLock ? tr.contacts.privateLabelHint : tr.contacts.needAppLock}
-                    </Text>
-                    <Pressable
-                      onPress={() => (hasLock ? setAskingCode(true) : router.navigate("/settings?focus=app-lock"))}
-                      hitSlop={6}
-                    >
-                      <Text style={{ color: brand, fontSize: 14, fontWeight: "600" }}>
-                        {hasLock ? tr.contacts.openLabel : tr.settings.appLock.turnOnTitle}
-                      </Text>
+                <View style={{ gap: 8 }}>
+                  <View style={styles.suggestHead}>
+                    <Text style={{ color: t.textSoft, fontWeight: "600", fontSize: 14 }}>{tr.contacts.pickPicture}</Text>
+                    <Pressable onPress={() => setSuggestions(suggestAvatars())} style={styles.shuffle} hitSlop={6}>
+                      <Shuffle size={16} color={brand} />
+                      <Text style={{ color: brand, fontWeight: "600" }}>{tr.contacts.shuffle}</Text>
                     </Pressable>
-                  </>
-                )}
-              </View>
+                  </View>
+                  <View style={styles.grid}>
+                    {suggestions.map((svg, i) => (
+                      <Pressable
+                        key={i}
+                        onPress={() => void chooseSuggestion(i)}
+                        accessibilityLabel={tr.contacts.usePicture}
+                        style={[styles.suggestion, picked === i && { borderColor: brand }]}
+                      >
+                        <View style={styles.suggestionClip}>
+                          <SvgXml xml={svg} width="100%" height="100%" />
+                        </View>
+                      </Pressable>
+                    ))}
+                  </View>
+                </View>
 
-              {error && <Notice tone="error">{error}</Notice>}
-              <PrimaryButton title={saving ? tr.common.saving : tr.common.save} disabled={saving} onPress={() => void save()} />
-              <SafetyNumber userId={userId} />
-            </ScrollView>
+                <View style={{ gap: 6 }}>
+                  <Text style={{ color: t.textSoft, fontWeight: "600", fontSize: 14 }}>{tr.contacts.name}</Text>
+                  <TextInput
+                    value={name ?? ""}
+                    onChangeText={setName}
+                    placeholder={tr.contacts.name}
+                    placeholderTextColor={t.muted}
+                    maxLength={NAME_MAX}
+                    style={[styles.input, { backgroundColor: t.field, color: t.text }]}
+                  />
+                  <View style={styles.suggestHead}>
+                    <Text style={{ color: t.muted, fontSize: 12, flex: 1 }}>{tr.contacts.onlyYouSee}</Text>
+                    <Text style={{ color: t.muted, fontSize: 12, fontVariant: ["tabular-nums"] }}>
+                      {(name ?? "").length}/{NAME_MAX}
+                    </Text>
+                    {!!name && (
+                      <Pressable onPress={() => setName("")} hitSlop={6}>
+                        <Text style={{ color: brand, fontSize: 12, fontWeight: "600" }}>{tr.contacts.useTheirName}</Text>
+                      </Pressable>
+                    )}
+                  </View>
+                </View>
+
+                {c.customName && (
+                  <View style={[styles.reveal, { backgroundColor: t.field }]}>
+                    <Text style={{ color: t.text, fontSize: 14 }}>
+                      <Text style={{ color: t.muted }}>{tr.contacts.realName}</Text>
+                      <Text style={{ fontWeight: "600" }}>{c.originalName}</Text>
+                    </Text>
+                  </View>
+                )}
+
+                <View style={[styles.reveal, { backgroundColor: t.field }]}>
+                  <View style={styles.labelHead}>
+                    <Lock size={14} color={t.textSoft} />
+                    <Text style={{ color: t.textSoft, fontWeight: "600", fontSize: 14 }}>{tr.contacts.privateLabel}</Text>
+                  </View>
+                  {label ? (
+                    <TextInput
+                      autoFocus
+                      value={label.text}
+                      onChangeText={(text) => setLabel({ ...label, text })}
+                      placeholder={tr.contacts.labelPlaceholder}
+                      placeholderTextColor={t.muted}
+                      maxLength={LABEL_MAX}
+                      style={[styles.input, { backgroundColor: t.surface, color: t.text }]}
+                    />
+                  ) : null}
+                  {label ? (
+                    <Text style={{ color: t.muted, fontSize: 12, textAlign: "right", fontVariant: ["tabular-nums"] }}>
+                      {label.text.length}/{LABEL_MAX}
+                    </Text>
+                  ) : (
+                    <>
+                      <Text style={{ color: t.muted, fontSize: 12 }}>
+                        {hasLock ? tr.contacts.privateLabelHint : tr.contacts.needAppLock}
+                      </Text>
+                      <Pressable
+                        onPress={() => (hasLock ? setAskingCode(true) : router.navigate("/settings?focus=app-lock"))}
+                        hitSlop={6}
+                      >
+                        <Text style={{ color: brand, fontSize: 14, fontWeight: "600" }}>
+                          {hasLock ? tr.contacts.openLabel : tr.settings.appLock.turnOnTitle}
+                        </Text>
+                      </Pressable>
+                    </>
+                  )}
+                </View>
+
+                <SafetyNumber userId={userId} />
+              </ScrollView>
+              <View style={{ gap: 10, paddingTop: 12, borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: t.border }}>
+                {error && <Notice tone="error">{error}</Notice>}
+                <PrimaryButton title={saving ? tr.common.saving : tr.common.save} disabled={saving} onPress={() => void save()} />
+              </View>
+            </>
           )}
         </View>
       </KeyboardAvoidingView>

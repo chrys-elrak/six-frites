@@ -245,9 +245,6 @@ export function ContactEditor({ userId, onClose }: { userId: string; onClose: ()
                 </p>
               )}
 
-              <PrimaryButton type="submit" disabled={saving} className="w-full">
-                {saving ? tr.common.saving : tr.common.save}
-              </PrimaryButton>
               <button
                 type="button"
                 onClick={() => setReporting(true)}
@@ -255,6 +252,11 @@ export function ContactEditor({ userId, onClose }: { userId: string; onClose: ()
               >
                 {tr.contacts.report(c.user.displayName)}
               </button>
+              <div className="sticky -bottom-5 -mx-5 border-t border-black/5 bg-white/90 px-5 py-3 backdrop-blur-xl dark:border-white/10 dark:bg-stone-900/90">
+                <PrimaryButton type="submit" disabled={saving} className="w-full">
+                  {saving ? tr.common.saving : tr.common.save}
+                </PrimaryButton>
+              </div>
             </form>
           )}
           {askingCode && (
