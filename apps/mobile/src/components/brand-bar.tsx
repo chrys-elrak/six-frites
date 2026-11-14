@@ -1,4 +1,4 @@
-import { router } from "expo-router";
+import { openHref } from "@/lib/nav";
 import { Pressable, StyleSheet, View } from "react-native";
 import { Text } from "./text";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -11,7 +11,7 @@ export function BrandBar({ children }: { children?: React.ReactNode }) {
   return (
     <View style={[styles.bar, { paddingTop: Math.max(insets.top, 8), backgroundColor: t.glass, borderColor: t.border }]}>
       <Pressable
-        onPress={() => router.navigate("/")}
+        onPress={() => openHref("/")}
         accessibilityRole="header"
         accessibilityLabel="Six Frites"
         style={styles.brand}

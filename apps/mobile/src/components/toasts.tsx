@@ -1,4 +1,3 @@
-import { type Href, router } from "expo-router";
 import { Check, MessageCircle, TriangleAlert, X } from "lucide-react-native";
 import { useEffect } from "react";
 import { Pressable, StyleSheet, View } from "react-native";
@@ -6,6 +5,7 @@ import { Text } from "./text";
 import Animated, { Easing, FadeInUp, FadeOutUp, useAnimatedStyle, useSharedValue, withTiming } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useT } from "@/lib/i18n";
+import { openHref } from "@/lib/nav";
 import { type Toast, useToasts } from "@/lib/notify";
 import { brand, brandInk, useTheme } from "@/lib/theme";
 import { Avatar } from "./avatar";
@@ -17,7 +17,7 @@ function SentPill({ toast, onDismiss }: { toast: Toast; onDismiss: () => void })
       <Pressable
         onPress={() => {
           onDismiss();
-          if (toast.href) router.push(toast.href as Href);
+          if (toast.href) openHref(toast.href);
         }}
         style={({ pressed }) => [styles.pill, { backgroundColor: t.surface, borderColor: t.border }, pressed && { opacity: 0.7 }]}
       >
@@ -56,7 +56,7 @@ function ToastCard({ toast, onDismiss }: { toast: Toast; onDismiss: () => void }
       <Pressable
         onPress={() => {
           onDismiss();
-          if (toast.href) router.push(toast.href as Href);
+          if (toast.href) openHref(toast.href);
         }}
         style={({ pressed }) => [styles.body, pressed && { opacity: 0.7 }]}
       >

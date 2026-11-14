@@ -1,7 +1,7 @@
 import { SixApiError, unwrap } from "@six/sdk";
 import { LABEL_MAX, NAME_MAX } from "@six/shared";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { router } from "expo-router";
+import { openHref } from "@/lib/nav";
 import { Lock, Shuffle, Trash2, X } from "lucide-react-native";
 import { type ComponentRef, useEffect, useRef, useState } from "react";
 import { Pressable, ScrollView, StyleSheet, View } from "react-native";
@@ -215,7 +215,7 @@ export function ContactEditor({ userId, onClose }: { userId: string; onClose: ()
                         {hasLock ? tr.contacts.privateLabelHint : tr.contacts.needAppLock}
                       </Text>
                       <Pressable
-                        onPress={() => (hasLock ? setAskingCode(true) : router.navigate("/settings?focus=app-lock"))}
+                        onPress={() => (hasLock ? setAskingCode(true) : openHref("/settings?focus=app-lock"))}
                         hitSlop={6}
                       >
                         <Text style={{ color: brand, fontSize: 14, fontWeight: "600" }}>

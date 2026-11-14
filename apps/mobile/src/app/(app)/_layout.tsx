@@ -17,6 +17,8 @@ import { RealtimeProvider } from "@/lib/realtime";
 import { useSession } from "@/lib/session";
 import { useTheme } from "@/lib/theme";
 
+export const unstable_settings = { anchor: "(tabs)" };
+
 export default function AppLayout() {
   const t = useTheme();
   const hasAppLock = useSession((s) => !!s.user?.hasAppLock);

@@ -25,11 +25,11 @@ export default function InviteScreen() {
     mutationFn: async () => unwrap(await six.api.POST("/v1/invites/{code}/accept", { params: { path: { code } } })),
     onSuccess: async ({ chatId }) => {
       if (user?.guest) setUser(unwrap(await six.api.GET("/v1/me")));
-      if (chatId) router.replace(`/chats/${chatId}`);
+      if (chatId) router.dismissTo(`/chats/${chatId}`, { withAnchor: true });
     },
   });
 
-  const home = <TextButton title={tr.auth.goHome} onPress={() => router.replace("/")} />;
+  const home = <TextButton title={tr.auth.goHome} onPress={() => router.dismissTo("/", { withAnchor: true })} />;
 
   if (status !== "authed") return <Redirect href={{ pathname: "/login", params: { invite: code } }} />;
   if (preview.isPending) return <Loading />;

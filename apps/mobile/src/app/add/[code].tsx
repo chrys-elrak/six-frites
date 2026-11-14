@@ -26,7 +26,7 @@ export default function AddScreen() {
     retry: false,
   });
 
-  const home = <TextButton title={tr.auth.goHome} onPress={() => router.replace("/")} />;
+  const home = <TextButton title={tr.auth.goHome} onPress={() => router.dismissTo("/", { withAnchor: true })} />;
 
   if (!authed) {
     return (
@@ -49,7 +49,7 @@ export default function AddScreen() {
         <EmptyState Icon={SearchX}>{findErrorText(find.error, tr)}</EmptyState>
       ) : (
         <View style={{ alignSelf: "stretch" }}>
-          <FoundUser found={find.data} query={code} />
+          <FoundUser found={find.data} query={code} open={(href) => router.dismissTo(href, { withAnchor: true })} />
         </View>
       )}
       {home}

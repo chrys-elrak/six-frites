@@ -10,6 +10,7 @@ import { closeChat, deleteMessages, updateChatSettings } from "@/lib/actions";
 import { useArchiveShut } from "@/lib/archive-lock";
 import { isAppChat, isBotChat, isFrozen, isNewsChat, useChat, useMessages } from "@/lib/chats";
 import { useT } from "@/lib/i18n";
+import { openHref } from "@/lib/nav";
 import { clearChatNotifications } from "@/lib/push";
 import { setActiveChat, useRealtime } from "@/lib/realtime";
 import { MAX_SELECTED, useSelection } from "@/lib/selection";
@@ -223,7 +224,7 @@ function OpenConversation({ chatId }: { chatId: string }) {
     return (
       <View style={styles.center}>
         <Text style={{ color: t.text, fontWeight: "600" }}>{tr.chat.notFound}</Text>
-        <TextButton title={tr.common.backToChats} onPress={() => router.replace("/")} />
+        <TextButton title={tr.common.backToChats} onPress={() => openHref("/")} />
       </View>
     );
   }
@@ -404,7 +405,7 @@ function OpenConversation({ chatId }: { chatId: string }) {
           inChat={!isBotChat(c)}
           onClose={() => setMenu(false)}
           onGroupInfo={() => setEditing(true)}
-          onDeleted={(scope) => scope === "me" && router.replace("/")}
+          onDeleted={(scope) => scope === "me" && openHref("/")}
           onChooseMessages={chooseMessages}
           onSharedMedia={(tab) => {
             setSearchFor("");

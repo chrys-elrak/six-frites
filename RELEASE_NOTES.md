@@ -2,6 +2,17 @@
 
 What Six Frites News tells members after each deploy, newest first. CLAUDE.md says when to add a section and how.
 
+## 2026-11-14 09h20
+
+### en
+- In the app, back now takes you where you expect: a chat or page opened from a link goes back to your chats instead of closing the app, and opening a notification or a group link no longer leaves extra screens behind.
+
+### fr
+- Dans l'application, le retour vous ramène là où vous l'attendez : une discussion ou une page ouverte depuis un lien revient à vos discussions au lieu de fermer l'application, et ouvrir une notification ou un lien de groupe ne laisse plus d'écrans en trop derrière.
+
+### mg
+- Ao amin'ny app, ny bokotra miverina dia mitondra anao any amin'izay andrasanao: resaka na pejy nosokafana avy amin'ny rohy dia miverina any amin'ny resakao fa tsy manidy ny app intsony, ary ny fanokafana fampandrenesana na rohin'ny vondrona dia tsy mamela efijery tafahoatra ao aoriana intsony.
+
 ## 2026-11-14 08h04
 
 ### en

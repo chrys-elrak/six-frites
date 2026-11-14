@@ -30,6 +30,7 @@ import {
   updateGroup,
   updateGroupMe,
 } from "@/lib/groups";
+import { openHref } from "@/lib/nav";
 import { useT } from "@/lib/i18n";
 import { useSession } from "@/lib/session";
 import { brand, brandInk, useTheme } from "@/lib/theme";
@@ -407,7 +408,7 @@ export function GroupInfo({ chat, onClose }: { chat: ChatDTO; onClose: () => voi
               run(
                 leaveGroup(qc, chat.id).then(() => {
                   onClose();
-                  router.replace("/");
+                  openHref("/");
                 }),
               ),
           },

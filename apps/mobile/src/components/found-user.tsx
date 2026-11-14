@@ -15,7 +15,17 @@ export const findErrorText = (err: unknown, tr: Dict) =>
     ? ((tr.contacts.findErrors as Record<string, string | undefined>)[err.code] ?? err.message)
     : tr.common.somethingWrong;
 
-export function FoundUser({ found, query, onAdded }: { found: FoundUserDTO; query: string; onAdded?: () => void }) {
+export function FoundUser({
+  found,
+  query,
+  onAdded,
+  open = (href) => router.push(href),
+}: {
+  found: FoundUserDTO;
+  query: string;
+  onAdded?: () => void;
+  open?: (href: `/chats/${string}`) => void;
+}) {
   const t = useTheme();
   const tr = useT();
   const qc = useQueryClient();
@@ -25,7 +35,7 @@ export function FoundUser({ found, query, onAdded }: { found: FoundUserDTO; quer
     onSuccess: (contact) => {
       void qc.invalidateQueries({ queryKey: ["contacts"] });
       onAdded?.();
-      router.push(`/chats/${contact.chatId}`);
+      open(`/chats/${contact.chatId}`);
     },
   });
 

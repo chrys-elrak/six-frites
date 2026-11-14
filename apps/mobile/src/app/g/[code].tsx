@@ -39,7 +39,7 @@ export default function JoinGroupScreen() {
     setError(null);
     try {
       const chat = await joinGroup(qc, code, { nickname: nickname.trim(), ...(photo && { photo }) });
-      router.replace(`/chats/${chat.id}`);
+      router.dismissTo(`/chats/${chat.id}`, { withAnchor: true });
     } catch (err) {
       setError(groupError(err, tr));
       setJoining(false);
@@ -61,7 +61,7 @@ export default function JoinGroupScreen() {
   if (preview.isPending) return <Loading />;
 
   const g = preview.data;
-  const home = <TextButton title={tr.auth.goHome} onPress={() => router.replace("/")} />;
+  const home = <TextButton title={tr.auth.goHome} onPress={() => router.dismissTo("/", { withAnchor: true })} />;
   if (!g) {
     return (
       <SafeAreaView style={[styles.center, { backgroundColor: t.bg }]}>
@@ -83,7 +83,7 @@ export default function JoinGroupScreen() {
             {g.description && <Text style={{ color: t.text, textAlign: "center" }}>{g.description}</Text>}
           </View>
           {g.chatId ? (
-            <PrimaryButton title={tr.groups.open} onPress={() => router.replace(`/chats/${g.chatId}`)} />
+            <PrimaryButton title={tr.groups.open} onPress={() => router.dismissTo(`/chats/${g.chatId}`, { withAnchor: true })} />
           ) : closed ? (
             <Text style={{ color: t.muted, textAlign: "center" }}>{g.banned ? tr.groups.banned : tr.groups.full}</Text>
           ) : (
