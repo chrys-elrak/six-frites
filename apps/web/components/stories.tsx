@@ -104,6 +104,22 @@ const hostOf = (url: string) => {
 
 const clampScale = (v: number) => Math.min(STORY_STICKER_SCALE.max, Math.max(STORY_STICKER_SCALE.min, v));
 
+/** An anonymous message as its card on a story: the prompt on the link's gradient, then its photo, GIF and text. */
+export function AskCard({ ask }: { ask: Pick<StoryAsk, "text" | "prompt" | "photoUrl"> & { gif: { url: string } | null } }) {
+  const tr = useT();
+  return (
+    <div className="w-64 overflow-hidden rounded-3xl bg-white text-center shadow-lg">
+      <p className="flex items-center justify-center gap-2 px-4 py-2.5 text-sm font-semibold text-white" style={{ backgroundImage: ASK_HEAD }}>
+        <Logo className="size-5 shrink-0" />
+        {ask.prompt ?? tr.ask.prompt}
+      </p>
+      {ask.photoUrl && <img src={ask.photoUrl} alt="" draggable={false} className="max-h-72 w-full object-cover" />}
+      {ask.gif && <video src={ask.gif.url} autoPlay loop muted playsInline className="max-h-72 w-full object-cover" />}
+      {ask.text.trim() && <p className="line-clamp-6 px-4 pt-5 pb-4 text-lg leading-snug font-bold break-words whitespace-pre-wrap text-stone-900">{ask.text}</p>}
+    </div>
+  );
+}
+
 /** Follows the pointer until it lets go, wherever it goes on the page. */
 function follow(move: (e: PointerEvent) => void, done?: (e: PointerEvent) => void) {
   const end = (e: PointerEvent) => {
@@ -222,17 +238,7 @@ export function StoryStickers({
 
   const node = (k: StorySticker, ask = asks[stickerIndex("ask", k)]) =>
     ask ? (
-      <div className="w-64 overflow-hidden rounded-3xl bg-white text-center shadow-lg">
-        <p className="flex items-center justify-center gap-2 px-4 py-2.5 text-sm font-semibold text-white" style={{ backgroundImage: ASK_HEAD }}>
-          <Logo className="size-5 shrink-0" />
-          {ask.prompt ?? tr.ask.prompt}
-        </p>
-        {ask.photoUrl && <img src={ask.photoUrl} alt="" draggable={false} className="max-h-72 w-full object-cover" />}
-        {ask.gif && <video src={ask.gif.url} autoPlay loop muted playsInline className="max-h-72 w-full object-cover" />}
-        {ask.text.trim() && (
-          <p className="px-4 pt-5 pb-4 text-lg leading-snug font-bold break-words whitespace-pre-wrap text-stone-900">{ask.text}</p>
-        )}
-      </div>
+      <AskCard ask={ask} />
     ) : stickerIndex("gif", k) >= 0 ? (
       gifs[stickerIndex("gif", k)]
     ) : stickerIndex("photo", k) >= 0 ? (

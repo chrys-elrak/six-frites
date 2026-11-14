@@ -71,7 +71,7 @@ import { currentPosition } from "./location-card";
 import { Portal } from "./portal";
 import { PrimaryButton } from "./ui";
 import { Sheet } from "./sheet";
-import { ChatBubbleCard, StoryStickers, backgroundAround } from "./stories";
+import { AskCard, ChatBubbleCard, StoryStickers, backgroundAround } from "./stories";
 import { LastsPicker } from "./notes";
 import { DrawBar, type Pen, StoryDrawingLayer, TextStyler, TextWriter, type Writing, type WrittenStyle, writtenStyle } from "./story-drawing";
 import { VideoTrimmer } from "./video-trimmer";
@@ -907,7 +907,20 @@ export function StoryComposer({
   );
 }
 
-/** The anonymous messages you received that can go on a story, to tick up to five of them, each once. */
+/** Shows a card once it scrolls near the picker's view, so its photo or GIF only loads then. */
+function LazyCard({ children }: { children: React.ReactNode }) {
+  const [near, setNear] = useState(false);
+  const spot = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (near || !spot.current) return;
+    const watch = new IntersectionObserver(([e]) => e?.isIntersecting && setNear(true), { rootMargin: "0px 300px" });
+    watch.observe(spot.current);
+    return () => watch.disconnect();
+  }, [near]);
+  return near ? children : <div ref={spot} className="h-48 w-64 animate-pulse rounded-3xl bg-stone-200 dark:bg-stone-800" />;
+}
+
+/** The anonymous messages you received that can go on a story, as their cards in a row to swipe through and tick up to five of, each once. */
 function AskPicker({ picked, onToggle, onClose }: { picked: string[]; onToggle: (m: AnonMessageDTO) => void; onClose: () => void }) {
   const tr = useT();
   const inbox = useInfiniteQuery({
@@ -929,16 +942,16 @@ function AskPicker({ picked, onToggle, onClose }: { picked: string[]; onToggle: 
         </span>
       </div>
       <div
-        className="min-h-0 flex-1 space-y-2 overflow-y-auto overscroll-contain px-3 pt-1 pb-3"
+        className="flex min-h-0 snap-x snap-mandatory items-start gap-3 overflow-x-auto overscroll-contain scroll-px-4 px-4 pt-1 pb-3"
         onScroll={(e) => {
           const el = e.currentTarget;
-          if (el.scrollTop + el.clientHeight > el.scrollHeight - 200 && inbox.hasNextPage && !inbox.isFetchingNextPage) void inbox.fetchNextPage();
+          if (el.scrollLeft + el.clientWidth > el.scrollWidth - 300 && inbox.hasNextPage && !inbox.isFetchingNextPage) void inbox.fetchNextPage();
         }}
       >
         {inbox.isPending ? (
-          <p className="py-8 text-center text-sm text-stone-500">{tr.common.loading}</p>
+          <p className="w-full py-8 text-center text-sm text-stone-500">{tr.common.loading}</p>
         ) : items.length === 0 ? (
-          <p className="py-8 text-center text-sm text-stone-500">{tr.ask.empty}</p>
+          <p className="w-full py-8 text-center text-sm text-stone-500">{tr.ask.empty}</p>
         ) : (
           items.map((m) => {
             const on = picked.includes(m.id);
@@ -949,21 +962,13 @@ function AskPicker({ picked, onToggle, onClose }: { picked: string[]; onToggle: 
                 aria-pressed={on}
                 disabled={!on && full}
                 onClick={() => onToggle(m)}
-                className={`flex w-full items-center gap-3 rounded-2xl p-2.5 text-left transition active:scale-[0.99] disabled:opacity-40 ${
-                  on ? "bg-brand/10 ring-2 ring-brand" : "ring-1 ring-stone-200 hover:bg-stone-50 dark:ring-stone-800 dark:hover:bg-stone-800/60"
-                }`}
+                className={`relative shrink-0 snap-start rounded-[1.75rem] p-1 transition active:scale-[0.98] disabled:opacity-40 ${on ? "ring-3 ring-brand" : ""}`}
               >
-                {m.photoUrl ? (
-                  <img src={m.photoUrl} alt="" className="size-12 shrink-0 rounded-xl object-cover" />
-                ) : m.gif ? (
-                  <video src={m.gif.url} autoPlay loop muted playsInline className="size-12 shrink-0 rounded-xl object-cover" />
-                ) : null}
-                <span className="min-w-0 flex-1">
-                  <span className="block truncate text-xs font-semibold text-brand">{m.prompt ?? tr.ask.prompt}</span>
-                  {m.text.trim() && <span className="line-clamp-2 text-sm break-words">{m.text}</span>}
-                </span>
+                <LazyCard>
+                  <AskCard ask={m} />
+                </LazyCard>
                 <span
-                  className={`grid size-6 shrink-0 place-items-center rounded-full ${on ? "bg-brand text-brand-ink" : "ring-2 ring-stone-300 dark:ring-stone-600"}`}
+                  className={`absolute top-3 right-3 grid size-7 place-items-center rounded-full ring-2 ring-white ${on ? "bg-brand text-brand-ink" : "bg-black/35"}`}
                 >
                   {on && <Check className="size-4" strokeWidth={3} />}
                 </span>
@@ -971,6 +976,7 @@ function AskPicker({ picked, onToggle, onClose }: { picked: string[]; onToggle: 
             );
           })
         )}
+        {inbox.isFetchingNextPage && <p className="shrink-0 self-center px-6 text-sm text-stone-500">{tr.common.loading}</p>}
       </div>
       <div className="border-t border-stone-100 px-4 pt-3 pb-[max(1rem,env(safe-area-inset-bottom))] dark:border-stone-800">
         <PrimaryButton type="button" onClick={onClose} className="w-full">

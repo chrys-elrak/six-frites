@@ -329,18 +329,7 @@ export function StoryStickers({
   const node = (k: StorySticker) => {
     const ask = asks[stickerIndex("ask", k)];
     const body = ask ? (
-        <View style={styles.askCard}>
-          <View style={styles.askHead}>
-            <Gradient id={`ask-head-${k}`} colors={ASK_COLORS[0]} doodles={HEAD_DOODLES} />
-            <Logo size={20} />
-            <Text style={styles.askPrompt} numberOfLines={2}>
-              {ask.prompt ?? tr.ask.prompt}
-            </Text>
-          </View>
-          {ask.photoUrl && <Image source={{ uri: ask.photoUrl }} style={styles.askMedia} contentFit="cover" />}
-          {ask.gif && <AskGif url={ask.gif.url} />}
-          {!!ask.text.trim() && <Text style={styles.askText}>{ask.text}</Text>}
-        </View>
+        <AskCard ask={ask} id={k} />
       ) : stickerIndex("gif", k) >= 0 ? (
         gifs[stickerIndex("gif", k)]
       ) : stickerIndex("photo", k) >= 0 ? (
@@ -983,6 +972,29 @@ export function StoryViewer({
         )}
       </View>
     </Modal>
+  );
+}
+
+/** An anonymous message as its card on a story: the prompt on the link's gradient, then its photo, GIF and text. */
+export function AskCard({ ask, id }: { ask: Pick<StoryAsk, "text" | "prompt" | "photoUrl"> & { gif: { url: string } | null }; id: string }) {
+  const tr = useT();
+  return (
+    <View style={styles.askCard}>
+      <View style={styles.askHead}>
+        <Gradient id={`ask-head-${id}`} colors={ASK_COLORS[0]} doodles={HEAD_DOODLES} />
+        <Logo size={20} />
+        <Text style={styles.askPrompt} numberOfLines={2}>
+          {ask.prompt ?? tr.ask.prompt}
+        </Text>
+      </View>
+      {ask.photoUrl && <Image source={{ uri: ask.photoUrl }} style={styles.askMedia} contentFit="cover" />}
+      {ask.gif && <AskGif url={ask.gif.url} />}
+      {!!ask.text.trim() && (
+        <Text style={styles.askText} numberOfLines={6}>
+          {ask.text}
+        </Text>
+      )}
+    </View>
   );
 }
 

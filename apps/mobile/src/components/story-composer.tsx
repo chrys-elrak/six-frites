@@ -69,7 +69,7 @@ import { brand, brandInk } from "@/lib/theme";
 import { currentPosition } from "./location-card";
 import { Modal } from "./modal";
 import { Sheet } from "./sheet";
-import { ChatBubbleCard, StoryStickers, backgroundAround, storyFill } from "./stories";
+import { AskCard, ChatBubbleCard, StoryStickers, backgroundAround, storyFill } from "./stories";
 import { LastsPicker } from "./notes";
 import { DrawBar, type Pen, StoryDrawingLayer, TextStyler, TextWriter, type Writing, type WrittenStyle, writtenStyle } from "./story-drawing";
 import { Text, TextInput } from "./text";
@@ -875,7 +875,10 @@ export function StoryComposer({
   );
 }
 
-/** The anonymous messages you received that can go on a story, to tick up to five of them, each once. */
+const ASK_WIDTH = 262;
+const ASK_GAP = 12;
+
+/** The anonymous messages you received that can go on a story, as their cards in a row to swipe through and tick up to five of, each once. */
 function AskPicker({ picked, onToggle, onClose }: { picked: string[]; onToggle: (m: AnonMessageDTO) => void; onClose: () => void }) {
   const tr = useT();
   const inbox = useInfiniteQuery({
@@ -886,6 +889,7 @@ function AskPicker({ picked, onToggle, onClose }: { picked: string[]; onToggle: 
   });
   const items = (inbox.data?.pages.flatMap((p) => p.items) ?? []).filter((m) => m.text.trim() || m.photoUrl || m.gif);
   const full = picked.length >= STORY_ASKS;
+  const { width } = useWindowDimensions();
 
   return (
     <View style={styles.asks}>
@@ -900,44 +904,32 @@ function AskPicker({ picked, onToggle, onClose }: { picked: string[]; onToggle: 
       ) : (
         <FlatList
           data={items}
+          horizontal
           keyExtractor={(m) => m.id}
           style={{ flexGrow: 0 }}
-          keyboardShouldPersistTaps="handled"
+          contentContainerStyle={{ gap: ASK_GAP, alignItems: "flex-start" }}
+          showsHorizontalScrollIndicator={false}
+          snapToInterval={ASK_WIDTH + ASK_GAP}
+          decelerationRate="fast"
+          initialNumToRender={2}
+          maxToRenderPerBatch={2}
+          windowSize={3}
+          removeClippedSubviews
+          onEndReachedThreshold={2}
           onEndReached={() => inbox.hasNextPage && !inbox.isFetchingNextPage && void inbox.fetchNextPage()}
-          ListEmptyComponent={<Text style={{ color: "rgba(255,255,255,0.7)", textAlign: "center", paddingVertical: 24 }}>{tr.ask.empty}</Text>}
+          ListFooterComponent={inbox.isFetchingNextPage ? <ActivityIndicator color="#fff" style={{ alignSelf: "center", padding: 24 }} /> : undefined}
+          ListEmptyComponent={<Text style={{ width: width - 56, color: "rgba(255,255,255,0.7)", textAlign: "center", paddingVertical: 24 }}>{tr.ask.empty}</Text>}
           renderItem={({ item: m }) => {
             const on = picked.includes(m.id);
-            const thumb = m.photoUrl ?? m.gif?.url;
             return (
               <Pressable
                 onPress={() => onToggle(m)}
                 disabled={!on && full}
                 accessibilityRole="checkbox"
                 accessibilityState={{ checked: on, disabled: !on && full }}
-                style={({ pressed }) => [
-                  styles.askRow,
-                  on && { borderColor: brand, backgroundColor: "rgba(235,138,0,0.18)" },
-                  !on && full && { opacity: 0.4 },
-                  pressed && { transform: [{ scale: 0.99 }] },
-                ]}
+                style={({ pressed }) => [styles.askSlide, on && { borderColor: brand }, !on && full && { opacity: 0.4 }, pressed && { transform: [{ scale: 0.98 }] }]}
               >
-                {m.photoUrl ? (
-                  <Image source={{ uri: thumb }} style={styles.askThumb} contentFit="cover" />
-                ) : m.gif ? (
-                  <View style={[styles.askThumb, { alignItems: "center", justifyContent: "center", backgroundColor: "rgba(255,255,255,0.15)" }]}>
-                    <Text style={{ color: "#fff", fontSize: 11, fontWeight: "800" }}>GIF</Text>
-                  </View>
-                ) : null}
-                <View style={{ flex: 1, minWidth: 0 }}>
-                  <Text numberOfLines={1} style={{ color: brand, fontSize: 12, fontWeight: "700" }}>
-                    {m.prompt ?? tr.ask.prompt}
-                  </Text>
-                  {!!m.text.trim() && (
-                    <Text numberOfLines={2} style={{ color: "#fff", fontSize: 14 }}>
-                      {m.text}
-                    </Text>
-                  )}
-                </View>
+                <AskCard ask={m} id={`pick-${m.id}`} />
                 <View style={[styles.askTick, on && { backgroundColor: brand, borderColor: brand }]}>
                   {on && <Check size={15} color={brandInk} strokeWidth={3} />}
                 </View>
@@ -968,12 +960,11 @@ const styles = StyleSheet.create({
   tool: { width: 44, height: 44, borderRadius: 22, alignItems: "center", justifyContent: "center" },
   bottom: { gap: 12, paddingHorizontal: 16, paddingTop: 12, backgroundColor: "rgba(0,0,0,0.35)" },
   gifs: { borderRadius: 16, backgroundColor: "rgba(0,0,0,0.55)", padding: 10 },
-  asks: { maxHeight: 380, gap: 8, borderRadius: 20, backgroundColor: "rgba(0,0,0,0.6)", padding: 12 },
+  asks: { gap: 10, borderRadius: 20, backgroundColor: "rgba(0,0,0,0.6)", padding: 12 },
   asksHead: { flexDirection: "row", alignItems: "center", justifyContent: "space-between" },
   asksCount: { color: "#fff", fontSize: 13, fontWeight: "700", backgroundColor: "rgba(255,255,255,0.15)", borderRadius: 10, overflow: "hidden", paddingHorizontal: 9, paddingVertical: 2 },
-  askRow: { flexDirection: "row", alignItems: "center", gap: 10, borderRadius: 16, padding: 10, marginBottom: 8, borderWidth: 1, borderColor: "rgba(255,255,255,0.2)" },
-  askThumb: { width: 44, height: 44, borderRadius: 10 },
-  askTick: { width: 24, height: 24, borderRadius: 12, alignItems: "center", justifyContent: "center", borderWidth: 2, borderColor: "rgba(255,255,255,0.5)" },
+  askSlide: { borderRadius: 25, borderWidth: 3, borderColor: "transparent" },
+  askTick: { position: "absolute", top: 10, right: 10, width: 26, height: 26, borderRadius: 13, alignItems: "center", justifyContent: "center", borderWidth: 2, borderColor: "#fff", backgroundColor: "rgba(0,0,0,0.35)" },
   askDone: { alignItems: "center", borderRadius: 999, backgroundColor: brand, paddingVertical: 11 },
   swatches: { flexGrow: 1, justifyContent: "center" },
   swatchRow: { flexDirection: "row", gap: 10, paddingVertical: 4 },
