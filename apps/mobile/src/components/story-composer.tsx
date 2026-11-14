@@ -55,7 +55,7 @@ import {
 import { type ComponentRef, useEffect, useRef, useState } from "react";
 import { ActivityIndicator, FlatList, type GestureResponderEvent, Keyboard, Pressable, ScrollView, StyleSheet, View, useWindowDimensions } from "react-native";
 import { captureRef } from "react-native-view-shot";
-import { KeyboardAvoidingView, useKeyboardState } from "react-native-keyboard-controller";
+import { KeyboardAvoidingView } from "react-native-keyboard-controller";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { getLocale, useT } from "@/lib/i18n";
 import { cutVideo, pickMedia, recordVideo, takePhoto } from "@/lib/media";
@@ -243,7 +243,6 @@ export function StoryComposer({
   const qc = useQueryClient();
   const insets = useSafeAreaInsets();
   const { height: screenH, width: screenW } = useWindowDimensions();
-  const keyboard = useKeyboardState((k) => (k.isVisible ? k.height : 0));
   const screen = useRef<ComponentRef<typeof View>>(null);
   const [flattening, setFlattening] = useState(false);
   const [file, setFile] = useState<LocalFile | null>(null);
@@ -260,6 +259,7 @@ export function StoryComposer({
   const linkField = useRef<ComponentRef<typeof TextInput>>(null);
   const [asks, setAsks] = useState<AnonMessageDTO[]>(anon ? [anon] : []);
   const [pickingAsks, setPickingAsks] = useState(false);
+  const [panelTop, setPanelTop] = useState(screenH);
   const [pickingGif, setPickingGif] = useState(false);
   const [location, setLocation] = useState<StoryLocation | null>(null);
   const [locating, setLocating] = useState(false);
@@ -602,8 +602,34 @@ export function StoryComposer({
 
           <View pointerEvents="box-none" style={[styles.top, { top: insets.top + 8 }, flattening && styles.gone]}>
             <Tool on={false} Icon={X} label={tr.common.close} onPress={onClose} />
+            {!drawingOn && (
+              <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.switches} contentContainerStyle={styles.switchRow}>
+                <Tool
+                  on={!!link}
+                  Icon={Link2}
+                  label={tr.stories.link}
+                  onPress={() => {
+                    setLink(link ? null : { url: "", label: "" });
+                    if (!link) setTimeout(() => linkField.current?.focus(), 50);
+                  }}
+                />
+                <Tool
+                  on={askLink}
+                  Icon={MessageCircleQuestionMark}
+                  label={tr.stories.askLink}
+                  onPress={() => {
+                    setAskLink(!askLink);
+                    if (!askLink) setTimeout(() => askField.current?.focus(), 50);
+                  }}
+                />
+                <Tool on={asks.length > 0 || pickingAsks} Icon={VenetianMask} label={tr.ask.title} onPress={() => setPickingAsks(!pickingAsks)} />
+                <Tool on={!!location} busy={locating} Icon={MapPin} label={tr.stories.location} onPress={() => void locate()} />
+                <Tool on={showDate} Icon={CalendarDays} label={tr.stories.date} onPress={() => setShowDate(!showDate)} />
+                <Tool on={showTime} Icon={Clock} label={tr.stories.time} onPress={() => setShowTime(!showTime)} />
+              </ScrollView>
+            )}
             <ScrollView
-              style={{ maxHeight: Math.max(96, screenH - insets.top - 230 - keyboard), flexGrow: 0 }}
+              style={{ maxHeight: Math.max(0, panelTop - insets.top - 8 - 12), flexGrow: 0 }}
               contentContainerStyle={styles.tools}
               showsVerticalScrollIndicator={false}
             >
@@ -613,33 +639,11 @@ export function StoryComposer({
                   <Tool on={!!file} Icon={ImagePlus} label={`${tr.stories.photo} / ${tr.stories.video}`} onPress={() => void pick("library")} />
                   <Tool on={false} Icon={Camera} label={tr.stories.photo} onPress={() => void pick("camera")} />
                   <Tool on={false} Icon={Video} label={tr.stories.video} onPress={() => void pick("video")} />
-                {file?.kind !== "video" && !fromChat && (
-                  <Tool on={photos.length > 0} Icon={Images} label={tr.stories.photoSticker} onPress={() => void addPhotos()} />
-                )}
+                  {file?.kind !== "video" && !fromChat && (
+                    <Tool on={photos.length > 0} Icon={Images} label={tr.stories.photoSticker} onPress={() => void addPhotos()} />
+                  )}
                   {canPaste && <Tool on={false} Icon={ClipboardPaste} label={tr.stories.pasteImage} onPress={() => void paste()} />}
                   <Tool on={gifs.length > 0 || pickingGif} Icon={Sticker} label={tr.stories.gif} onPress={() => setPickingGif(!pickingGif)} />
-                  <Tool
-                    on={!!link}
-                    Icon={Link2}
-                    label={tr.stories.link}
-                    onPress={() => {
-                      setLink(link ? null : { url: "", label: "" });
-                      if (!link) setTimeout(() => linkField.current?.focus(), 50);
-                    }}
-                  />
-                  <Tool
-                    on={askLink}
-                    Icon={MessageCircleQuestionMark}
-                    label={tr.stories.askLink}
-                    onPress={() => {
-                      setAskLink(!askLink);
-                      if (!askLink) setTimeout(() => askField.current?.focus(), 50);
-                    }}
-                  />
-                  <Tool on={asks.length > 0 || pickingAsks} Icon={VenetianMask} label={tr.ask.title} onPress={() => setPickingAsks(!pickingAsks)} />
-                  <Tool on={!!location} busy={locating} Icon={MapPin} label={tr.stories.location} onPress={() => void locate()} />
-                  <Tool on={showDate} Icon={CalendarDays} label={tr.stories.date} onPress={() => setShowDate(!showDate)} />
-                  <Tool on={showTime} Icon={Clock} label={tr.stories.time} onPress={() => setShowTime(!showTime)} />
                 </>
               )}
               <Tool on={drawingOn} Icon={Pencil} label={tr.composer.editTools.draw} onPress={() => setDrawingOn(!drawingOn)} />
@@ -657,7 +661,10 @@ export function StoryComposer({
             </ScrollView>
           </View>
 
-          <View style={[styles.bottom, { paddingBottom: Math.max(insets.bottom, 16) }, flattening && styles.gone]}>
+          <View
+            onLayout={(e) => setPanelTop(e.nativeEvent.layout.y)}
+            style={[styles.bottom, { paddingBottom: Math.max(insets.bottom, 16) }, flattening && styles.gone]}
+          >
             {drawingOn && (
               <DrawBar
                 pen={pen}
@@ -956,6 +963,8 @@ const styles = StyleSheet.create({
   caption: { color: "#fff", fontSize: 16, textAlign: "center", textShadowColor: "rgba(0,0,0,0.6)", textShadowRadius: 4 },
   top: { position: "absolute", left: 12, right: 12, flexDirection: "row", justifyContent: "space-between", alignItems: "flex-start" },
   tools: { gap: 10 },
+  switches: { flex: 1, marginHorizontal: 10 },
+  switchRow: { flexGrow: 1, justifyContent: "center", gap: 10 },
   tool: { width: 44, height: 44, borderRadius: 22, alignItems: "center", justifyContent: "center" },
   bottom: { gap: 12, paddingHorizontal: 16, paddingTop: 12, backgroundColor: "rgba(0,0,0,0.35)" },
   gifs: { borderRadius: 16, backgroundColor: "rgba(0,0,0,0.55)", padding: 10 },

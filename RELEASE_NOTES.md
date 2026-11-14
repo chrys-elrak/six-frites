@@ -2,6 +2,17 @@
 
 What Six Frites News tells members after each deploy, newest first. CLAUDE.md says when to add a section and how.
 
+## 2026-11-14 07h43
+
+### en
+- In the story editor, the link, question, anonymous message, place, date and time buttons now sit in a row at the top, and the other buttons stay above the text box instead of hiding behind it.
+
+### fr
+- Dans l'éditeur de story, les boutons lien, question, message anonyme, lieu, date et heure sont maintenant en ligne en haut, et les autres boutons restent au-dessus du champ de texte au lieu de passer derrière.
+
+### mg
+- Ao amin'ny fanoratana story, eo ambony izao no misy ny bokotra rohy, fanontaniana, hafatra tsy fantatra anarana, toerana, daty ary ora, ary ireo bokotra hafa dia mijanona eo ambonin'ny toerana fanoratana fa tsy miafina ao ambadiny intsony.
+
 ## 2026-11-14 07h42
 
 ### en

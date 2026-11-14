@@ -79,7 +79,7 @@ import { VideoTrimmer } from "./video-trimmer";
 const MEDIA_TYPES = "image/jpeg,image/png,image/webp,image/gif,video/mp4,video/quicktime,video/webm";
 
 const tool = (on: boolean) =>
-  `pointer-events-auto grid size-11 place-items-center rounded-full backdrop-blur transition active:scale-95 ${
+  `pointer-events-auto grid size-11 shrink-0 place-items-center rounded-full backdrop-blur transition active:scale-95 ${
     on ? "bg-white text-stone-900" : "bg-black/35 text-white hover:bg-black/50"
   }`;
 
@@ -148,6 +148,14 @@ export function StoryComposer({
   const linkField = useRef<HTMLInputElement>(null);
   const [asks, setAsks] = useState<AnonMessageDTO[]>(anon ? [anon] : []);
   const [pickingAsks, setPickingAsks] = useState(false);
+  const [panel, setPanel] = useState<HTMLDivElement | null>(null);
+  const [panelHeight, setPanelHeight] = useState(0);
+  useEffect(() => {
+    if (!panel) return;
+    const watch = new ResizeObserver(() => setPanelHeight(panel.offsetHeight));
+    watch.observe(panel);
+    return () => watch.disconnect();
+  }, [panel]);
   const [pickingGif, setPickingGif] = useState(false);
   const [camera, setCamera] = useState(false);
   const [location, setLocation] = useState<StoryLocation | null>(null);
@@ -520,6 +528,18 @@ export function StoryComposer({
       ? [{ label: tr.stories.photoSticker, icon: Images, on: photos.length > 0, onClick: () => photoPicker.current?.click() }]
       : []),
     { label: tr.stories.gif, icon: Sticker, on: gifs.length > 0 || pickingGif, onClick: () => setPickingGif(!pickingGif) },
+    { label: tr.composer.editTools.draw, icon: Pencil, on: drawingOn, onClick: () => setDrawingOn(!drawingOn) },
+    {
+      label: tr.stories.addText,
+      icon: CaseSensitive,
+      on: false,
+      onClick: () => {
+        setDrawingOn(false);
+        if (drawing.texts.length < 10) setWriting({ index: -1, text: "", color: EDIT_COLORS[0]!, font: "classic", look: "plain" });
+      },
+    },
+  ];
+  const switches = [
     {
       label: tr.stories.link,
       icon: Link2,
@@ -542,16 +562,6 @@ export function StoryComposer({
     { label: tr.stories.location, icon: locating ? Loader2 : MapPin, on: !!location, onClick: () => void locate() },
     { label: tr.stories.date, icon: CalendarDays, on: showDate, onClick: () => setShowDate(!showDate) },
     { label: tr.stories.time, icon: Clock, on: showTime, onClick: () => setShowTime(!showTime) },
-    { label: tr.composer.editTools.draw, icon: Pencil, on: drawingOn, onClick: () => setDrawingOn(!drawingOn) },
-    {
-      label: tr.stories.addText,
-      icon: CaseSensitive,
-      on: false,
-      onClick: () => {
-        setDrawingOn(false);
-        if (drawing.texts.length < 10) setWriting({ index: -1, text: "", color: EDIT_COLORS[0]!, font: "classic", look: "plain" });
-      },
-    },
   ];
 
   return (
@@ -619,11 +629,26 @@ export function StoryComposer({
             <StoryStickers {...stickers} placed onMove={drawingOn ? undefined : stickers.onMove} skip={flattening ? stays : undefined} />
           </StoryDrawingLayer>
 
-          <div data-flat-skip className="pointer-events-none absolute inset-x-0 top-0 flex items-start justify-between p-3 pt-[max(0.75rem,env(safe-area-inset-top))]">
+          <div
+            data-flat-skip
+            className="pointer-events-none absolute inset-x-0 top-0 flex items-start justify-between p-3 pt-[max(0.75rem,env(safe-area-inset-top))]"
+            style={{ bottom: panelHeight }}
+          >
             <button type="button" onClick={onClose} aria-label={tr.common.close} title={tr.common.close} className={tool(false)}>
               <X className="size-6" />
             </button>
-            <div className="pointer-events-auto -m-1 flex max-h-[calc(100dvh-11rem)] flex-col gap-2.5 overflow-y-auto p-1 [scrollbar-width:none] md:max-h-[calc(min(92dvh,52rem)-11rem)] [&::-webkit-scrollbar]:hidden">
+            {!drawingOn && (
+              <div className="pointer-events-auto -my-1 mx-2.5 min-w-0 flex-1 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+                <div className="mx-auto flex w-max gap-2.5 py-1">
+                  {switches.map(({ label, icon: Icon, on, onClick }) => (
+                    <button key={label} type="button" onClick={onClick} aria-label={label} aria-pressed={on} title={label} className={tool(on)}>
+                      <Icon className={`size-5 ${Icon === Loader2 ? "animate-spin" : ""}`} />
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+            <div className="pointer-events-auto -m-1 flex max-h-full flex-col gap-2.5 overflow-y-auto p-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
               {tools.filter((t) => !drawingOn || t.icon === Pencil).map(({ label, icon: Icon, on, onClick }) => (
                 <button key={label} type="button" onClick={onClick} aria-label={label} aria-pressed={on} title={label} className={tool(on)}>
                   <Icon className={`size-5 ${Icon === Loader2 ? "animate-spin" : ""}`} />
@@ -632,7 +657,11 @@ export function StoryComposer({
             </div>
           </div>
 
-          <div data-flat-skip className="relative flex flex-col gap-3 bg-gradient-to-t from-black/70 to-transparent px-4 pt-6 pb-[max(1rem,env(safe-area-inset-bottom))]">
+          <div
+            ref={setPanel}
+            data-flat-skip
+            className="relative flex flex-col gap-3 bg-gradient-to-t from-black/70 to-transparent px-4 pt-6 pb-[max(1rem,env(safe-area-inset-bottom))]"
+          >
             {drawingOn && (
               <DrawBar
                 pen={pen}
@@ -900,7 +929,7 @@ function AskPicker({ picked, onToggle, onClose }: { picked: string[]; onToggle: 
         </span>
       </div>
       <div
-        className="min-h-0 flex-1 space-y-2 overflow-y-auto overscroll-contain px-3 pb-3"
+        className="min-h-0 flex-1 space-y-2 overflow-y-auto overscroll-contain px-3 pt-1 pb-3"
         onScroll={(e) => {
           const el = e.currentTarget;
           if (el.scrollTop + el.clientHeight > el.scrollHeight - 200 && inbox.hasNextPage && !inbox.isFetchingNextPage) void inbox.fetchNextPage();
