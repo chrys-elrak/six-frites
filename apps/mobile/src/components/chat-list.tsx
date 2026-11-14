@@ -198,7 +198,7 @@ function ChatRow({ chat, meId }: { chat: ChatDTO; meId: string }) {
   const t = useTheme();
   const tr = useT();
   const [menu, setMenu] = useState(false);
-  const typing = useTyping(chat.id);
+  const typing = useTyping(chat);
   const draft = useDrafts((s) => s.byChat[chat.id]);
   const unsent = useOutbox((s) => {
     const pending = s.byChat[chat.id];
@@ -273,7 +273,7 @@ function ChatRow({ chat, meId }: { chat: ChatDTO; meId: string }) {
                 <View style={styles.rowLine}>
                   <View style={{ flex: 1 }}>
                     {typing ? (
-                      <Text style={[styles.preview, { color: brand, fontWeight: "500" }]}>{tr.chats.typing[typing]}</Text>
+                      <Text style={[styles.preview, { color: brand, fontWeight: "500" }]}>{typing}</Text>
                     ) : unsent ? (
                       <View style={{ flexDirection: "row", alignItems: "center", gap: 4 }}>
                         {unsent.status === "failed" ? <AlertCircle size={14} color={t.danger} /> : <Clock size={14} color={t.muted} />}

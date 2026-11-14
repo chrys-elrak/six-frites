@@ -139,7 +139,7 @@ function OpenConversation({ chatId }: { chatId: string }) {
   const [searchFor, setSearchFor] = useState("");
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [pinIndex, setPinIndex] = useState(0);
-  const typing = useTyping(chatId);
+  const typing = useTyping(chat.data);
   const inCall = useCall((s) => s.call !== null);
   const keyChanges = useKeyChanges((s) => s.userIds);
   const dismissKeyChange = useKeyChanges((s) => s.dismiss);
@@ -298,7 +298,7 @@ function OpenConversation({ chatId }: { chatId: string }) {
                   {status === "offline" ? tr.chats.waitingForNetwork : tr.common.connecting}
                 </Text>
               ) : typing ? (
-                <Text style={{ color: brand, fontSize: 12, fontWeight: "600" }}>{tr.chats.typing[typing]}</Text>
+                <Text style={{ color: brand, fontSize: 12, fontWeight: "600" }}>{typing}</Text>
               ) : (
                 (presence || c.muted || c.archived || !!c.autoDeleteSecs || c.support || c.withSupport || c.group) && (
                   <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
@@ -367,7 +367,7 @@ function OpenConversation({ chatId }: { chatId: string }) {
               meId={meId}
               onSeen={onSeen}
               onOpenThread={(m) => setThread(m.id)}
-              after={typing && !selecting ? <TypingBubble kind={typing} /> : undefined}
+              after={typing && !selecting ? <TypingBubble label={typing} /> : undefined}
             />
           </View>
           {!selecting && c.supportClosedAt && (

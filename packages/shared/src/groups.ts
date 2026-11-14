@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { Id } from "./common.js";
 import { ContactPhoto } from "./contacts.js";
-import { type ChatDTO, GROUP_MAX_PLACES, GROUP_MIN_PLACES, MENTION, type ServiceAction } from "./chats.js";
+import { type ChatDTO, GROUP_MAX_PLACES, GROUP_MIN_PLACES, MENTION, type ServiceAction, type TypingKind } from "./chats.js";
 import type { Dict } from "./i18n/index.js";
 import type { PublicUser } from "./invites.js";
 
@@ -105,12 +105,18 @@ export function mentionsIn(text: string, members: Member[], meId: string) {
     .map((m) => m.user.id);
 }
 
-/** How a message can mention me in a group: my nickname, which shows as "@You", @everyone, and @admin if I am one. */
+/**
+ * How a message can mention me in a group (my nickname, which shows as "@You", @everyone, and @admin if I am one), and
+ * the names I gave other members, to show their mentions by.
+ */
 export function myMentions(chat: Pick<ChatDTO, "group" | "members">, meId: string) {
   const me = chat.group && chat.members.find((m) => m.user.id === meId);
   if (!me) return null;
   const nickname = `@${nicknameOf(me.user)}`;
-  return { nickname, all: new Set([nickname, "@everyone", ...(isAdmin(me) ? ["@admin"] : [])]) };
+  const names = new Map(
+    chat.members.filter((m) => m.user.alias && m.user.id !== meId).map((m) => [`@${m.user.alias}`, `@${m.user.displayName}`]),
+  );
+  return { nickname, all: new Set([nickname, "@everyone", ...(isAdmin(me) ? ["@admin"] : [])]), names };
 }
 
 /** `text` with my own mentions in a group, like @#3FA2C1, written as "@You" instead. */
@@ -138,6 +144,15 @@ export function mentionOptions(chat: Pick<ChatDTO, "members">, meId: string, que
     ...groups.map((group) => ({ insert: `@${group}`, member: null, group })),
     ...members.map((member) => ({ insert: `@${nicknameOf(member.user)}`, member, group: null })),
   ];
+}
+
+/** What a chat shows while people type or record: what they're doing, and in a group who. */
+export function typingLabel(chat: Pick<ChatDTO, "group" | "members">, typers: [string, TypingKind][], t: Dict) {
+  const [first] = typers;
+  if (!first) return null;
+  if (!chat.group) return t.chats.typing[first[1]];
+  if (typers.length > 1) return t.chats.typingSeveral(typers.length);
+  return t.chats.typingBy(senderName(chat, first[0], t), t.chats.typing[first[1]]);
 }
 
 /** How a chat shows whoever sent something, or "Former member" for someone who left a group. */

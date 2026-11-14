@@ -8,6 +8,7 @@ import {
   Id,
   JoinGroupInput,
   SetGroupRoleInput,
+  UpdateContactInput,
   UpdateGroupInput,
   UpdateGroupMeInput,
 } from "@six/shared";
@@ -16,6 +17,7 @@ import {
   groupLinkPreview,
   joinGroup,
   leaveGroup,
+  nameGroupMember,
   previewGroup,
   removeGroupMember,
   resetGroupLink,
@@ -143,6 +145,23 @@ const groupRoutes: FastifyPluginAsyncZod = async (app) => {
       },
     },
     (req) => setGroupRole(req.auth.userId, req.params.id, req.params.userId, req.body),
+  );
+
+  app.patch(
+    "/groups/:id/members/:userId/name",
+    {
+      schema: {
+        tags,
+        summary: "Give a member a name and photo only you see",
+        description:
+          "The same as a contact's own name and photo (PATCH /v1/contacts/{userId}), for anyone in the group: it shows in every chat you share with them. Null clears it.",
+        security,
+        params: MemberParams,
+        body: UpdateContactInput,
+        response: { 200: ChatDTO },
+      },
+    },
+    (req) => nameGroupMember(req.auth.userId, req.params.id, req.params.userId, req.body),
   );
 
   app.delete(

@@ -8,16 +8,25 @@ What Six Frites News tells members after each deploy, newest first. CLAUDE.md sa
 - Group admins can close a group for an hour, a day, a week or until a time they pick: only admins write until then, and it opens again by itself.
 - Groups have polls: ask a question with up to twelve answers. Votes are anonymous, unless whoever makes the poll chooses to show who voted.
 - In a group, type @ to mention someone, @admin to call the admins, or, for admins, @everyone. Whoever is mentioned sees "@You" and gets a notification, even if they muted the group.
+- In a group, tap someone's picture to give them a name and photo of your own. Only you see them, there and in your chats with them, and their mentions show that name too.
+- When you give someone a name of your own, the groups you share with them show it right away.
+- In a group you now see who is typing, recording audio or sending a photo or video.
 
 ### fr
 - Les admins d'un groupe peuvent le fermer pour une heure, un jour, une semaine ou jusqu'à l'heure de leur choix : seuls les admins écrivent jusque-là, puis il se rouvre tout seul.
 - Les groupes ont des sondages : posez une question avec jusqu'à douze réponses. Les votes sont anonymes, sauf si l'auteur du sondage choisit de montrer qui a voté.
 - Dans un groupe, tapez @ pour mentionner quelqu'un, @admin pour appeler les admins, ou, pour les admins, @everyone. La personne mentionnée voit « @Vous » et reçoit une notification, même si elle a mis le groupe en sourdine.
+- Dans un groupe, touchez la photo de quelqu'un pour lui donner un nom et une photo à vous. Vous seul les voyez, là et dans vos discussions avec cette personne, et ses mentions affichent aussi ce nom.
+- Quand vous donnez votre propre nom à quelqu'un, les groupes que vous partagez avec cette personne l'affichent tout de suite.
+- Dans un groupe, vous voyez maintenant qui écrit, enregistre un audio ou envoie une photo ou une vidéo.
 
 ### mg
 - Afaka manidy ny vondrona mandritra ny ora iray, andro iray, herinandro iray na hatramin'ny ora tiany ny admin: ny admin ihany no manoratra mandra-pahatongan'izay, ary misokatra ho azy indray izy avy eo.
 - Misy fitsapan-kevitra ao amin'ny vondrona: mametraha fanontaniana misy valiny hatramin'ny roa ambin'ny folo. Tsy fantatra ny mpifidy, raha tsy misafidy ny hampiseho izany ilay nanao ny fitsapan-kevitra.
 - Ao amin'ny vondrona, soraty @ hanononana olona, @admin hiantsoana ny admin, na, ho an'ny admin, @everyone. Mahita "@Ianao" sy mahazo fampandrenesana ilay voatonona, na dia nanakona ny vondrona aza izy.
+- Ao amin'ny vondrona, tsindrio ny sarin'olona hanomezana azy anarana sy sary ho anao manokana. Ianao ihany no mahita azy, ao sy amin'ny resaka ataonareo, ary io anarana io koa no miseho rehefa voatonona izy.
+- Rehefa manome anarana ho anao manokana ho an'olona ianao, miseho avy hatrany izany ao amin'ny vondrona iarahanareo.
+- Hitanao izao ao amin'ny vondrona hoe iza no manoratra, mandrakitra feo na mandefa sary na horonan-tsary.
 
 ## 2026-11-14 05h55
 

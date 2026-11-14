@@ -1,5 +1,5 @@
 import { unwrap } from "@six/sdk";
-import type { CreateGroupInput, JoinGroupInput, SetGroupRoleInput, UpdateGroupInput, UpdateGroupMeInput } from "@six/shared";
+import type { CreateGroupInput, JoinGroupInput, SetGroupRoleInput, UpdateContactInput, UpdateGroupInput, UpdateGroupMeInput } from "@six/shared";
 import type { QueryClient } from "@tanstack/react-query";
 import { removeChat, upsertChat } from "./chats";
 import { six } from "./six";
@@ -41,4 +41,12 @@ export async function removeGroupMember(id: string, userId: string) {
 export async function leaveGroup(qc: QueryClient, id: string) {
   unwrap(await six.api.POST("/v1/groups/{id}/leave", path(id)));
   removeChat(qc, id);
+}
+
+/** Gives another member a name and photo only I see; it shows in every chat we share, so they all reload. */
+export async function nameGroupMember(qc: QueryClient, id: string, userId: string, body: UpdateContactInput) {
+  upsertChat(qc, unwrap(await six.api.PATCH("/v1/groups/{id}/members/{userId}/name", { params: { path: { id, userId } }, body })));
+  void qc.invalidateQueries({ queryKey: ["chat"] });
+  void qc.invalidateQueries({ queryKey: ["chats"] });
+  void qc.invalidateQueries({ queryKey: ["contacts"] });
 }

@@ -170,7 +170,7 @@ function OpenConversation({ chatId }: { chatId: string }) {
   const [pinIndex, setPinIndex] = useState(0);
   const [head, headHeight] = useHeight();
   const [foot, footHeight] = useHeight();
-  const typing = useTyping(chatId);
+  const typing = useTyping(chat.data);
   const selecting = useSelection((s) => s.chatId === chatId);
   const selectedIds = useSelection((s) => s.ids);
   const clearSelection = useSelection((s) => s.clear);
@@ -328,7 +328,7 @@ function OpenConversation({ chatId }: { chatId: string }) {
                         {status === "offline" ? tr.chats.waitingForNetwork : tr.common.connecting}
                       </span>
                     ) : typing ? (
-                      <span className="block text-xs font-medium text-brand">{tr.chats.typing[typing]}</span>
+                      <span className="block truncate text-xs font-medium text-brand">{typing}</span>
                     ) : (
                       (shownPresence || muted || c.archived || c.autoDeleteSecs || c.support || c.withSupport || c.group) && (
                         <span className="line-clamp-2 text-xs text-stone-500">
@@ -427,7 +427,7 @@ function OpenConversation({ chatId }: { chatId: string }) {
                     <span key={d} className="size-1.5 animate-bounce rounded-full bg-stone-400" style={{ animationDelay: `${d}s` }} />
                   ))}
                 </span>
-                <span role="status">{tr.chats.typing[typing]}</span>
+                <span role="status">{typing}</span>
               </div>
             )}
             {!selecting && <AdBanner />}

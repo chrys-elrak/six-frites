@@ -341,5 +341,23 @@ describe("groups", () => {
     expect(note).toMatchObject({ kind: "mention", chatId: group.id, messageId: sent.id, user: { displayName: "#CAFE00" } });
     expect((await get(stranger, "/v1/notifications")).items).toEqual([]);
   });
+
+  it("lets a member give another a name only they see, kept over their nickname", async () => {
+    const owner = await signUp("owner");
+    const group = await newGroup(owner, { maxMembers: 10 });
+    const [ana, stranger] = await Promise.all([signUp("ana"), signUp("stranger")]);
+    await join(ana, group.group.inviteCode, "#A0A0A0");
+
+    const named = await call(ana, "PATCH", `/v1/groups/${group.id}/members/${owner.user.id}/name`, { displayName: "Boss" });
+    expect(named.statusCode, named.body).toBe(200);
+    const seen = (who: Who) => get(who, `/v1/chats/${group.id}`).then((c) => c.members.find((m: { user: { id: string } }) => m.user.id === owner.user.id).user);
+    expect(await seen(ana)).toMatchObject({ displayName: "Boss", alias: "#CAFE00" });
+    expect(await seen(owner)).toMatchObject({ displayName: "#CAFE00" });
+
+    expect((await call(stranger, "PATCH", `/v1/groups/${group.id}/members/${owner.user.id}/name`, { displayName: "X" })).statusCode).toBe(404);
+    expect((await call(ana, "PATCH", `/v1/groups/${group.id}/members/${ana.user.id}/name`, { displayName: "Me" })).statusCode).toBe(400);
+    await call(ana, "PATCH", `/v1/groups/${group.id}/members/${owner.user.id}/name`, { displayName: null });
+    expect((await seen(ana)).displayName).toBe("#CAFE00");
+  });
 });
 

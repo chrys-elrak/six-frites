@@ -7,6 +7,7 @@ import {
   type JoinGroupInput,
   type ServiceAction,
   type SetGroupRoleInput,
+  type UpdateContactInput,
   type UpdateGroupInput,
   type UpdateGroupMeInput,
 } from "@six/shared";
@@ -15,7 +16,7 @@ import { type Emit, type Tx, withEvents } from "../lib/events.js";
 import { prisma } from "../lib/prisma.js";
 import { deleteObjects, presignGet, putObject } from "../lib/storage.js";
 import { getChat } from "./chats.js";
-import { parsePhoto } from "./contacts.js";
+import { parsePhoto, setOverride } from "./contacts.js";
 import { createMessage, scrubMessageEvents } from "./messages.js";
 import { purgeUploads } from "./uploads.js";
 import { pairAlias } from "./users.js";
@@ -225,6 +226,17 @@ export async function updateGroupMe(userId: string, chatId: string, input: Updat
   });
   if (photoKey !== undefined) dropPhotos([member.photoKey]);
   return dto;
+}
+
+/** Gives another member of the group a name and photo only I see, here and in every chat we share. */
+export async function nameGroupMember(userId: string, chatId: string, targetId: string, input: UpdateContactInput) {
+  await groupMember(prisma, chatId, userId);
+  if (targetId === userId) throw new AppError("VALIDATION_FAILED", "Change your own name with PATCH /v1/groups/{id}/me");
+  await groupMember(prisma, chatId, targetId).catch(() => {
+    throw new AppError("USER_NOT_FOUND");
+  });
+  await setOverride(userId, targetId, input);
+  return getChat(userId, chatId);
 }
 
 /** Makes a member an admin, or an admin a member again. Only the owner can. */

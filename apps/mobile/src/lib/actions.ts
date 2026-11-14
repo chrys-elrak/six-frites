@@ -257,7 +257,7 @@ export async function updateContact(
   void qc.invalidateQueries({ queryKey: ["contacts"] });
   void qc.invalidateQueries({ queryKey: ["referrals"] });
   void qc.invalidateQueries({ queryKey: chatKeys.lists });
-  void qc.invalidateQueries({ queryKey: chatKeys.chat(contact.chatId) });
+  void qc.invalidateQueries({ queryKey: ["chat"] });
   return contact;
 }
 

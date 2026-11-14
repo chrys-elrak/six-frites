@@ -11,6 +11,7 @@ import {
   chatFace,
   durationLabel,
   groupClosed,
+  nicknameOf,
   randomAlias,
   randomGender,
 } from "@six/shared";
@@ -25,6 +26,7 @@ import {
   leaveGroup,
   removeGroupMember,
   resetGroupLink,
+  nameGroupMember,
   setGroupRole,
   updateGroup,
   updateGroupMe,
@@ -318,6 +320,63 @@ function EditMeDialog({ chat, me, onClose }: { chat: ChatDTO; me: ChatMemberDTO;
         >
           {saving ? tr.common.saving : tr.common.save}
         </PrimaryButton>
+      </form>
+    </Dialog>
+  );
+}
+
+/** Gives another member a name and photo only I see, here and in every chat we share; a contact's own name and photo. */
+export function NameMemberDialog({ chat, member, onClose }: { chat: ChatDTO; member: ChatMemberDTO; onClose: () => void }) {
+  const tr = useT();
+  const qc = useQueryClient();
+  const nickname = nicknameOf(member.user);
+  const named = member.user.displayName !== nickname;
+  const [name, setName] = useState(named ? member.user.displayName : "");
+  const [photo, setPhoto] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [saving, setSaving] = useState(false);
+
+  async function save(body: { displayName?: string | null; photo?: string | null }) {
+    setSaving(true);
+    setError(null);
+    try {
+      await nameGroupMember(qc, chat.id, member.user.id, body);
+      onClose();
+    } catch (err) {
+      setError(groupError(err, tr));
+      setSaving(false);
+    }
+  }
+
+  return (
+    <Dialog onClose={onClose}>
+      <form
+        className="space-y-4 p-5"
+        onSubmit={(e) => {
+          e.preventDefault();
+          void save({ displayName: name.trim() || null, ...(photo && { photo }) });
+        }}
+      >
+        <PhotoPicker name={name.trim() || nickname} photo={photo ?? member.user.avatarUrl} onChange={setPhoto} />
+        <label className={label}>
+          <span className={caption}>{tr.groups.nameMember}</span>
+          <input autoFocus value={name} onChange={(e) => setName(e.target.value)} maxLength={64} placeholder={nickname} className={field} />
+        </label>
+        <p className="text-xs text-stone-500">{tr.groups.nameMemberHint(nickname)}</p>
+        {error && <p className="text-sm text-red-600 dark:text-red-400">{error}</p>}
+        <PrimaryButton type="submit" disabled={saving || ((name.trim() || null) === (named ? member.user.displayName : null) && !photo)} className="w-full">
+          {saving ? tr.common.saving : tr.common.save}
+        </PrimaryButton>
+        {named && (
+          <button
+            type="button"
+            disabled={saving}
+            onClick={() => void save({ displayName: null, photo: null })}
+            className="block w-full text-center text-sm text-stone-500 hover:underline"
+          >
+            {tr.groups.resetName}
+          </button>
+        )}
       </form>
     </Dialog>
   );

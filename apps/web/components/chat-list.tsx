@@ -189,7 +189,7 @@ function ChatRow({ chat, meId, active, rail }: { chat: ChatDTO; meId: string; ac
     rail ? null : () => settings({ pinned: !chat.pinned }),
     rail ? null : () => settings({ archived: !chat.archived }),
   );
-  const typing = useTyping(chat.id);
+  const typing = useTyping(chat);
   const draft = useDrafts((s) => (active ? undefined : s.byChat[chat.id]));
   const unsent = useOutbox((s) => {
     const pending = s.byChat[chat.id];
@@ -314,7 +314,7 @@ function ChatRow({ chat, meId, active, rail }: { chat: ChatDTO; meId: string; ac
                 }`}
               >
                 {typing ? (
-                  tr.chats.typing[typing]
+                  typing
                 ) : unsent ? (
                   <span className="inline-flex items-center gap-1">
                     {unsent.status === "failed" ? (

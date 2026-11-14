@@ -1,4 +1,5 @@
-import type { TypingKind } from "@six/shared";
+import { type ChatDTO, type TypingKind, typingLabel } from "@six/shared";
+import { useT } from "./i18n";
 import { create } from "zustand";
 
 const TTL = 6000;
@@ -23,5 +24,9 @@ export const useTypingStore = create<TypingState>((set, get) => ({
   },
 }));
 
-export const useTyping = (chatId: string) =>
-  useTypingStore((s) => Object.values(s.byChat[chatId] ?? {})[0] ?? null);
+/** What the chat shows while people in it type or record, saying who in a group; null when nobody does. */
+export function useTyping(chat: Pick<ChatDTO, "id" | "group" | "members"> | undefined) {
+  const tr = useT();
+  const typers = useTypingStore((s) => (chat ? s.byChat[chat.id] : undefined));
+  return chat && typers ? typingLabel(chat, Object.entries(typers), tr) : null;
+}

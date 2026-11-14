@@ -9,6 +9,7 @@ import {
   chatFace,
   durationLabel,
   groupClosed,
+  nicknameOf,
   randomAlias,
   randomGender,
 } from "@six/shared";
@@ -24,6 +25,7 @@ import {
   leaveGroup,
   removeGroupMember,
   resetGroupLink,
+  nameGroupMember,
   setGroupRole,
   updateGroup,
   updateGroupMe,
@@ -279,6 +281,60 @@ function EditMe({ chat, me, onClose }: { chat: ChatDTO; me: ChatMemberDTO; onClo
         disabled={saving || !nickname.trim() || (nickname.trim() === me.user.displayName && !photo)}
         onPress={() => void save()}
       />
+    </Popup>
+  );
+}
+
+/** Gives another member a name and photo only I see, here and in every chat we share; a contact's own name and photo. */
+export function NameMember({ chat, member, onClose }: { chat: ChatDTO; member: ChatMemberDTO; onClose: () => void }) {
+  const t = useTheme();
+  const tr = useT();
+  const qc = useQueryClient();
+  const nickname = nicknameOf(member.user);
+  const named = member.user.displayName !== nickname;
+  const [name, setName] = useState(named ? member.user.displayName : "");
+  const [photo, setPhoto] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [saving, setSaving] = useState(false);
+
+  async function save(body: { displayName?: string | null; photo?: string | null }) {
+    setSaving(true);
+    setError(null);
+    try {
+      await nameGroupMember(qc, chat.id, member.user.id, body);
+      onClose();
+    } catch (err) {
+      setError(groupError(err, tr));
+      setSaving(false);
+    }
+  }
+
+  return (
+    <Popup onClose={onClose} gap={14}>
+      <PhotoPicker name={name.trim() || nickname} photo={photo ?? member.user.avatarUrl} onChange={setPhoto} />
+      <Text style={{ color: t.textSoft, fontSize: 13, fontWeight: "600" }}>{tr.groups.nameMember}</Text>
+      <TextInput
+        autoFocus
+        value={name}
+        onChangeText={setName}
+        maxLength={64}
+        placeholder={nickname}
+        placeholderTextColor={t.muted}
+        style={{ backgroundColor: t.field, color: t.text, borderRadius: 12, paddingHorizontal: 12, paddingVertical: 10, fontSize: 16 }}
+      />
+      <Text style={{ color: t.muted, fontSize: 12 }}>{tr.groups.nameMemberHint(nickname)}</Text>
+      <ErrorText>{error}</ErrorText>
+      <PrimaryButton
+        title={tr.common.save}
+        busy={saving}
+        disabled={saving || ((name.trim() || null) === (named ? member.user.displayName : null) && !photo)}
+        onPress={() => void save({ displayName: name.trim() || null, ...(photo && { photo }) })}
+      />
+      {named && (
+        <Pressable onPress={() => void save({ displayName: null, photo: null })} disabled={saving} hitSlop={8}>
+          <Text style={{ color: t.muted, fontSize: 14, textAlign: "center" }}>{tr.groups.resetName}</Text>
+        </Pressable>
+      )}
     </Popup>
   );
 }

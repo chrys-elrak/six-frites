@@ -182,8 +182,20 @@ export function parsePhoto(dataUrl: string) {
 
 /** Sets or clears the name and photo only `ownerId` sees for this contact. */
 export async function updateContact(ownerId: string, contactId: string, input: UpdateContactInput) {
-  const contact = await getContact(ownerId, contactId);
-  const previousKey = contact.photoKey;
+  await getContact(ownerId, contactId);
+  await setOverride(ownerId, contactId, input);
+  return toContactDTO(await getContact(ownerId, contactId));
+}
+
+/**
+ * Sets or clears the name and photo only `ownerId` sees for someone they share a chat with, a direct chat or a group,
+ * and shows it in every chat they share.
+ */
+export async function setOverride(ownerId: string, contactId: string, input: UpdateContactInput) {
+  const previous = await prisma.contactOverride.findUnique({
+    where: { ownerId_contactId: { ownerId, contactId } },
+    select: { photoKey: true },
+  });
 
   let photoKey: string | null | undefined;
   if (input.photo === null) photoKey = null;
@@ -206,13 +218,16 @@ export async function updateContact(ownerId: string, contactId: string, input: U
     if (saved.displayName === null && saved.photoKey === null && saved.label === null) {
       await tx.contactOverride.delete({ where: { ownerId_contactId: { ownerId, contactId } } });
     }
-    emit(ownerId, "chat.updated", await getChat(ownerId, contact.chatId, tx));
+    const shared = await tx.chat.findMany({
+      where: { AND: [{ members: { some: { userId: ownerId } } }, { members: { some: { userId: contactId } } }] },
+      select: { id: true },
+    });
+    for (const { id } of shared) emit(ownerId, "chat.updated", await getChat(ownerId, id, tx));
   });
 
-  if (photoKey !== undefined && previousKey && previousKey !== photoKey) {
-    await deleteObjects([previousKey]).catch(() => null);
+  if (photoKey !== undefined && previous?.photoKey && previous.photoKey !== photoKey) {
+    await deleteObjects([previous.photoKey]).catch(() => null);
   }
-  return toContactDTO(await getContact(ownerId, contactId));
 }
 
 /** The private note `ownerId` keeps about a contact. Never part of any other response; only their app lock code opens it. */

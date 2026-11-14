@@ -1,8 +1,6 @@
-import type { TypingKind } from "@six/shared";
 import { useEffect } from "react";
 import { StyleSheet, View } from "react-native";
 import Animated, { useAnimatedStyle, useSharedValue, withDelay, withRepeat, withSequence, withTiming } from "react-native-reanimated";
-import { useT } from "@/lib/i18n";
 import { useTheme } from "@/lib/theme";
 import { Text } from "./text";
 
@@ -15,10 +13,9 @@ function Dot({ delay, color }: { delay: number; color: string }) {
   return <Animated.View style={[styles.dot, { backgroundColor: color }, style]} />;
 }
 
-/** Sits under the newest message while the other person is typing or recording, with what they're doing. */
-export function TypingBubble({ kind }: { kind: TypingKind }) {
+/** Sits under the newest message while someone is typing or recording, with what they're doing and, in a group, who. */
+export function TypingBubble({ label }: { label: string }) {
   const t = useTheme();
-  const tr = useT();
   return (
     <View pointerEvents="none" style={[styles.bubble, { backgroundColor: t.surface, borderColor: t.border }]}>
       <View style={styles.dots}>
@@ -26,7 +23,7 @@ export function TypingBubble({ kind }: { kind: TypingKind }) {
           <Dot key={d} delay={d} color={t.muted} />
         ))}
       </View>
-      <Text style={{ color: t.textSoft, fontSize: 12, fontWeight: "500" }}>{tr.chats.typing[kind]}</Text>
+      <Text style={{ color: t.textSoft, fontSize: 12, fontWeight: "500" }}>{label}</Text>
     </View>
   );
 }

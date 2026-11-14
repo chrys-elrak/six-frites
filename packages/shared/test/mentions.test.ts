@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { mentionAsYou, mentionOptions, mentionQuery, mentionsIn } from "../src/groups.js";
+import { mentionAsYou, mentionOptions, mentionQuery, mentionsIn, myMentions, typingLabel } from "../src/groups.js";
+import { dict } from "../src/i18n/index.js";
 
 const member = (id: string, displayName: string, alias?: string, role: "owner" | "admin" | "member" = "member") => ({
   user: { id, displayName, avatarUrl: null, ...(alias && { alias }) },
@@ -50,5 +51,21 @@ describe("mentions", () => {
     expect(mentionOptions(chat, "ana", "").map((o) => o.insert)).toEqual(["@admin", "@#000001", "@#B0B0B0"]);
     expect(mentionOptions(chat, "ana", "ad").map((o) => o.insert)).toEqual(["@admin"]);
     expect(mentionOptions(chat, "owner", "#b").map((o) => o.insert)).toEqual(["@#B0B0B0"]);
+  });
+
+  it("shows other members' mentions by the names I gave them", () => {
+    const members = [member("me", "#AAAAAA"), member("ana", "Cocombre", "#A0A0A0"), member("bo", "#B0B0B0")];
+    const mine = myMentions({ group: {} as never, members }, "me")!;
+    expect(mine.nickname).toBe("@#AAAAAA");
+    expect(Object.fromEntries(mine.names)).toEqual({ "@#A0A0A0": "@Cocombre" });
+  });
+
+  it("says who is typing in a group, and only what in a direct chat", () => {
+    const members = [member("me", "#AAAAAA"), member("ana", "Cocombre", "#A0A0A0"), member("bo", "#B0B0B0")];
+    const fr = dict.fr;
+    expect(typingLabel({ group: {} as never, members }, [["ana", "voice"]], fr)).toBe("Cocombre enregistre un audio…");
+    expect(typingLabel({ group: {} as never, members }, [["ana", "text"], ["bo", "text"]], fr)).toBe("2 personnes écrivent…");
+    expect(typingLabel({ group: null, members }, [["ana", "text"]], fr)).toBe("écrit…");
+    expect(typingLabel({ group: null, members }, [], fr)).toBeNull();
   });
 });

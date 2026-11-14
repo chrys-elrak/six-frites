@@ -28075,7 +28075,7 @@ export interface paths {
                             items: {
                                 id: string;
                                 /** @enum {string} */
-                                kind: "joined" | "added" | "story_reaction" | "note_reaction" | "story_reply" | "note_reply" | "missed_call" | "anon_message" | "unblocked" | "full_access";
+                                kind: "joined" | "added" | "story_reaction" | "note_reaction" | "story_reply" | "note_reply" | "missed_call" | "anon_message" | "unblocked" | "full_access" | "mention";
                                 /** @description Who did it; null for anon_message, which never says who sent it */
                                 user: {
                                     id: string;
@@ -28085,13 +28085,13 @@ export interface paths {
                                     /** @description Their alias, when you gave them a name of your own: without a photo, their picture still comes from it */
                                     alias?: string;
                                 } | null;
-                                /** @description The direct chat with them, to open on tap */
+                                /** @description The direct chat with them, or for mention the group, to open on tap */
                                 chatId: string | null;
                                 /** @description For story_reaction and note_reaction */
                                 emoji: string | null;
                                 /** @description For story_reaction and story_reply: the story, to open with its viewers */
                                 storyId: string | null;
-                                /** @description For story_reply and note_reply: the reply, to scroll to in the chat */
+                                /** @description For story_reply, note_reply and mention: the message, to scroll to in the chat */
                                 messageId: string | null;
                                 /** @description For missed_call: whether it was a video call */
                                 video: boolean;
@@ -33548,6 +33548,1042 @@ export interface paths {
                     "application/json": {
                         /** @enum {string} */
                         role: "admin" | "member";
+                    };
+                };
+            };
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            id: string;
+                            /** @enum {string} */
+                            type: "direct" | "group";
+                            title: string;
+                            /** @description Set on a group */
+                            group: {
+                                photoUrl: string | null;
+                                description: string | null;
+                                /** @description The code in the group's link, the only way in; null for members when only admins may share it */
+                                inviteCode: string | null;
+                                maxMembers: number;
+                                /** @description Off: only the owner and admins send messages; members read and react */
+                                membersCanWrite: boolean;
+                                /**
+                                 * Format: date-time
+                                 * @description Until then only the owner and admins send messages, as with membersCanWrite off
+                                 */
+                                closedUntil: string | null;
+                                /** @description Off: only the owner and admins see the group's link */
+                                membersCanInvite: boolean;
+                                /** @enum {string} */
+                                myRole: "owner" | "admin" | "member";
+                            } | null;
+                            members: {
+                                /** @description In a group, their nickname and photo there, unless you gave them a name of your own */
+                                user: {
+                                    id: string;
+                                    displayName: string;
+                                    /** Format: uri */
+                                    avatarUrl: string | null;
+                                    /** @description Their alias, when you gave them a name of your own: without a photo, their picture still comes from it */
+                                    alias?: string;
+                                };
+                                /**
+                                 * @description In a group; null in a direct chat
+                                 * @enum {string|null}
+                                 */
+                                role: "owner" | "admin" | "member" | null;
+                                lastDeliveredMessageId: string | null;
+                                /** Format: date-time */
+                                lastDeliveredAt: string | null;
+                                lastReadMessageId: string | null;
+                                /** Format: date-time */
+                                lastReadAt: string | null;
+                            }[];
+                            lastMessage: {
+                                id: string;
+                                chatId: string;
+                                senderId: string;
+                                clientId: string;
+                                /** @enum {string} */
+                                type: "text" | "image" | "video" | "video_note" | "voice" | "file" | "gif" | "sticker" | "service" | "location" | "checklist" | "game" | "poll";
+                                text: string | null;
+                                entities: {
+                                    /** @enum {string} */
+                                    type: "bold" | "italic" | "underline" | "strike" | "code" | "spoiler" | "color" | "font" | "size" | "highlight" | "outline";
+                                    offset: number;
+                                    length: number;
+                                    /** @description For color, highlight (a background behind the text) and outline (a line around its letters): a TEXT_COLORS or TEXT_GRADIENTS name, #rrggbb, or #rrggbb-#rrggbb; for font: a TEXT_FONTS name; for size: a whole size in points, 8 to 48 */
+                                    value?: string;
+                                }[];
+                                spoiler: boolean;
+                                /** @description Sent with `/silent`: it arrives without a notification or sound */
+                                silent: boolean;
+                                /** @description A bump: it brings the message in `replyTo` back to the bottom of the chat, as Messenger does */
+                                bump: boolean;
+                                /** @description Sent in vanish mode: it disappears once the other person has read it and left the chat */
+                                vanish: boolean;
+                                attachment: {
+                                    id: string;
+                                    /**
+                                     * @description `gif` uploads are only created by sending a `gifId`; `sticker` files go into sticker packs; a `sticker_zip` (admins only) is imported into official packs
+                                     * @enum {string}
+                                     */
+                                    kind: "image" | "video" | "video_note" | "voice" | "file" | "gif" | "sticker" | "sticker_zip";
+                                    /**
+                                     * @description `removed`: a large file a moderator deleted to free space
+                                     * @enum {string}
+                                     */
+                                    status: "pending" | "processing" | "ready" | "failed" | "removed";
+                                    name: string;
+                                    mime: string;
+                                    size: number;
+                                    /**
+                                     * Format: uri
+                                     * @description Signed link to the playable or viewable file, once ready
+                                     */
+                                    url: string | null;
+                                    /** Format: uri */
+                                    thumbUrl: string | null;
+                                    width: number | null;
+                                    height: number | null;
+                                    durationMs: number | null;
+                                    waveform: number[] | null;
+                                    /** @description The file is encrypted; its key, name, type and preview are in the message content */
+                                    encrypted: boolean;
+                                } | null;
+                                sticker: {
+                                    id: string;
+                                    packId: string;
+                                    emoji: string;
+                                    /**
+                                     * @description `lottie`: a Lottie JSON animation. `image`: a static WebP or PNG.
+                                     * @enum {string}
+                                     */
+                                    format: "lottie" | "image";
+                                    /**
+                                     * Format: uri
+                                     * @description Null while an uploaded sticker is still being processed
+                                     */
+                                    url: string | null;
+                                    width: number | null;
+                                    height: number | null;
+                                } | null;
+                                ephemeral: {
+                                    maxViews: number | null;
+                                    ttlSeconds: number | null;
+                                    /** @description How many times the recipient opened it */
+                                    views: number;
+                                    /** Format: date-time */
+                                    firstViewedAt: string | null;
+                                    /** @description Content is withheld for you; open it with POST /v1/messages/{id}/view */
+                                    locked: boolean;
+                                    /** @description Its views or timer ran out; the recipient can no longer open it */
+                                    expired: boolean;
+                                    /** @description Content permanently deleted; it can no longer be resent */
+                                    purged: boolean;
+                                    /** @description The sender re-armed it after it was opened */
+                                    resent: boolean;
+                                    /** @description How many more times the sender can re-arm it */
+                                    resendsLeft: number;
+                                    /**
+                                     * Format: date-time
+                                     * @description Until when the sender can resend it, once it has been opened
+                                     */
+                                    resendUntil: string | null;
+                                } | null;
+                                /** @description Photos and videos sent together share it and show as one album */
+                                groupId: string | null;
+                                /** @description In a group, the message this one comments on; it then shows only in that message's comments */
+                                threadId: string | null;
+                                /** @description A group message's comments; null on comments themselves and on service messages */
+                                thread: {
+                                    /** @description How many comments it has */
+                                    count: number;
+                                    /** @description Its comments are closed, by an admin or by `limit` or `closesAt`: nobody can add one until an admin reopens them */
+                                    closed: boolean;
+                                    /** @description Comments close once this many come from people other than its author */
+                                    limit: number | null;
+                                    /**
+                                     * Format: date-time
+                                     * @description Comments close at this time
+                                     */
+                                    closesAt: string | null;
+                                } | null;
+                                replyTo: {
+                                    id: string;
+                                    senderId: string;
+                                    /** @enum {string} */
+                                    type: "text" | "image" | "video" | "video_note" | "voice" | "file" | "gif" | "sticker" | "service" | "location" | "checklist" | "game" | "poll";
+                                    text: string | null;
+                                    spoiler: boolean;
+                                    ephemeral: boolean;
+                                    deleted: boolean;
+                                    /** @description The quoted text is encrypted; show it from your own copy of that message */
+                                    encrypted: boolean;
+                                    /**
+                                     * Format: date-time
+                                     * @description When the quoted message was sent
+                                     */
+                                    sentAt: string;
+                                } | null;
+                                /** @description The story or note a message answers, as it was when they answered: it may be gone since */
+                                story: {
+                                    id: string;
+                                    /** @description Whose story or note it is */
+                                    ownerId: string;
+                                    /**
+                                     * @description note: a note they answered, its text in `text`
+                                     * @enum {string}
+                                     */
+                                    kind: "text" | "image" | "video" | "note";
+                                    /** @description The start of the story's text or caption */
+                                    text: string | null;
+                                    /** @description A text story's colour, or two for a gradient */
+                                    background: string | null;
+                                    /**
+                                     * Format: uri
+                                     * @description A photo story's picture, or a video's first frame; it stops working once the story is gone
+                                     */
+                                    imageUrl: string | null;
+                                } | null;
+                                /** @description What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `pin` means they pinned a message; `shared_to` means they shared a message from this chat to their story or as their note; `resend_request` means they couldn't open an encrypted message and asked the sender for it again; `screenshot` means they took a screenshot of the chat (only detected on the web, and not everywhere); `call` logs a call the sender made; `live_invite` is posted in your chat when `from` asks you to a live game; `live_result` is how a live game you played alone against Six Frites Game ended, for you; in a group, `group_created`, `joined`, `left`, `removed`, `renamed` and `group_photo` tell what happened to the group and to whom (`name` is how they showed there) */
+                                action: ({
+                                    /** @enum {string} */
+                                    type: "auto_delete";
+                                    secs: number | null;
+                                } | {
+                                    /** @enum {string} */
+                                    type: "theme";
+                                    theme: string | null;
+                                } | {
+                                    /** @enum {string} */
+                                    type: "e2ee";
+                                } | {
+                                    /** @enum {string} */
+                                    type: "vanish";
+                                    on: boolean;
+                                } | {
+                                    /** @enum {string} */
+                                    type: "pin";
+                                } | {
+                                    /** @enum {string} */
+                                    type: "screenshot";
+                                } | {
+                                    /** @enum {string} */
+                                    type: "resend_request";
+                                } | {
+                                    /** @enum {string} */
+                                    type: "shared_to";
+                                    /** @enum {string} */
+                                    to: "story" | "note";
+                                } | {
+                                    /** @enum {string} */
+                                    type: "group_created";
+                                    title: string;
+                                } | {
+                                    /** @enum {string} */
+                                    type: "joined";
+                                    name: string;
+                                } | {
+                                    /** @enum {string} */
+                                    type: "left";
+                                    name: string;
+                                } | {
+                                    /** @enum {string} */
+                                    type: "removed";
+                                    name: string;
+                                } | {
+                                    /** @enum {string} */
+                                    type: "renamed";
+                                    title: string;
+                                } | {
+                                    /** @enum {string} */
+                                    type: "group_photo";
+                                } | {
+                                    /** @enum {string} */
+                                    type: "call";
+                                    video: boolean;
+                                    /** @description How long it lasted; null if it was missed or declined */
+                                    secs: number | null;
+                                } | {
+                                    /** @enum {string} */
+                                    type: "live_invite";
+                                    /** @enum {string} */
+                                    game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory" | "reflex" | "market" | "snack";
+                                    roomId: string;
+                                    from: string;
+                                    /** @description The game is over and its room closed, so there is nothing to join */
+                                    ended?: boolean;
+                                } | {
+                                    /** @enum {string} */
+                                    type: "live_result";
+                                    /** @enum {string} */
+                                    game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory" | "reflex" | "market" | "snack";
+                                    /** @enum {string} */
+                                    result: "won" | "lost" | "draw";
+                                    /** @description Your score, then the bot's best, in the games that keep one: boxes, pairs or word points */
+                                    score?: number[];
+                                }) | null;
+                                location: {
+                                    lat: number;
+                                    lng: number;
+                                    /** @description How far off it may be, in meters */
+                                    accuracy?: number | null;
+                                    /** @description What the place is called, for a place picked on the map */
+                                    name?: string;
+                                } | null;
+                                checklist: {
+                                    title: string;
+                                    items: string[];
+                                } | null;
+                                /** @description The checklist items marked done; either person can tick them */
+                                checks: {
+                                    /** @description Index in the checklist's items */
+                                    item: number;
+                                    /** @description Who marked it done */
+                                    userId: string;
+                                    /** Format: date-time */
+                                    at: string;
+                                }[];
+                                poll: {
+                                    question: string;
+                                    options: string[];
+                                } | null;
+                                /** @description How many people chose each of the poll's options, by index */
+                                votes: number[];
+                                /** @description The option you chose, if you voted */
+                                myVote: number | null;
+                                /** @description The poll shows who chose what; off, votes are anonymous and only counts show */
+                                pollVisible: boolean;
+                                /** @description Who chose which option, on a poll with `pollVisible`; empty on anonymous polls */
+                                voters: {
+                                    option: number;
+                                    userId: string;
+                                }[];
+                                /** @description In a group, the members mentioned with @, who are notified even if they muted it */
+                                mentions: string[];
+                                game: ({
+                                    /** @enum {string} */
+                                    game: "rps";
+                                    /** @enum {string} */
+                                    hand: "rock" | "paper" | "scissors";
+                                } | {
+                                    /** @enum {string} */
+                                    game: "dice";
+                                    pick: number;
+                                    seed: number;
+                                } | {
+                                    /** @enum {string} */
+                                    game: "guess";
+                                    secret: number;
+                                } | {
+                                    /** @enum {string} */
+                                    game: "penalty";
+                                    shots: ("left" | "middle" | "right")[];
+                                    dives: ("left" | "middle" | "right")[];
+                                } | {
+                                    /** @enum {string} */
+                                    game: "hangman";
+                                    word: string;
+                                } | {
+                                    /** @enum {string} */
+                                    game: "lie";
+                                    statements: string[];
+                                    lie: number;
+                                } | {
+                                    /** @enum {string} */
+                                    game: "rather";
+                                    options: string[];
+                                    choice: number;
+                                } | {
+                                    /** @enum {string} */
+                                    game: "riddle";
+                                    emojis: string;
+                                    answer: string;
+                                    /** @description A key the typed answers are sealed with, so only people who can read the game can read them */
+                                    key: string;
+                                } | {
+                                    /** @enum {string} */
+                                    game: "ships";
+                                    boats: number[][];
+                                } | {
+                                    /** @enum {string} */
+                                    game: "ttt";
+                                    cell: number;
+                                } | {
+                                    /** @enum {string} */
+                                    game: "four";
+                                    col: number;
+                                } | {
+                                    /** @enum {string} */
+                                    game: "sketch";
+                                    strokes: {
+                                        color: number;
+                                        points: number[];
+                                    }[];
+                                    answer: string;
+                                    /** @description A key the typed answers are sealed with, so only people who can read the game can read them */
+                                    key: string;
+                                }) | null;
+                                /** @description Answers to the game, oldest first; anyone but the sender can play */
+                                moves: {
+                                    userId: string;
+                                    move: {
+                                        /** @enum {string} */
+                                        hand: "rock" | "paper" | "scissors";
+                                    } | {
+                                        pick: number;
+                                        seed: number;
+                                    } | {
+                                        n: number;
+                                    } | {
+                                        shots: ("left" | "middle" | "right")[];
+                                        dives: ("left" | "middle" | "right")[];
+                                    } | {
+                                        letter: string;
+                                    } | {
+                                        choice: number;
+                                    } | {
+                                        sealed: string;
+                                    } | {
+                                        shot: number;
+                                    } | {
+                                        cell: number;
+                                    } | {
+                                        col: number;
+                                    };
+                                    /** Format: date-time */
+                                    at: string;
+                                }[];
+                                /** Format: date-time */
+                                createdAt: string;
+                                /** Format: date-time */
+                                editedAt: string | null;
+                                /** Format: date-time */
+                                deletedAt: string | null;
+                                /** @description Who deleted it for everyone: the sender, or the other person in a direct chat */
+                                deletedBy: string | null;
+                                /**
+                                 * Format: date-time
+                                 * @description When the chat's auto-delete timer removes it for everyone
+                                 */
+                                expiresAt: string | null;
+                                /** @description One entry per emoji, sticker or GIF, oldest first; a person can add several different ones */
+                                reactions: {
+                                    /** @description The emoji, or `sticker:<id>` / `gif:<id>` for a sticker or GIF; also what removes it */
+                                    emoji: string;
+                                    userIds: string[];
+                                    /** @description When each of them reacted, by user id */
+                                    reactedAt?: {
+                                        [key: string]: string;
+                                    };
+                                    /** @description For a sticker reaction; null once the sticker is gone */
+                                    sticker?: {
+                                        id: string;
+                                        packId: string;
+                                        emoji: string;
+                                        /**
+                                         * @description `lottie`: a Lottie JSON animation. `image`: a static WebP or PNG.
+                                         * @enum {string}
+                                         */
+                                        format: "lottie" | "image";
+                                        /**
+                                         * Format: uri
+                                         * @description Null while an uploaded sticker is still being processed
+                                         */
+                                        url: string | null;
+                                        width: number | null;
+                                        height: number | null;
+                                    } | null;
+                                    /** @description For a GIF reaction, as an MP4 to play muted on a loop */
+                                    gif?: {
+                                        /** Format: uri */
+                                        url: string;
+                                        width: number | null;
+                                        height: number | null;
+                                    } | null;
+                                }[];
+                                /** @description Set for end-to-end encrypted messages: `text`, `entities` and `spoiler` are then empty and the content is in your device's envelope */
+                                encryption: {
+                                    /** @description The device that encrypted it; open the envelope with your session with it */
+                                    senderDeviceId: string | null;
+                                    /** @description Only the envelopes for your own devices */
+                                    envelopes: {
+                                        deviceId: string;
+                                        envelope: {
+                                            /** @enum {number} */
+                                            v: 1;
+                                            x3dh?: {
+                                                identity: {
+                                                    /** @description Ed25519 identity key */
+                                                    signPub: string;
+                                                    /** @description X25519 identity key, signed by signPub */
+                                                    dhPub: string;
+                                                    /** @description A 64-byte Ed25519 signature, base64url without padding */
+                                                    dhSig: string;
+                                                };
+                                                /** @description A 32-byte public key, base64url without padding */
+                                                ephemeral: string;
+                                                signedPreKeyId: number;
+                                                oneTimePreKeyId: number | null;
+                                            };
+                                            header: string;
+                                            body: string;
+                                        };
+                                    }[];
+                                    /** @description Your backup copy, if you stored one */
+                                    backup: string | null;
+                                    /** @description `requested`: `by` couldn't decrypt it and asked the sender to encrypt it again (PUT /v1/messages/{id}/envelopes). `failed`: the sender's device couldn't read it either */
+                                    reseal: {
+                                        /** @enum {string} */
+                                        state: "requested" | "failed";
+                                        by: string;
+                                    } | null;
+                                } | null;
+                            } | null;
+                            unreadCount: number;
+                            /**
+                             * Format: date-time
+                             * @description Messages sent before this are hidden from you: in a group, those from before you joined, quotes of them included
+                             */
+                            hiddenBefore: string | null;
+                            archived: boolean;
+                            muted: boolean;
+                            /**
+                             * Format: date-time
+                             * @description When a timed mute ends; null while muted for good or not muted
+                             */
+                            mutedUntil: string | null;
+                            pinned: boolean;
+                            /** @description Your setting: blur the photos and videos in the chat, yours included, until you tap them */
+                            safeView: boolean;
+                            /** @description Shared by both people: new messages are deleted for everyone this long after they are sent */
+                            autoDeleteSecs: number | null;
+                            /** @description Vanish mode, shared by both people: messages sent while it is on disappear once the other person has seen them and left the chat */
+                            vanish: boolean;
+                            /** @description Chat background shared by both people (an id from CHAT_THEMES); null uses each person's default */
+                            theme: string | null;
+                            /** @description Shared by both people: the messages pinned at the top of the chat, newest pin first, at most 20 */
+                            pinnedMessages: {
+                                id: string;
+                                chatId: string;
+                                senderId: string;
+                                clientId: string;
+                                /** @enum {string} */
+                                type: "text" | "image" | "video" | "video_note" | "voice" | "file" | "gif" | "sticker" | "service" | "location" | "checklist" | "game" | "poll";
+                                text: string | null;
+                                entities: {
+                                    /** @enum {string} */
+                                    type: "bold" | "italic" | "underline" | "strike" | "code" | "spoiler" | "color" | "font" | "size" | "highlight" | "outline";
+                                    offset: number;
+                                    length: number;
+                                    /** @description For color, highlight (a background behind the text) and outline (a line around its letters): a TEXT_COLORS or TEXT_GRADIENTS name, #rrggbb, or #rrggbb-#rrggbb; for font: a TEXT_FONTS name; for size: a whole size in points, 8 to 48 */
+                                    value?: string;
+                                }[];
+                                spoiler: boolean;
+                                /** @description Sent with `/silent`: it arrives without a notification or sound */
+                                silent: boolean;
+                                /** @description A bump: it brings the message in `replyTo` back to the bottom of the chat, as Messenger does */
+                                bump: boolean;
+                                /** @description Sent in vanish mode: it disappears once the other person has read it and left the chat */
+                                vanish: boolean;
+                                attachment: {
+                                    id: string;
+                                    /**
+                                     * @description `gif` uploads are only created by sending a `gifId`; `sticker` files go into sticker packs; a `sticker_zip` (admins only) is imported into official packs
+                                     * @enum {string}
+                                     */
+                                    kind: "image" | "video" | "video_note" | "voice" | "file" | "gif" | "sticker" | "sticker_zip";
+                                    /**
+                                     * @description `removed`: a large file a moderator deleted to free space
+                                     * @enum {string}
+                                     */
+                                    status: "pending" | "processing" | "ready" | "failed" | "removed";
+                                    name: string;
+                                    mime: string;
+                                    size: number;
+                                    /**
+                                     * Format: uri
+                                     * @description Signed link to the playable or viewable file, once ready
+                                     */
+                                    url: string | null;
+                                    /** Format: uri */
+                                    thumbUrl: string | null;
+                                    width: number | null;
+                                    height: number | null;
+                                    durationMs: number | null;
+                                    waveform: number[] | null;
+                                    /** @description The file is encrypted; its key, name, type and preview are in the message content */
+                                    encrypted: boolean;
+                                } | null;
+                                sticker: {
+                                    id: string;
+                                    packId: string;
+                                    emoji: string;
+                                    /**
+                                     * @description `lottie`: a Lottie JSON animation. `image`: a static WebP or PNG.
+                                     * @enum {string}
+                                     */
+                                    format: "lottie" | "image";
+                                    /**
+                                     * Format: uri
+                                     * @description Null while an uploaded sticker is still being processed
+                                     */
+                                    url: string | null;
+                                    width: number | null;
+                                    height: number | null;
+                                } | null;
+                                ephemeral: {
+                                    maxViews: number | null;
+                                    ttlSeconds: number | null;
+                                    /** @description How many times the recipient opened it */
+                                    views: number;
+                                    /** Format: date-time */
+                                    firstViewedAt: string | null;
+                                    /** @description Content is withheld for you; open it with POST /v1/messages/{id}/view */
+                                    locked: boolean;
+                                    /** @description Its views or timer ran out; the recipient can no longer open it */
+                                    expired: boolean;
+                                    /** @description Content permanently deleted; it can no longer be resent */
+                                    purged: boolean;
+                                    /** @description The sender re-armed it after it was opened */
+                                    resent: boolean;
+                                    /** @description How many more times the sender can re-arm it */
+                                    resendsLeft: number;
+                                    /**
+                                     * Format: date-time
+                                     * @description Until when the sender can resend it, once it has been opened
+                                     */
+                                    resendUntil: string | null;
+                                } | null;
+                                /** @description Photos and videos sent together share it and show as one album */
+                                groupId: string | null;
+                                /** @description In a group, the message this one comments on; it then shows only in that message's comments */
+                                threadId: string | null;
+                                /** @description A group message's comments; null on comments themselves and on service messages */
+                                thread: {
+                                    /** @description How many comments it has */
+                                    count: number;
+                                    /** @description Its comments are closed, by an admin or by `limit` or `closesAt`: nobody can add one until an admin reopens them */
+                                    closed: boolean;
+                                    /** @description Comments close once this many come from people other than its author */
+                                    limit: number | null;
+                                    /**
+                                     * Format: date-time
+                                     * @description Comments close at this time
+                                     */
+                                    closesAt: string | null;
+                                } | null;
+                                replyTo: {
+                                    id: string;
+                                    senderId: string;
+                                    /** @enum {string} */
+                                    type: "text" | "image" | "video" | "video_note" | "voice" | "file" | "gif" | "sticker" | "service" | "location" | "checklist" | "game" | "poll";
+                                    text: string | null;
+                                    spoiler: boolean;
+                                    ephemeral: boolean;
+                                    deleted: boolean;
+                                    /** @description The quoted text is encrypted; show it from your own copy of that message */
+                                    encrypted: boolean;
+                                    /**
+                                     * Format: date-time
+                                     * @description When the quoted message was sent
+                                     */
+                                    sentAt: string;
+                                } | null;
+                                /** @description The story or note a message answers, as it was when they answered: it may be gone since */
+                                story: {
+                                    id: string;
+                                    /** @description Whose story or note it is */
+                                    ownerId: string;
+                                    /**
+                                     * @description note: a note they answered, its text in `text`
+                                     * @enum {string}
+                                     */
+                                    kind: "text" | "image" | "video" | "note";
+                                    /** @description The start of the story's text or caption */
+                                    text: string | null;
+                                    /** @description A text story's colour, or two for a gradient */
+                                    background: string | null;
+                                    /**
+                                     * Format: uri
+                                     * @description A photo story's picture, or a video's first frame; it stops working once the story is gone
+                                     */
+                                    imageUrl: string | null;
+                                } | null;
+                                /** @description What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `pin` means they pinned a message; `shared_to` means they shared a message from this chat to their story or as their note; `resend_request` means they couldn't open an encrypted message and asked the sender for it again; `screenshot` means they took a screenshot of the chat (only detected on the web, and not everywhere); `call` logs a call the sender made; `live_invite` is posted in your chat when `from` asks you to a live game; `live_result` is how a live game you played alone against Six Frites Game ended, for you; in a group, `group_created`, `joined`, `left`, `removed`, `renamed` and `group_photo` tell what happened to the group and to whom (`name` is how they showed there) */
+                                action: ({
+                                    /** @enum {string} */
+                                    type: "auto_delete";
+                                    secs: number | null;
+                                } | {
+                                    /** @enum {string} */
+                                    type: "theme";
+                                    theme: string | null;
+                                } | {
+                                    /** @enum {string} */
+                                    type: "e2ee";
+                                } | {
+                                    /** @enum {string} */
+                                    type: "vanish";
+                                    on: boolean;
+                                } | {
+                                    /** @enum {string} */
+                                    type: "pin";
+                                } | {
+                                    /** @enum {string} */
+                                    type: "screenshot";
+                                } | {
+                                    /** @enum {string} */
+                                    type: "resend_request";
+                                } | {
+                                    /** @enum {string} */
+                                    type: "shared_to";
+                                    /** @enum {string} */
+                                    to: "story" | "note";
+                                } | {
+                                    /** @enum {string} */
+                                    type: "group_created";
+                                    title: string;
+                                } | {
+                                    /** @enum {string} */
+                                    type: "joined";
+                                    name: string;
+                                } | {
+                                    /** @enum {string} */
+                                    type: "left";
+                                    name: string;
+                                } | {
+                                    /** @enum {string} */
+                                    type: "removed";
+                                    name: string;
+                                } | {
+                                    /** @enum {string} */
+                                    type: "renamed";
+                                    title: string;
+                                } | {
+                                    /** @enum {string} */
+                                    type: "group_photo";
+                                } | {
+                                    /** @enum {string} */
+                                    type: "call";
+                                    video: boolean;
+                                    /** @description How long it lasted; null if it was missed or declined */
+                                    secs: number | null;
+                                } | {
+                                    /** @enum {string} */
+                                    type: "live_invite";
+                                    /** @enum {string} */
+                                    game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory" | "reflex" | "market" | "snack";
+                                    roomId: string;
+                                    from: string;
+                                    /** @description The game is over and its room closed, so there is nothing to join */
+                                    ended?: boolean;
+                                } | {
+                                    /** @enum {string} */
+                                    type: "live_result";
+                                    /** @enum {string} */
+                                    game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory" | "reflex" | "market" | "snack";
+                                    /** @enum {string} */
+                                    result: "won" | "lost" | "draw";
+                                    /** @description Your score, then the bot's best, in the games that keep one: boxes, pairs or word points */
+                                    score?: number[];
+                                }) | null;
+                                location: {
+                                    lat: number;
+                                    lng: number;
+                                    /** @description How far off it may be, in meters */
+                                    accuracy?: number | null;
+                                    /** @description What the place is called, for a place picked on the map */
+                                    name?: string;
+                                } | null;
+                                checklist: {
+                                    title: string;
+                                    items: string[];
+                                } | null;
+                                /** @description The checklist items marked done; either person can tick them */
+                                checks: {
+                                    /** @description Index in the checklist's items */
+                                    item: number;
+                                    /** @description Who marked it done */
+                                    userId: string;
+                                    /** Format: date-time */
+                                    at: string;
+                                }[];
+                                poll: {
+                                    question: string;
+                                    options: string[];
+                                } | null;
+                                /** @description How many people chose each of the poll's options, by index */
+                                votes: number[];
+                                /** @description The option you chose, if you voted */
+                                myVote: number | null;
+                                /** @description The poll shows who chose what; off, votes are anonymous and only counts show */
+                                pollVisible: boolean;
+                                /** @description Who chose which option, on a poll with `pollVisible`; empty on anonymous polls */
+                                voters: {
+                                    option: number;
+                                    userId: string;
+                                }[];
+                                /** @description In a group, the members mentioned with @, who are notified even if they muted it */
+                                mentions: string[];
+                                game: ({
+                                    /** @enum {string} */
+                                    game: "rps";
+                                    /** @enum {string} */
+                                    hand: "rock" | "paper" | "scissors";
+                                } | {
+                                    /** @enum {string} */
+                                    game: "dice";
+                                    pick: number;
+                                    seed: number;
+                                } | {
+                                    /** @enum {string} */
+                                    game: "guess";
+                                    secret: number;
+                                } | {
+                                    /** @enum {string} */
+                                    game: "penalty";
+                                    shots: ("left" | "middle" | "right")[];
+                                    dives: ("left" | "middle" | "right")[];
+                                } | {
+                                    /** @enum {string} */
+                                    game: "hangman";
+                                    word: string;
+                                } | {
+                                    /** @enum {string} */
+                                    game: "lie";
+                                    statements: string[];
+                                    lie: number;
+                                } | {
+                                    /** @enum {string} */
+                                    game: "rather";
+                                    options: string[];
+                                    choice: number;
+                                } | {
+                                    /** @enum {string} */
+                                    game: "riddle";
+                                    emojis: string;
+                                    answer: string;
+                                    /** @description A key the typed answers are sealed with, so only people who can read the game can read them */
+                                    key: string;
+                                } | {
+                                    /** @enum {string} */
+                                    game: "ships";
+                                    boats: number[][];
+                                } | {
+                                    /** @enum {string} */
+                                    game: "ttt";
+                                    cell: number;
+                                } | {
+                                    /** @enum {string} */
+                                    game: "four";
+                                    col: number;
+                                } | {
+                                    /** @enum {string} */
+                                    game: "sketch";
+                                    strokes: {
+                                        color: number;
+                                        points: number[];
+                                    }[];
+                                    answer: string;
+                                    /** @description A key the typed answers are sealed with, so only people who can read the game can read them */
+                                    key: string;
+                                }) | null;
+                                /** @description Answers to the game, oldest first; anyone but the sender can play */
+                                moves: {
+                                    userId: string;
+                                    move: {
+                                        /** @enum {string} */
+                                        hand: "rock" | "paper" | "scissors";
+                                    } | {
+                                        pick: number;
+                                        seed: number;
+                                    } | {
+                                        n: number;
+                                    } | {
+                                        shots: ("left" | "middle" | "right")[];
+                                        dives: ("left" | "middle" | "right")[];
+                                    } | {
+                                        letter: string;
+                                    } | {
+                                        choice: number;
+                                    } | {
+                                        sealed: string;
+                                    } | {
+                                        shot: number;
+                                    } | {
+                                        cell: number;
+                                    } | {
+                                        col: number;
+                                    };
+                                    /** Format: date-time */
+                                    at: string;
+                                }[];
+                                /** Format: date-time */
+                                createdAt: string;
+                                /** Format: date-time */
+                                editedAt: string | null;
+                                /** Format: date-time */
+                                deletedAt: string | null;
+                                /** @description Who deleted it for everyone: the sender, or the other person in a direct chat */
+                                deletedBy: string | null;
+                                /**
+                                 * Format: date-time
+                                 * @description When the chat's auto-delete timer removes it for everyone
+                                 */
+                                expiresAt: string | null;
+                                /** @description One entry per emoji, sticker or GIF, oldest first; a person can add several different ones */
+                                reactions: {
+                                    /** @description The emoji, or `sticker:<id>` / `gif:<id>` for a sticker or GIF; also what removes it */
+                                    emoji: string;
+                                    userIds: string[];
+                                    /** @description When each of them reacted, by user id */
+                                    reactedAt?: {
+                                        [key: string]: string;
+                                    };
+                                    /** @description For a sticker reaction; null once the sticker is gone */
+                                    sticker?: {
+                                        id: string;
+                                        packId: string;
+                                        emoji: string;
+                                        /**
+                                         * @description `lottie`: a Lottie JSON animation. `image`: a static WebP or PNG.
+                                         * @enum {string}
+                                         */
+                                        format: "lottie" | "image";
+                                        /**
+                                         * Format: uri
+                                         * @description Null while an uploaded sticker is still being processed
+                                         */
+                                        url: string | null;
+                                        width: number | null;
+                                        height: number | null;
+                                    } | null;
+                                    /** @description For a GIF reaction, as an MP4 to play muted on a loop */
+                                    gif?: {
+                                        /** Format: uri */
+                                        url: string;
+                                        width: number | null;
+                                        height: number | null;
+                                    } | null;
+                                }[];
+                                /** @description Set for end-to-end encrypted messages: `text`, `entities` and `spoiler` are then empty and the content is in your device's envelope */
+                                encryption: {
+                                    /** @description The device that encrypted it; open the envelope with your session with it */
+                                    senderDeviceId: string | null;
+                                    /** @description Only the envelopes for your own devices */
+                                    envelopes: {
+                                        deviceId: string;
+                                        envelope: {
+                                            /** @enum {number} */
+                                            v: 1;
+                                            x3dh?: {
+                                                identity: {
+                                                    /** @description Ed25519 identity key */
+                                                    signPub: string;
+                                                    /** @description X25519 identity key, signed by signPub */
+                                                    dhPub: string;
+                                                    /** @description A 64-byte Ed25519 signature, base64url without padding */
+                                                    dhSig: string;
+                                                };
+                                                /** @description A 32-byte public key, base64url without padding */
+                                                ephemeral: string;
+                                                signedPreKeyId: number;
+                                                oneTimePreKeyId: number | null;
+                                            };
+                                            header: string;
+                                            body: string;
+                                        };
+                                    }[];
+                                    /** @description Your backup copy, if you stored one */
+                                    backup: string | null;
+                                    /** @description `requested`: `by` couldn't decrypt it and asked the sender to encrypt it again (PUT /v1/messages/{id}/envelopes). `failed`: the sender's device couldn't read it either */
+                                    reseal: {
+                                        /** @enum {string} */
+                                        state: "requested" | "failed";
+                                        by: string;
+                                    } | null;
+                                } | null;
+                            }[];
+                            /** @description Your scheduled messages waiting to be sent in this chat */
+                            scheduledCount: number;
+                            /** @description Just yours: what you were typing here, saved by one of your devices for the others; null until one does */
+                            draft: {
+                                /** @description Plain text; null when cleared, or when it is sealed */
+                                text: string | null;
+                                /** @description Sealed with your backup key, so only your devices can read it */
+                                sealed: string | null;
+                                /** Format: date-time */
+                                at: string;
+                            } | null;
+                            /** @description You blocked the other person: nobody can send, react or edit until you unblock */
+                            blockedByMe: boolean;
+                            /** @description The other person blocked you */
+                            blockedByThem: boolean;
+                            /** @description The other person deleted their account */
+                            peerDeleted: boolean;
+                            /** @description Messages here are end-to-end encrypted from now on; sending plain text is refused (ENCRYPTION_REQUIRED) */
+                            encrypted: boolean;
+                            /** @description A support chat with a guest from the support page: only text, photos and replies can be sent, and nobody can call */
+                            support: boolean;
+                            /** @description You answer this chat for support; the person you're helping sees you as Six Frites */
+                            supportDesk: boolean;
+                            /** @description Your chat with Six Frites support: no calls, no presence, and text and photos only */
+                            withSupport: boolean;
+                            /**
+                             * Format: date-time
+                             * @description When support closed this conversation; the next message opens it again
+                             */
+                            supportClosedAt: string | null;
+                            /** Format: date-time */
+                            lastActivityAt: string;
+                            /** Format: date-time */
+                            createdAt: string;
+                        };
+                    };
+                };
+            };
+        };
+        trace?: never;
+    };
+    "/v1/groups/{id}/members/{userId}/name": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /**
+         * Give a member a name and photo only you see
+         * @description The same as a contact's own name and photo (PATCH /v1/contacts/{userId}), for anyone in the group: it shows in every chat you share with them. Null clears it.
+         */
+        patch: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                    userId: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        displayName?: string | null;
+                        photo?: string | null;
                     };
                 };
             };

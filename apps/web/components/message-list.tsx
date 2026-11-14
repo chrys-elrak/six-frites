@@ -4,6 +4,7 @@ import { unwrap } from "@six/sdk";
 import {
   type ChatDTO,
   type ChatGame,
+  type ChatMemberDTO,
   type Checklist,
   type Poll,
   type ChecklistMark,
@@ -140,6 +141,7 @@ import { StoryReplyLink } from "./stories";
 import { useChatLayout } from "@/lib/chat-layout";
 import { NoteEditor } from "./notes";
 import { ChecklistView } from "./checklist";
+import { NameMemberDialog } from "./groups";
 import { PollView } from "./poll";
 import { GameView } from "./game";
 import { LocationCard } from "./location-card";
@@ -623,7 +625,7 @@ export function Linked({ text, size }: { text: string; size?: string }) {
           part.text.split(MENTION_SPLIT).map((piece, k) =>
             k % 2 ? (
               <span key={`${i}@${k}`} className={`rounded px-0.5 font-semibold ${me?.all.has(piece) ? "bg-brand/30" : "bg-current/10"}`}>
-                {piece === me?.nickname ? `@${tr.common.you}` : piece}
+                {piece === me?.nickname ? `@${tr.common.you}` : (me?.names.get(piece) ?? piece)}
               </span>
             ) : (
               splitEmoji(piece).map((s, j) => (j % 2 ? <AnimatedEmoji key={`${i}:${k}:${j}`} emoji={s} size={emoji} /> : s))
@@ -854,13 +856,16 @@ function Bubble({
   autoPlay,
   onVoiceStop,
   sender,
+  onSenderPress,
   comments,
   onOpenThread,
   quoteEarlier,
 }: {
   row: MsgRow;
   /** In a group, who sent an incoming message: their name heads a run of their messages, their picture ends it. */
-  sender?: Pick<PublicUser, "displayName" | "avatarUrl" | "alias"> & { role?: GroupRole | null };
+  sender?: Pick<PublicUser, "displayName" | "avatarUrl" | "alias"> & { id?: string; role?: GroupRole | null };
+  /** In a group, tapping another member's picture gives them a name and photo of my own. */
+  onSenderPress?: (userId: string) => void;
   highlighted: boolean;
   selecting: boolean;
   selected: boolean;
@@ -1023,7 +1028,14 @@ function Bubble({
         <div className={`flex items-center gap-1 ${compact ? "min-w-0 flex-1 gap-2" : "max-w-[80%] md:max-w-[65%]"} ${right ? "flex-row-reverse" : ""}`}>
           {sender && (
             <span className={`w-9 shrink-0 ${compact ? "self-start pt-6" : "self-end"}`}>
-              {(compact ? groupStart : groupEnd) && <Avatar user={mine ? { ...sender, displayName: "#" } : sender} />}
+              {(compact ? groupStart : groupEnd) &&
+                (sender.id && !mine && onSenderPress ? (
+                  <button type="button" onClick={() => onSenderPress(sender.id!)} aria-label={tr.groups.nameMember} className="rounded-full">
+                    <Avatar user={sender} />
+                  </button>
+                ) : (
+                  <Avatar user={mine ? { ...sender, displayName: "#" } : sender} />
+                ))}
             </span>
           )}
           <div className={`flex min-w-0 flex-col gap-1 ${compact ? "items-start" : "items-end"}`}>
@@ -1323,6 +1335,7 @@ export const MessageList = forwardRef<
     const [confirmDelete, setConfirmDelete] = useState<MessageDTO[] | null>(null);
     const [sharing, setSharing] = useState<{ text: string; message: MessageDTO } | null>(null);
     const [noting, setNoting] = useState<{ text: string; message: MessageDTO } | null>(null);
+    const [naming, setNaming] = useState<ChatMemberDTO | null>(null);
     const look = chatTheme(chat.theme).light;
     const quoteOf = (msg: MessageDTO) => {
       const from = chat.members.find((x) => x.user.id === msg.senderId)?.user;
@@ -1846,6 +1859,7 @@ export const MessageList = forwardRef<
                 key={row.key}
                 row={row}
                 sender={senderOf(row)}
+                onSenderPress={chat.group ? (id) => setNaming(chat.members.find((m) => m.user.id === id) ?? null) : undefined}
                 highlighted={row.id !== null && row.id === highlight}
                 selecting={selecting}
                 selected={row.id !== null && selecting && selectedIds.includes(row.id)}
@@ -1997,6 +2011,7 @@ export const MessageList = forwardRef<
             onClose={() => setNoting(null)}
           />
         )}
+        {naming && <NameMemberDialog chat={chat} member={naming} onClose={() => setNaming(null)} />}
         {sharing && <StoryComposer initialText={sharing.text} bubble={`${look.bubble},${look.bubbleInk}`} quote={quoteOf(sharing.message)} onClose={() => setSharing(null)} />}
         {forwarding && (
           <ChatPicker
