@@ -2,7 +2,8 @@
 
 import { type ChatDTO, groupClosed } from "@six/shared";
 import { useQueryClient } from "@tanstack/react-query";
-import { Ban, Megaphone, UserX } from "lucide-react";
+import { Ban, Lightbulb, Megaphone, UserX } from "lucide-react";
+import Link from "next/link";
 import { useState } from "react";
 import { setBlocked } from "@/lib/actions";
 import { isNewsChat } from "@/lib/chats";
@@ -39,6 +40,15 @@ export function ChatBlocked({ chat, peerId, peerName }: { chat: ChatDTO; peerId:
     <div className="flex items-center gap-3 border-t border-black/5 bg-stone-50/45 px-4 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] backdrop-blur-xl backdrop-saturate-150 dark:border-white/10 dark:bg-stone-950/40">
       <Icon className="size-5 shrink-0 text-stone-400" />
       <p className="min-w-0 flex-1 text-sm text-stone-600 dark:text-stone-300">{text}</p>
+      {news && (
+        <Link
+          href="/tips"
+          className="flex shrink-0 items-center gap-1.5 rounded-xl bg-brand/15 px-3 py-2 text-sm font-semibold text-brand hover:bg-brand/25"
+        >
+          <Lightbulb className="size-4" />
+          {tr.tips.all}
+        </Link>
+      )}
       {chat.blockedByMe && !chat.peerDeleted && (
         <button
           onClick={() => void unblock()}

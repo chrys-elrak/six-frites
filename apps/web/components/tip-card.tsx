@@ -1,7 +1,7 @@
 "use client";
 
-import { ChevronLeft, ChevronRight, Lightbulb, UserPlus } from "lucide-react";
-import Link from "next/link";
+import { findInText } from "@six/shared";
+import { ChevronLeft, Lightbulb, Search, UserPlus } from "lucide-react";
 import { useEffect, useState } from "react";
 import { BackLink } from "@/lib/back";
 import { useT } from "@/lib/i18n";
@@ -80,32 +80,22 @@ export function InviteNudge({ onInvite }: { onInvite: () => void }) {
   );
 }
 
-/** A row in Settings that opens every tip on their own page, for whoever doesn't want to wait for them one a day. */
-export function AllTips() {
-  const tr = useT();
-  return (
-    <Link
-      href="/tips"
-      className="flex w-full items-center gap-3 rounded-2xl bg-surface backdrop-blur-md px-4 py-3 text-left shadow-sm ring-1 ring-surface-line hover:bg-white/80 dark:hover:bg-stone-800/70"
-    >
-      <Lightbulb className="size-5 text-brand" />
-      <span className="min-w-0 flex-1">
-        <span className="block text-sm font-medium">{tr.tips.all}</span>
-        <span className="block text-xs text-stone-500">{tr.tips.allHint(tr.tips.list.length)}</span>
-      </span>
-      <ChevronRight className="size-5 text-stone-400" />
-    </Link>
-  );
-}
+/** The tips holding `query`, ignoring case and accents, each with its number and the part that matched; all of them when it's empty. */
+const matchingTips = (list: readonly string[], query: string) =>
+  list
+    .map((tip, i) => ({ tip, i, hit: query.trim() ? findInText(tip, query, Infinity) : null }))
+    .filter((t) => !query.trim() || t.hit);
 
-/** Every tip, numbered, as a page of its own. */
+/** Every tip, numbered, as a page of its own, with a search box. */
 export function TipsPage() {
   const tr = useT();
+  const [query, setQuery] = useState("");
+  const found = matchingTips(tr.tips.list, query);
   return (
     <div className="flex min-h-0 flex-1 flex-col">
       <header className="flex items-center gap-1 border-b border-black/5 bg-stone-50/45 px-2 py-2 backdrop-blur-xl md:h-16 md:py-0 dark:border-white/10 dark:bg-stone-950/40">
         <BackLink
-          href="/settings"
+          href="/"
           aria-label={tr.common.back}
           className="grid size-10 shrink-0 place-items-center rounded-full text-stone-600 hover:bg-stone-200 dark:text-stone-300 dark:hover:bg-stone-800"
         >
@@ -115,14 +105,38 @@ export function TipsPage() {
         <h1 className="min-w-0 flex-1 truncate px-2 font-semibold">{tr.tips.all}</h1>
       </header>
       <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain">
+        <div className="mx-auto max-w-2xl px-4 pt-3">
+          <label className="flex items-center gap-2 rounded-xl bg-stone-100 px-3 py-2 dark:bg-stone-800">
+            <Search className="size-4 shrink-0 text-stone-400" />
+            <input
+              type="search"
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              placeholder={tr.tips.search}
+              aria-label={tr.tips.search}
+              className="min-w-0 flex-1 bg-transparent text-[16px] outline-none"
+            />
+          </label>
+        </div>
         <ol className="mx-auto max-w-2xl divide-y divide-black/5 px-4 pb-[max(1rem,env(safe-area-inset-bottom))] dark:divide-white/10">
-          {tr.tips.list.map((tip, i) => (
+          {found.map(({ tip, i, hit }) => (
             <li key={i} className="flex gap-3 py-3.5 text-[15px]">
               <span className="w-6 shrink-0 text-right font-semibold text-brand tabular-nums">{i + 1}</span>
-              <span className="text-stone-700 dark:text-stone-300">{tip}</span>
+              <span className="text-stone-700 dark:text-stone-300">
+                {hit ? (
+                  <>
+                    {hit.before}
+                    <mark className="rounded bg-brand/25 text-inherit">{hit.match}</mark>
+                    {hit.after}
+                  </>
+                ) : (
+                  tip
+                )}
+              </span>
             </li>
           ))}
         </ol>
+        {!found.length && <p className="px-4 py-8 text-center text-sm text-stone-500">{tr.tips.noMatch}</p>}
       </div>
     </div>
   );

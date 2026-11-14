@@ -2,6 +2,8 @@ const en = {
   title: "Tip",
   next: "Got it",
   all: "All tips",
+  search: "Search the tips",
+  noMatch: "No tip matches that.",
   allHint: (n: number) => `${n} little things that make Six Frites easier.`,
   list: [
     "Swipe a chat to the right to pin it on top, or to the left to archive it.",
@@ -65,6 +67,8 @@ const fr: typeof en = {
   title: "Astuce",
   next: "Compris",
   all: "Toutes les astuces",
+  search: "Rechercher dans les astuces",
+  noMatch: "Aucune astuce ne correspond.",
   allHint: (n) => `${n} petites choses qui rendent Six Frites plus simple.`,
   list: [
     "Glissez une discussion vers la droite pour l'épingler en haut, ou vers la gauche pour l'archiver.",
@@ -128,6 +132,8 @@ const mg: typeof en = {
   title: "Torohevitra",
   next: "Azoko",
   all: "Torohevitra rehetra",
+  search: "Hikaroka ao amin'ny torohevitra",
+  noMatch: "Tsy misy torohevitra mifanaraka amin'izany.",
   allHint: (n) => `Zavatra kely ${n} manamora ny Six Frites.`,
   list: [
     "Ataovy miankavanana ny resaka iray mba hametrahana azy eo ambony, na miankavia mba hanafenana azy.",

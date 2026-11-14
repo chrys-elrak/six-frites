@@ -24,7 +24,6 @@ import { Referrals } from "./invites";
 import { ProfileCard } from "./profile-card";
 import { Sheet } from "./sheet";
 import { QuickReactionsSettings } from "./reactions";
-import { AllTips } from "./tip-card";
 import { TourAgain } from "./tour";
 import { Card, SectionTitle, Toggle } from "./ui";
 import { BrandActions } from "./brand-actions";
@@ -224,7 +223,6 @@ export function SettingsPanel() {
           <InstallCard />
           <AndroidDownload />
           <TourAgain />
-          <AllTips />
           <LanguagePicker />
           <ThemePicker />
           <LayoutPicker />

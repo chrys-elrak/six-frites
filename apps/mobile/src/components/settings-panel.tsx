@@ -42,7 +42,6 @@ import { Sheet } from "./sheet";
 import { Card, Divider, Notice, SectionTitle, TextButton, Toggle } from "./ui";
 import { UpdateCard } from "./update-banner";
 import { BrandBar } from "./brand-bar";
-import { AllTips } from "./tip-card";
 import { TourAgain } from "./tour";
 
 function ProfileCard() {
@@ -698,7 +697,6 @@ export function SettingsPanel() {
         <UpdateCard />
         <ProfileCard />
         <TourAgain />
-        <AllTips />
         <LanguagePicker />
         <ThemePicker />
         <LayoutPicker />

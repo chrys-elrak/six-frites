@@ -2,6 +2,17 @@
 
 What Six Frites News tells members after each deploy, newest first. CLAUDE.md says when to add a section and how.
 
+## 2026-11-14 06h53
+
+### en
+- All the tips now live in Six Frites News: tap All tips at the bottom of that chat. You can search them too, and the words you typed are highlighted.
+
+### fr
+- Toutes les astuces sont maintenant dans Six Frites News : touchez Toutes les astuces en bas de cette discussion. Vous pouvez aussi y chercher, et les mots tapés sont surlignés.
+
+### mg
+- Ao amin'ny Six Frites News izao ny torohevitra rehetra: tsindrio ny Torohevitra rehetra eo ambany amin'io resaka io. Azonao karohina koa izy ireo, ary asongadina ny teny nosoratanao.
+
 ## 2026-11-14 06h48
 
 ### en

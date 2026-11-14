@@ -1,13 +1,14 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { ChevronLeft, ChevronRight, Lightbulb, UserPlus } from "lucide-react-native";
+import { findInText } from "@six/shared";
+import { ChevronLeft, Lightbulb, Search, UserPlus } from "lucide-react-native";
 import { router } from "expo-router";
 import { useEffect, useState } from "react";
 import { Pressable, ScrollView, StyleSheet, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useT } from "@/lib/i18n";
 import { brand, brandInk, useTheme } from "@/lib/theme";
-import { Text } from "./text";
-import { Card, IconButton, ScreenHeader } from "./ui";
+import { Text, TextInput } from "./text";
+import { IconButton, ScreenHeader } from "./ui";
 
 const KEY = "six:tip";
 const today = () => new Date().toDateString();
@@ -77,6 +78,7 @@ export function InviteNudge({ onInvite }: { onInvite: () => void }) {
 const styles = StyleSheet.create({
   row: { flexDirection: "row", alignItems: "center", gap: 12, padding: 16 },
   tip: { flexDirection: "row", gap: 12, paddingVertical: 12, borderTopWidth: StyleSheet.hairlineWidth },
+  search: { flexDirection: "row", alignItems: "center", gap: 8, borderRadius: 12, paddingHorizontal: 12, marginTop: 12, marginBottom: 4 },
   card: {
     flexDirection: "row",
     alignItems: "center",
@@ -92,28 +94,18 @@ const styles = StyleSheet.create({
   button: { backgroundColor: brand, borderRadius: 999, paddingHorizontal: 12, paddingVertical: 7 },
 });
 
-/** A row in Settings that opens every tip on their own screen, for whoever doesn't want to wait for them one a day. */
-export function AllTips() {
-  const t = useTheme();
-  const tr = useT();
-  return (
-    <Card>
-      <Pressable onPress={() => router.push("/tips")} accessibilityRole="button" style={styles.row}>
-        <Lightbulb size={20} color={brand} />
-        <View style={{ flex: 1 }}>
-          <Text style={{ color: t.text, fontWeight: "500", fontSize: 15 }}>{tr.tips.all}</Text>
-          <Text style={{ color: t.muted, fontSize: 13 }}>{tr.tips.allHint(tr.tips.list.length)}</Text>
-        </View>
-        <ChevronRight size={18} color={t.faint} />
-      </Pressable>
-    </Card>
-  );
-}
+/** The tips holding `query`, ignoring case and accents, each with its number and the part that matched; all of them when it's empty. */
+const matchingTips = (list: readonly string[], query: string) =>
+  list
+    .map((tip, i) => ({ tip, i, hit: query.trim() ? findInText(tip, query, Infinity) : null }))
+    .filter((t) => !query.trim() || t.hit);
 
-/** Every tip, numbered, as a screen of its own. */
+/** Every tip, numbered, as a screen of its own, with a search box. */
 export function TipsScreen() {
   const t = useTheme();
   const tr = useT();
+  const [query, setQuery] = useState("");
+  const found = matchingTips(tr.tips.list, query);
   const insets = useSafeAreaInsets();
   return (
     <View style={{ flex: 1, backgroundColor: t.bg }}>
@@ -122,13 +114,36 @@ export function TipsScreen() {
         <Lightbulb size={20} color={brand} />
         <Text style={{ flex: 1, color: t.text, fontSize: 18, fontWeight: "700" }}>{tr.tips.all}</Text>
       </ScreenHeader>
-      <ScrollView contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: insets.bottom + 16 }}>
-        {tr.tips.list.map((tip, i) => (
-          <View key={i} style={[styles.tip, { borderColor: t.border }, i === 0 && { borderTopWidth: 0 }]}>
+      <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: insets.bottom + 16 }}>
+        <View style={[styles.search, { backgroundColor: t.field }]}>
+          <Search size={16} color={t.faint} />
+          <TextInput
+            value={query}
+            onChangeText={setQuery}
+            placeholder={tr.tips.search}
+            placeholderTextColor={t.muted}
+            accessibilityLabel={tr.tips.search}
+            returnKeyType="search"
+            style={{ flex: 1, color: t.text, fontSize: 16, paddingVertical: 8 }}
+          />
+        </View>
+        {found.map(({ tip, i, hit }, n) => (
+          <View key={i} style={[styles.tip, { borderColor: t.border }, n === 0 && { borderTopWidth: 0 }]}>
             <Text style={{ width: 24, textAlign: "right", color: brand, fontWeight: "700", fontSize: 14 }}>{i + 1}</Text>
-            <Text style={{ flex: 1, color: t.textSoft, fontSize: 15, lineHeight: 21 }}>{tip}</Text>
+            <Text style={{ flex: 1, color: t.textSoft, fontSize: 15, lineHeight: 21 }}>
+              {hit ? (
+                <>
+                  {hit.before}
+                  <Text style={{ backgroundColor: "rgba(235,138,0,0.25)", color: t.text }}>{hit.match}</Text>
+                  {hit.after}
+                </>
+              ) : (
+                tip
+              )}
+            </Text>
           </View>
         ))}
+        {!found.length && <Text style={{ color: t.muted, fontSize: 14, textAlign: "center", paddingVertical: 32 }}>{tr.tips.noMatch}</Text>}
       </ScrollView>
     </View>
   );
