@@ -298,10 +298,13 @@ export function StoryComposer({
 
   const on = stickersOn({ asks: asks.length, gifs: gifs.length, photos: photos.length, link: !!link, askLink, location: !!location, showDate, showTime });
   const shown = useRef<string[]>([]);
+  const [focus, setFocus] = useState<StorySticker | number | null>(null);
+  const hit = useRef(false);
   useLayoutEffect(() => {
     const added = on.filter((k) => !shown.current.includes(k));
     shown.current = on;
     if (added.length) setPositions((p) => landOnTop(p, drawing.texts, added));
+    if (added.length) setFocus(added.at(-1)!);
   }, [on.join()]);
 
   const drafts = useStoryDrafts();
@@ -384,6 +387,7 @@ export function StoryComposer({
     setWriting(null);
     const words = w.text.trim();
     if (!words && w.index < 0) return;
+    setFocus(!words ? null : w.index < 0 ? drawing.texts.length : w.index);
     keep();
     const old = drawing.texts[w.index];
     const t = {
@@ -592,7 +596,14 @@ export function StoryComposer({
     at: new Date().toISOString(),
     positions,
     frame: card,
-    onMove: (sticker: StorySticker, spot: StorySpot) => setPositions((p) => ({ ...p, [sticker]: { ...spot, z: zToTop(p, drawing.texts, p[sticker]?.z) } })),
+    focused: typeof focus === "string" && !flattening ? focus : null,
+    onTouch: () => {
+      hit.current = true;
+    },
+    onMove: (sticker: StorySticker, spot: StorySpot) => {
+      setFocus(sticker);
+      setPositions((p) => ({ ...p, [sticker]: { ...spot, z: zToTop(p, drawing.texts, p[sticker]?.z) } }));
+    },
     onRemove: (sticker: StorySticker) => {
       if (stickerIndex("ask", sticker) >= 0) return dropAsk(stickerIndex("ask", sticker));
       if (stickerIndex("gif", sticker) >= 0) {
@@ -619,6 +630,7 @@ export function StoryComposer({
       });
     },
     onTap: (sticker: StorySticker) => {
+      setFocus((f) => (f === sticker ? null : sticker));
       if (sticker === "location") placeField.current?.focus();
       if (sticker === "link") linkField.current?.focus();
       if (sticker === "asklink") askField.current?.focus();
@@ -632,7 +644,15 @@ export function StoryComposer({
       navigationBarTranslucent
       onRequestClose={() => (writing ? setWriting(null) : drawingOn ? setDrawingOn(false) : close())}
     >
-      <View ref={screen} collapsable={false} style={styles.screen}>
+      <View
+        ref={screen}
+        collapsable={false}
+        style={styles.screen}
+        onTouchStart={() => {
+          if (!hit.current) setFocus(null);
+          hit.current = false;
+        }}
+      >
         <KeyboardAvoidingView behavior="padding" style={[styles.screen, file ? { backgroundColor: "#000" } : storyFill(background)]}>
           <View ref={card} pointerEvents="none" style={StyleSheet.absoluteFill} />
           <View style={styles.preview}>
@@ -667,6 +687,11 @@ export function StoryComposer({
             pen={drawingOn ? pen : null}
             onBegin={keep}
             onChange={setDrawing}
+            focusedText={typeof focus === "number" ? focus : null}
+            onTouchText={(i) => {
+              hit.current = true;
+              setFocus(i);
+            }}
             raise={(z) => zToTop(positions, drawing.texts, z)}
             onEditText={(index) => {
               const t = drawing.texts[index]!;
@@ -928,6 +953,7 @@ export function StoryComposer({
                 writing.index >= 0
                   ? () => {
                       keep();
+                      setFocus(null);
                       setDrawing((d) => ({ ...d, texts: d.texts.filter((_, i) => i !== writing.index) }));
                       setWriting(null);
                     }

@@ -107,6 +107,10 @@ interface Editing {
   onMove: Move;
   onRemove?: (sticker: StorySticker) => void;
   onTap?: (sticker: StorySticker) => void;
+  /** The sticker showing its remove button and resize handle; the others show neither. */
+  focused?: StorySticker | null;
+  /** Called when a finger lands on a sticker or its buttons, so a touch anywhere else can take the focus away. */
+  onTouch?: () => void;
 }
 
 /**
@@ -160,6 +164,7 @@ function Sticker({
   return (
     <View
       ref={self}
+      onTouchStart={editing.onTouch}
       onStartShouldSetResponder={() => true}
       onMoveShouldSetResponder={() => true}
       onResponderTerminationRequest={() => false}
@@ -201,39 +206,41 @@ function Sticker({
       style={{ transform: [{ translateX: shift.dx }, { translateY: shift.dy }, { scale: shown }, { rotate: `${shownTurn}deg` }] }}
     >
       {children}
-      {editing.onRemove && (
+      {editing.focused === sticker && editing.onRemove && (
         <Pressable onPress={() => editing.onRemove!(sticker)} accessibilityLabel={tr.common.remove} hitSlop={8} style={[styles.handle, styles.remove, keep]}>
           <X size={14} color={stone[900]} strokeWidth={3} />
         </Pressable>
       )}
-      <View
-        onStartShouldSetResponder={() => true}
-        onMoveShouldSetResponder={() => true}
-        onResponderTerminationRequest={() => false}
-        onResponderGrant={(e) => measure(e.nativeEvent.pageX, e.nativeEvent.pageY)}
-        onResponderMove={(e) => {
-          const s = start.current;
-          if (!s) return;
-          const { pageX, pageY } = e.nativeEvent;
-          const centre = { x: s.cx, y: s.cy };
-          const from = Math.hypot(s.px - s.cx, s.py - s.cy) || 1;
-          liveRef.current = clampScale((scale * Math.hypot(pageX - s.cx, pageY - s.cy)) / from);
-          setLive(liveRef.current);
-          setTurned(rotate + angleOf(centre, { x: pageX, y: pageY }) - angleOf(centre, { x: s.px, y: s.py }));
-        }}
-        onResponderRelease={() => {
-          const s = start.current;
-          if (s && liveRef.current !== null) editing.onMove(sticker, { x: s.x, y: s.y, scale: liveRef.current, rotate: turnRef.current ?? rotate });
-          liveRef.current = null;
-          setLive(null);
-          turnRef.current = null;
-          setTurn(null);
-        }}
-        hitSlop={8}
-        style={[styles.handle, styles.resize, keep]}
-      >
-        <MoveDiagonal2 size={14} color={stone[900]} strokeWidth={2.5} />
-      </View>
+      {editing.focused === sticker && (
+        <View
+          onStartShouldSetResponder={() => true}
+          onMoveShouldSetResponder={() => true}
+          onResponderTerminationRequest={() => false}
+          onResponderGrant={(e) => measure(e.nativeEvent.pageX, e.nativeEvent.pageY)}
+          onResponderMove={(e) => {
+            const s = start.current;
+            if (!s) return;
+            const { pageX, pageY } = e.nativeEvent;
+            const centre = { x: s.cx, y: s.cy };
+            const from = Math.hypot(s.px - s.cx, s.py - s.cy) || 1;
+            liveRef.current = clampScale((scale * Math.hypot(pageX - s.cx, pageY - s.cy)) / from);
+            setLive(liveRef.current);
+            setTurned(rotate + angleOf(centre, { x: pageX, y: pageY }) - angleOf(centre, { x: s.px, y: s.py }));
+          }}
+          onResponderRelease={() => {
+            const s = start.current;
+            if (s && liveRef.current !== null) editing.onMove(sticker, { x: s.x, y: s.y, scale: liveRef.current, rotate: turnRef.current ?? rotate });
+            liveRef.current = null;
+            setLive(null);
+            turnRef.current = null;
+            setTurn(null);
+          }}
+          hitSlop={8}
+          style={[styles.handle, styles.resize, keep]}
+        >
+          <MoveDiagonal2 size={14} color={stone[900]} strokeWidth={2.5} />
+        </View>
+      )}
     </View>
   );
 }
@@ -288,6 +295,8 @@ export function StoryStickers({
   onMove,
   onRemove,
   onTap,
+  focused,
+  onTouch,
   skip,
   photos = [],
 }: {
@@ -310,6 +319,8 @@ export function StoryStickers({
   onMove?: Move;
   onRemove?: (sticker: StorySticker) => void;
   onTap?: (sticker: StorySticker) => void;
+  focused?: StorySticker | null;
+  onTouch?: () => void;
   /** Leaves these stickers out, as when the story is drawn into a picture without the ones that stay live. */
   skip?: (sticker: StorySticker) => boolean;
 }) {
@@ -324,7 +335,7 @@ export function StoryStickers({
           : { location: !!location, date: showDate, time: showTime, link: !!link, asklink: !!askLink }[k as "link"];
   const shown = STORY_STICKERS.filter((k) => has(k) && !!positions[k] === placed && !skip?.(k));
   if (!shown.length) return null;
-  const editing = onMove && frame ? { frame, onMove, onRemove, onTap } : undefined;
+  const editing = onMove && frame ? { frame, onMove, onRemove, onTap, focused, onTouch } : undefined;
 
   const node = (k: StorySticker) => {
     const ask = asks[stickerIndex("ask", k)];

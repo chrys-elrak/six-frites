@@ -8,18 +8,21 @@ What Six Frites News tells members after each deploy, newest first. CLAUDE.md sa
 - When you add anonymous messages to a story, you now see them as the cards they'll be on your story, side by side: swipe through and tap up to five. A long message is cut short with … so the card stays readable.
 - The text style, font and colour pickers in the story editor now only show while you type your text, so they no longer cover your story.
 - In the story editor, what you add now lands near the top, above everything else, instead of low down where the menu hides it.
+- In the app's story editor, the remove and resize buttons only show on the item or text you just added, moved or tapped. Tap anywhere else to hide them.
 - Close a story you started and you can save it as a draft. Pick it up later from Drafts, next to how long it lasts.
 
 ### fr
 - Quand vous ajoutez des messages anonymes à une story, vous les voyez maintenant comme les cartes qu'ils seront sur votre story, côte à côte : faites défiler et touchez-en jusqu'à cinq. Un message long est coupé avec … pour que la carte reste lisible.
 - Les choix de style, de police et de couleur du texte dans l'éditeur de story n'apparaissent plus que pendant que vous écrivez, et ne cachent plus votre story.
 - Dans l'éditeur de story, ce que vous ajoutez arrive maintenant en haut, par-dessus le reste, au lieu d'arriver en bas sous le menu.
+- Dans l'éditeur de story de l'application, les boutons pour retirer et redimensionner n'apparaissent que sur l'élément ou le texte que vous venez d'ajouter, de déplacer ou de toucher. Touchez ailleurs pour les cacher.
 - En fermant une story commencée, vous pouvez l'enregistrer en brouillon. Reprenez-la plus tard depuis Brouillons, à côté de la durée.
 
 ### mg
 - Rehefa manampy hafatra tsy fantatra anarana amin'ny story ianao, dia hitanao izao ho toy ny karatra hiseho amin'ny storinao izy ireo, mifanila: ataovy mandeha ary misafidiana hatramin'ny dimy. Fohezina amin'ny … ny hafatra lava mba ho mora vakiana ny karatra.
 - Ny safidy endrika, soratra ary loko ao amin'ny fanoratana story dia tsy miseho afa-tsy rehefa manoratra ianao, ka tsy manakona ny storinao intsony.
 - Ao amin'ny fanoratana story, eo ambony sy ambonin'ny zavatra hafa rehetra izao no miseho izay ampianao, fa tsy any ambany ambadiky ny menu intsony.
+- Ao amin'ny fanoratana story ao amin'ny app, ny bokotra hanesorana sy hanovana habe dia tsy miseho afa-tsy amin'ilay zavatra na soratra vao nampianao, nafindranao na notsindrianao. Tsindrio any an-kafa hanafenana azy ireo.
 - Rehefa manidy story efa nanombohanao ianao dia azonao tehirizina ho drafitra izy. Tohizo any aoriana avy amin'ny Drafitra, eo akaikin'ny faharetany.
 
 ## 2026-11-14 07h43

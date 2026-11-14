@@ -108,6 +108,8 @@ export function StoryDrawingLayer({
   onChange,
   onEditText,
   raise,
+  focusedText,
+  onTouchText,
   children,
 }: {
   drawing: StoryDrawing;
@@ -117,6 +119,10 @@ export function StoryDrawingLayer({
   onEditText?: (index: number) => void;
   /** The stacking order that puts a text now at `z` on top of everything else on the story. */
   raise?: (z: number | undefined) => number;
+  /** The text showing its resize handle; the others show none. */
+  focusedText?: number | null;
+  /** Called when a finger lands on a text or its handle. */
+  onTouchText?: (index: number) => void;
   /** The placed stickers, under the drawing until moved, so they share one stacking order with its texts. */
   children?: React.ReactNode;
 }) {
@@ -241,6 +247,7 @@ export function StoryDrawingLayer({
                 boxes.current[i] = v;
               }}
               pointerEvents={editing ? "auto" : "none"}
+              onTouchStart={() => onTouchText?.(i)}
               style={{ transform: [{ rotate: `${t.rotate ?? 0}deg` }] }}
               {...follow}
               onStartShouldSetResponder={() => editing}
@@ -260,7 +267,7 @@ export function StoryDrawingLayer({
               }}
             >
               <LookText text={t.text} look={t.look} color={t.color} size={STORY_TEXT_SIZE * t.scale * w} font={t.font} />
-              {editing && (
+              {editing && focusedText === i && (
                 <View
                   {...follow}
                   onStartShouldSetResponder={() => true}
