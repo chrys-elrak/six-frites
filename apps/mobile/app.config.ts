@@ -39,7 +39,7 @@ export default ({ config }: ConfigContext): ExpoConfig =>
   name: "Six Frites",
   slug: "six-frites",
   scheme: "sixfrites",
-  version: "1.6.0",
+  version: "1.6.1",
   orientation: "default",
   icon: "./assets/icon.png",
   userInterfaceStyle: "automatic",
@@ -54,7 +54,7 @@ export default ({ config }: ConfigContext): ExpoConfig =>
   },
   android: {
     package: "com.sixfrites.app",
-    versionCode: 10,
+    versionCode: 11,
     adaptiveIcon: {
       backgroundColor: "#F2711C",
       foregroundImage: "./assets/android-icon-foreground.png",
@@ -166,7 +166,7 @@ export default ({ config }: ConfigContext): ExpoConfig =>
     [
       "expo-build-properties",
       {
-        android: { minSdkVersion: 26, buildArchs: ["armeabi-v7a", "arm64-v8a"], useLegacyPackaging: true, extraProguardRules: "-keep class org.webrtc.** { *; }\n-dontwarn org.webrtc.**" },
+        android: { minSdkVersion: 26, buildArchs: ["armeabi-v7a", "arm64-v8a"], useLegacyPackaging: true, extraProguardRules: "-keep class org.webrtc.** { *; }\n-dontwarn org.webrtc.**\n-keep class * extends androidx.room.RoomDatabase { <init>(); }" },
         ...(!iosUrlScheme && { ios: { extraPods: googleSignInPods } }),
       },
     ],

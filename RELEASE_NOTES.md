@@ -92,6 +92,17 @@ What Six Frites News tells members after each deploy, newest first. CLAUDE.md sa
 ### mg
 - Mandeha indray ny famafana ho an'ny rehetra ny resaka lava, miaraka amin'ny sary sy horonan-tsariny.
 
+## 2026-11-14 06h05
+
+### en
+- The Android app no longer closes as soon as it opens: update to 1.6.1 from Google Play or Koera Store.
+
+### fr
+- L'application Android ne se ferme plus dès son ouverture : passez à la version 1.6.1 depuis Google Play ou Koera Store.
+
+### mg
+- Tsy mikatona intsony raha vao sokafana ny fampiharana Android: ataovy 1.6.1 avy amin'ny Google Play na Koera Store.
+
 ## 2026-11-14 05h59
 
 ### en

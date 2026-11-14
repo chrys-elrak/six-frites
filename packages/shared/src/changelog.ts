@@ -14,6 +14,15 @@ export interface Release {
  */
 export const CHANGELOG: Release[] = [
   {
+    version: "1.6.1",
+    date: "2026-11-14",
+    notes: {
+      en: ["Fixes the app closing as soon as it opened in 1.6.0."],
+      fr: ["Corrige l'application qui se fermait dès son ouverture en 1.6.0."],
+      mg: ["Voavaha ny fikatonan'ny fampiharana raha vao nosokafana tamin'ny 1.6.0."],
+    },
+  },
+  {
     version: "1.6.0",
     date: "2026-11-12",
     notes: {
