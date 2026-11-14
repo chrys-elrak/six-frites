@@ -75,6 +75,11 @@ const en = {
   shapes: { pen: "Pen", arrow: "Arrow", circle: "Circle", rect: "Box" },
   textLooks: { plain: "No background", box: "Background", outline: "Outline" },
   emptyHint: "Share a photo, a video or a few words with your contacts. You choose how long it stays.",
+  drafts: "Drafts",
+  saveDraft: "Save draft",
+  discard: "Discard",
+  deleteDraft: "Delete draft",
+  keepForLater: "Keep this story for later?",
 };
 
 const fr: typeof en = {
@@ -154,6 +159,11 @@ const fr: typeof en = {
   shapes: { pen: "Crayon", arrow: "Flèche", circle: "Cercle", rect: "Cadre" },
   textLooks: { plain: "Sans fond", box: "Avec fond", outline: "Contour" },
   emptyHint: "Partagez une photo, une vidéo ou quelques mots avec vos contacts. Vous choisissez combien de temps elle reste.",
+  drafts: "Brouillons",
+  saveDraft: "Enregistrer le brouillon",
+  discard: "Abandonner",
+  deleteDraft: "Supprimer le brouillon",
+  keepForLater: "Garder cette story pour plus tard ?",
 };
 
 const mg: typeof en = {
@@ -233,6 +243,11 @@ const mg: typeof en = {
   shapes: { pen: "Penina", arrow: "Zana-tsipika", circle: "Faribolana", rect: "Efajoro" },
   textLooks: { plain: "Tsy misy loko ambadika", box: "Misy loko ambadika", outline: "Misy sisiny" },
   emptyHint: "Mizara sary, horonantsary na teny vitsivitsy amin'ireo mpifandray aminao. Ianao no misafidy hoe hafiriana no hijanonany.",
+  drafts: "Drafitra",
+  saveDraft: "Tehirizo ho drafitra",
+  discard: "Ariana",
+  deleteDraft: "Fafao ny drafitra",
+  keepForLater: "Hotehirizina ho amin'ny manaraka ve ity tantara ity?",
 };
 
 export default { en, fr, mg };

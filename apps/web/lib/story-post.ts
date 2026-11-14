@@ -17,10 +17,10 @@ let hide: ReturnType<typeof setTimeout> | undefined;
 
 /**
  * Uploads a story's photo or video, if any, then shares it, while the composer is already closed. A failure keeps
- * everything for a retry.
+ * everything for a retry. Says whether it went up.
  */
 // ponytail: one story at a time; a second one started meanwhile takes over the bar
-export async function postStory(qc: QueryClient, body: CreateStoryInput, file?: { blob: Blob } & Omit<UploadOptions, "onProgress">) {
+export async function postStory(qc: QueryClient, body: CreateStoryInput, file?: { blob: Blob } & Omit<UploadOptions, "onProgress">): Promise<boolean> {
   const set = useStoryPost.setState;
   clearTimeout(hide);
   set({ state: "posting", progress: 0, retry: null });
@@ -30,7 +30,9 @@ export async function postStory(qc: QueryClient, body: CreateStoryInput, file?: 
     void qc.invalidateQueries({ queryKey: ["stories"] });
     set((s) => (s.state ? { state: "done", progress: 1 } : {}));
     hide = setTimeout(() => set({ state: null }), 3000);
+    return true;
   } catch {
     set({ state: "failed", retry: () => void postStory(qc, body, file) });
+    return false;
   }
 }

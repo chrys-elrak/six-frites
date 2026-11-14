@@ -28,7 +28,8 @@ import {
   askUrl,
   dropSpot,
   stickerIndex,
-  stickerOf,
+  landOnTop,
+  stickersOn,
   zToTop,
   STORY_STICKER_SCALE,
 } from "@six/shared";
@@ -37,6 +38,7 @@ import {
   CalendarDays,
   Camera,
   CaseSensitive,
+  FileClock,
   Check,
   ChevronDown,
   Clock,
@@ -56,15 +58,16 @@ import {
   X,
 } from "lucide-react";
 import { toJpeg } from "html-to-image";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { useCloseOnBack } from "@/lib/back";
 import { getLocale, useT } from "@/lib/i18n";
 import { mediaMeta } from "@/lib/media-meta";
 import { chatCardJpeg } from "@/lib/chat-card";
-import { clockTime, shortDate } from "@/lib/format";
+import { clockTime, shortDate, timeAgo } from "@/lib/format";
 import { useSession } from "@/lib/session";
 import { six } from "@/lib/six";
 import { postStory } from "@/lib/story-post";
+import { type StoryDraft, deleteDraft, draftsKey, saveDraft, useStoryDrafts } from "@/lib/story-drafts";
 import { CameraDialog } from "./camera-dialog";
 import { GifSearch } from "./gif-picker";
 import { currentPosition } from "./location-card";
@@ -101,8 +104,6 @@ function webLink(typed: string) {
   }
 }
 
-/** Where the `i`th of several anonymous messages or GIFs lands: each a little lower than the one before. */
-const cascade = (i: number) => ({ x: 0.5, y: Math.min(0.15 + 0.15 * i, 0.8), scale: 0.75 });
 
 /** Positions without the photo stickers, which only exist in a flattened picture. */
 const noPhotos = (positions: StoryPositions) =>
@@ -185,8 +186,93 @@ export function StoryComposer({
   const kind = file ? kindFor(file.type) : null;
   const tooLong = kind === "video" && (videoMs ?? 0) > STORY_LIMITS.videoMs + STORY_LIMITS.videoSlackMs;
   const href = link && webLink(link.url);
-  const ready = (!!file || !!text.trim() || gifs.length > 0 || photos.length > 0 || asks.length > 0 || !!href || askLink || drawn) && !tooLong;
-  const fromChat = !!initialText && !file;
+  const filled = !!file || !!text.trim() || gifs.length > 0 || photos.length > 0 || asks.length > 0 || !!href || askLink || drawn;
+  const ready = filled && !tooLong;
+  const [shared, setShared] = useState<StoryDraft["shared"]>(initialText ? { bubble, quote } : null);
+  const fromChat = !!shared && !file;
+
+  const on = stickersOn({ asks: asks.length, gifs: gifs.length, photos: photos.length, link: !!link, askLink, location: !!location, showDate, showTime });
+  const shown = useRef<string[]>([]);
+  useLayoutEffect(() => {
+    const added = on.filter((k) => !shown.current.includes(k));
+    shown.current = on;
+    if (added.length) setPositions((p) => landOnTop(p, drawing.texts, added));
+  }, [on.join()]);
+
+  const drafts = useStoryDrafts();
+  const [draftId, setDraftId] = useState<string | null>(null);
+  const [closing, setClosing] = useState(false);
+  const [pickingDraft, setPickingDraft] = useState(false);
+  const close = () => (filled ? setClosing(true) : onClose());
+
+  async function keepDraft() {
+    try {
+      await saveDraft({
+        id: draftId ?? `${Date.now()}`,
+        savedAt: new Date().toISOString(),
+        text,
+        background,
+        mainStyle,
+        file,
+        photos: photos.map((p) => p.file),
+        gifs,
+        asks,
+        link,
+        askLink,
+        askText,
+        location,
+        showDate,
+        showTime,
+        positions,
+        drawing,
+        durationSecs,
+        shared,
+      });
+      void qc.invalidateQueries({ queryKey: draftsKey });
+      onClose();
+    } catch (err) {
+      setError((err as Error).message);
+    }
+  }
+
+  async function dropDraft() {
+    if (draftId) {
+      await deleteDraft(draftId).catch(() => null);
+      void qc.invalidateQueries({ queryKey: draftsKey });
+    }
+    onClose();
+  }
+
+  function openDraft(d: StoryDraft) {
+    shown.current = stickersOn({ asks: d.asks.length, gifs: d.gifs.length, photos: d.photos.length, link: !!d.link, askLink: d.askLink, location: !!d.location, showDate: d.showDate, showTime: d.showTime });
+    setDraftId(d.id);
+    if (d.file) void pick(d.file);
+    setText(d.text);
+    setBackground(d.background);
+    setMainStyle(d.mainStyle);
+    setPhotos(d.photos.map((file) => ({ file, url: URL.createObjectURL(file) })));
+    setGifs(d.gifs);
+    setAsks(d.asks);
+    setLink(d.link);
+    setAskLink(d.askLink);
+    setAskText(d.askText);
+    setLocation(d.location);
+    setShowDate(d.showDate);
+    setShowTime(d.showTime);
+    setPositions(d.positions);
+    setDrawing(d.drawing);
+    setUndos([]);
+    setDurationSecs(d.durationSecs);
+    setShared(d.shared);
+  }
+
+  /** Once the story is up, the draft it came from goes. */
+  const posted = (ok: boolean) => {
+    if (!ok || !draftId) return;
+    void deleteDraft(draftId)
+      .then(() => qc.invalidateQueries({ queryKey: draftsKey }))
+      .catch(() => null);
+  };
   const covered = !text.trim() && (asks.length > 0 || gifs.length > 0 || photos.length > 0 || !!link || askLink || !!location || showDate || showTime || drawn);
 
   useEffect(() => {
@@ -252,7 +338,7 @@ export function StoryComposer({
   useCloseOnBack(() => {
     if (writing) setWriting(null);
     else if (drawingOn) setDrawingOn(false);
-    else onClose();
+    else close();
   });
 
   useEffect(() => {
@@ -351,6 +437,7 @@ export function StoryComposer({
       durationSecs,
     };
     if (fromChat) {
+      const { bubble, quote } = shared!;
       const own = quote?.from.id === me;
       void chatCardJpeg({
         text,
@@ -361,7 +448,7 @@ export function StoryComposer({
         when: quote ? `${shortDate(quote.sentAt)} · ${clockTime(quote.sentAt)}` : null,
         label: tr.stories.fromChat,
       }).then((blob) =>
-        postStory(qc, { ...live, fromChat: true, messageId: quote?.messageId }, { blob, kind: "image", name: "story.jpg", mime: "image/jpeg" }),
+        postStory(qc, { ...live, fromChat: true, messageId: quote?.messageId }, { blob, kind: "image", name: "story.jpg", mime: "image/jpeg" }).then(posted),
       );
       return onClose();
     }
@@ -380,7 +467,7 @@ export function StoryComposer({
           durationSecs,
         },
         { blob: flat, kind: "image", name: "story.jpg", mime: "image/jpeg" },
-      );
+      ).then(posted);
       return onClose();
     }
     const words = text.trim();
@@ -390,8 +477,8 @@ export function StoryComposer({
       {
         text: asDrawn ? undefined : words || undefined,
         fromChat,
-        bubble: fromChat ? bubble : undefined,
-        messageId: fromChat ? quote?.messageId : undefined,
+        bubble: fromChat ? shared?.bubble : undefined,
+        messageId: fromChat ? shared?.quote?.messageId : undefined,
         background,
         gifIds: gifs.length ? gifs.map((g) => g.id) : undefined,
         link: href ? { url: href, label: link!.label.trim() || undefined } : undefined,
@@ -410,7 +497,7 @@ export function StoryComposer({
         durationSecs,
       },
       file && kind ? { blob: file, kind, name: file.name, mime: file.type } : undefined,
-    );
+    ).then(posted);
     onClose();
   }
 
@@ -466,27 +553,18 @@ export function StoryComposer({
     setPositions((p) => dropSpot(p, "ask", i));
   }
 
-  /** Puts an anonymous message on the story, or takes it off. Past the first, each lands a little lower than the last. */
+  /** Puts an anonymous message on the story, or takes it off. */
   function toggleAsk(m: AnonMessageDTO) {
     const at = asks.findIndex((a) => a.id === m.id);
     if (at >= 0) return dropAsk(at);
     if (asks.length >= STORY_ASKS) return;
-    const i = asks.length;
     setAsks([...asks, m]);
-    if (i > 0) setPositions((p) => ({ ...p, [stickerOf("ask", i)]: cascade(i) }));
   }
 
-  /** Puts photos from the computer or phone on the story like stickers, up to five; past the first, each lands lower. */
+  /** Puts photos from the computer or phone on the story like stickers, up to five. */
   function addPhotos(files: File[]) {
     const picked = files.filter((f) => kindFor(f.type) === "image").slice(0, STORY_PHOTOS - photos.length);
-    if (!picked.length) return;
-    const from = photos.length;
-    setPhotos([...photos, ...picked.map((file) => ({ file, url: URL.createObjectURL(file) }))]);
-    setPositions((p) => {
-      const next = { ...p };
-      picked.forEach((_, j) => from + j > 0 && (next[stickerOf("photo", from + j)] = cascade(from + j)));
-      return next;
-    });
+    if (picked.length) setPhotos([...photos, ...picked.map((file) => ({ file, url: URL.createObjectURL(file) }))]);
   }
 
   /**
@@ -514,10 +592,7 @@ export function StoryComposer({
   }
 
   function addGif(g: GifDTO) {
-    const i = gifs.length;
-    if (i >= STORY_GIFS) return;
-    setGifs([...gifs, g]);
-    if (i > 0) setPositions((p) => ({ ...p, [stickerOf("gif", i)]: cascade(i) }));
+    if (gifs.length < STORY_GIFS) setGifs([...gifs, g]);
   }
 
   const tools = [
@@ -634,7 +709,7 @@ export function StoryComposer({
             className="pointer-events-none absolute inset-x-0 top-0 flex items-start justify-between p-3 pt-[max(0.75rem,env(safe-area-inset-top))]"
             style={{ bottom: panelHeight }}
           >
-            <button type="button" onClick={onClose} aria-label={tr.common.close} title={tr.common.close} className={tool(false)}>
+            <button type="button" onClick={close} aria-label={tr.common.close} title={tr.common.close} className={tool(false)}>
               <X className="size-6" />
             </button>
             {!drawingOn && (
@@ -795,6 +870,16 @@ export function StoryComposer({
               </p>
             )}
             <div className="flex items-center gap-2">
+              {!filled && !!drafts.data?.length && (
+                <button
+                  type="button"
+                  onClick={() => setPickingDraft(true)}
+                  className="flex items-center gap-1.5 rounded-full bg-black/40 px-3.5 py-2.5 text-sm font-medium backdrop-blur hover:bg-black/55"
+                >
+                  <FileClock className="size-4" />
+                  {tr.stories.drafts} ({drafts.data.length})
+                </button>
+              )}
               <button
                 type="button"
                 onClick={() => setPickingDuration(true)}
@@ -902,6 +987,26 @@ export function StoryComposer({
         />
       )}
       {customDuration && <LastsPicker value={durationSecs} onSave={setDurationSecs} onClose={() => setCustomDuration(false)} />}
+      {closing && (
+        <Sheet
+          title={tr.stories.keepForLater}
+          actions={[
+            { label: tr.stories.saveDraft, onSelect: () => void keepDraft() },
+            { label: draftId ? tr.stories.deleteDraft : tr.stories.discard, onSelect: () => void dropDraft(), destructive: true },
+          ]}
+          onClose={() => setClosing(false)}
+        />
+      )}
+      {pickingDraft && (
+        <Sheet
+          title={tr.stories.drafts}
+          actions={(drafts.data ?? []).map((d) => ({
+            label: `${d.text.trim().slice(0, 40) || (d.file?.type.startsWith("video/") ? tr.stories.video : d.file ? tr.stories.photo : tr.stories.newStory)} · ${timeAgo(d.savedAt)}`,
+            onSelect: () => openDraft(d),
+          }))}
+          onClose={() => setPickingDraft(false)}
+        />
+      )}
       {cutting && file && <VideoTrimmer file={file} onCancel={() => setCutting(false)} onDone={(from, to) => void cut(from, to)} />}
     </Portal>
   );

@@ -31,10 +31,10 @@ async function notify(title: string, body: string, channelId: string, sticky = f
 
 /**
  * Uploads a story's photo or video, if any, then shares it, while the composer is already closed. A notification
- * follows the upload in the status bar and says when it's done; a failure keeps everything for a retry.
+ * follows the upload in the status bar and says when it's done; a failure keeps everything for a retry. Says whether it went up.
  */
 // ponytail: one story at a time; a second one started meanwhile takes over the bar and the notification
-export async function postStory(qc: QueryClient, body: CreateStoryInput, file?: { uri: string } & Omit<UploadOptions, "onProgress">) {
+export async function postStory(qc: QueryClient, body: CreateStoryInput, file?: { uri: string } & Omit<UploadOptions, "onProgress">): Promise<boolean> {
   const tr = getT();
   const set = useStoryPost.setState;
   clearTimeout(hide);
@@ -57,8 +57,10 @@ export async function postStory(qc: QueryClient, body: CreateStoryInput, file?: 
     set((s) => (s.state ? { state: "done", progress: 1 } : {}));
     hide = setTimeout(() => set({ state: null }), 3000);
     void notify(tr.stories.posted, "", "in-app").catch(() => null);
+    return true;
   } catch {
     set({ state: "failed", retry: () => void postStory(qc, body, file) });
     void notify(tr.stories.couldNotPostShort, tr.stories.couldNotPost, "in-app").catch(() => null);
+    return false;
   }
 }

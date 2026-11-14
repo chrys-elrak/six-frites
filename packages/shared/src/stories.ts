@@ -164,6 +164,24 @@ export function zToTop(positions: StoryPositions, texts: { z?: number }[], curre
   return current === top && current > 0 && all.filter((v) => v === top).length === 1 ? current : Math.min(999, top + 1);
 }
 
+/** The stickers on a story being made, from what it has. */
+export function stickersOn(s: { asks: number; gifs: number; photos: number; link: boolean; askLink: boolean; location: boolean; showDate: boolean; showTime: boolean }) {
+  return STORY_STICKERS.filter((k) => {
+    for (const kind of ["ask", "gif", "photo"] as const) if (stickerIndex(kind, k) >= 0) return stickerIndex(kind, k) < s[`${kind}s`];
+    return { location: s.location, link: s.link, asklink: s.askLink, date: s.showDate, time: s.showTime }[k as "link"];
+  });
+}
+
+/** The positions once `added` stickers are put on a story: near the top, the big ones smaller, each above everything already there. */
+export function landOnTop(positions: StoryPositions, texts: { z?: number }[], added: StorySticker[]) {
+  const next = { ...positions };
+  for (const k of added) {
+    const big = stickerIndex("ask", k) >= 0 || stickerIndex("gif", k) >= 0 || stickerIndex("photo", k) >= 0;
+    next[k] = { x: 0.5, y: 0.25, ...(big && { scale: 0.75 }), z: zToTop(next, texts) };
+  }
+  return next;
+}
+
 /** The positions once a story's `i`th anonymous message or GIF is taken off: the ones after it each take the spot of the one before. */
 export function dropSpot(positions: StoryPositions, kind: Many, i: number): StoryPositions {
   const next = { ...positions };
