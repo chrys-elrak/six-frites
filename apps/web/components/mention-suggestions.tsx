@@ -1,13 +1,14 @@
 "use client";
 
-import { type ChatMemberDTO, mentionQuery, nicknameOf } from "@six/shared";
+import { type ChatMemberDTO, type MentionOption, mentionOptions, mentionQuery } from "@six/shared";
+import { ShieldCheck, Users } from "lucide-react";
 import { useState } from "react";
 import { useT } from "@/lib/i18n";
 import { Avatar } from "./avatar";
 
 /**
- * Group members whose nickname starts like the `@` typed right before the caret. Picking one hands `replace` the
- * text with `@#NICKNAME ` in place of what was typed, and where the caret goes.
+ * What to mention for the `@` typed right before the caret: @everyone and @admin, then members whose nickname starts
+ * like it. Picking one hands `replace` the text with the mention in place of what was typed, and where the caret goes.
  */
 export function useMentionSuggestions(
   text: string,
@@ -19,13 +20,11 @@ export function useMentionSuggestions(
   const [active, setActive] = useState(0);
   const [dismissed, setDismissed] = useState<string | null>(null);
   const q = members && dismissed !== text ? mentionQuery(text, caret) : null;
-  const items = q
-    ? members!.filter((m) => m.user.id !== meId && nicknameOf(m.user).slice(1).startsWith(q.query)).slice(0, 8)
-    : [];
+  const items = q ? mentionOptions({ members: members! }, meId ?? "", q.query) : [];
 
-  function pick(member: ChatMemberDTO) {
+  function pick(option: MentionOption) {
     if (!q) return;
-    const mention = `@${nicknameOf(member.user)} `;
+    const mention = `${option.insert} `;
     setActive(0);
     replace(text.slice(0, q.start) + mention + text.slice(caret), q.start + mention.length);
   }
@@ -64,7 +63,7 @@ export function MentionSuggestions({
     >
       {items.map((m, i) => (
         <button
-          key={m.user.id}
+          key={m.insert}
           type="button"
           role="option"
           aria-selected={i === active}
@@ -73,9 +72,17 @@ export function MentionSuggestions({
           onClick={() => pick(m)}
           className={`flex w-full items-center gap-2 rounded-lg px-2 py-1.5 text-left ${i === active ? "bg-brand/20" : ""}`}
         >
-          <Avatar user={m.user} size="sm" />
-          <span className="min-w-0 flex-1 truncate text-sm font-medium">{m.user.displayName}</span>
-          {m.user.alias && <span className="shrink-0 text-xs text-stone-500">{m.user.alias}</span>}
+          {m.member ? (
+            <Avatar user={m.member.user} size="sm" />
+          ) : (
+            <span className="grid size-9 shrink-0 place-items-center rounded-full bg-brand/20 text-brand">
+              {m.group === "everyone" ? <Users className="size-4" /> : <ShieldCheck className="size-4" />}
+            </span>
+          )}
+          <span className="min-w-0 flex-1 truncate text-sm font-medium">
+            {m.member ? m.member.user.displayName : m.group === "everyone" ? tr.composer.mentionEveryone : tr.composer.mentionAdmins}
+          </span>
+          <span className="shrink-0 text-xs text-stone-500">{m.member ? m.member.user.alias : m.insert}</span>
         </button>
       ))}
     </div>

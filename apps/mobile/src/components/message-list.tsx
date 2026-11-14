@@ -28,7 +28,7 @@ import {
   isBotGame,
   shareTargets,
   chatTheme,
-  nicknameOf,
+  myMentions,
 } from "@six/shared";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import * as Haptics from "expo-haptics";
@@ -601,10 +601,10 @@ function MessageText({ row, selecting, color }: { row: MsgRow; selecting: boolea
   );
 }
 
-const MENTION_SPLIT = /(@#[0-9A-F]{6}\b)/;
+const MENTION_SPLIT = /(@(?:#[0-9A-F]{6}|everyone|admin)\b)/;
 
-/** In a group, how I'm written when someone mentions me, like @#3FA2C1, to show as "@You" instead. */
-const MyMention = createContext<string | null>(null);
+/** In a group, the mentions that reach me, and my nickname among them to show as "@You". */
+const MyMention = createContext<ReturnType<typeof myMentions>>(null);
 
 /** Text with its links, mentions and animated emoji; the emoji grow with the text's size when it has one. */
 export function Linked({ text, selecting, size, onOpen }: { text: string; selecting: boolean; size?: string; onOpen?: () => void }) {
@@ -632,8 +632,8 @@ export function Linked({ text, selecting, size, onOpen }: { text: string; select
         ) : (
           part.text.split(MENTION_SPLIT).map((piece, k) =>
             k % 2 ? (
-              <Text key={`${i}@${k}`} style={[styles.mention, piece === me && styles.mentionMe]}>
-                {piece === me ? `@${tr.common.you}` : piece}
+              <Text key={`${i}@${k}`} style={[styles.mention, me?.all.has(piece) && styles.mentionMe]}>
+                {piece === me?.nickname ? `@${tr.common.you}` : piece}
               </Text>
             ) : (
               splitEmoji(piece).map((s, j) => (j % 2 ? <AnimatedEmoji key={`${i}:${k}:${j}`} emoji={s} size={emoji} inline /> : s))
@@ -1333,8 +1333,7 @@ export const MessageList = forwardRef<
   }
 >(
   function MessageList({ chat, meId, onSeen, threadId, onOpenThread, after }, handle) {
-    const meMember = chat.group ? chat.members.find((m) => m.user.id === meId) : undefined;
-    const myMention = meMember ? `@${nicknameOf(meMember.user)}` : null;
+    const myMention = useMemo(() => myMentions(chat, meId), [chat, meId]);
     useFonts(FONT_FILES);
     const t = useTheme();
     const tr = useT();

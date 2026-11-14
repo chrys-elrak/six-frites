@@ -32,7 +32,7 @@ import {
   isBotGame,
   shareTargets,
   chatTheme,
-  nicknameOf,
+  myMentions,
 } from "@six/shared";
 import { startBotGame } from "./bot-games";
 import { Avatar } from "./avatar";
@@ -602,10 +602,10 @@ function MessageText({ row, selectable }: { row: MsgRow; selectable: boolean }) 
   );
 }
 
-const MENTION_SPLIT = /(@#[0-9A-F]{6}\b)/;
+const MENTION_SPLIT = /(@(?:#[0-9A-F]{6}|everyone|admin)\b)/;
 
-/** In a group, how I'm written when someone mentions me, like @#3FA2C1, to show as "@You" instead. */
-const MyMention = createContext<string | null>(null);
+/** In a group, the mentions that reach me, and my nickname among them to show as "@You". */
+const MyMention = createContext<ReturnType<typeof myMentions>>(null);
 
 /** Text with its links, mentions and animated emoji; the emoji grow with the text's size when it has one. */
 export function Linked({ text, size }: { text: string; size?: string }) {
@@ -622,8 +622,8 @@ export function Linked({ text, size }: { text: string; size?: string }) {
         ) : (
           part.text.split(MENTION_SPLIT).map((piece, k) =>
             k % 2 ? (
-              <span key={`${i}@${k}`} className={`rounded px-0.5 font-semibold ${piece === me ? "bg-brand/30" : "bg-current/10"}`}>
-                {piece === me ? `@${tr.common.you}` : piece}
+              <span key={`${i}@${k}`} className={`rounded px-0.5 font-semibold ${me?.all.has(piece) ? "bg-brand/30" : "bg-current/10"}`}>
+                {piece === me?.nickname ? `@${tr.common.you}` : piece}
               </span>
             ) : (
               splitEmoji(piece).map((s, j) => (j % 2 ? <AnimatedEmoji key={`${i}:${k}:${j}`} emoji={s} size={emoji} /> : s))
@@ -1286,8 +1286,7 @@ export const MessageList = forwardRef<
 >(
   function MessageList({ chat, meId, onSeen, insetTop = 0, insetBottom = 0, threadId, onOpenThread }, handle) {
     const frozen = isFrozen(chat);
-    const meMember = chat.group ? chat.members.find((m) => m.user.id === meId) : undefined;
-    const myMention = meMember ? `@${nicknameOf(meMember.user)}` : null;
+    const myMention = useMemo(() => myMentions(chat, meId), [chat, meId]);
     const tr = useT();
     const qc = useQueryClient();
     const { realtime } = useRealtime();

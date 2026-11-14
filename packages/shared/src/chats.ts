@@ -129,8 +129,8 @@ export const Poll = z.object({
 });
 export type Poll = z.infer<typeof Poll>;
 
-/** A group nickname written as a mention, like @#3FA2C1. */
-export const MENTION = /@#[0-9A-F]{6}\b/g;
+/** A mention in a group: @ and a nickname like @#3FA2C1, @admin for its admins, or @everyone. */
+export const MENTION = /@(?:#[0-9A-F]{6}|everyone|admin)\b/g;
 
 export const ChecklistMark = z.object({
   item: z.number().int().describe("Index in the checklist's items"),

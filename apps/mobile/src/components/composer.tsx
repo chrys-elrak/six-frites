@@ -8,8 +8,9 @@ import {
   type TypingKind,
   albumIds,
   emojiQuery,
+  type MentionOption,
+  mentionOptions,
   mentionQuery,
-  nicknameOf,
   emojifyEnd,
   emojifyTyped,
   maskSpoilers,
@@ -58,6 +59,8 @@ import {
   Italic,
   ListChecks,
   ChartBar,
+  ShieldCheck,
+  Users,
   MapPin,
   Music,
   NotebookPen,
@@ -396,13 +399,11 @@ export function Composer({
   const suggestions = useMemo(() => (typed ? suggestEmoji(allEmoji, typed) : []), [typed]);
 
   const mentioning = chat?.group ? mentionQuery(text, caret) : null;
-  const mentionable = mentioning
-    ? chat!.members.filter((m) => m.user.id !== meId && nicknameOf(m.user).slice(1).startsWith(mentioning.query)).slice(0, 8)
-    : [];
+  const mentionable = mentioning ? mentionOptions(chat!, meId ?? "", mentioning.query) : [];
 
-  function pickMention(user: (typeof mentionable)[number]["user"]) {
+  function pickMention(option: MentionOption) {
     if (!mentioning) return;
-    const mention = `@${nicknameOf(user)} `;
+    const mention = `${option.insert} `;
     const at = mentioning.start + mention.length;
     change(text.slice(0, mentioning.start) + mention + text.slice(caret));
     setForced({ start: at, end: at });
@@ -828,19 +829,28 @@ export function Composer({
             accessibilityLabel={tr.composer.mentionSuggestions}
             contentContainerStyle={styles.toolbar}
           >
-            {mentionable.map((m) => (
-              <Pressable
-                key={m.user.id}
-                onPress={() => pickMention(m.user)}
-                accessibilityLabel={m.user.displayName}
-                style={[styles.mention, { backgroundColor: t.surface, borderColor: t.border }]}
-              >
-                <Avatar user={m.user} size="sm" />
-                <Text numberOfLines={1} style={{ color: t.text, fontSize: 14, fontWeight: "600", maxWidth: 140 }}>
-                  {m.user.displayName}
-                </Text>
-              </Pressable>
-            ))}
+            {mentionable.map((m) => {
+              const label = m.member ? m.member.user.displayName : m.group === "everyone" ? tr.composer.mentionEveryone : tr.composer.mentionAdmins;
+              return (
+                <Pressable
+                  key={m.insert}
+                  onPress={() => pickMention(m)}
+                  accessibilityLabel={label}
+                  style={[styles.mention, { backgroundColor: t.surface, borderColor: t.border }]}
+                >
+                  {m.member ? (
+                    <Avatar user={m.member.user} size="sm" />
+                  ) : (
+                    <View style={[styles.mentionGroup, { backgroundColor: t.surfaceAlt }]}>
+                      {m.group === "everyone" ? <Users size={18} color={t.text} /> : <ShieldCheck size={18} color={t.text} />}
+                    </View>
+                  )}
+                  <Text numberOfLines={1} style={{ color: t.text, fontSize: 14, fontWeight: "600", maxWidth: 140 }}>
+                    {m.member ? label : m.insert}
+                  </Text>
+                </Pressable>
+              );
+            })}
           </ScrollView>
         )}
 
@@ -1224,6 +1234,7 @@ const styles = StyleSheet.create({
   glassItem: { minWidth: 40, height: 40, borderRadius: 10, alignItems: "center", justifyContent: "center" },
   clearOfSelectionMenu: { marginBottom: 80 },
   suggestion: { fontSize: 22 },
+  mentionGroup: { width: 36, height: 36, borderRadius: 18, alignItems: "center", justifyContent: "center" },
   mention: {
     flexDirection: "row",
     alignItems: "center",

@@ -88,22 +88,56 @@ export const readOnlyGroup = (chat: Pick<ChatDTO, "group">) =>
 /** The nickname a group member goes by there and is mentioned by, even when you gave them a name of your own. */
 export const nicknameOf = (u: Pick<PublicUser, "displayName" | "alias">) => u.alias ?? u.displayName;
 
-/** The other members of a group that `text` mentions, as @ and their nickname. */
-export function mentionsIn(text: string, members: Pick<ChatDTO["members"][number], "user">[], meId: string) {
+type Member = Pick<ChatDTO["members"][number], "user" | "role">;
+
+const isAdmin = (m: Pick<Member, "role"> | undefined) => m?.role === "owner" || m?.role === "admin";
+
+/**
+ * The other members of a group that `text` mentions: one by @ and their nickname, the owner and admins by @admin, and
+ * everyone by @everyone, which only an admin can write.
+ */
+export function mentionsIn(text: string, members: Member[], meId: string) {
   const written = new Set(text.match(MENTION) ?? []);
-  return members.filter((m) => m.user.id !== meId && written.has(`@${nicknameOf(m.user)}`)).map((m) => m.user.id);
+  const everyone = written.has("@everyone") && isAdmin(members.find((m) => m.user.id === meId));
+  const admins = written.has("@admin");
+  return members
+    .filter((m) => m.user.id !== meId && (everyone || (admins && isAdmin(m)) || written.has(`@${nicknameOf(m.user)}`)))
+    .map((m) => m.user.id);
+}
+
+/** How a message can mention me in a group: my nickname, which shows as "@You", @everyone, and @admin if I am one. */
+export function myMentions(chat: Pick<ChatDTO, "group" | "members">, meId: string) {
+  const me = chat.group && chat.members.find((m) => m.user.id === meId);
+  if (!me) return null;
+  const nickname = `@${nicknameOf(me.user)}`;
+  return { nickname, all: new Set([nickname, "@everyone", ...(isAdmin(me) ? ["@admin"] : [])]) };
 }
 
 /** `text` with my own mentions in a group, like @#3FA2C1, written as "@You" instead. */
 export function mentionAsYou(text: string, chat: Pick<ChatDTO, "group" | "members">, meId: string, you: string) {
-  const me = chat.group && chat.members.find((m) => m.user.id === meId);
-  return me ? text.replaceAll(`@${nicknameOf(me.user)}`, `@${you}`) : text;
+  const mine = myMentions(chat, meId);
+  return mine ? text.replaceAll(mine.nickname, `@${you}`) : text;
 }
 
-/** The @ being typed right before the caret, and what follows it so far, to suggest members from. */
+/** The @ being typed right before the caret, and what follows it so far, to suggest mentions from. */
 export function mentionQuery(text: string, caret: number) {
-  const typed = /(?:^|\s)@(#?[0-9A-Fa-f]{0,6})$/.exec(text.slice(0, caret));
-  return typed ? { start: caret - typed[1]!.length - 1, query: typed[1]!.replace("#", "").toUpperCase() } : null;
+  const typed = /(?:^|\s)@(#?[0-9A-Za-z]{0,8})$/.exec(text.slice(0, caret));
+  return typed ? { start: caret - typed[1]!.length - 1, query: typed[1]! } : null;
+}
+
+export type MentionOption = { insert: string; member: ChatDTO["members"][number] | null; group: "everyone" | "admin" | null };
+
+/** What to suggest for the @ being typed: @everyone (for admins) and @admin first, then members by nickname. */
+export function mentionOptions(chat: Pick<ChatDTO, "members">, meId: string, query: string): MentionOption[] {
+  const typed = query.replace("#", "").toUpperCase();
+  const groups = (["everyone", "admin"] as const).filter(
+    (g) => !query.startsWith("#") && g.startsWith(query.toLowerCase()) && (g === "admin" || isAdmin(chat.members.find((m) => m.user.id === meId))),
+  );
+  const members = chat.members.filter((m) => m.user.id !== meId && nicknameOf(m.user).slice(1).startsWith(typed)).slice(0, 8);
+  return [
+    ...groups.map((group) => ({ insert: `@${group}`, member: null, group })),
+    ...members.map((member) => ({ insert: `@${nicknameOf(member.user)}`, member, group: null })),
+  ];
 }
 
 /** How a chat shows whoever sent something, or "Former member" for someone who left a group. */
