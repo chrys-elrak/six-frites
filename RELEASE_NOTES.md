@@ -23,6 +23,7 @@ What Six Frites News tells members after each deploy, newest first. CLAUDE.md sa
 - Shared stories no longer show a stray round button from the editor next to text or photos you moved or resized.
 - When you share a story, its link, GIFs, anonymous messages and place no longer vanish for a moment before the editor closes.
 - On Xiaomi phones in dark mode, the app keeps its own colours instead of the phone darkening them, so buttons no longer turn black when you share a story. It comes with the next Android app update.
+- A story now shows a spinner until its picture, GIFs and anonymous messages have all loaded, then appears whole instead of bit by bit.
 - Close a story you started and you can save it as a draft. Pick it up later from Drafts, next to how long it lasts.
 
 ### fr
@@ -33,6 +34,7 @@ What Six Frites News tells members after each deploy, newest first. CLAUDE.md sa
 - Les stories partagées n'affichent plus un petit bouton rond de l'éditeur à côté d'un texte ou d'une photo que vous avez déplacé ou redimensionné.
 - Quand vous partagez une story, son lien, ses GIF, ses messages anonymes et son lieu ne disparaissent plus un instant avant que l'éditeur se ferme.
 - Sur les téléphones Xiaomi en mode sombre, l'application garde ses propres couleurs au lieu que le téléphone les assombrisse, et les boutons ne deviennent plus noirs quand vous partagez une story. Ce sera dans la prochaine mise à jour de l'application Android.
+- Une story affiche maintenant un indicateur de chargement jusqu'à ce que son image, ses GIF et ses messages anonymes soient tous chargés, puis apparaît d'un coup au lieu de morceau par morceau.
 - En fermant une story commencée, vous pouvez l'enregistrer en brouillon. Reprenez-la plus tard depuis Brouillons, à côté de la durée.
 
 ### mg
@@ -43,6 +45,7 @@ What Six Frites News tells members after each deploy, newest first. CLAUDE.md sa
 - Tsy misy bokotra boribory kely avy amin'ny fanoratana intsony eo akaikin'ny soratra na sary nafindranao na novanao habe ao amin'ny story nozaraina.
 - Rehefa mizara story ianao dia tsy manjavona vetivety intsony ny rohy, ny GIF, ny hafatra tsy fantatra anarana ary ny toerana alohan'ny hikatonan'ny fanoratana.
 - Amin'ny finday Xiaomi amin'ny mode maizina, mitazona ny lokony manokana ny app fa tsy manamaizina azy intsony ny finday, ka tsy mainty intsony ny bokotra rehefa mizara story ianao. Ho tonga amin'ny fanavaozana manaraka ny app Android izany.
+- Misy famantarana fiandrasana izao ny story mandra-pahavitan'ny sary, ny GIF ary ny hafatra tsy fantatra anarana ao aminy, dia miseho manontolo indray mandeha fa tsy tsikelikely.
 - Rehefa manidy story efa nanombohanao ianao dia azonao tehirizina ho drafitra izy. Tohizo any aoriana avy amin'ny Drafitra, eo akaikin'ny faharetany.
 
 ## 2026-11-14 07h43

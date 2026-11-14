@@ -26,6 +26,7 @@ import {
   type StoryAsk,
   type StoryLink,
   askUrl,
+  stickersOn,
   type StorySticker,
 } from "@six/shared";
 import { Gradient, HEAD_DOODLES } from "./anon-inbox";
@@ -51,7 +52,7 @@ import {
   X,
 } from "lucide-react-native";
 import { router, useLocalSearchParams } from "expo-router";
-import { type ComponentRef, useCallback, useEffect, useRef, useState } from "react";
+import { type ComponentRef, createContext, useCallback, useContext, useEffect, useRef, useState } from "react";
 import { ActivityIndicator, FlatList, Keyboard, Linking, Pressable, ScrollView, StyleSheet, View } from "react-native";
 import { KeyboardStickyView } from "react-native-keyboard-controller";
 import Animated, { BounceIn } from "react-native-reanimated";
@@ -810,8 +811,21 @@ export function StoryViewer({
   const mine = group?.user.id === meId;
   const [shownId, setShownId] = useState<string | null>(null);
   const imageLoading = story?.type === "image" && !!story.media?.url && shownId !== story.id;
-  const loading = imageLoading || (story?.type === "video" && !!story.media?.url && videoMs === null);
-  const stopped = paused || held || showViewers || deleting || replying || imageLoading;
+  const [loadedUrls, setLoadedUrls] = useState<string[]>([]);
+  const loaded = useCallback((url: string) => setLoadedUrls((l) => (l.includes(url) ? l : [...l, url])), []);
+  const [readyId, setReadyId] = useState<string | null>(null);
+  const needed = [...(story?.asks ?? []).flatMap((a) => [a.photoUrl, a.gif?.url]), ...(story?.gifs ?? []).map((g) => g.url)];
+  const stickersReady = !!story && (readyId === story.id || needed.every((u) => !u || loadedUrls.includes(u)));
+  useEffect(() => {
+    if (stickersReady && story) setReadyId(story.id);
+  }, [stickersReady, story]);
+  useEffect(() => {
+    if (!story) return;
+    const giveUp = setTimeout(() => setReadyId(story.id), 8000);
+    return () => clearTimeout(giveUp);
+  }, [story?.id]);
+  const loading = imageLoading || !stickersReady || (story?.type === "video" && !!story.media?.url && videoMs === null);
+  const stopped = paused || held || showViewers || deleting || replying || imageLoading || !stickersReady;
   const length = story?.type === "video" ? (videoMs ?? Infinity) : STORY_SHOW_MS;
 
   const go = useCallback(
@@ -874,6 +888,16 @@ export function StoryViewer({
     at: story.createdAt,
     positions: story.positions ?? {},
   };
+  const loose = stickersOn({
+    asks: stickers.asks.length,
+    gifs: stickers.gifs.length,
+    photos: 0,
+    link: !!stickers.link,
+    askLink: !!stickers.askLink,
+    location: !!stickers.location,
+    showDate: stickers.showDate,
+    showTime: stickers.showTime,
+  }).some((k) => !stickers.positions[k]);
 
   async function remove() {
     await six.api.DELETE("/v1/stories/{id}", { params: { path: { id: story!.id } } });
@@ -896,7 +920,7 @@ export function StoryViewer({
           {story.type === "image" && media?.url && (
             <Image
               source={{ uri: media.url }}
-              style={StyleSheet.absoluteFill}
+              style={[StyleSheet.absoluteFill, loading && styles.gone]}
               contentFit="contain"
               onLoad={() => setShownId(story.id)}
               onError={() => setShownId(story.id)}
@@ -917,20 +941,26 @@ export function StoryViewer({
             <ChatBubbleCard text={story.text} bubble={story.bubble} quote={story.quote} />
           )}
         </Pressable>
-        {!loading && (
-          <>
+        <Loaded.Provider value={loaded}>
+          <View pointerEvents="box-none" style={[StyleSheet.absoluteFill, loading && styles.gone]}>
             <StoryDrawingLayer drawing={story.drawing}>
               <StoryStickers {...stickers} placed />
             </StoryDrawingLayer>
-          </>
-        )}
+          </View>
+        </Loaded.Provider>
 
         <KeyboardStickyView
           pointerEvents="box-none"
           offset={{ opened: Math.max(insets.bottom, 20) - 8 }}
           style={[styles.bottom, { paddingBottom: Math.max(insets.bottom, 20) }]}
         >
-          {!loading && <StoryStickers {...stickers} placed={false} />}
+          {loose && (
+            <Loaded.Provider value={loaded}>
+              <View pointerEvents="box-none" style={[{ alignItems: "center", gap: 12 }, loading && styles.gone]}>
+                <StoryStickers {...stickers} placed={false} />
+              </View>
+            </Loaded.Provider>
+          )}
           {!loading && !!media && !!story.text && <Text style={styles.caption}>{story.text}</Text>}
           {mine && (
             <Pressable onPress={() => setShowViewers(true)} style={styles.views}>
@@ -986,9 +1016,22 @@ export function StoryViewer({
   );
 }
 
+/** Tells the story viewer that a photo or GIF on a story has loaded, or failed to, by its address. */
+const Loaded = createContext<(url: string) => void>(() => undefined);
+
+/** Reports a GIF as loaded once its player can play it, or knows it can't. */
+function useGifLoaded(player: ReturnType<typeof useVideoPlayer>, url: string) {
+  const loaded = useContext(Loaded);
+  const { status } = useEvent(player, "statusChange", { status: player.status });
+  useEffect(() => {
+    if (status === "readyToPlay" || status === "error") loaded(url);
+  }, [status, url, loaded]);
+}
+
 /** An anonymous message as its card on a story: the prompt on the link's gradient, then its photo, GIF and text. */
 export function AskCard({ ask, id }: { ask: Pick<StoryAsk, "text" | "prompt" | "photoUrl"> & { gif: { url: string } | null }; id: string }) {
   const tr = useT();
+  const loaded = useContext(Loaded);
   return (
     <View style={styles.askCard}>
       <View style={styles.askHead}>
@@ -998,7 +1041,15 @@ export function AskCard({ ask, id }: { ask: Pick<StoryAsk, "text" | "prompt" | "
           {ask.prompt ?? tr.ask.prompt}
         </Text>
       </View>
-      {ask.photoUrl && <Image source={{ uri: ask.photoUrl }} style={styles.askMedia} contentFit="cover" />}
+      {ask.photoUrl && (
+        <Image
+          source={{ uri: ask.photoUrl }}
+          style={styles.askMedia}
+          contentFit="cover"
+          onLoad={() => loaded(ask.photoUrl!)}
+          onError={() => loaded(ask.photoUrl!)}
+        />
+      )}
       {ask.gif && <AskGif url={ask.gif.url} />}
       {!!ask.text.trim() && (
         <Text style={styles.askText} numberOfLines={6}>
@@ -1015,6 +1066,7 @@ function AskGif({ url }: { url: string }) {
     p.muted = true;
     p.play();
   });
+  useGifLoaded(player, url);
   return <VideoView player={player} style={styles.askMedia} contentFit="cover" nativeControls={false} />;
 }
 
@@ -1024,6 +1076,7 @@ function StoryGif({ url }: { url: string }) {
     p.muted = true;
     p.play();
   });
+  useGifLoaded(player, url);
   return <VideoView player={player} style={styles.gif} contentFit="contain" nativeControls={false} />;
 }
 
@@ -1084,6 +1137,7 @@ const styles = StyleSheet.create({
   noteSlot: { height: 36, justifyContent: "flex-end", alignItems: "center" },
   screen: { flex: 1, backgroundColor: "#000" },
   center: { alignItems: "center", justifyContent: "center" },
+  gone: { opacity: 0 },
   bigText: { color: "#fff", fontSize: 26, lineHeight: 34, fontWeight: "700", textAlign: "center", paddingHorizontal: 32 },
   top: { position: "absolute", left: 0, right: 0, top: 0, paddingHorizontal: 8, paddingBottom: 20, backgroundImage: "linear-gradient(to bottom, rgba(0,0,0,0.5), transparent)" },
   track: { flex: 1, height: 2.5, borderRadius: 2, backgroundColor: "rgba(255,255,255,0.35)", overflow: "hidden" },

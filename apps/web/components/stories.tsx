@@ -29,6 +29,7 @@ import {
   type StoryAsk,
   type StoryLink,
   askUrl,
+  stickersOn,
   type StorySticker,
 } from "@six/shared";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -52,7 +53,7 @@ import {
   X,
 } from "lucide-react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { createContext, useCallback, useContext, useEffect, useRef, useState } from "react";
 import { useCloseOnBack } from "@/lib/back";
 import { clockTime, shortDate, timeAgo } from "@/lib/format";
 import { useChats } from "@/lib/chats";
@@ -104,17 +105,41 @@ const hostOf = (url: string) => {
 
 const clampScale = (v: number) => Math.min(STORY_STICKER_SCALE.max, Math.max(STORY_STICKER_SCALE.min, v));
 
+/** Tells the story viewer that a photo or GIF on a story has loaded, or failed to, by its address. */
+const Loaded = createContext<(url: string) => void>(() => undefined);
+
 /** An anonymous message as its card on a story: the prompt on the link's gradient, then its photo, GIF and text. */
 export function AskCard({ ask }: { ask: Pick<StoryAsk, "text" | "prompt" | "photoUrl"> & { gif: { url: string } | null } }) {
   const tr = useT();
+  const loaded = useContext(Loaded);
   return (
     <div className="w-64 overflow-hidden rounded-3xl bg-white text-center shadow-lg">
       <p className="flex items-center justify-center gap-2 px-4 py-2.5 text-sm font-semibold text-white" style={{ backgroundImage: ASK_HEAD }}>
         <Logo className="size-5 shrink-0" />
         {ask.prompt ?? tr.ask.prompt}
       </p>
-      {ask.photoUrl && <img src={ask.photoUrl} alt="" draggable={false} className="max-h-72 w-full object-cover" />}
-      {ask.gif && <video src={ask.gif.url} autoPlay loop muted playsInline className="max-h-72 w-full object-cover" />}
+      {ask.photoUrl && (
+        <img
+          src={ask.photoUrl}
+          alt=""
+          draggable={false}
+          onLoad={() => loaded(ask.photoUrl!)}
+          onError={() => loaded(ask.photoUrl!)}
+          className="max-h-72 w-full object-cover"
+        />
+      )}
+      {ask.gif && (
+        <video
+          src={ask.gif.url}
+          autoPlay
+          loop
+          muted
+          playsInline
+          onLoadedData={() => loaded(ask.gif!.url)}
+          onError={() => loaded(ask.gif!.url)}
+          className="max-h-72 w-full object-cover"
+        />
+      )}
       {ask.text.trim() && <p className="line-clamp-6 px-4 pt-5 pb-4 text-lg leading-snug font-bold break-words whitespace-pre-wrap text-stone-900">{ask.text}</p>}
     </div>
   );
@@ -765,8 +790,21 @@ export function StoryViewer({
   const mine = group?.user.id === meId;
   const [shownId, setShownId] = useState<string | null>(null);
   const imageLoading = story?.type === "image" && !!story.media?.url && shownId !== story.id;
-  const loading = imageLoading || (story?.type === "video" && !!story.media?.url && videoMs === null);
-  const stopped = paused || held || showViewers || deleting || replying || imageLoading;
+  const [loadedUrls, setLoadedUrls] = useState<string[]>([]);
+  const loaded = useCallback((url: string) => setLoadedUrls((l) => (l.includes(url) ? l : [...l, url])), []);
+  const [readyId, setReadyId] = useState<string | null>(null);
+  const needed = [...(story?.asks ?? []).flatMap((a) => [a.photoUrl, a.gif?.url]), ...(story?.gifs ?? []).map((g) => g.url)];
+  const stickersReady = !!story && (readyId === story.id || needed.every((u) => !u || loadedUrls.includes(u)));
+  useEffect(() => {
+    if (stickersReady && story) setReadyId(story.id);
+  }, [stickersReady, story]);
+  useEffect(() => {
+    if (!story) return;
+    const giveUp = setTimeout(() => setReadyId(story.id), 8000);
+    return () => clearTimeout(giveUp);
+  }, [story?.id]);
+  const loading = imageLoading || !stickersReady || (story?.type === "video" && !!story.media?.url && videoMs === null);
+  const stopped = paused || held || showViewers || deleting || replying || imageLoading || !stickersReady;
   const length = story?.type === "video" ? (videoMs ?? Infinity) : STORY_SHOW_MS;
 
   const go = useCallback(
@@ -841,7 +879,19 @@ export function StoryViewer({
   const media = story.media;
   const stickers = {
     asks: story.asks ?? [],
-    gifs: (story.gifs ?? []).map((g) => <video key={g.url} src={g.url} autoPlay loop muted playsInline className="max-h-40 max-w-56 rounded-xl" />),
+    gifs: (story.gifs ?? []).map((g) => (
+      <video
+        key={g.url}
+        src={g.url}
+        autoPlay
+        loop
+        muted
+        playsInline
+        onLoadedData={() => loaded(g.url)}
+        onError={() => loaded(g.url)}
+        className="max-h-40 max-w-56 rounded-xl"
+      />
+    )),
     link: story.link ?? null,
     askLink: story.askCode ? askUrl(window.location.origin, story.askCode) : null,
     askText: story.askText ?? null,
@@ -851,6 +901,16 @@ export function StoryViewer({
     at: story.createdAt,
     positions: story.positions ?? {},
   };
+  const loose = stickersOn({
+    asks: stickers.asks.length,
+    gifs: stickers.gifs.length,
+    photos: 0,
+    link: !!stickers.link,
+    askLink: !!stickers.askLink,
+    location: !!stickers.location,
+    showDate: stickers.showDate,
+    showTime: stickers.showTime,
+  }).some((k) => !stickers.positions[k]);
   const tap = (e: React.PointerEvent<HTMLDivElement>) => {
     const box = e.currentTarget.getBoundingClientRect();
     go(e.clientX - box.left < box.width / 3 ? -1 : 1);
@@ -889,7 +949,7 @@ export function StoryViewer({
                 draggable={false}
                 onLoad={() => setShownId(story.id)}
                 onError={() => setShownId(story.id)}
-                className="max-h-full max-w-full object-contain select-none"
+                className={`max-h-full max-w-full object-contain select-none ${loading ? "opacity-0" : ""}`}
               />
             )}
             {story.type === "video" && media?.url && (
@@ -920,16 +980,22 @@ export function StoryViewer({
             )}
           </div>
 
-          {!loading && (
-            <>
+          <Loaded.Provider value={loaded}>
+            <div className={`pointer-events-none absolute inset-0 ${loading ? "opacity-0" : ""}`}>
               <StoryDrawingLayer drawing={story.drawing}>
                 <StoryStickers {...stickers} placed />
               </StoryDrawingLayer>
-            </>
-          )}
+            </div>
+          </Loaded.Provider>
 
           <div className="pointer-events-none absolute inset-x-0 bottom-0 flex flex-col items-center gap-3 bg-gradient-to-t from-black/60 to-transparent px-4 pt-16 pb-[max(1.25rem,env(safe-area-inset-bottom))]">
-            {!loading && <StoryStickers {...stickers} placed={false} />}
+            {loose && (
+              <Loaded.Provider value={loaded}>
+                <div className={`flex flex-col items-center gap-3 ${loading ? "opacity-0" : ""}`}>
+                  <StoryStickers {...stickers} placed={false} />
+                </div>
+              </Loaded.Provider>
+            )}
             {!loading && media && story.text && <p className="text-center text-base break-words whitespace-pre-wrap">{story.text}</p>}
             {mine && (
               <button
