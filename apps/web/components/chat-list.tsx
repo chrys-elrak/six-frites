@@ -44,7 +44,7 @@ import {
   Headset,
   Share2,
   UserPlus,
-  Users,
+  MessagesSquare,
 } from "lucide-react";
 import { unwrap } from "@six/sdk";
 import { BackLink, useGoUp } from "@/lib/back";
@@ -267,7 +267,16 @@ function ChatRow({ chat, meId, active, rail }: { chat: ChatDTO; meId: string; ac
           )}
           <span className="relative shrink-0">
             {chat.group ? (
-              <Avatar user={peer} size={rail ? "sm" : "md"} />
+              <>
+                <Avatar user={peer} size={rail ? "sm" : "md"} />
+                <span
+                  title={tr.groups.group}
+                  aria-label={tr.groups.group}
+                  className={`absolute -right-0.5 -bottom-0.5 grid place-items-center rounded-full bg-stone-600 text-white ring-2 ring-stone-50 dark:bg-stone-500 dark:ring-stone-950 ${rail ? "size-4" : "size-5"}`}
+                >
+                  <MessagesSquare className={rail ? "size-2.5" : "size-3"} strokeWidth={2.5} />
+                </span>
+              </>
             ) : (
               <StoryAvatar userId={peer.id} name={chat.title}>
                 <Avatar user={peer} size={rail ? "sm" : "md"} online={online} />
@@ -664,7 +673,7 @@ export function ChatList({
                 title={tr.groups.newGroup}
                 className="grid size-9 place-items-center rounded-full text-brand hover:bg-stone-200 dark:hover:bg-stone-800"
               >
-                <Users className="size-5" />
+                <MessagesSquare className="size-5" />
               </button>
             )}
             <button

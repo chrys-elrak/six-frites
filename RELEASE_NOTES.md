@@ -2,6 +2,17 @@
 
 What Six Frites News tells members after each deploy, newest first. CLAUDE.md says when to add a section and how.
 
+## 2026-11-14 05h55
+
+### en
+- Groups now have a small chat-bubbles badge on their picture in the chat list, so you can tell them from people at a glance. The New group button uses the same icon.
+
+### fr
+- Les groupes ont maintenant un petit badge en forme de bulles sur leur photo dans la liste des discussions, pour les distinguer des personnes d'un coup d'œil. Le bouton Nouveau groupe utilise la même icône.
+
+### mg
+- Manana marika kely miendrika baolina resaka eo amin'ny sariny ao amin'ny lisitry ny resaka izao ny vondrona, mba hanavahana azy amin'ny olona raha vao jerena. Mitovy sary ihany koa ny bokotra Vondrona vaovao.
+
 ## 2026-11-13 22h40
 
 ### en

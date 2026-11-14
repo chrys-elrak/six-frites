@@ -51,8 +51,8 @@ import {
   Share2,
   Timer,
   UserPlus,
-  Users,
   Video,
+  MessagesSquare,
 } from "lucide-react-native";
 import { useCallback, useEffect, useEffectEvent, useState } from "react";
 import { Alert, FlatList, Pressable, RefreshControl, StyleSheet, useWindowDimensions, View } from "react-native";
@@ -134,7 +134,7 @@ function Preview({ chat, meId, color, bold }: { chat: ChatDTO; meId: string; col
       ) : m.action?.type === "live_invite" || m.action?.type === "live_result" ? (
         <Gamepad2 size={14} color={color} />
       ) : isGroupAction(m.action) ? (
-        <Users size={14} color={color} />
+        <MessagesSquare size={14} color={color} />
       ) : (
         <Timer size={14} color={color} />
       );
@@ -244,7 +244,12 @@ function ChatRow({ chat, meId }: { chat: ChatDTO; meId: string }) {
               style={({ pressed }) => [styles.row, loud && { backgroundColor: `${brand}1A` }, pressed && { backgroundColor: t.pressed }]}
             >
               {chat.group ? (
-                <Avatar user={peer} size="md" />
+                <View>
+                  <Avatar user={peer} size="md" />
+                  <View accessibilityLabel={tr.groups.group} style={[styles.groupBadge, { borderColor: t.bg }]}>
+                    <MessagesSquare size={11} color="#fff" strokeWidth={2.5} />
+                  </View>
+                </View>
               ) : (
                 <StoryAvatar userId={peer.id} name={chat.title}>
                   <Avatar user={peer} size="md" online={!!online} />
@@ -588,7 +593,7 @@ export function ChatList({ archived = false, contacts = false }: { archived?: bo
             <IconButton Icon={QrCode} color={brand} label={tr.settings.findMe} onPress={() => setDialog("findMe")} />
           )}
           {view !== "contacts" && (
-            <IconButton Icon={Users} color={brand} label={tr.groups.newGroup} onPress={() => setDialog("group")} />
+            <IconButton Icon={MessagesSquare} color={brand} label={tr.groups.newGroup} onPress={() => setDialog("group")} />
           )}
           <IconButton Icon={Share2} color={brand} label={tr.contacts.inviteFriend} onPress={() => setDialog("invite")} />
           <IconButton Icon={UserPlus} color={brand} label={tr.contacts.addContact} onPress={() => setDialog("add")} />
@@ -692,6 +697,18 @@ export function ChatList({ archived = false, contacts = false }: { archived?: bo
 }
 
 const styles = StyleSheet.create({
+  groupBadge: {
+    position: "absolute",
+    right: -2,
+    bottom: -2,
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    borderWidth: 2,
+    backgroundColor: "#57534e",
+    alignItems: "center",
+    justifyContent: "center",
+  },
   sortRow: { paddingHorizontal: 16, paddingTop: 8, paddingBottom: 4 },
   title: { fontSize: 22, fontWeight: "700", letterSpacing: -0.3 },
   row: { flexDirection: "row", alignItems: "center", gap: 12, paddingHorizontal: 16, paddingVertical: 10 },

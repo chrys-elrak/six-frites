@@ -1,5 +1,6 @@
 const en = {
   newGroup: "New group",
+  group: "Group",
   name: "Group name",
   namePlaceholder: "Beach crew",
   photo: "Group photo",
@@ -84,6 +85,7 @@ const en = {
 
 const fr: typeof en = {
   newGroup: "Nouveau groupe",
+  group: "Groupe",
   name: "Nom du groupe",
   namePlaceholder: "La bande de la plage",
   photo: "Photo du groupe",
@@ -168,6 +170,7 @@ const fr: typeof en = {
 
 const mg: typeof en = {
   newGroup: "Vondrona vaovao",
+  group: "Vondrona",
   name: "Anaran'ny vondrona",
   namePlaceholder: "Ekipan'ny morontsiraka",
   photo: "Sarin'ny vondrona",
