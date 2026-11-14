@@ -472,6 +472,8 @@ model Message {
   @@index([chatId, createdAt])
   @@index([threadId, createdAt])
   @@index([expiresAt])
+  /// Deleting a message sets its replies' replyToId to null, which scans every message without this.
+  @@index([replyToId])
 }
 
 model ChecklistMark {
@@ -546,6 +548,7 @@ model ScheduledMessage {
   @@unique([senderId, clientId])
   @@index([chatId, senderId])
   @@index([sendAt])
+  @@index([replyToId])
 }
 
 model MessageHidden {

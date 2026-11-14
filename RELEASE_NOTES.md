@@ -2,6 +2,17 @@
 
 What Six Frites News tells members after each deploy, newest first. CLAUDE.md says when to add a section and how.
 
+## 2026-11-14 07h42
+
+### en
+- Deleting a chat with a long history for everyone now goes through. The earlier fix wasn't enough for the biggest chats.
+
+### fr
+- Supprimer pour tout le monde une discussion avec un long historique fonctionne maintenant. La correction précédente ne suffisait pas pour les plus grandes discussions.
+
+### mg
+- Mandeha tsara izao ny famafana ho an'ny rehetra ny resaka manana tantara lava. Tsy ampy ho an'ny resaka lehibe indrindra ilay fanitsiana teo aloha.
+
 ## 2026-11-14 06h53
 
 ### en
