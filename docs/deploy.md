@@ -98,6 +98,10 @@ Bump `version` and `android.versionCode` in `apps/mobile/app.config.ts` first, a
 top of `packages/shared/src/changelog.ts`. The build stops without them and ends by printing the English notes for
 Koera Store.
 
+Every release build (`build:android`, `build:android:play`, `build:ios`) adds a line to `apps/mobile/RELEASES.md` under
+its version, with the file, build number, sha256 and commit, and the version's en/fr/mg notes the first time. In
+Claude Code, `/build a`, `/build i` or `/build` (both) runs them through the `release-builder` agent.
+
 What members read comes from `RELEASE_NOTES.md` instead. Every commit that changes something for them adds a section
 there, and after each deploy the worker has Six Frites News post the sections not sent yet in every member's chat
 with it, as one message in their language.

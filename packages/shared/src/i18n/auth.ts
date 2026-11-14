@@ -11,7 +11,7 @@ const en = {
   backToApp: "Back to the app",
   backToTab: "Signed in. Go back to your Six Frites tab.",
   googleNotFinished:
-    "Google sign-in didn't finish. If you picked an account, this build isn't registered with Google yet (its package name and SHA-1 must be added as an Android OAuth client).",
+    "Google sign-in was cancelled. Tap “Continue with Google” to try again.",
   errors: {
     INVITE_NOT_FOUND: "That invite link doesn't exist.",
     INVITE_EXPIRED: "That invite link has expired.",
@@ -71,7 +71,7 @@ const fr: typeof en = {
   backToApp: "Retour à l'app",
   backToTab: "Connecté(e). Revenez à votre onglet Six Frites.",
   googleNotFinished:
-    "La connexion Google n'a pas abouti. Si vous avez choisi un compte, cette version de l'app n'est pas encore enregistrée auprès de Google (son nom de package et son SHA-1 doivent être ajoutés comme client OAuth Android).",
+    "Connexion Google annulée. Appuyez sur « Continuer avec Google » pour réessayer.",
   errors: {
     INVITE_NOT_FOUND: "Ce lien d'invitation n'existe pas.",
     INVITE_EXPIRED: "Ce lien d'invitation a expiré.",
@@ -133,7 +133,7 @@ const mg: typeof en = {
   backToApp: "Hiverina amin'ny app",
   backToTab: "Tafiditra ianao. Miverena amin'ny tabilao Six Frites-nao.",
   googleNotFinished:
-    "Tsy vita ny fidirana amin'ny Google. Raha efa nisafidy kaonty ianao, dia mbola tsy voasoratra ao amin'ny Google ity kinova ity (tsy maintsy ampidirina ho mpanjifa OAuth Android ny anaran'ny package sy ny SHA-1-ny).",
+    "Nofoanana ny fidirana amin'ny Google. Tsindrio indray ny bokotra Google raha hanandrana indray.",
   errors: {
     INVITE_NOT_FOUND: "Tsy misy io rohy fanasana io.",
     INVITE_EXPIRED: "Lany daty io rohy fanasana io.",

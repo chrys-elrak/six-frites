@@ -40,4 +40,5 @@ rm -rf "$archive"
 xcodebuild -workspace ios/SixFrites.xcworkspace -scheme SixFrites -configuration Release -destination generic/platform=iOS \
   -archivePath "$archive" DEVELOPMENT_TEAM=BDJ7N2QQ43 archive
 xcodebuild -exportArchive -archivePath "$archive" -exportOptionsPlist scripts/ios-export.plist -exportPath dist/ios "$@"
+npx tsx scripts/record-release.mjs "iOS (uploaded to App Store Connect)" "$archive"
 printf '\nUploaded %s to App Store Connect. It shows up in TestFlight once Apple has processed it.\n' "$version"

@@ -298,7 +298,7 @@ function Stat({
   return (
     <div className={`min-w-0 rounded-xl bg-stone-900/[0.04] px-3 py-2 dark:bg-white/5 ${className}`}>
       <p className="text-[11px] font-medium text-stone-500">{label}</p>
-      <p className={`truncate text-sm font-semibold tabular-nums ${over ? warn : ""}`}>{value}</p>
+      <p className={`text-sm font-semibold tabular-nums [overflow-wrap:anywhere] ${over ? warn : ""}`}>{value}</p>
       {limit !== null && (
         <div className="mt-1.5 h-1 overflow-hidden rounded-full bg-stone-900/10 dark:bg-white/10">
           <div
@@ -338,7 +338,7 @@ function UserRow({ u, checked, onCheck }: { u: AdminUserDTO; checked: boolean; o
   const mb = 1024 * 1024;
 
   return (
-    <li className={`rounded-2xl bg-surface p-4 shadow-sm ring-1 backdrop-blur-md ${checked ? "ring-2 ring-brand" : "ring-surface-line"}`}>
+    <li className={`rounded-2xl bg-surface p-3 shadow-sm sm:p-4 ring-1 backdrop-blur-md ${checked ? "ring-2 ring-brand" : "ring-surface-line"}`}>
       <div className="flex items-start gap-3">
         <input
           type="checkbox"
@@ -350,7 +350,7 @@ function UserRow({ u, checked, onCheck }: { u: AdminUserDTO; checked: boolean; o
         <Avatar user={u} size="md" online={u.online} />
         <div className="min-w-0 flex-1">
           <p className="flex flex-wrap items-center gap-1.5">
-            <span className="min-w-0 truncate font-semibold">{u.displayName}</span>
+            <span className="min-w-0 font-semibold [overflow-wrap:anywhere]">{u.displayName}</span>
             {u.admin ? (
               <Badge tone="brand">Admin</Badge>
             ) : u.guest || (u.bannedAt && u.banScope === "chat") ? (
@@ -367,7 +367,7 @@ function UserRow({ u, checked, onCheck }: { u: AdminUserDTO; checked: boolean; o
             {u.queued && <Badge tone="amber">Waiting</Badge>}
             {!u.ads && <Badge tone="green">No ads</Badge>}
           </p>
-          <p className="truncate text-sm text-stone-500">
+          <p className="text-sm text-stone-500 [overflow-wrap:anywhere]">
             {u.email}
             {u.providers.length > 0 && ` · via ${u.providers.map((p) => PROVIDER_NAMES[p]).join(", ")}`}
           </p>

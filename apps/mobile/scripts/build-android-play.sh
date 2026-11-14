@@ -28,3 +28,4 @@ CI=1 npx expo prebuild -p android --clean
 grep -E 'versionCode|versionName' android/app/build.gradle | head -2
 ls -lh "$aab"
 shasum -a 256 "$aab"
+npx tsx scripts/record-release.mjs "Android AAB (Google Play)" "$aab"

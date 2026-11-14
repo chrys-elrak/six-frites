@@ -95,6 +95,17 @@ What Six Frites News tells members after each deploy, newest first. CLAUDE.md sa
 ### mg
 - Mandeha tsara izao ny famafana ho an'ny rehetra ny resaka manana tantara lava. Tsy ampy ho an'ny resaka lehibe indrindra ilay fanitsiana teo aloha.
 
+## 2026-11-14 07h41
+
+### en
+- On Android, closing the Google sign-in window now just says sign-in was cancelled, instead of a confusing technical message.
+
+### fr
+- Sur Android, fermer la fenêtre de connexion Google indique maintenant simplement que la connexion est annulée, au lieu d'un message technique déroutant.
+
+### mg
+- Amin'ny Android, rehefa akatonao ny varavarankelin'ny fidirana Google dia milaza fotsiny izao fa nofoanana ny fidirana, fa tsy hafatra teknika mampisavoritaka intsony.
+
 ## 2026-11-14 06h53
 
 ### en

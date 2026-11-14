@@ -135,7 +135,7 @@ describe("user moderation", () => {
     const boss = await admin();
     const { host } = await makeFriends();
     expect((await call(host, "POST", "/v1/bot", { locale: "en", open: true })).statusCode).toBe(200);
-    const [row] = (await get(boss, `/v1/admin/users?q=${encodeURIComponent(host.user.displayName)}`)).items;
+    const [row] = (await get(boss, `/v1/admin/users?q=${encodeURIComponent(host.user.email)}`)).items;
     expect(row).toMatchObject({ id: host.user.id, chats: 1 });
   });
 

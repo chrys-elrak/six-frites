@@ -16,4 +16,6 @@ apk=android/app/build/outputs/apk/release/app-release.apk
 grep -E 'versionCode|versionName' android/app/build.gradle | head -2
 ls -lh "$apk"
 shasum -a 256 "$apk"
+mkdir -p dist && cp "$apk" "dist/six-frites-$version.apk"
+npx tsx scripts/record-release.mjs "Android APK (Koera Store)" "dist/six-frites-$version.apk"
 printf '\nKoera Store notes for %s:\n%s\n' "$version" "$notes"

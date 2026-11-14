@@ -1,5 +1,5 @@
 import { openHref } from "@/lib/nav";
-import { Pressable, StyleSheet, View } from "react-native";
+import { Platform, Pressable, StyleSheet, View } from "react-native";
 import { Text } from "./text";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useTheme } from "@/lib/theme";
@@ -9,7 +9,7 @@ export function BrandBar({ children }: { children?: React.ReactNode }) {
   const t = useTheme();
   const insets = useSafeAreaInsets();
   return (
-    <View style={[styles.bar, { paddingTop: Math.max(insets.top, 8), backgroundColor: t.glass, borderColor: t.border }]}>
+    <View style={[styles.bar, Platform.OS === "android" ? { paddingTop: insets.top + 8, paddingBottom: 12 } : { paddingTop: Math.max(insets.top, 8) }, { backgroundColor: t.glass, borderColor: t.border }]}>
       <Pressable
         onPress={() => openHref("/")}
         accessibilityRole="header"
