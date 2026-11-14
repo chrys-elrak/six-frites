@@ -55,7 +55,7 @@ import {
 import { type ComponentRef, useEffect, useRef, useState } from "react";
 import { ActivityIndicator, FlatList, type GestureResponderEvent, Keyboard, Pressable, ScrollView, StyleSheet, View, useWindowDimensions } from "react-native";
 import { captureRef } from "react-native-view-shot";
-import { KeyboardAvoidingView } from "react-native-keyboard-controller";
+import { KeyboardAvoidingView, useKeyboardState } from "react-native-keyboard-controller";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { getLocale, useT } from "@/lib/i18n";
 import { cutVideo, pickMedia, recordVideo, takePhoto } from "@/lib/media";
@@ -289,6 +289,8 @@ export function StoryComposer({
   const ready = (!!file || !!text.trim() || gifs.length > 0 || photos.length > 0 || asks.length > 0 || !!href || askLink || drawn) && !tooLong;
   const fromChat = !!initialText && !file;
   const covered = !text.trim() && (asks.length > 0 || gifs.length > 0 || photos.length > 0 || !!link || askLink || !!location || showDate || showTime || drawn);
+  const keyboardUp = useKeyboardState((k) => k.isVisible);
+  const styling = typing && keyboardUp && !covered;
 
   const keep = () => setUndos((u) => [...u, drawing]);
   function finishWriting() {
@@ -711,8 +713,8 @@ export function StoryComposer({
                 )}
               </View>
             )}
-            {!file && !drawingOn && typing && <TextStyler value={mainStyle} onChange={setMainStyle} />}
-            {!file && !drawingOn && !typing && (
+            {!file && !drawingOn && styling && <TextStyler value={mainStyle} onChange={setMainStyle} />}
+            {!file && !drawingOn && !styling && (
               <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.swatches}>
                 <View accessibilityRole="radiogroup" accessibilityLabel={tr.stories.background} style={styles.swatchRow}>
                   {STORY_BACKGROUNDS.map((c) => (

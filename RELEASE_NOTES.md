@@ -6,12 +6,15 @@ What Six Frites News tells members after each deploy, newest first. CLAUDE.md sa
 
 ### en
 - When you add anonymous messages to a story, you now see them as the cards they'll be on your story, side by side: swipe through and tap up to five. A long message is cut short with … so the card stays readable.
+- The text style, font and colour pickers in the story editor now only show while you type your text, so they no longer cover your story.
 
 ### fr
 - Quand vous ajoutez des messages anonymes à une story, vous les voyez maintenant comme les cartes qu'ils seront sur votre story, côte à côte : faites défiler et touchez-en jusqu'à cinq. Un message long est coupé avec … pour que la carte reste lisible.
+- Les choix de style, de police et de couleur du texte dans l'éditeur de story n'apparaissent plus que pendant que vous écrivez, et ne cachent plus votre story.
 
 ### mg
 - Rehefa manampy hafatra tsy fantatra anarana amin'ny story ianao, dia hitanao izao ho toy ny karatra hiseho amin'ny storinao izy ireo, mifanila: ataovy mandeha ary misafidiana hatramin'ny dimy. Fohezina amin'ny … ny hafatra lava mba ho mora vakiana ny karatra.
+- Ny safidy endrika, soratra ary loko ao amin'ny fanoratana story dia tsy miseho afa-tsy rehefa manoratra ianao, ka tsy manakona ny storinao intsony.
 
 ## 2026-11-14 07h43
 

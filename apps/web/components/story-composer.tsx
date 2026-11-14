@@ -674,8 +674,8 @@ export function StoryComposer({
                 onDone={() => setDrawingOn(false)}
               />
             )}
-            {!file && !drawingOn && typing && <TextStyler value={mainStyle} onChange={setMainStyle} />}
-            {!file && !drawingOn && !typing && (
+            {!file && !drawingOn && typing && !covered && <TextStyler value={mainStyle} onChange={setMainStyle} />}
+            {!file && !drawingOn && (!typing || covered) && (
               <div className="-mx-4 shrink-0 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
                 <div role="radiogroup" aria-label={tr.stories.background} className="mx-auto flex w-max gap-2.5 px-4 py-1.5">
                   {STORY_BACKGROUNDS.map((c) => (
