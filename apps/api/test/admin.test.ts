@@ -131,6 +131,14 @@ describe("reports", () => {
 });
 
 describe("user moderation", () => {
+  it("counts only a person's chats with other people, not the app's own or support", async () => {
+    const boss = await admin();
+    const { host } = await makeFriends();
+    expect((await call(host, "POST", "/v1/bot", { locale: "en", open: true })).statusCode).toBe(200);
+    const [row] = (await get(boss, `/v1/admin/users?q=${encodeURIComponent(host.user.displayName)}`)).items;
+    expect(row).toMatchObject({ id: host.user.id, chats: 1 });
+  });
+
   it("searches, bans, unbans and never bans an admin", async () => {
     const boss = await admin();
     const target = await signUp("Mallory");

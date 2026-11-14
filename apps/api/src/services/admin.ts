@@ -68,10 +68,16 @@ export async function verifyAdminCode(userId: string, sessionId: string, { code,
 
 const activeSessions = () => ({ revokedAt: null, expiresAt: { gt: new Date() } });
 
+/** Chats with other people: not Six Frites News, the Game bot or a support chat, nor one deleted on their side. */
+const realChats = {
+  hidden: false,
+  chat: { supportUserId: null, members: { none: { userId: { in: APP_ACCOUNT_IDS } } } },
+} satisfies Prisma.ChatMemberWhereInput;
+
 const userInclude = () =>
   ({
     sessions: { where: activeSessions(), select: { lastUsedAt: true } },
-    _count: { select: { memberships: true, messages: true, reportsAgainst: { where: { status: "open" } } } },
+    _count: { select: { memberships: { where: realChats }, messages: true, reportsAgainst: { where: { status: "open" } } } },
   }) satisfies Prisma.UserInclude;
 type UserRow = Prisma.UserGetPayload<{ include: ReturnType<typeof userInclude> }>;
 
