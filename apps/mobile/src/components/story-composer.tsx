@@ -686,7 +686,7 @@ export function StoryComposer({
             drawing={drawing}
             pen={drawingOn ? pen : null}
             onBegin={keep}
-            onChange={setDrawing}
+            onChange={flattening ? undefined : setDrawing}
             focusedText={typeof focus === "number" ? focus : null}
             onTouchText={(i) => {
               hit.current = true;

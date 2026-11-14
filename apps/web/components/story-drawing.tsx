@@ -224,6 +224,7 @@ export function StoryDrawingLayer({
               <span
                 onPointerDown={grabSize(i)}
                 aria-hidden
+                data-flat-skip
                 className="absolute -right-3 -bottom-3 grid size-6 cursor-nwse-resize touch-none place-items-center rounded-full bg-white text-stone-900 shadow ring-1 ring-black/10"
               >
                 <MoveDiagonal2 className="size-3.5" strokeWidth={2.5} />

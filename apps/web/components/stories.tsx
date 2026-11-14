@@ -305,12 +305,13 @@ export function StoryStickers({
             aria-label={tr.common.remove}
             title={tr.common.remove}
             style={keep}
+            data-flat-skip
             className={`${handle} -top-2.5 -left-2.5`}
           >
             <X className="size-3.5" strokeWidth={3} />
           </button>
         )}
-        <span onPointerDown={resize(k)} aria-hidden style={keep} className={`${handle} -right-2.5 -bottom-2.5 cursor-nwse-resize`}>
+        <span onPointerDown={resize(k)} aria-hidden data-flat-skip style={keep} className={`${handle} -right-2.5 -bottom-2.5 cursor-nwse-resize`}>
           <MoveDiagonal2 className="size-3.5" strokeWidth={2.5} />
         </span>
       </>

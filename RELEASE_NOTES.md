@@ -9,6 +9,7 @@ What Six Frites News tells members after each deploy, newest first. CLAUDE.md sa
 - The text style, font and colour pickers in the story editor now only show while you type your text, so they no longer cover your story.
 - In the story editor, what you add now lands near the top, above everything else, instead of low down where the menu hides it.
 - In the app's story editor, the remove and resize buttons only show on the item or text you just added, moved or tapped. Tap anywhere else to hide them.
+- Shared stories no longer show a stray round button from the editor next to text or photos you moved or resized.
 - Close a story you started and you can save it as a draft. Pick it up later from Drafts, next to how long it lasts.
 
 ### fr
@@ -16,6 +17,7 @@ What Six Frites News tells members after each deploy, newest first. CLAUDE.md sa
 - Les choix de style, de police et de couleur du texte dans l'éditeur de story n'apparaissent plus que pendant que vous écrivez, et ne cachent plus votre story.
 - Dans l'éditeur de story, ce que vous ajoutez arrive maintenant en haut, par-dessus le reste, au lieu d'arriver en bas sous le menu.
 - Dans l'éditeur de story de l'application, les boutons pour retirer et redimensionner n'apparaissent que sur l'élément ou le texte que vous venez d'ajouter, de déplacer ou de toucher. Touchez ailleurs pour les cacher.
+- Les stories partagées n'affichent plus un petit bouton rond de l'éditeur à côté d'un texte ou d'une photo que vous avez déplacé ou redimensionné.
 - En fermant une story commencée, vous pouvez l'enregistrer en brouillon. Reprenez-la plus tard depuis Brouillons, à côté de la durée.
 
 ### mg
@@ -23,6 +25,7 @@ What Six Frites News tells members after each deploy, newest first. CLAUDE.md sa
 - Ny safidy endrika, soratra ary loko ao amin'ny fanoratana story dia tsy miseho afa-tsy rehefa manoratra ianao, ka tsy manakona ny storinao intsony.
 - Ao amin'ny fanoratana story, eo ambony sy ambonin'ny zavatra hafa rehetra izao no miseho izay ampianao, fa tsy any ambany ambadiky ny menu intsony.
 - Ao amin'ny fanoratana story ao amin'ny app, ny bokotra hanesorana sy hanovana habe dia tsy miseho afa-tsy amin'ilay zavatra na soratra vao nampianao, nafindranao na notsindrianao. Tsindrio any an-kafa hanafenana azy ireo.
+- Tsy misy bokotra boribory kely avy amin'ny fanoratana intsony eo akaikin'ny soratra na sary nafindranao na novanao habe ao amin'ny story nozaraina.
 - Rehefa manidy story efa nanombohanao ianao dia azonao tehirizina ho drafitra izy. Tohizo any aoriana avy amin'ny Drafitra, eo akaikin'ny faharetany.
 
 ## 2026-11-14 07h43
