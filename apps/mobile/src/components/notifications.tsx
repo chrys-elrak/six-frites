@@ -1,15 +1,22 @@
 import { type NotificationDTO, notificationHref, notificationText } from "@six/shared";
 import { useQueryClient } from "@tanstack/react-query";
 import { type Href, router, useFocusEffect } from "expo-router";
-import { Bell, Mail, MailOpen, PartyPopper, Settings2, Trash2, VenetianMask } from "lucide-react-native";
+import { Bell, CheckCheck, Mail, MailOpen, PartyPopper, Settings2, Trash2, VenetianMask } from "lucide-react-native";
 import { useCallback, useState } from "react";
-import { FlatList, Pressable, RefreshControl, StyleSheet, View } from "react-native";
+import { Alert, FlatList, Pressable, RefreshControl, StyleSheet, View } from "react-native";
 import { GestureDetector } from "react-native-gesture-handler";
 import Animated from "react-native-reanimated";
 import { useHiddenByArchive } from "@/lib/archive-lock";
 import { listTime } from "@/lib/format";
 import { useT } from "@/lib/i18n";
-import { deleteNotification, markNotification, markNotificationsSeen, useNotifications } from "@/lib/notifications";
+import {
+  clearNotifications,
+  deleteNotification,
+  markAllNotificationsRead,
+  markNotification,
+  markNotificationsSeen,
+  useNotifications,
+} from "@/lib/notifications";
 import { useSwipeRow } from "@/lib/swipe";
 import { brand, brandInk, useTheme } from "@/lib/theme";
 import { Avatar } from "./avatar";
@@ -25,7 +32,13 @@ export function Notifications() {
   const list = useNotifications();
   const hidden = useHiddenByArchive();
   const unread = list.data?.unread ?? 0;
+  const items = list.data?.items.filter((n) => !(n.user && hidden.userIds.has(n.user.id)) && !(n.chatId && hidden.chatIds.has(n.chatId))) ?? [];
   const [settings, setSettings] = useState(false);
+  const clearAll = () =>
+    Alert.alert(tr.notifications.clearAll, tr.notifications.clearAllConfirm, [
+      { text: tr.common.cancel, style: "cancel" },
+      { text: tr.notifications.clearAll, style: "destructive", onPress: () => void clearNotifications(qc) },
+    ]);
 
   useFocusEffect(
     useCallback(() => {
@@ -36,6 +49,10 @@ export function Notifications() {
   return (
     <View style={{ flex: 1, backgroundColor: t.glass }}>
       <BrandBar>
+        {items.some((n) => n.unread) && (
+          <IconButton Icon={CheckCheck} color={brand} label={tr.notifications.markAllRead} onPress={() => void markAllNotificationsRead(qc)} />
+        )}
+        {items.length > 0 && <IconButton Icon={Trash2} color={brand} label={tr.notifications.clearAll} onPress={clearAll} />}
         <IconButton
           Icon={Settings2}
           color={brand}
@@ -49,7 +66,7 @@ export function Notifications() {
         </Popup>
       )}
       <FlatList
-        data={list.data?.items.filter((n) => !(n.user && hidden.userIds.has(n.user.id)) && !(n.chatId && hidden.chatIds.has(n.chatId))) ?? []}
+        data={items}
         keyExtractor={(n) => n.id}
         contentContainerStyle={{ flexGrow: 1 }}
         refreshControl={

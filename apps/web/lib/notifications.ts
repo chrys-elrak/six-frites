@@ -25,3 +25,14 @@ export async function deleteNotification(qc: QueryClient, id: string) {
   qc.setQueryData<NotificationsDTO>(notificationsKey, (d) => d && { ...d, items: d.items.filter((n) => n.id !== id) });
   await six.api.DELETE("/v1/notifications/{id}", { params: { path: { id } } }).catch(() => null);
 }
+
+/** Marks every notification read, here at once and then on the server. */
+export async function markAllNotificationsRead(qc: QueryClient) {
+  qc.setQueryData<NotificationsDTO>(notificationsKey, (d) => d && { unread: 0, items: d.items.map((n) => ({ ...n, unread: false })) });
+  await six.api.POST("/v1/notifications/read").catch(() => null);
+}
+
+export async function clearNotifications(qc: QueryClient) {
+  qc.setQueryData<NotificationsDTO>(notificationsKey, (d) => d && { unread: 0, items: [] });
+  await six.api.DELETE("/v1/notifications").catch(() => null);
+}

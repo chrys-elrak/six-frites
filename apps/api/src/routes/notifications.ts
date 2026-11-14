@@ -1,7 +1,14 @@
 import type { FastifyPluginAsyncZod } from "fastify-type-provider-zod";
 import { z } from "zod";
 import { Id, NotificationsDTO, UpdateNotificationInput } from "@six/shared";
-import { deleteNotification, listNotifications, markNotification, markNotificationsSeen } from "../services/notifications.js";
+import {
+  clearNotifications,
+  deleteNotification,
+  listNotifications,
+  markAllNotificationsRead,
+  markNotification,
+  markNotificationsSeen,
+} from "../services/notifications.js";
 
 const security = [{ bearer: [] }];
 const Params = z.object({ id: Id });
@@ -28,6 +35,32 @@ const notificationRoutes: FastifyPluginAsyncZod = async (app) => {
     { schema: { tags: ["notifications"], summary: "Mark every notification as seen", security, response: { 204: z.null() } } },
     async (req, reply) => {
       await markNotificationsSeen(req.auth.userId);
+      return reply.status(204).send(null);
+    },
+  );
+
+  app.post(
+    "/notifications/read",
+    {
+      schema: {
+        tags: ["notifications"],
+        summary: "Mark every notification as read",
+        description: "Unlike `seen`, this also marks read the ones marked unread again.",
+        security,
+        response: { 204: z.null() },
+      },
+    },
+    async (req, reply) => {
+      await markAllNotificationsRead(req.auth.userId);
+      return reply.status(204).send(null);
+    },
+  );
+
+  app.delete(
+    "/notifications",
+    { schema: { tags: ["notifications"], summary: "Delete all my notifications", security, response: { 204: z.null() } } },
+    async (req, reply) => {
+      await clearNotifications(req.auth.userId);
       return reply.status(204).send(null);
     },
   );

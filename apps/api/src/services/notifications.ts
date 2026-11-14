@@ -86,6 +86,20 @@ export async function markNotificationsSeen(userId: string) {
   await prisma.user.update({ where: { id: userId }, data: { notificationsSeenAt: new Date() } });
 }
 
+/** Marks every notification read, the ones marked unread again too. */
+export async function markAllNotificationsRead(userId: string) {
+  await prisma.$transaction([
+    prisma.user.update({ where: { id: userId }, data: { notificationsSeenAt: new Date() } }),
+    prisma.notification.updateMany({ where: { userId, markedUnread: true }, data: { markedUnread: false } }),
+  ]);
+  changed(userId);
+}
+
+export async function clearNotifications(userId: string) {
+  await prisma.notification.deleteMany({ where: { userId } });
+  changed(userId);
+}
+
 /** Drops notifications older than 30 days. */
 export async function deleteOldNotifications() {
   const { count } = await prisma.notification.deleteMany({

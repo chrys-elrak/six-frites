@@ -2,12 +2,19 @@
 
 import { type NotificationDTO, notificationHref, notificationText } from "@six/shared";
 import { useQueryClient } from "@tanstack/react-query";
-import { Bell, Mail, MailOpen, PartyPopper, Settings2, Trash2, VenetianMask } from "lucide-react";
+import { Bell, CheckCheck, Mail, MailOpen, PartyPopper, Settings2, Trash2, VenetianMask } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { listTime } from "@/lib/format";
 import { useT } from "@/lib/i18n";
-import { deleteNotification, markNotification, markNotificationsSeen, useNotifications } from "@/lib/notifications";
+import {
+  clearNotifications,
+  deleteNotification,
+  markAllNotificationsRead,
+  markNotification,
+  markNotificationsSeen,
+  useNotifications,
+} from "@/lib/notifications";
 import { useLongPress } from "@/lib/long-press";
 import { useHiddenByArchive } from "@/lib/archive-lock";
 import { useSwipeRow } from "@/lib/swipe";
@@ -25,6 +32,7 @@ export function Notifications() {
   const hidden = useHiddenByArchive();
   const items = list.data?.items.filter((n) => !(n.user && hidden.userIds.has(n.user.id)) && !(n.chatId && hidden.chatIds.has(n.chatId))) ?? [];
   const [settings, setSettings] = useState(false);
+  const [confirmClear, setConfirmClear] = useState(false);
 
   useEffect(() => {
     if (unread > 0) void markNotificationsSeen(qc);
@@ -33,6 +41,26 @@ export function Notifications() {
   return (
     <div className="flex h-full min-h-0 flex-col">
       <BrandActions>
+        {items.some((n) => n.unread) && (
+          <button
+            onClick={() => void markAllNotificationsRead(qc)}
+            aria-label={tr.notifications.markAllRead}
+            title={tr.notifications.markAllRead}
+            className="grid size-9 place-items-center rounded-full text-brand hover:bg-stone-200 dark:hover:bg-stone-800"
+          >
+            <CheckCheck className="size-5" />
+          </button>
+        )}
+        {items.length > 0 && (
+          <button
+            onClick={() => setConfirmClear(true)}
+            aria-label={tr.notifications.clearAll}
+            title={tr.notifications.clearAll}
+            className="grid size-9 place-items-center rounded-full text-brand hover:bg-stone-200 dark:hover:bg-stone-800"
+          >
+            <Trash2 className="size-5" />
+          </button>
+        )}
         <button
           onClick={() => setSettings((s) => !s)}
           aria-label={tr.settings.notifications}
@@ -42,6 +70,13 @@ export function Notifications() {
           <Settings2 className="size-5" />
         </button>
       </BrandActions>
+      {confirmClear && (
+        <Sheet
+          title={tr.notifications.clearAllConfirm}
+          onClose={() => setConfirmClear(false)}
+          actions={[{ label: tr.notifications.clearAll, destructive: true, onSelect: () => void clearNotifications(qc) }]}
+        />
+      )}
       {settings && (
         <Dialog onClose={() => setSettings(false)}>
           <div className="p-4">

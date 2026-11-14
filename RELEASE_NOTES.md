@@ -13,6 +13,17 @@ What Six Frites News tells members after each deploy, newest first. CLAUDE.md sa
 ### mg
 - Ao amin'ny app, ny bokotra miverina dia mitondra anao any amin'izay andrasanao: resaka na pejy nosokafana avy amin'ny rohy dia miverina any amin'ny resakao fa tsy manidy ny app intsony, ary ny fanokafana fampandrenesana na rohin'ny vondrona dia tsy mamela efijery tafahoatra ao aoriana intsony.
 
+## 2026-11-14 08h41
+
+### en
+- Notifications have two new buttons at the top: mark them all as read, or clear them all at once.
+
+### fr
+- Les notifications ont deux nouveaux boutons en haut : tout marquer comme lu, ou tout effacer d'un coup.
+
+### mg
+- Misy bokotra roa vaovao eo ambony amin'ny fampandrenesana: ataovy hoe voavaky avokoa, na fafao indray mandeha avokoa.
+
 ## 2026-11-14 08h04
 
 ### en

@@ -83,6 +83,27 @@ describe("notifications", () => {
     expect(list.items.map((n: { id: string }) => n.id)).toEqual([joined.id]);
   });
 
+  it("marks all read and clears all, only mine", async () => {
+    const { host, guest } = await makeFriends();
+    const stranger = await signUp("stranger");
+    const { contactCode } = await get(host, "/v1/me");
+    await call(stranger, "POST", "/v1/contacts", { q: contactCode });
+    await call(host, "POST", "/v1/notifications/seen");
+    const [, joined] = (await get(host, "/v1/notifications")).items;
+    await call(host, "PATCH", `/v1/notifications/${joined.id}`, { unread: true });
+    await call(guest, "POST", "/v1/contacts", { q: (await get(stranger, "/v1/me")).contactCode });
+
+    expect((await call(host, "POST", "/v1/notifications/read")).statusCode).toBe(204);
+    const read = await get(host, "/v1/notifications");
+    expect(read.items).toHaveLength(2);
+    expect(read.unread).toBe(0);
+    expect(read.items.every((n: { unread: boolean }) => !n.unread)).toBe(true);
+
+    expect((await call(host, "DELETE", "/v1/notifications")).statusCode).toBe(204);
+    expect((await get(host, "/v1/notifications")).items).toEqual([]);
+    expect((await get(stranger, "/v1/notifications")).items).toHaveLength(1);
+  });
+
   it("hides people I blocked", async () => {
     const { host, guest } = await makeFriends();
     expect((await call(host, "POST", `/v1/users/${guest.user.id}/block`)).statusCode).toBe(204);
