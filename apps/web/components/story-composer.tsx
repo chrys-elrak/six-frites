@@ -686,7 +686,7 @@ export function StoryComposer({
               />
             )}
             <div className="pointer-events-none absolute inset-x-0 bottom-3 flex flex-col items-center gap-3 px-16">
-              <StoryStickers {...stickers} placed={false} skip={flattening ? stays : undefined} />
+              <StoryStickers {...stickers} placed={false} skip={stays} />
               {file && text.trim() && <p className="text-center break-words whitespace-pre-wrap drop-shadow">{text}</p>}
             </div>
           </div>
@@ -701,7 +701,7 @@ export function StoryComposer({
               setWriting({ index, text: t.text, color: t.color, font: t.font, look: t.look ?? "plain" });
             }}
           >
-            <StoryStickers {...stickers} placed onMove={drawingOn ? undefined : stickers.onMove} skip={flattening ? stays : undefined} />
+            <StoryStickers {...stickers} placed onMove={drawingOn ? undefined : stickers.onMove} skip={stays} />
           </StoryDrawingLayer>
 
           <div

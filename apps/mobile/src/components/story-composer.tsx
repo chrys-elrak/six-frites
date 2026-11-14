@@ -247,6 +247,8 @@ export function StoryComposer({
   const { height: screenH, width: screenW } = useWindowDimensions();
   const screen = useRef<ComponentRef<typeof View>>(null);
   const [flattening, setFlattening] = useState(false);
+  const [still, setStill] = useState<string | null>(null);
+  const stillShown = useRef(() => {});
   const [file, setFile] = useState<LocalFile | null>(null);
   const [text, setText] = useState(initialText ?? "");
   const [background, setBackground] = useState<string>(initialText ? backgroundAround(bubble) : STORY_BACKGROUNDS[0]);
@@ -474,9 +476,18 @@ export function StoryComposer({
 
   /**
    * Draws a picture or text story into one JPEG, everything but the stickers that stay live (link, GIFs, place,
-   * anonymous messages): the tools and those stickers hide for a frame while the screen is captured.
+   * anonymous messages): the tools and those stickers hide while the screen is captured, under a still of the
+   * screen as it was, so the poster never sees them go.
    */
   async function flatten() {
+    const frame = await captureRef(screen, { format: "jpg", quality: 0.8, result: "tmpfile" }).catch(() => null);
+    if (frame) {
+      await new Promise<void>((done) => {
+        stillShown.current = done;
+        setStill(frame);
+        setTimeout(done, 500);
+      });
+    }
     Keyboard.dismiss();
     setFlattening(true);
     await new Promise((r) => setTimeout(r, 350));
@@ -963,6 +974,7 @@ export function StoryComposer({
           )}
         </KeyboardAvoidingView>
       </View>
+      {still && <Image source={{ uri: still }} onDisplay={() => stillShown.current()} style={StyleSheet.absoluteFill} contentFit="cover" />}
       {pickingDuration && (
         <Sheet
           title={tr.stories.lasts}

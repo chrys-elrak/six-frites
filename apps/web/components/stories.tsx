@@ -162,7 +162,7 @@ export function StoryStickers({
   gifs: React.ReactNode[];
   /** Photos placed like stickers while composing; they end up drawn into the story's picture. */
   photos?: React.ReactNode[];
-  /** Leaves these stickers out, as when the story is drawn into a picture without the ones that stay live. */
+  /** Leaves these stickers out of the story's picture when it is drawn, as the ones that stay live; they stay on screen. */
   skip?: (sticker: StorySticker) => boolean;
   link: StoryLink | null;
   /** The poster's anonymous link, when the story invites anonymous messages. */
@@ -191,7 +191,7 @@ export function StoryStickers({
           ? stickerIndex("photo", k) < photos.length
           : { location: !!location, date: showDate, time: showTime, link: !!link, asklink: !!askLink }[k as "link"];
   const stop = (e: React.PointerEvent) => e.stopPropagation();
-  const shown = STORY_STICKERS.filter((k) => has(k) && !!positions[k] === placed && !skip?.(k));
+  const shown = STORY_STICKERS.filter((k) => has(k) && !!positions[k] === placed);
   if (!shown.length) return null;
   const editing = !!onMove && !!frame;
 
@@ -324,6 +324,7 @@ export function StoryStickers({
       <div
         key={k}
         data-pinch={editing ? `sticker:${k}` : undefined}
+        data-flat-skip={skip?.(k) || undefined}
         onPointerDown={drag(k)}
         className={`absolute ${grab}`}
         style={{
@@ -343,7 +344,7 @@ export function StoryStickers({
   return (
     <>
       {shown.filter(big).map((k) => (
-        <div key={k} data-pinch={editing ? `sticker:${k}` : undefined} onPointerDown={drag(k)} className={`relative ${grab}`}>
+        <div key={k} data-pinch={editing ? `sticker:${k}` : undefined} data-flat-skip={skip?.(k) || undefined} onPointerDown={drag(k)} className={`relative ${grab}`}>
           {node(k)}
           {handles(k)}
         </div>
@@ -351,7 +352,7 @@ export function StoryStickers({
       {chips.length > 0 && (
         <div className="flex flex-wrap justify-center gap-3">
           {chips.map((k) => (
-            <div key={k} data-pinch={editing ? `sticker:${k}` : undefined} onPointerDown={drag(k)} className={`relative ${grab}`}>
+            <div key={k} data-pinch={editing ? `sticker:${k}` : undefined} data-flat-skip={skip?.(k) || undefined} onPointerDown={drag(k)} className={`relative ${grab}`}>
               {node(k)}
               {handles(k)}
             </div>
