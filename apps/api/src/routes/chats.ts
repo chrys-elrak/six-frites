@@ -617,14 +617,16 @@ const chatRoutes: FastifyPluginAsyncZod = async (app) => {
       schema: {
         tags: ["chats"],
         summary: "Say you took a screenshot of the chat",
-        description: "Posts a `screenshot` service message, so the others see it and get a push.",
+        description:
+          "Posts a `screenshot` service message, so the others see it and get a push. `blocked`: the app stopped the screenshot, so the message says they tried.",
         security,
         params: ChatParams,
+        body: z.object({ blocked: z.boolean().default(false) }).nullish(),
         response: { 204: z.null() },
       },
     },
     async (req, reply) => {
-      await reportScreenshot(req.auth.userId, req.params.id);
+      await reportScreenshot(req.auth.userId, req.params.id, !!req.body?.blocked);
       return reply.status(204).send(null);
     },
   );

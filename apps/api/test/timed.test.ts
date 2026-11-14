@@ -241,5 +241,13 @@ describe("screenshots", () => {
     expect((await call(guest, "POST", `/v1/chats/${chatId}/screenshot`)).statusCode).toBe(204);
     const [notice] = (await get(host, `/v1/chats/${chatId}/messages`)).items;
     expect(notice).toMatchObject({ type: "service", senderId: guest.user.id, action: { type: "screenshot" } });
+    expect(notice.action.blocked).toBeUndefined();
+  });
+
+  it("say when the app stopped it", async () => {
+    const { host, guest, chatId } = await makeFriends();
+    expect((await call(guest, "POST", `/v1/chats/${chatId}/screenshot`, { blocked: true })).statusCode).toBe(204);
+    const [notice] = (await get(host, `/v1/chats/${chatId}/messages`)).items;
+    expect(notice.action).toEqual({ type: "screenshot", blocked: true });
   });
 });

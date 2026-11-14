@@ -297,6 +297,11 @@ export async function deleteChat(
   if (!range) applyChatDeleted(qc, chatId, scope);
 }
 
+/** Tells the others in the chat I took a screenshot, or only tried to when the app stopped it. */
+export function reportScreenshot(chatId: string, blocked: boolean) {
+  void six.api.POST("/v1/chats/{id}/screenshot", { params: { path: { id: chatId } }, body: { blocked } }).catch(() => null);
+}
+
 /** Blocks or unblocks the other person in a chat; the server's chat.updated refreshes the chat. */
 /** Tells the server I left the chat, so the vanish-mode messages I've read go for both of us. */
 export function closeChat(chatId: string) {

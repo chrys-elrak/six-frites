@@ -17,9 +17,9 @@ export const CHANGELOG: Release[] = [
     version: "1.6.1",
     date: "2026-11-14",
     notes: {
-      en: ["Fixes the app closing as soon as it opened in 1.6.0."],
-      fr: ["Corrige l'application qui se fermait dès son ouverture en 1.6.0."],
-      mg: ["Voavaha ny fikatonan'ny fampiharana raha vao nosokafana tamin'ny 1.6.0."],
+      en: ["Fixes the app closing as soon as it opened in 1.6.0.", "Screenshots are now blocked only on the chat list and inside chats.", "Trying to screenshot a chat or group tells everyone in it (iPhone, and Android 14 and up)."],
+      fr: ["Corrige l'application qui se fermait dès son ouverture en 1.6.0.", "Les captures d'écran ne sont plus bloquées que sur la liste des discussions et dans les discussions.", "Tenter une capture d'écran d'une discussion ou d'un groupe prévient tout le monde (iPhone, et Android 14 et plus)."],
+      mg: ["Voavaha ny fikatonan'ny fampiharana raha vao nosokafana tamin'ny 1.6.0.", "Ny lisitry ny resaka sy ny ao anatin'ny resaka ihany no tsy azo alaina sary intsony.", "Fantatry ny rehetra ao raha misy manandrana maka sary ny efijery amin'ny resaka na vondrona (iPhone, sy Android 14 no ho miakatra)."],
     },
   },
   {

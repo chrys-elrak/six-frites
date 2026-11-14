@@ -155,7 +155,7 @@ function OpenConversation({ chatId }: { chatId: string }) {
       const shortcut = e.metaKey && e.shiftKey && ["Digit3", "Digit4", "Digit5", "KeyS"].includes(e.code);
       if ((e.key !== "PrintScreen" && !shortcut) || Date.now() - last < 10_000) return;
       last = Date.now();
-      void six.api.POST("/v1/chats/{id}/screenshot", { params: { path: { id: chatId } } });
+      void six.api.POST("/v1/chats/{id}/screenshot", { params: { path: { id: chatId } }, body: {} });
     };
     window.addEventListener("keydown", onKey);
     window.addEventListener("keyup", onKey);

@@ -417,7 +417,8 @@ export async function postNotice(userId: string, chatId: string, action: Service
   await queuePush(message.id, recipients).catch((err) => console.error("could not queue push:", err.message));
 }
 
-export const reportScreenshot = (userId: string, chatId: string) => postNotice(userId, chatId, { type: "screenshot" });
+export const reportScreenshot = (userId: string, chatId: string, blocked: boolean) =>
+  postNotice(userId, chatId, { type: "screenshot", ...(blocked && { blocked }) });
 
 /**
  * Someone left the chat: the vanish-mode messages they have read from the other person are deleted for

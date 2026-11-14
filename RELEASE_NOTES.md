@@ -96,12 +96,18 @@ What Six Frites News tells members after each deploy, newest first. CLAUDE.md sa
 
 ### en
 - The Android app no longer closes as soon as it opens: update to 1.6.1 from Google Play or Koera Store.
+- In the app, screenshots are now blocked only on your chat list and inside chats, so you can capture the other pages again.
+- When someone tries to take a screenshot of a chat or group in the app, everyone in it now sees that they tried (on iPhone, and on Android 14 and up).
 
 ### fr
 - L'application Android ne se ferme plus dès son ouverture : passez à la version 1.6.1 depuis Google Play ou Koera Store.
+- Dans l'application, les captures d'écran ne sont plus bloquées que sur la liste des discussions et dans les discussions : vous pouvez de nouveau capturer les autres pages.
+- Quand quelqu'un tente une capture d'écran d'une discussion ou d'un groupe dans l'application, tout le monde y voit maintenant qu'il a essayé (sur iPhone, et sur Android 14 et plus).
 
 ### mg
 - Tsy mikatona intsony raha vao sokafana ny fampiharana Android: ataovy 1.6.1 avy amin'ny Google Play na Koera Store.
+- Ao amin'ny fampiharana, ny lisitry ny resaka sy ny ao anatin'ny resaka ihany no tsy azo alaina sary intsony, ka azonao alaina sary indray ny pejy hafa.
+- Rehefa misy manandrana maka sary ny efijery amin'ny resaka na vondrona ao amin'ny fampiharana, hitan'ny rehetra ao izao fa nanandrana izy (amin'ny iPhone, sy Android 14 no ho miakatra).
 
 ## 2026-11-14 05h59
 

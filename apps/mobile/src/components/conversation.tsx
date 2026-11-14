@@ -21,6 +21,7 @@ import { BubbleColorsContext } from "@/lib/bubble-colors";
 import { startCall, useCall } from "@/lib/calls";
 import { e2eeFor, useHydratedMessage, useKeyChanges } from "@/lib/e2ee";
 import { useTyping } from "@/lib/typing";
+import { useNoScreenshots } from "@/lib/no-screenshots";
 import { LockScreen } from "./app-lock";
 import { Avatar } from "./avatar";
 import { ChatBackground } from "./chat-background";
@@ -99,6 +100,7 @@ function PinnedBar({
 export function Conversation({ chatId }: { chatId: string }) {
   const tr = useT();
   const chat = useChat(useQueryClient(), chatId);
+  useNoScreenshots(chat.data && !chat.data.withSupport ? chatId : undefined);
   const shut = useArchiveShut() && !!chat.data?.archived;
   const [unlocked, setUnlocked] = useState(false);
   const shown = useRef(false);

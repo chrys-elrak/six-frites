@@ -76,6 +76,7 @@ import { useTyping } from "@/lib/typing";
 import { receiveDraft, useDrafts } from "@/lib/drafts";
 import { useOutbox } from "@/lib/outbox";
 import { six } from "@/lib/six";
+import { useNoScreenshots } from "@/lib/no-screenshots";
 import { AddContact } from "./add-contact";
 import { NewGroup } from "./groups";
 import { Avatar } from "./avatar";
@@ -465,6 +466,7 @@ type ListView = "chats" | "desk" | "contacts";
  * support gets a switch at the bottom for the support chats.
  */
 export function ChatList({ archived = false, contacts = false }: { archived?: boolean; contacts?: boolean }) {
+  useNoScreenshots();
   const t = useTheme();
   const tr = useT();
   const openSupport = async () => {

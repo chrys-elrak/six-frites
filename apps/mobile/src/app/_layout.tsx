@@ -3,7 +3,6 @@ import { isLimited } from "@six/shared";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { DarkTheme, DefaultTheme, SplashScreen, Stack, ThemeProvider } from "expo-router";
 import { ShareIntentProvider } from "expo-share-intent";
-import { usePreventScreenCapture } from "expo-screen-capture";
 import { StatusBar } from "expo-status-bar";
 import { WifiOff } from "lucide-react-native";
 import { useEffect, useState } from "react";
@@ -41,10 +40,7 @@ function Unreachable() {
   );
 }
 
-const preventScreenCapture = process.env.EXPO_PUBLIC_ALLOW_SCREEN_CAPTURE ? () => {} : usePreventScreenCapture;
-
 export default function RootLayout() {
-  preventScreenCapture();
   const t = useTheme();
   const [client] = useState(
     () => new QueryClient({ defaultOptions: { queries: { staleTime: 30_000, retry: 1 } } }),
