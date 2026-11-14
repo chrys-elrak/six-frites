@@ -2,6 +2,17 @@
 
 What Six Frites News tells members after each deploy, newest first. CLAUDE.md says when to add a section and how.
 
+## 2026-11-14 06h48
+
+### en
+- Deleting a long chat for everyone works again, with its photos and videos.
+
+### fr
+- Supprimer pour tout le monde une longue discussion fonctionne de nouveau, avec ses photos et vidéos.
+
+### mg
+- Mandeha indray ny famafana ho an'ny rehetra ny resaka lava, miaraka amin'ny sary sy horonan-tsariny.
+
 ## 2026-11-14 05h59
 
 ### en

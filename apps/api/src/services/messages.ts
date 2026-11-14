@@ -869,12 +869,13 @@ export async function playGame(userId: string, messageId: string, move: GameMove
 export async function scrubMessageEvents(tx: Tx, messageIds: string[]) {
   if (!messageIds.length) return;
   await tx.$executeRaw`
-    DELETE FROM "ChangeEvent"
-    WHERE type IN ('message.new', 'message.edited') AND payload->>'id' = ANY(${messageIds}::text[])`;
+    DELETE FROM "ChangeEvent" c USING unnest(${messageIds}::text[]) AS d(id)
+    WHERE c.type IN ('message.new', 'message.edited') AND c.payload->>'id' = d.id`;
   await tx.$executeRaw`
-    UPDATE "ChangeEvent"
-    SET payload = jsonb_set(jsonb_set(payload, '{replyTo,text}', 'null'), '{replyTo,deleted}', 'true')
-    WHERE type IN ('message.new', 'message.edited') AND payload->'replyTo'->>'id' = ANY(${messageIds}::text[])`;
+    UPDATE "ChangeEvent" c
+    SET payload = jsonb_set(jsonb_set(c.payload, '{replyTo,text}', 'null'), '{replyTo,deleted}', 'true')
+    FROM unnest(${messageIds}::text[]) AS d(id)
+    WHERE c.type IN ('message.new', 'message.edited') AND c.payload->'replyTo'->>'id' = d.id`;
 }
 
 /** Deletes every copy of encrypted content: the envelopes for each device and everyone's backups. */
