@@ -1,7 +1,7 @@
 "use client";
 
 import { SixApiError, unwrap } from "@six/sdk";
-import { COMMANDS, type EmojiEntry, type GifDTO, LIVE_EMOJI, LIVE_GAMES, type LiveGame, type MenuCommand, type StickerDTO, groupCommands, isMenuCommand, parseCommand, silentMessage, suggestEmoji } from "@six/shared";
+import { COMMANDS, type EmojiEntry, type GifDTO, LIVE_EMOJI, LIVE_GAMES, type LiveGame, type MenuCommand, type StickerDTO, groupCommands, isMenuCommand, parseCommand, suggestEmoji, typedMessage } from "@six/shared";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import { type Ref, useEffect, useImperativeHandle, useState } from "react";
@@ -37,8 +37,8 @@ export interface CommandBarHandle {
  * Slash commands over the composer: `/` lists them, `/giphy love` shows GIFs and `/sticker wave` stickers
  * to send, `/emoji`, `/voice`, `/destruct`, `/location`, `/autodelete`, `/blur`, `/vanish` and
  * `/search` offer their choices inline, narrowed by what follows, `/play` starts a live game with the
- * other person, and `/game` or `/schedule` opens that dialog. After `/silent` it steps aside for the
- * message to send without a notification.
+ * other person, and `/game` or `/schedule` opens that dialog. After `/silent` or `/lock` it steps aside
+ * for the message to send without a notification or locked with a code.
  */
 export function CommandBar({
   ref,
@@ -70,7 +70,7 @@ export function CommandBar({
   const chat = useChat(qc, chatId).data;
   const voice = useVoiceEffect((s) => s.effect);
   const setVoice = useVoiceEffect((s) => s.set);
-  const command = silentMessage(text) === null ? parseCommand(text, chat?.group ? groupCommands(COMMANDS) : COMMANDS) : null;
+  const command = typedMessage(text) === null ? parseCommand(text, chat?.group ? groupCommands(COMMANDS) : COMMANDS) : null;
   const run = command?.kind === "run" ? command : null;
   const search = run?.name === "giphy" || run?.name === "sticker" ? run.args : null;
   const kind = run?.name === "sticker" ? "sticker" : "gif";

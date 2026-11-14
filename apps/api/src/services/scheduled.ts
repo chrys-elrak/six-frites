@@ -46,6 +46,7 @@ function toScheduledDTO(s: ScheduledRow): ScheduledMessageDTO {
     spoiler: s.spoiler,
     attachment: s.attachment ? toAttachmentDTO(s.attachment) : null,
     ephemeral: ephemeral ? { maxViews: s.maxViews, ttlSeconds: s.ttlSeconds } : null,
+    codeLock: s.codeLock,
     replyTo: s.replyTo ? toReplyPreview(s.replyTo) : null,
     sendAt: s.sendAt.toISOString(),
     createdAt: s.createdAt.toISOString(),
@@ -143,6 +144,7 @@ export async function scheduleMessage(
         entities: storedEntities(input.entities),
         spoiler: input.spoiler ?? false,
         silent: input.silent ?? false,
+        codeLock: !!input.codeLock,
         maxViews: input.ephemeral?.maxViews ?? null,
         ttlSeconds: input.ephemeral?.ttlSeconds ?? null,
         attachmentId: input.attachmentId ?? null,
@@ -227,6 +229,7 @@ async function deliverScheduled(id: string, ownerId?: string) {
         groupId: s.groupId ?? undefined,
         silent: s.silent,
         ephemeral: ephemeral ? { maxViews: s.maxViews ?? undefined, ttlSeconds: s.ttlSeconds ?? undefined } : undefined,
+        codeLock: s.codeLock || undefined,
         ...(encrypted
           ? { encrypted, type: (s.type as "location" | "checklist" | null) ?? undefined }
           : {

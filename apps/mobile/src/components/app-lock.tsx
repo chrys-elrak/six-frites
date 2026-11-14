@@ -89,7 +89,7 @@ export function AppLockSettings() {
  * Turns the lock on with the backup PIN, so one code does both. Without a PIN yet, the new code becomes it, unless
  * this phone can't make one without dropping an older backup: then the lock gets a code of its own.
  */
-function TurnOnDialog({ onClose }: { onClose: () => void }) {
+export function TurnOnDialog({ onClose }: { onClose: () => void }) {
   const t = useTheme();
   const tr = useT();
   const user = useSession((s) => s.user)!;

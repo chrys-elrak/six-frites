@@ -1,11 +1,11 @@
 import { describe, expect, it } from "vitest";
-import { parseCommand, silentMessage } from "../src/commands.js";
+import { lockedMessage, parseCommand, silentMessage, typedMessage } from "../src/commands.js";
 
 describe("commands", () => {
   it("lists the commands a name could be", () => {
     expect(parseCommand("/")).toEqual({
       kind: "names",
-      names: ["giphy", "sticker", "silent", "emoji", "game", "play", "location", "schedule", "voice", "vanish"],
+      names: ["giphy", "sticker", "silent", "lock", "emoji", "game", "play", "location", "schedule", "voice", "vanish"],
     });
     expect(parseCommand("/st")).toEqual({ kind: "names", names: ["sticker"] });
     expect(parseCommand("/s")).toEqual({ kind: "names", names: ["sticker", "silent", "schedule"] });
@@ -42,6 +42,15 @@ describe("commands", () => {
     expect(silentMessage("/silent ")).toBe("");
     expect(silentMessage("/silent")).toBeNull();
     expect(silentMessage("see you /silent")).toBeNull();
+  });
+
+  it("finds the message to send locked", () => {
+    expect(lockedMessage("/lock my code is 4711")).toBe("my code is 4711");
+    expect(lockedMessage("/lock")).toBeNull();
+    expect(silentMessage("/lock hi")).toBeNull();
+    expect(typedMessage("/lock hi")).toBe("hi");
+    expect(typedMessage("/silent hi")).toBe("hi");
+    expect(typedMessage("/giphy hi")).toBeNull();
   });
 
   it("leaves plain messages alone", () => {

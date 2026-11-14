@@ -117,6 +117,14 @@ function Preview({ chat, meId }: { chat: ChatDTO; meId: string }) {
       </span>
     );
   }
+  if (m.codeLock?.locked) {
+    return (
+      <span className="inline-flex items-center gap-1">
+        {who}
+        <Lock className="size-3.5 shrink-0" /> {tr.summary.lockedMessage}
+      </span>
+    );
+  }
   if (m.type === "service") {
     return (
       <span className="inline-flex items-center gap-1">

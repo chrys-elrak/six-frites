@@ -226,7 +226,7 @@ const en = {
     errors: {
       WRONG_APP_LOCK_CODE: "That's not your app lock code.",
       APP_LOCK_REQUIRED: "Turn on the app lock first.",
-      RATE_LIMITED: "Too many tries. Wait a minute.",
+      RATE_LIMITED: "Too many tries. Try again later.",
       VALIDATION_FAILED: "Use 4 to 8 digits.",
     } as ByCode<"WRONG_APP_LOCK_CODE">,
   },
@@ -461,7 +461,7 @@ const fr: typeof en = {
     errors: {
       WRONG_APP_LOCK_CODE: "Ce n'est pas votre code de verrouillage.",
       APP_LOCK_REQUIRED: "Activez d'abord le verrouillage de l'app.",
-      RATE_LIMITED: "Trop de tentatives. Patientez une minute.",
+      RATE_LIMITED: "Trop de tentatives. Réessayez plus tard.",
       VALIDATION_FAILED: "Utilisez 4 à 8 chiffres.",
     },
   },
@@ -693,7 +693,7 @@ const mg: typeof en = {
     errors: {
       WRONG_APP_LOCK_CODE: "Tsy io no kaodin'ny hidinao.",
       APP_LOCK_REQUIRED: "Alefaso aloha ny hidin'ny app.",
-      RATE_LIMITED: "Be loatra ny andrana. Andraso iray minitra.",
+      RATE_LIMITED: "Be loatra ny andrana. Andramo indray any aoriana.",
       VALIDATION_FAILED: "Mampiasà isa 4 ka hatramin'ny 8.",
     },
   },

@@ -449,7 +449,7 @@ export class E2EE {
   async open(m: MessageDTO): Promise<Opened> {
     if (!m.encryption) return { status: "plain" };
     const spent = m.ephemeral?.expired && m.senderId !== this.userId;
-    if (m.deletedAt || m.ephemeral?.locked || m.ephemeral?.purged || spent) return { status: "unavailable", reason: "hidden" };
+    if (m.deletedAt || m.ephemeral?.locked || m.codeLock?.locked || m.ephemeral?.purged || spent) return { status: "unavailable", reason: "hidden" };
     const cached = await this.getJSON<Cached>(`plain:${m.id}`);
     if (cached && cached.editedAt === m.editedAt) {
       if (!m.encryption.backup) void this.queueBackup(m, cached.content);

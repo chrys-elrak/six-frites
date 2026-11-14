@@ -2,6 +2,20 @@
 
 What Six Frites News tells members after each deploy, newest first. CLAUDE.md says when to add a section and how.
 
+## 2026-11-14 09h53
+
+### en
+- Lock a message with a code: pick "Lock with code" in the + menu before you send text, a photo, a video, a voice message, a file or a place, or type /lock before a message. Everyone has to enter their own app lock code to open it, you included, every time, and it locks again as soon as it's closed. Nothing of it shows in the chat list or in notifications. Everything else still works on it, self-destruct included, and once it's open you can copy it, forward it (it arrives locked) or edit it if it's yours.
+- After 10 wrong app lock codes in a day, the code can't be entered again until the next day.
+
+### fr
+- Verrouillez un message par code : choisissez « Verrouiller par code » dans le menu + avant d'envoyer un texte, une photo, une vidéo, un message vocal, un fichier ou un lieu, ou tapez /lock avant un message. Tout le monde, vous compris, doit saisir son propre code de verrouillage pour l'ouvrir, à chaque fois, et il se verrouille dès qu'il est fermé. Rien n'en apparaît dans la liste des discussions ni dans les notifications. Tout le reste fonctionne toujours, l'autodestruction comprise, et une fois ouvert vous pouvez le copier, le transférer (il arrive verrouillé) ou le modifier s'il est à vous.
+- Après 10 codes de verrouillage erronés en une journée, le code ne peut plus être saisi avant le lendemain.
+
+### mg
+- Hidio amin'ny kaody ny hafatra: safidio ny « Hidiana amin'ny kaody » ao amin'ny menio + alohan'ny handefasanao soratra, sary, horonan-tsary, hafatra feo, rakitra na toerana, na soraty ny /lock alohan'ny hafatra. Ny rehetra, ianao koa, dia tsy maintsy mampiditra ny kaody fanidiany avy vao afaka manokatra azy, isaky ny mamaky, ary mihidy indray izy raha vao akatona. Tsy misy hita amin'ny lisitry ny resaka na amin'ny fampandrenesana. Mandeha foana ny zavatra hafa rehetra, anisan'izany ny famafana ho azy, ary rehefa voasokatra izy dia azonao adika, alefa amin'ny hafa (tonga voahidy izy) na ovaina raha anao.
+- Rehefa diso in-10 ny kaody fanidiana ao anatin'ny iray andro, dia tsy azo ampidirina intsony izy mandra-pahatongan'ny ampitso.
+
 ## 2026-11-14 09h20
 
 ### en

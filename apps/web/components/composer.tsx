@@ -15,7 +15,9 @@ import {
   attachCommands,
   type CommandName,
   parseCommand,
+  lockedMessage,
   silentMessage,
+  typedMessage,
   stripAudio,
   type CommentRule,
 } from "@six/shared";
@@ -37,6 +39,7 @@ import {
   ImagePlus,
   ListChecks,
   ChartBar,
+  Lock,
   MapPin,
   Music,
   NotebookPen,
@@ -129,6 +132,7 @@ const COMMAND_ICONS: Record<CommandName, LucideIcon> = {
   giphy: Film,
   sticker: Sticker,
   silent: BellOff,
+  lock: Lock,
   emoji: Smile,
   game: Gamepad2,
   play: Dices,
@@ -224,6 +228,7 @@ export function Composer({
     useComposerMode.getState().hand(slot, undefined);
   }, [handed, slot]);
   const [ephemeral, setEphemeral] = useState<EphemeralInput | null>(null);
+  const [codeLock, setCodeLock] = useState(false);
   const closeCamera = useCallback(() => setCamera(false), []);
   const [scheduling, setScheduling] = useState<"now" | "next" | null>(null);
   const [sendAt, setSendAt] = useState<Date | null>(null);
@@ -260,15 +265,17 @@ export function Composer({
       text: "",
       replyTo: mode?.kind === "reply" ? mode.message : undefined,
       ephemeral: chosen,
+      codeLock,
       spoiler,
       file: { blob: file, kind: "video_note", name: file.name, mime: file.type || "video/webm" },
     });
     setEphemeral(null);
+    setCodeLock(false);
     if (mode) cancel();
     onSent();
   }
 
-  function sendSpecial(extra: Pick<Draft, "location" | "checklist" | "poll" | "pollVisible" | "game" | "ephemeral">) {
+  function sendSpecial(extra: Pick<Draft, "location" | "checklist" | "poll" | "pollVisible" | "game" | "ephemeral" | "codeLock">) {
     if (!realtime) return;
     queue({
       text: "",
@@ -303,6 +310,12 @@ export function Composer({
     ...(chat?.group ? [{ label: tr.composer.poll, icon: ChartBar, color: "#0ea5e9", onSelect: () => setWritingPoll(true) }] : []),
     { label: tr.composer.game, icon: Gamepad2, color: "#a855f7", onSelect: () => setStartingGame(true) },
     { label: tr.composer.scheduleMessage, icon: CalendarClock, color: "#eab308", onSelect: () => setScheduling("next") },
+    {
+      label: tr.composer.lockWithCode,
+      icon: Lock,
+      color: "#78716c",
+      onSelect: () => setCodeLock(true),
+    },
   ];
   const commandActions: PanelItem[] = attachCommands(!!chat?.group).map((name) => ({
     label: `/${name}`,
@@ -364,7 +377,7 @@ export function Composer({
       setCaret(at);
       requestAnimationFrame(() => ref.current?.setSelectionRange(at, at));
     },
-    !(parseCommand(text) && silentMessage(text) === null),
+    !(parseCommand(text) && typedMessage(text) === null),
   );
 
   const mention = useMentionSuggestions(text, caret, chat?.group ? chat.members : null, meId, (value, at) => {
@@ -439,8 +452,9 @@ export function Composer({
   }, [chatId]);
 
   const silent = editing ? null : silentMessage(text);
-  const commanding = silent === null && parseCommand(text) !== null;
-  const parsed = parseMarkup(emojifyEnd(silent ?? text));
+  const locked = editing ? null : lockedMessage(text);
+  const commanding = silent === null && locked === null && parseCommand(text) !== null;
+  const parsed = parseMarkup(emojifyEnd(silent ?? locked ?? text));
   const captionOnly = !!editing && (!!editing.attachment || (mode?.kind === "edit" && !!mode.photo));
   const canSubmit = (parsed.text.length > 0 || captionOnly) && realtime !== null && !saving;
   const sendPress = useLongPress(() => canSubmit && !editing && setScheduling("now"));
@@ -482,11 +496,13 @@ export function Composer({
       text: parsed.text,
       entities: parsed.entities,
       replyTo: mode?.kind === "reply" ? mode.message : undefined,
-      ephemeral,
+      ephemeral: locked === null ? ephemeral : null,
+      codeLock: locked !== null || codeLock,
       file,
       silent: silent !== null,
     });
     setEphemeral(null);
+    setCodeLock(false);
     useDrafts.getState().set(slot, "");
     setText("");
     if (mode) cancel();
@@ -551,12 +567,14 @@ export function Composer({
         replyTo: first && mode?.kind === "reply" ? mode.message : undefined,
         spoiler: hidden && (kind === "image" || kind === "video"),
         ephemeral: chosen,
+        codeLock,
         file: { blob: file, kind, name: file.name || "file", mime: file.type || "application/octet-stream" },
       });
     });
     useDrafts.getState().set(slot, "");
     setText("");
     setEphemeral(null);
+    setCodeLock(false);
     if (mode) cancel();
     onSent();
   }
@@ -744,6 +762,20 @@ export function Composer({
               onClick={() => setEphemeral(null)}
               aria-label={tr.composer.turnOffSelfDestruct}
               className="grid size-7 place-items-center rounded-full hover:bg-orange-500/10"
+            >
+              <X className="size-4" />
+            </button>
+          </div>
+        )}
+        {codeLock && !editing && (
+          <div className="flex items-center gap-2 px-1 text-sm text-stone-600 dark:text-stone-300">
+            <Lock className="size-4" />
+            <span className="flex-1">{tr.composer.lockedRule}</span>
+            <button
+              type="button"
+              onClick={() => setCodeLock(false)}
+              aria-label={tr.composer.dontLock}
+              className="grid size-7 place-items-center rounded-full hover:bg-stone-500/10"
             >
               <X className="size-4" />
             </button>
@@ -1137,8 +1169,9 @@ export function Composer({
           onClose={() => setAskLocation(false)}
           onSend={(location, chosen) => {
             setAskLocation(false);
-            sendSpecial({ location, ephemeral: chosen });
+            sendSpecial({ location, ephemeral: chosen, codeLock });
             setEphemeral(null);
+            setCodeLock(false);
           }}
         />
       )}

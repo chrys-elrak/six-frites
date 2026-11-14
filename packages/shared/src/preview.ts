@@ -117,13 +117,14 @@ export function shownType(m: Pick<MessageDTO, "type" | "attachment"> & { file?: 
 }
 
 /**
- * A one-line description of a message for chat previews and notifications. Never reveals spoilers
- * or self-destructing content.
+ * A one-line description of a message for chat previews and notifications. Never reveals spoilers,
+ * self-destructing content or a message locked with a code.
  */
 export function previewText(m: MessageDTO & { file?: { sticker?: boolean } }, t: Dict) {
   const type = shownType(m);
   if (type === "service") return serviceText(m, t);
   if (m.ephemeral) return t.summary.selfDestructing;
+  if (m.codeLock?.locked) return `🔒 ${t.summary.lockedMessage}`;
   if (m.deletedAt) return t.summary.messageDeleted;
   if (m.bump) return m.replyTo?.text ? t.summary.bumpedText(m.replyTo.text) : t.summary.bumped;
   if (type === "sticker") return m.sticker ? `${m.sticker.emoji} ${t.summary.kinds.sticker}` : t.summary.kinds.sticker;

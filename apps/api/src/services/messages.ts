@@ -47,6 +47,7 @@ import { deliverResealPush, queuePush, queueReactionPush } from "./push.js";
 import { toStickerDTO } from "./stickers.js";
 import { claimForMessage, purgeUploads, toAttachmentDTO } from "./uploads.js";
 import { notify } from "./notifications.js";
+import { requireAppLock } from "./users.js";
 
 export const messageInclude = {
   replyTo: true,
@@ -101,7 +102,7 @@ export function toReplyPreview(r: Message): ReplyPreview {
     senderId: r.senderId,
     type: r.type as MessageType,
     text:
-      r.deletedAt || r.expiredAt || isEphemeral(r) || r.text === null
+      r.deletedAt || r.expiredAt || isEphemeral(r) || r.codeLock || r.text === null
         ? null
         : maskSpoilers(r.text, entitiesOf(r)).slice(0, SNIPPET),
     spoiler: r.spoiler,
@@ -109,6 +110,7 @@ export function toReplyPreview(r: Message): ReplyPreview {
     deleted: r.deletedAt !== null,
     encrypted: r.encrypted,
     sentAt: r.createdAt.toISOString(),
+    ...(r.codeLock && { locked: true }),
   };
 }
 
@@ -129,17 +131,15 @@ function encryptionFor(m: MessageRow, viewerId: string, hidden: boolean): Encryp
   };
 }
 
-/**
- * Builds a message as `viewerId` may see it. Self-destructing messages are locked for everyone but
- * the sender: no text and no file links, until POST /v1/messages/{id}/view opens them (`reveal`).
- */
 function toStoryReply({ imageKey, ...story }: StoredStoryReply): StoryReply {
   return { ...story, imageUrl: imageKey ? presignGet(imageKey) : null };
 }
 
 /**
- * A message as `viewerId` sees it. With `hiddenBefore`, the viewer's own cutoff (in a group, when they joined), a
- * quote of something older keeps its place but not its text.
+ * A message as `viewerId` sees it. Self-destructing messages are locked for everyone but the sender, and messages
+ * locked with a code for everyone, the sender included: no text, no file links and no envelopes, until
+ * POST /v1/messages/{id}/view or /unlock opens them (`reveal`). With `hiddenBefore`, the viewer's own cutoff (in a group, when they joined), a quote of something older
+ * keeps its place but not its text.
  */
 export function toMessageDTO(m: MessageRow, viewerId: string, opts: { reveal?: boolean; hiddenBefore?: Date | null } = {}): MessageDTO {
   const r = m.replyTo;
@@ -148,7 +148,8 @@ export function toMessageDTO(m: MessageRow, viewerId: string, opts: { reveal?: b
   const expired = m.expiredAt !== null;
   const purged = m.purgedAt !== null;
   const locked = ephemeral && !expired && !isSender && !opts.reveal;
-  const hideContent = m.deletedAt !== null || purged || locked || (expired && !isSender);
+  const codeLocked = m.codeLock && !opts.reveal;
+  const hideContent = m.deletedAt !== null || purged || locked || codeLocked || (expired && !isSender);
   const others = m.views.filter((v) => v.userId !== m.senderId);
   const mine = m.views.find((v) => v.userId === viewerId);
   const firstView =
@@ -169,7 +170,7 @@ export function toMessageDTO(m: MessageRow, viewerId: string, opts: { reveal?: b
     attachment:
       hideContent || !m.attachment
         ? null
-        : toAttachmentDTO(m.attachment, ephemeral && opts.reveal ? EPHEMERAL_LINK_SECONDS : undefined),
+        : toAttachmentDTO(m.attachment, (ephemeral || m.codeLock) && opts.reveal ? EPHEMERAL_LINK_SECONDS : undefined),
     sticker: hideContent || !m.sticker ? null : toStickerDTO(m.sticker),
     ephemeral: ephemeral
       ? {
@@ -188,6 +189,7 @@ export function toMessageDTO(m: MessageRow, viewerId: string, opts: { reveal?: b
               : null,
         }
       : null,
+    codeLock: m.codeLock ? { locked: codeLocked } : null,
     groupId: m.groupId,
     threadId: m.threadId,
     thread:
@@ -289,7 +291,7 @@ export async function listMessages(userId: string, chatId: string, q: MessageLis
     chatId,
     threadId: q.thread ?? null,
     ...visibleTo(userId, member.clearedAt),
-    ...(q.only && { ...SHARED[q.only], deletedAt: null, maxViews: null, ttlSeconds: null }),
+    ...(q.only && { ...SHARED[q.only], deletedAt: null, maxViews: null, ttlSeconds: null, codeLock: false }),
     ...((q.from || q.to) && { createdAt: { gte: q.from, lt: q.to } }),
   };
   const target = q.until ? await prisma.message.findFirst({ where: { id: q.until, chatId } }) : null;
@@ -474,6 +476,9 @@ export async function createMessage(
     throw new AppError("NOT_GROUP_ADMIN", "Only a group's owner and admins can post with comments closed");
   }
   if (content) checkEncryption(chat, content, upload);
+  if (content?.codeLock && upload && !LOCKABLE_FILES.includes(upload.kind)) {
+    throw new AppError("VALIDATION_FAILED", "Only text, files and locations can be locked with a code");
+  }
   if (content && (await tx.chatMember.count({ where: { chatId, user: { guest: true } } }))) checkSupport(content, upload);
 
   const encrypted = content?.encrypted;
@@ -519,6 +524,7 @@ export async function createMessage(
       silent: input.silent ?? false,
       bump: content?.bump ?? false,
       vanish: !!content && chat.vanish,
+      codeLock: !!content?.codeLock,
       maxViews: content?.ephemeral?.maxViews ?? null,
       ttlSeconds: content?.ephemeral?.ttlSeconds ?? null,
       replyToId: content?.replyToId ?? null,
@@ -591,6 +597,8 @@ export async function createMessage(
   }
   return { message, recipients: members.filter((id) => id !== userId) };
 }
+
+const LOCKABLE_FILES = ["image", "video", "video_note", "voice", "file"];
 
 const kindOf = (c: SendMessageInput) =>
   c.type ?? (c.location ? "location" : c.checklist ? "checklist" : c.poll ? "poll" : c.game ? "game" : "text");
@@ -1187,8 +1195,11 @@ export async function resendMessage(userId: string, messageId: string): Promise<
   return dto;
 }
 
-/** Opens a message for its recipient, counting the view and starting any self-destruct timer. */
-export async function viewMessage(userId: string, messageId: string): Promise<ViewMessageResult> {
+/**
+ * Opens a message for its recipient, counting the view and starting any self-destruct timer. A message locked with a
+ * code only opens through unlockMessage, which checks the code first and then comes here `unlocked`.
+ */
+export async function viewMessage(userId: string, messageId: string, unlocked = false): Promise<ViewMessageResult> {
   return withEvents(async (tx, emit) => {
     await tx.$executeRaw`SELECT 1 FROM "Message" WHERE id = ${messageId} FOR UPDATE`;
     const m = await tx.message.findUnique({ where: { id: messageId }, include: messageInclude });
@@ -1197,6 +1208,7 @@ export async function viewMessage(userId: string, messageId: string): Promise<Vi
       throw new AppError("MESSAGE_NOT_FOUND");
     });
     if (m.expiredAt) throw new AppError("MESSAGE_EXPIRED");
+    if (m.codeLock && !unlocked) throw new AppError("FORBIDDEN", "Open it with your code at POST /v1/messages/{id}/unlock");
     if (!isEphemeral(m) || m.senderId === userId) {
       return { message: toMessageDTO(m, userId, { reveal: true }), expiresAt: null };
     }
@@ -1227,4 +1239,20 @@ export async function viewMessage(userId: string, messageId: string): Promise<Vi
     }
     return { message, expiresAt: expiresAt?.toISOString() ?? null };
   });
+}
+
+/**
+ * Opens a message locked with a code for one member, who must enter their own app lock code each time: nothing is
+ * stored, the content only travels in this answer. Its sender too. A wrong code is refused before anything counts, and
+ * a self-destructing one is then opened as by viewMessage, which counts the view.
+ */
+export async function unlockMessage(userId: string, messageId: string, code: string): Promise<ViewMessageResult> {
+  const m = await prisma.message.findUnique({ where: { id: messageId }, include: messageInclude });
+  const member = m && (await prisma.chatMember.findUnique({ where: { chatId_userId: { chatId: m.chatId, userId } } }));
+  const visible = member && (await prisma.message.count({ where: { id: messageId, ...visibleTo(userId, member.clearedAt) } }));
+  if (!m || !visible || m.deletedAt) throw new AppError("MESSAGE_NOT_FOUND");
+  if (!m.codeLock) return { message: toMessageDTO(m, userId, { hiddenBefore: member.clearedAt }), expiresAt: null };
+  await requireAppLock(userId, code);
+  if (isEphemeral(m)) return viewMessage(userId, messageId, true);
+  return { message: toMessageDTO(m, userId, { reveal: true, hiddenBefore: member.clearedAt }), expiresAt: null };
 }

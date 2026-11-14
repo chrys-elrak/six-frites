@@ -145,6 +145,15 @@ function Preview({ chat, meId, color, bold }: { chat: ChatDTO; meId: string; col
       chat.group ? serviceSentence(m, mine ? null : senderName(chat, m.senderId, tr), tr) : serviceText(m, tr, mine),
     );
   }
+  if (m.codeLock?.locked) {
+    return line(
+      <>
+        {you ? <Text style={[styles.preview, ink]}>{you}</Text> : null}
+        <Lock size={14} color={color} />
+      </>,
+      tr.summary.lockedMessage,
+    );
+  }
   if (m.undecryptable || m.decrypting) {
     return line(<Lock size={14} color={color} />, m.decrypting ? tr.chats.decrypting : tr.chats.encryptedMessage, true);
   }

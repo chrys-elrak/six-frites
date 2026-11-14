@@ -39,6 +39,7 @@ export interface Draft {
   silent?: boolean;
   bump?: boolean;
   ephemeral?: EphemeralInput | null;
+  codeLock?: boolean;
   file?: { blob: Blob; kind: UploadKind; name: string; mime: string; sticker?: boolean; disguised?: boolean };
   gif?: GifDTO;
   sticker?: StickerDTO;
@@ -53,9 +54,9 @@ export interface Draft {
   sendAt?: Date | null;
 }
 
-/** What a reply shows of the message it quotes: no spoilers, nothing from self-destructing messages. */
+/** What a reply shows of the message it quotes: no spoilers, nothing from self-destructing or locked messages. */
 export const replyQuote = (m: MessageDTO) =>
-  m.text === null || m.ephemeral ? null : maskSpoilers(m.text, m.entities);
+  m.text === null || m.ephemeral || m.codeLock ? null : maskSpoilers(m.text, m.entities);
 
 async function imageSize(blob: Blob) {
   try {
@@ -142,6 +143,7 @@ export async function deliver(qc: QueryClient, realtime: Realtime, pending: Pend
       replyToId: pending.replyTo?.id,
       storyId: pending.story?.id,
       ephemeral: pending.ephemeral ?? undefined,
+      codeLock: pending.codeLock || undefined,
       groupId: pending.groupId,
       threadId: pending.threadId,
       ...pending.comments,
@@ -261,6 +263,7 @@ export async function queueMessage(qc: QueryClient, realtime: Realtime, chatId: 
           deleted: false,
           encrypted: replyTo.encryption !== null,
           sentAt: replyTo.createdAt,
+          ...(replyTo.codeLock && { locked: true }),
         }
       : null,
     story: draft.story,
@@ -268,6 +271,7 @@ export async function queueMessage(qc: QueryClient, realtime: Realtime, chatId: 
     silent: draft.silent,
     bump: draft.bump,
     ephemeral: draft.ephemeral ?? null,
+    codeLock: draft.codeLock,
     attachment: file
       ? {
           kind: file.kind,
@@ -323,6 +327,7 @@ export async function forwardMessages(qc: QueryClient, realtime: Realtime, chatI
       spoiler: m.spoiler,
       location: m.location ?? undefined,
       checklist: m.checklist ?? undefined,
+      codeLock: !!m.codeLock,
       groupId,
       file: file
         ? { blob: file, kind: m.attachment!.kind, name: file.name, mime: file.type, sticker: m.file?.sticker, disguised: m.file?.disguised }

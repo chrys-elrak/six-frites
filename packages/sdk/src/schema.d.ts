@@ -4976,6 +4976,11 @@ export interface paths {
                                      */
                                     resendUntil: string | null;
                                 } | null;
+                                /** @description Its sender locked it: everyone, the sender included, needs their own app lock code to open it, each time. Null when it isn't locked */
+                                codeLock?: {
+                                    /** @description Content is withheld for you; open it with your app lock code at POST /v1/messages/{id}/unlock */
+                                    locked: boolean;
+                                } | null;
                                 /** @description Photos and videos sent together share it and show as one album */
                                 groupId: string | null;
                                 /** @description In a group, the message this one comments on; it then shows only in that message's comments */
@@ -5010,6 +5015,8 @@ export interface paths {
                                      * @description When the quoted message was sent
                                      */
                                     sentAt: string;
+                                    /** @description The quoted message is locked with a code, so its text never shows here */
+                                    locked?: boolean;
                                 } | null;
                                 /** @description The story or note a message answers, as it was when they answered: it may be gone since */
                                 story: {
@@ -5031,7 +5038,7 @@ export interface paths {
                                      */
                                     imageUrl: string | null;
                                 } | null;
-                                /** @description What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `pin` means they pinned a message; `shared_to` means they shared a message from this chat to their story or as their note; `resend_request` means they couldn't open an encrypted message and asked the sender for it again; `screenshot` means they took a screenshot of the chat (only detected on the web, and not everywhere); `call` logs a call the sender made; `live_invite` is posted in your chat when `from` asks you to a live game; `live_result` is how a live game you played alone against Six Frites Game ended, for you; in a group, `group_created`, `joined`, `left`, `removed`, `renamed` and `group_photo` tell what happened to the group and to whom (`name` is how they showed there) */
+                                /** @description What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `pin` means they pinned a message; `shared_to` means they shared a message from this chat to their story or as their note; `resend_request` means they couldn't open an encrypted message and asked the sender for it again; `screenshot` means they took a screenshot of the chat, or only tried to when `blocked` (the app stops them; detected on the web, on iOS and on Android 14 and up); `call` logs a call the sender made; `live_invite` is posted in your chat when `from` asks you to a live game; `live_result` is how a live game you played alone against Six Frites Game ended, for you; in a group, `group_created`, `joined`, `left`, `removed`, `renamed` and `group_photo` tell what happened to the group and to whom (`name` is how they showed there) */
                                 action: ({
                                     /** @enum {string} */
                                     type: "auto_delete";
@@ -5053,6 +5060,7 @@ export interface paths {
                                 } | {
                                     /** @enum {string} */
                                     type: "screenshot";
+                                    blocked?: boolean;
                                 } | {
                                     /** @enum {string} */
                                     type: "resend_request";
@@ -5441,6 +5449,11 @@ export interface paths {
                                      */
                                     resendUntil: string | null;
                                 } | null;
+                                /** @description Its sender locked it: everyone, the sender included, needs their own app lock code to open it, each time. Null when it isn't locked */
+                                codeLock?: {
+                                    /** @description Content is withheld for you; open it with your app lock code at POST /v1/messages/{id}/unlock */
+                                    locked: boolean;
+                                } | null;
                                 /** @description Photos and videos sent together share it and show as one album */
                                 groupId: string | null;
                                 /** @description In a group, the message this one comments on; it then shows only in that message's comments */
@@ -5475,6 +5488,8 @@ export interface paths {
                                      * @description When the quoted message was sent
                                      */
                                     sentAt: string;
+                                    /** @description The quoted message is locked with a code, so its text never shows here */
+                                    locked?: boolean;
                                 } | null;
                                 /** @description The story or note a message answers, as it was when they answered: it may be gone since */
                                 story: {
@@ -5496,7 +5511,7 @@ export interface paths {
                                      */
                                     imageUrl: string | null;
                                 } | null;
-                                /** @description What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `pin` means they pinned a message; `shared_to` means they shared a message from this chat to their story or as their note; `resend_request` means they couldn't open an encrypted message and asked the sender for it again; `screenshot` means they took a screenshot of the chat (only detected on the web, and not everywhere); `call` logs a call the sender made; `live_invite` is posted in your chat when `from` asks you to a live game; `live_result` is how a live game you played alone against Six Frites Game ended, for you; in a group, `group_created`, `joined`, `left`, `removed`, `renamed` and `group_photo` tell what happened to the group and to whom (`name` is how they showed there) */
+                                /** @description What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `pin` means they pinned a message; `shared_to` means they shared a message from this chat to their story or as their note; `resend_request` means they couldn't open an encrypted message and asked the sender for it again; `screenshot` means they took a screenshot of the chat, or only tried to when `blocked` (the app stops them; detected on the web, on iOS and on Android 14 and up); `call` logs a call the sender made; `live_invite` is posted in your chat when `from` asks you to a live game; `live_result` is how a live game you played alone against Six Frites Game ended, for you; in a group, `group_created`, `joined`, `left`, `removed`, `renamed` and `group_photo` tell what happened to the group and to whom (`name` is how they showed there) */
                                 action: ({
                                     /** @enum {string} */
                                     type: "auto_delete";
@@ -5518,6 +5533,7 @@ export interface paths {
                                 } | {
                                     /** @enum {string} */
                                     type: "screenshot";
+                                    blocked?: boolean;
                                 } | {
                                     /** @enum {string} */
                                     type: "resend_request";
@@ -5965,6 +5981,11 @@ export interface paths {
                                  */
                                 resendUntil: string | null;
                             } | null;
+                            /** @description Its sender locked it: everyone, the sender included, needs their own app lock code to open it, each time. Null when it isn't locked */
+                            codeLock?: {
+                                /** @description Content is withheld for you; open it with your app lock code at POST /v1/messages/{id}/unlock */
+                                locked: boolean;
+                            } | null;
                             /** @description Photos and videos sent together share it and show as one album */
                             groupId: string | null;
                             /** @description In a group, the message this one comments on; it then shows only in that message's comments */
@@ -5999,6 +6020,8 @@ export interface paths {
                                  * @description When the quoted message was sent
                                  */
                                 sentAt: string;
+                                /** @description The quoted message is locked with a code, so its text never shows here */
+                                locked?: boolean;
                             } | null;
                             /** @description The story or note a message answers, as it was when they answered: it may be gone since */
                             story: {
@@ -6020,7 +6043,7 @@ export interface paths {
                                  */
                                 imageUrl: string | null;
                             } | null;
-                            /** @description What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `pin` means they pinned a message; `shared_to` means they shared a message from this chat to their story or as their note; `resend_request` means they couldn't open an encrypted message and asked the sender for it again; `screenshot` means they took a screenshot of the chat (only detected on the web, and not everywhere); `call` logs a call the sender made; `live_invite` is posted in your chat when `from` asks you to a live game; `live_result` is how a live game you played alone against Six Frites Game ended, for you; in a group, `group_created`, `joined`, `left`, `removed`, `renamed` and `group_photo` tell what happened to the group and to whom (`name` is how they showed there) */
+                            /** @description What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `pin` means they pinned a message; `shared_to` means they shared a message from this chat to their story or as their note; `resend_request` means they couldn't open an encrypted message and asked the sender for it again; `screenshot` means they took a screenshot of the chat, or only tried to when `blocked` (the app stops them; detected on the web, on iOS and on Android 14 and up); `call` logs a call the sender made; `live_invite` is posted in your chat when `from` asks you to a live game; `live_result` is how a live game you played alone against Six Frites Game ended, for you; in a group, `group_created`, `joined`, `left`, `removed`, `renamed` and `group_photo` tell what happened to the group and to whom (`name` is how they showed there) */
                             action: ({
                                 /** @enum {string} */
                                 type: "auto_delete";
@@ -6042,6 +6065,7 @@ export interface paths {
                             } | {
                                 /** @enum {string} */
                                 type: "screenshot";
+                                blocked?: boolean;
                             } | {
                                 /** @enum {string} */
                                 type: "resend_request";
@@ -6491,6 +6515,11 @@ export interface paths {
                                      */
                                     resendUntil: string | null;
                                 } | null;
+                                /** @description Its sender locked it: everyone, the sender included, needs their own app lock code to open it, each time. Null when it isn't locked */
+                                codeLock?: {
+                                    /** @description Content is withheld for you; open it with your app lock code at POST /v1/messages/{id}/unlock */
+                                    locked: boolean;
+                                } | null;
                                 /** @description Photos and videos sent together share it and show as one album */
                                 groupId: string | null;
                                 /** @description In a group, the message this one comments on; it then shows only in that message's comments */
@@ -6525,6 +6554,8 @@ export interface paths {
                                      * @description When the quoted message was sent
                                      */
                                     sentAt: string;
+                                    /** @description The quoted message is locked with a code, so its text never shows here */
+                                    locked?: boolean;
                                 } | null;
                                 /** @description The story or note a message answers, as it was when they answered: it may be gone since */
                                 story: {
@@ -6546,7 +6577,7 @@ export interface paths {
                                      */
                                     imageUrl: string | null;
                                 } | null;
-                                /** @description What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `pin` means they pinned a message; `shared_to` means they shared a message from this chat to their story or as their note; `resend_request` means they couldn't open an encrypted message and asked the sender for it again; `screenshot` means they took a screenshot of the chat (only detected on the web, and not everywhere); `call` logs a call the sender made; `live_invite` is posted in your chat when `from` asks you to a live game; `live_result` is how a live game you played alone against Six Frites Game ended, for you; in a group, `group_created`, `joined`, `left`, `removed`, `renamed` and `group_photo` tell what happened to the group and to whom (`name` is how they showed there) */
+                                /** @description What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `pin` means they pinned a message; `shared_to` means they shared a message from this chat to their story or as their note; `resend_request` means they couldn't open an encrypted message and asked the sender for it again; `screenshot` means they took a screenshot of the chat, or only tried to when `blocked` (the app stops them; detected on the web, on iOS and on Android 14 and up); `call` logs a call the sender made; `live_invite` is posted in your chat when `from` asks you to a live game; `live_result` is how a live game you played alone against Six Frites Game ended, for you; in a group, `group_created`, `joined`, `left`, `removed`, `renamed` and `group_photo` tell what happened to the group and to whom (`name` is how they showed there) */
                                 action: ({
                                     /** @enum {string} */
                                     type: "auto_delete";
@@ -6568,6 +6599,7 @@ export interface paths {
                                 } | {
                                     /** @enum {string} */
                                     type: "screenshot";
+                                    blocked?: boolean;
                                 } | {
                                     /** @enum {string} */
                                     type: "resend_request";
@@ -6956,6 +6988,11 @@ export interface paths {
                                      */
                                     resendUntil: string | null;
                                 } | null;
+                                /** @description Its sender locked it: everyone, the sender included, needs their own app lock code to open it, each time. Null when it isn't locked */
+                                codeLock?: {
+                                    /** @description Content is withheld for you; open it with your app lock code at POST /v1/messages/{id}/unlock */
+                                    locked: boolean;
+                                } | null;
                                 /** @description Photos and videos sent together share it and show as one album */
                                 groupId: string | null;
                                 /** @description In a group, the message this one comments on; it then shows only in that message's comments */
@@ -6990,6 +7027,8 @@ export interface paths {
                                      * @description When the quoted message was sent
                                      */
                                     sentAt: string;
+                                    /** @description The quoted message is locked with a code, so its text never shows here */
+                                    locked?: boolean;
                                 } | null;
                                 /** @description The story or note a message answers, as it was when they answered: it may be gone since */
                                 story: {
@@ -7011,7 +7050,7 @@ export interface paths {
                                      */
                                     imageUrl: string | null;
                                 } | null;
-                                /** @description What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `pin` means they pinned a message; `shared_to` means they shared a message from this chat to their story or as their note; `resend_request` means they couldn't open an encrypted message and asked the sender for it again; `screenshot` means they took a screenshot of the chat (only detected on the web, and not everywhere); `call` logs a call the sender made; `live_invite` is posted in your chat when `from` asks you to a live game; `live_result` is how a live game you played alone against Six Frites Game ended, for you; in a group, `group_created`, `joined`, `left`, `removed`, `renamed` and `group_photo` tell what happened to the group and to whom (`name` is how they showed there) */
+                                /** @description What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `pin` means they pinned a message; `shared_to` means they shared a message from this chat to their story or as their note; `resend_request` means they couldn't open an encrypted message and asked the sender for it again; `screenshot` means they took a screenshot of the chat, or only tried to when `blocked` (the app stops them; detected on the web, on iOS and on Android 14 and up); `call` logs a call the sender made; `live_invite` is posted in your chat when `from` asks you to a live game; `live_result` is how a live game you played alone against Six Frites Game ended, for you; in a group, `group_created`, `joined`, `left`, `removed`, `renamed` and `group_photo` tell what happened to the group and to whom (`name` is how they showed there) */
                                 action: ({
                                     /** @enum {string} */
                                     type: "auto_delete";
@@ -7033,6 +7072,7 @@ export interface paths {
                                 } | {
                                     /** @enum {string} */
                                     type: "screenshot";
+                                    blocked?: boolean;
                                 } | {
                                     /** @enum {string} */
                                     type: "resend_request";
@@ -7519,6 +7559,11 @@ export interface paths {
                                      */
                                     resendUntil: string | null;
                                 } | null;
+                                /** @description Its sender locked it: everyone, the sender included, needs their own app lock code to open it, each time. Null when it isn't locked */
+                                codeLock?: {
+                                    /** @description Content is withheld for you; open it with your app lock code at POST /v1/messages/{id}/unlock */
+                                    locked: boolean;
+                                } | null;
                                 /** @description Photos and videos sent together share it and show as one album */
                                 groupId: string | null;
                                 /** @description In a group, the message this one comments on; it then shows only in that message's comments */
@@ -7553,6 +7598,8 @@ export interface paths {
                                      * @description When the quoted message was sent
                                      */
                                     sentAt: string;
+                                    /** @description The quoted message is locked with a code, so its text never shows here */
+                                    locked?: boolean;
                                 } | null;
                                 /** @description The story or note a message answers, as it was when they answered: it may be gone since */
                                 story: {
@@ -7574,7 +7621,7 @@ export interface paths {
                                      */
                                     imageUrl: string | null;
                                 } | null;
-                                /** @description What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `pin` means they pinned a message; `shared_to` means they shared a message from this chat to their story or as their note; `resend_request` means they couldn't open an encrypted message and asked the sender for it again; `screenshot` means they took a screenshot of the chat (only detected on the web, and not everywhere); `call` logs a call the sender made; `live_invite` is posted in your chat when `from` asks you to a live game; `live_result` is how a live game you played alone against Six Frites Game ended, for you; in a group, `group_created`, `joined`, `left`, `removed`, `renamed` and `group_photo` tell what happened to the group and to whom (`name` is how they showed there) */
+                                /** @description What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `pin` means they pinned a message; `shared_to` means they shared a message from this chat to their story or as their note; `resend_request` means they couldn't open an encrypted message and asked the sender for it again; `screenshot` means they took a screenshot of the chat, or only tried to when `blocked` (the app stops them; detected on the web, on iOS and on Android 14 and up); `call` logs a call the sender made; `live_invite` is posted in your chat when `from` asks you to a live game; `live_result` is how a live game you played alone against Six Frites Game ended, for you; in a group, `group_created`, `joined`, `left`, `removed`, `renamed` and `group_photo` tell what happened to the group and to whom (`name` is how they showed there) */
                                 action: ({
                                     /** @enum {string} */
                                     type: "auto_delete";
@@ -7596,6 +7643,7 @@ export interface paths {
                                 } | {
                                     /** @enum {string} */
                                     type: "screenshot";
+                                    blocked?: boolean;
                                 } | {
                                     /** @enum {string} */
                                     type: "resend_request";
@@ -7984,6 +8032,11 @@ export interface paths {
                                      */
                                     resendUntil: string | null;
                                 } | null;
+                                /** @description Its sender locked it: everyone, the sender included, needs their own app lock code to open it, each time. Null when it isn't locked */
+                                codeLock?: {
+                                    /** @description Content is withheld for you; open it with your app lock code at POST /v1/messages/{id}/unlock */
+                                    locked: boolean;
+                                } | null;
                                 /** @description Photos and videos sent together share it and show as one album */
                                 groupId: string | null;
                                 /** @description In a group, the message this one comments on; it then shows only in that message's comments */
@@ -8018,6 +8071,8 @@ export interface paths {
                                      * @description When the quoted message was sent
                                      */
                                     sentAt: string;
+                                    /** @description The quoted message is locked with a code, so its text never shows here */
+                                    locked?: boolean;
                                 } | null;
                                 /** @description The story or note a message answers, as it was when they answered: it may be gone since */
                                 story: {
@@ -8039,7 +8094,7 @@ export interface paths {
                                      */
                                     imageUrl: string | null;
                                 } | null;
-                                /** @description What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `pin` means they pinned a message; `shared_to` means they shared a message from this chat to their story or as their note; `resend_request` means they couldn't open an encrypted message and asked the sender for it again; `screenshot` means they took a screenshot of the chat (only detected on the web, and not everywhere); `call` logs a call the sender made; `live_invite` is posted in your chat when `from` asks you to a live game; `live_result` is how a live game you played alone against Six Frites Game ended, for you; in a group, `group_created`, `joined`, `left`, `removed`, `renamed` and `group_photo` tell what happened to the group and to whom (`name` is how they showed there) */
+                                /** @description What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `pin` means they pinned a message; `shared_to` means they shared a message from this chat to their story or as their note; `resend_request` means they couldn't open an encrypted message and asked the sender for it again; `screenshot` means they took a screenshot of the chat, or only tried to when `blocked` (the app stops them; detected on the web, on iOS and on Android 14 and up); `call` logs a call the sender made; `live_invite` is posted in your chat when `from` asks you to a live game; `live_result` is how a live game you played alone against Six Frites Game ended, for you; in a group, `group_created`, `joined`, `left`, `removed`, `renamed` and `group_photo` tell what happened to the group and to whom (`name` is how they showed there) */
                                 action: ({
                                     /** @enum {string} */
                                     type: "auto_delete";
@@ -8061,6 +8116,7 @@ export interface paths {
                                 } | {
                                     /** @enum {string} */
                                     type: "screenshot";
+                                    blocked?: boolean;
                                 } | {
                                     /** @enum {string} */
                                     type: "resend_request";
@@ -8545,6 +8601,11 @@ export interface paths {
                                          */
                                         resendUntil: string | null;
                                     } | null;
+                                    /** @description Its sender locked it: everyone, the sender included, needs their own app lock code to open it, each time. Null when it isn't locked */
+                                    codeLock?: {
+                                        /** @description Content is withheld for you; open it with your app lock code at POST /v1/messages/{id}/unlock */
+                                        locked: boolean;
+                                    } | null;
                                     /** @description Photos and videos sent together share it and show as one album */
                                     groupId: string | null;
                                     /** @description In a group, the message this one comments on; it then shows only in that message's comments */
@@ -8579,6 +8640,8 @@ export interface paths {
                                          * @description When the quoted message was sent
                                          */
                                         sentAt: string;
+                                        /** @description The quoted message is locked with a code, so its text never shows here */
+                                        locked?: boolean;
                                     } | null;
                                     /** @description The story or note a message answers, as it was when they answered: it may be gone since */
                                     story: {
@@ -8600,7 +8663,7 @@ export interface paths {
                                          */
                                         imageUrl: string | null;
                                     } | null;
-                                    /** @description What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `pin` means they pinned a message; `shared_to` means they shared a message from this chat to their story or as their note; `resend_request` means they couldn't open an encrypted message and asked the sender for it again; `screenshot` means they took a screenshot of the chat (only detected on the web, and not everywhere); `call` logs a call the sender made; `live_invite` is posted in your chat when `from` asks you to a live game; `live_result` is how a live game you played alone against Six Frites Game ended, for you; in a group, `group_created`, `joined`, `left`, `removed`, `renamed` and `group_photo` tell what happened to the group and to whom (`name` is how they showed there) */
+                                    /** @description What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `pin` means they pinned a message; `shared_to` means they shared a message from this chat to their story or as their note; `resend_request` means they couldn't open an encrypted message and asked the sender for it again; `screenshot` means they took a screenshot of the chat, or only tried to when `blocked` (the app stops them; detected on the web, on iOS and on Android 14 and up); `call` logs a call the sender made; `live_invite` is posted in your chat when `from` asks you to a live game; `live_result` is how a live game you played alone against Six Frites Game ended, for you; in a group, `group_created`, `joined`, `left`, `removed`, `renamed` and `group_photo` tell what happened to the group and to whom (`name` is how they showed there) */
                                     action: ({
                                         /** @enum {string} */
                                         type: "auto_delete";
@@ -8622,6 +8685,7 @@ export interface paths {
                                     } | {
                                         /** @enum {string} */
                                         type: "screenshot";
+                                        blocked?: boolean;
                                     } | {
                                         /** @enum {string} */
                                         type: "resend_request";
@@ -9010,6 +9074,11 @@ export interface paths {
                                          */
                                         resendUntil: string | null;
                                     } | null;
+                                    /** @description Its sender locked it: everyone, the sender included, needs their own app lock code to open it, each time. Null when it isn't locked */
+                                    codeLock?: {
+                                        /** @description Content is withheld for you; open it with your app lock code at POST /v1/messages/{id}/unlock */
+                                        locked: boolean;
+                                    } | null;
                                     /** @description Photos and videos sent together share it and show as one album */
                                     groupId: string | null;
                                     /** @description In a group, the message this one comments on; it then shows only in that message's comments */
@@ -9044,6 +9113,8 @@ export interface paths {
                                          * @description When the quoted message was sent
                                          */
                                         sentAt: string;
+                                        /** @description The quoted message is locked with a code, so its text never shows here */
+                                        locked?: boolean;
                                     } | null;
                                     /** @description The story or note a message answers, as it was when they answered: it may be gone since */
                                     story: {
@@ -9065,7 +9136,7 @@ export interface paths {
                                          */
                                         imageUrl: string | null;
                                     } | null;
-                                    /** @description What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `pin` means they pinned a message; `shared_to` means they shared a message from this chat to their story or as their note; `resend_request` means they couldn't open an encrypted message and asked the sender for it again; `screenshot` means they took a screenshot of the chat (only detected on the web, and not everywhere); `call` logs a call the sender made; `live_invite` is posted in your chat when `from` asks you to a live game; `live_result` is how a live game you played alone against Six Frites Game ended, for you; in a group, `group_created`, `joined`, `left`, `removed`, `renamed` and `group_photo` tell what happened to the group and to whom (`name` is how they showed there) */
+                                    /** @description What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `pin` means they pinned a message; `shared_to` means they shared a message from this chat to their story or as their note; `resend_request` means they couldn't open an encrypted message and asked the sender for it again; `screenshot` means they took a screenshot of the chat, or only tried to when `blocked` (the app stops them; detected on the web, on iOS and on Android 14 and up); `call` logs a call the sender made; `live_invite` is posted in your chat when `from` asks you to a live game; `live_result` is how a live game you played alone against Six Frites Game ended, for you; in a group, `group_created`, `joined`, `left`, `removed`, `renamed` and `group_photo` tell what happened to the group and to whom (`name` is how they showed there) */
                                     action: ({
                                         /** @enum {string} */
                                         type: "auto_delete";
@@ -9087,6 +9158,7 @@ export interface paths {
                                     } | {
                                         /** @enum {string} */
                                         type: "screenshot";
+                                        blocked?: boolean;
                                     } | {
                                         /** @enum {string} */
                                         type: "resend_request";
@@ -9572,6 +9644,11 @@ export interface paths {
                                      */
                                     resendUntil: string | null;
                                 } | null;
+                                /** @description Its sender locked it: everyone, the sender included, needs their own app lock code to open it, each time. Null when it isn't locked */
+                                codeLock?: {
+                                    /** @description Content is withheld for you; open it with your app lock code at POST /v1/messages/{id}/unlock */
+                                    locked: boolean;
+                                } | null;
                                 /** @description Photos and videos sent together share it and show as one album */
                                 groupId: string | null;
                                 /** @description In a group, the message this one comments on; it then shows only in that message's comments */
@@ -9606,6 +9683,8 @@ export interface paths {
                                      * @description When the quoted message was sent
                                      */
                                     sentAt: string;
+                                    /** @description The quoted message is locked with a code, so its text never shows here */
+                                    locked?: boolean;
                                 } | null;
                                 /** @description The story or note a message answers, as it was when they answered: it may be gone since */
                                 story: {
@@ -9627,7 +9706,7 @@ export interface paths {
                                      */
                                     imageUrl: string | null;
                                 } | null;
-                                /** @description What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `pin` means they pinned a message; `shared_to` means they shared a message from this chat to their story or as their note; `resend_request` means they couldn't open an encrypted message and asked the sender for it again; `screenshot` means they took a screenshot of the chat (only detected on the web, and not everywhere); `call` logs a call the sender made; `live_invite` is posted in your chat when `from` asks you to a live game; `live_result` is how a live game you played alone against Six Frites Game ended, for you; in a group, `group_created`, `joined`, `left`, `removed`, `renamed` and `group_photo` tell what happened to the group and to whom (`name` is how they showed there) */
+                                /** @description What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `pin` means they pinned a message; `shared_to` means they shared a message from this chat to their story or as their note; `resend_request` means they couldn't open an encrypted message and asked the sender for it again; `screenshot` means they took a screenshot of the chat, or only tried to when `blocked` (the app stops them; detected on the web, on iOS and on Android 14 and up); `call` logs a call the sender made; `live_invite` is posted in your chat when `from` asks you to a live game; `live_result` is how a live game you played alone against Six Frites Game ended, for you; in a group, `group_created`, `joined`, `left`, `removed`, `renamed` and `group_photo` tell what happened to the group and to whom (`name` is how they showed there) */
                                 action: ({
                                     /** @enum {string} */
                                     type: "auto_delete";
@@ -9649,6 +9728,7 @@ export interface paths {
                                 } | {
                                     /** @enum {string} */
                                     type: "screenshot";
+                                    blocked?: boolean;
                                 } | {
                                     /** @enum {string} */
                                     type: "resend_request";
@@ -10037,6 +10117,11 @@ export interface paths {
                                      */
                                     resendUntil: string | null;
                                 } | null;
+                                /** @description Its sender locked it: everyone, the sender included, needs their own app lock code to open it, each time. Null when it isn't locked */
+                                codeLock?: {
+                                    /** @description Content is withheld for you; open it with your app lock code at POST /v1/messages/{id}/unlock */
+                                    locked: boolean;
+                                } | null;
                                 /** @description Photos and videos sent together share it and show as one album */
                                 groupId: string | null;
                                 /** @description In a group, the message this one comments on; it then shows only in that message's comments */
@@ -10071,6 +10156,8 @@ export interface paths {
                                      * @description When the quoted message was sent
                                      */
                                     sentAt: string;
+                                    /** @description The quoted message is locked with a code, so its text never shows here */
+                                    locked?: boolean;
                                 } | null;
                                 /** @description The story or note a message answers, as it was when they answered: it may be gone since */
                                 story: {
@@ -10092,7 +10179,7 @@ export interface paths {
                                      */
                                     imageUrl: string | null;
                                 } | null;
-                                /** @description What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `pin` means they pinned a message; `shared_to` means they shared a message from this chat to their story or as their note; `resend_request` means they couldn't open an encrypted message and asked the sender for it again; `screenshot` means they took a screenshot of the chat (only detected on the web, and not everywhere); `call` logs a call the sender made; `live_invite` is posted in your chat when `from` asks you to a live game; `live_result` is how a live game you played alone against Six Frites Game ended, for you; in a group, `group_created`, `joined`, `left`, `removed`, `renamed` and `group_photo` tell what happened to the group and to whom (`name` is how they showed there) */
+                                /** @description What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `pin` means they pinned a message; `shared_to` means they shared a message from this chat to their story or as their note; `resend_request` means they couldn't open an encrypted message and asked the sender for it again; `screenshot` means they took a screenshot of the chat, or only tried to when `blocked` (the app stops them; detected on the web, on iOS and on Android 14 and up); `call` logs a call the sender made; `live_invite` is posted in your chat when `from` asks you to a live game; `live_result` is how a live game you played alone against Six Frites Game ended, for you; in a group, `group_created`, `joined`, `left`, `removed`, `renamed` and `group_photo` tell what happened to the group and to whom (`name` is how they showed there) */
                                 action: ({
                                     /** @enum {string} */
                                     type: "auto_delete";
@@ -10114,6 +10201,7 @@ export interface paths {
                                 } | {
                                     /** @enum {string} */
                                     type: "screenshot";
+                                    blocked?: boolean;
                                 } | {
                                     /** @enum {string} */
                                     type: "resend_request";
@@ -10652,6 +10740,11 @@ export interface paths {
                                      */
                                     resendUntil: string | null;
                                 } | null;
+                                /** @description Its sender locked it: everyone, the sender included, needs their own app lock code to open it, each time. Null when it isn't locked */
+                                codeLock?: {
+                                    /** @description Content is withheld for you; open it with your app lock code at POST /v1/messages/{id}/unlock */
+                                    locked: boolean;
+                                } | null;
                                 /** @description Photos and videos sent together share it and show as one album */
                                 groupId: string | null;
                                 /** @description In a group, the message this one comments on; it then shows only in that message's comments */
@@ -10686,6 +10779,8 @@ export interface paths {
                                      * @description When the quoted message was sent
                                      */
                                     sentAt: string;
+                                    /** @description The quoted message is locked with a code, so its text never shows here */
+                                    locked?: boolean;
                                 } | null;
                                 /** @description The story or note a message answers, as it was when they answered: it may be gone since */
                                 story: {
@@ -10707,7 +10802,7 @@ export interface paths {
                                      */
                                     imageUrl: string | null;
                                 } | null;
-                                /** @description What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `pin` means they pinned a message; `shared_to` means they shared a message from this chat to their story or as their note; `resend_request` means they couldn't open an encrypted message and asked the sender for it again; `screenshot` means they took a screenshot of the chat (only detected on the web, and not everywhere); `call` logs a call the sender made; `live_invite` is posted in your chat when `from` asks you to a live game; `live_result` is how a live game you played alone against Six Frites Game ended, for you; in a group, `group_created`, `joined`, `left`, `removed`, `renamed` and `group_photo` tell what happened to the group and to whom (`name` is how they showed there) */
+                                /** @description What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `pin` means they pinned a message; `shared_to` means they shared a message from this chat to their story or as their note; `resend_request` means they couldn't open an encrypted message and asked the sender for it again; `screenshot` means they took a screenshot of the chat, or only tried to when `blocked` (the app stops them; detected on the web, on iOS and on Android 14 and up); `call` logs a call the sender made; `live_invite` is posted in your chat when `from` asks you to a live game; `live_result` is how a live game you played alone against Six Frites Game ended, for you; in a group, `group_created`, `joined`, `left`, `removed`, `renamed` and `group_photo` tell what happened to the group and to whom (`name` is how they showed there) */
                                 action: ({
                                     /** @enum {string} */
                                     type: "auto_delete";
@@ -10729,6 +10824,7 @@ export interface paths {
                                 } | {
                                     /** @enum {string} */
                                     type: "screenshot";
+                                    blocked?: boolean;
                                 } | {
                                     /** @enum {string} */
                                     type: "resend_request";
@@ -11117,6 +11213,11 @@ export interface paths {
                                      */
                                     resendUntil: string | null;
                                 } | null;
+                                /** @description Its sender locked it: everyone, the sender included, needs their own app lock code to open it, each time. Null when it isn't locked */
+                                codeLock?: {
+                                    /** @description Content is withheld for you; open it with your app lock code at POST /v1/messages/{id}/unlock */
+                                    locked: boolean;
+                                } | null;
                                 /** @description Photos and videos sent together share it and show as one album */
                                 groupId: string | null;
                                 /** @description In a group, the message this one comments on; it then shows only in that message's comments */
@@ -11151,6 +11252,8 @@ export interface paths {
                                      * @description When the quoted message was sent
                                      */
                                     sentAt: string;
+                                    /** @description The quoted message is locked with a code, so its text never shows here */
+                                    locked?: boolean;
                                 } | null;
                                 /** @description The story or note a message answers, as it was when they answered: it may be gone since */
                                 story: {
@@ -11172,7 +11275,7 @@ export interface paths {
                                      */
                                     imageUrl: string | null;
                                 } | null;
-                                /** @description What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `pin` means they pinned a message; `shared_to` means they shared a message from this chat to their story or as their note; `resend_request` means they couldn't open an encrypted message and asked the sender for it again; `screenshot` means they took a screenshot of the chat (only detected on the web, and not everywhere); `call` logs a call the sender made; `live_invite` is posted in your chat when `from` asks you to a live game; `live_result` is how a live game you played alone against Six Frites Game ended, for you; in a group, `group_created`, `joined`, `left`, `removed`, `renamed` and `group_photo` tell what happened to the group and to whom (`name` is how they showed there) */
+                                /** @description What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `pin` means they pinned a message; `shared_to` means they shared a message from this chat to their story or as their note; `resend_request` means they couldn't open an encrypted message and asked the sender for it again; `screenshot` means they took a screenshot of the chat, or only tried to when `blocked` (the app stops them; detected on the web, on iOS and on Android 14 and up); `call` logs a call the sender made; `live_invite` is posted in your chat when `from` asks you to a live game; `live_result` is how a live game you played alone against Six Frites Game ended, for you; in a group, `group_created`, `joined`, `left`, `removed`, `renamed` and `group_photo` tell what happened to the group and to whom (`name` is how they showed there) */
                                 action: ({
                                     /** @enum {string} */
                                     type: "auto_delete";
@@ -11194,6 +11297,7 @@ export interface paths {
                                 } | {
                                     /** @enum {string} */
                                     type: "screenshot";
+                                    blocked?: boolean;
                                 } | {
                                     /** @enum {string} */
                                     type: "resend_request";
@@ -11743,6 +11847,11 @@ export interface paths {
                                  */
                                 resendUntil: string | null;
                             } | null;
+                            /** @description Its sender locked it: everyone, the sender included, needs their own app lock code to open it, each time. Null when it isn't locked */
+                            codeLock?: {
+                                /** @description Content is withheld for you; open it with your app lock code at POST /v1/messages/{id}/unlock */
+                                locked: boolean;
+                            } | null;
                             /** @description Photos and videos sent together share it and show as one album */
                             groupId: string | null;
                             /** @description In a group, the message this one comments on; it then shows only in that message's comments */
@@ -11777,6 +11886,8 @@ export interface paths {
                                  * @description When the quoted message was sent
                                  */
                                 sentAt: string;
+                                /** @description The quoted message is locked with a code, so its text never shows here */
+                                locked?: boolean;
                             } | null;
                             /** @description The story or note a message answers, as it was when they answered: it may be gone since */
                             story: {
@@ -11798,7 +11909,7 @@ export interface paths {
                                  */
                                 imageUrl: string | null;
                             } | null;
-                            /** @description What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `pin` means they pinned a message; `shared_to` means they shared a message from this chat to their story or as their note; `resend_request` means they couldn't open an encrypted message and asked the sender for it again; `screenshot` means they took a screenshot of the chat (only detected on the web, and not everywhere); `call` logs a call the sender made; `live_invite` is posted in your chat when `from` asks you to a live game; `live_result` is how a live game you played alone against Six Frites Game ended, for you; in a group, `group_created`, `joined`, `left`, `removed`, `renamed` and `group_photo` tell what happened to the group and to whom (`name` is how they showed there) */
+                            /** @description What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `pin` means they pinned a message; `shared_to` means they shared a message from this chat to their story or as their note; `resend_request` means they couldn't open an encrypted message and asked the sender for it again; `screenshot` means they took a screenshot of the chat, or only tried to when `blocked` (the app stops them; detected on the web, on iOS and on Android 14 and up); `call` logs a call the sender made; `live_invite` is posted in your chat when `from` asks you to a live game; `live_result` is how a live game you played alone against Six Frites Game ended, for you; in a group, `group_created`, `joined`, `left`, `removed`, `renamed` and `group_photo` tell what happened to the group and to whom (`name` is how they showed there) */
                             action: ({
                                 /** @enum {string} */
                                 type: "auto_delete";
@@ -11820,6 +11931,7 @@ export interface paths {
                             } | {
                                 /** @enum {string} */
                                 type: "screenshot";
+                                blocked?: boolean;
                             } | {
                                 /** @enum {string} */
                                 type: "resend_request";
@@ -12236,6 +12348,11 @@ export interface paths {
                                  */
                                 resendUntil: string | null;
                             } | null;
+                            /** @description Its sender locked it: everyone, the sender included, needs their own app lock code to open it, each time. Null when it isn't locked */
+                            codeLock?: {
+                                /** @description Content is withheld for you; open it with your app lock code at POST /v1/messages/{id}/unlock */
+                                locked: boolean;
+                            } | null;
                             /** @description Photos and videos sent together share it and show as one album */
                             groupId: string | null;
                             /** @description In a group, the message this one comments on; it then shows only in that message's comments */
@@ -12270,6 +12387,8 @@ export interface paths {
                                  * @description When the quoted message was sent
                                  */
                                 sentAt: string;
+                                /** @description The quoted message is locked with a code, so its text never shows here */
+                                locked?: boolean;
                             } | null;
                             /** @description The story or note a message answers, as it was when they answered: it may be gone since */
                             story: {
@@ -12291,7 +12410,7 @@ export interface paths {
                                  */
                                 imageUrl: string | null;
                             } | null;
-                            /** @description What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `pin` means they pinned a message; `shared_to` means they shared a message from this chat to their story or as their note; `resend_request` means they couldn't open an encrypted message and asked the sender for it again; `screenshot` means they took a screenshot of the chat (only detected on the web, and not everywhere); `call` logs a call the sender made; `live_invite` is posted in your chat when `from` asks you to a live game; `live_result` is how a live game you played alone against Six Frites Game ended, for you; in a group, `group_created`, `joined`, `left`, `removed`, `renamed` and `group_photo` tell what happened to the group and to whom (`name` is how they showed there) */
+                            /** @description What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `pin` means they pinned a message; `shared_to` means they shared a message from this chat to their story or as their note; `resend_request` means they couldn't open an encrypted message and asked the sender for it again; `screenshot` means they took a screenshot of the chat, or only tried to when `blocked` (the app stops them; detected on the web, on iOS and on Android 14 and up); `call` logs a call the sender made; `live_invite` is posted in your chat when `from` asks you to a live game; `live_result` is how a live game you played alone against Six Frites Game ended, for you; in a group, `group_created`, `joined`, `left`, `removed`, `renamed` and `group_photo` tell what happened to the group and to whom (`name` is how they showed there) */
                             action: ({
                                 /** @enum {string} */
                                 type: "auto_delete";
@@ -12313,6 +12432,7 @@ export interface paths {
                             } | {
                                 /** @enum {string} */
                                 type: "screenshot";
+                                blocked?: boolean;
                             } | {
                                 /** @enum {string} */
                                 type: "resend_request";
@@ -12724,6 +12844,11 @@ export interface paths {
                                  */
                                 resendUntil: string | null;
                             } | null;
+                            /** @description Its sender locked it: everyone, the sender included, needs their own app lock code to open it, each time. Null when it isn't locked */
+                            codeLock?: {
+                                /** @description Content is withheld for you; open it with your app lock code at POST /v1/messages/{id}/unlock */
+                                locked: boolean;
+                            } | null;
                             /** @description Photos and videos sent together share it and show as one album */
                             groupId: string | null;
                             /** @description In a group, the message this one comments on; it then shows only in that message's comments */
@@ -12758,6 +12883,8 @@ export interface paths {
                                  * @description When the quoted message was sent
                                  */
                                 sentAt: string;
+                                /** @description The quoted message is locked with a code, so its text never shows here */
+                                locked?: boolean;
                             } | null;
                             /** @description The story or note a message answers, as it was when they answered: it may be gone since */
                             story: {
@@ -12779,7 +12906,7 @@ export interface paths {
                                  */
                                 imageUrl: string | null;
                             } | null;
-                            /** @description What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `pin` means they pinned a message; `shared_to` means they shared a message from this chat to their story or as their note; `resend_request` means they couldn't open an encrypted message and asked the sender for it again; `screenshot` means they took a screenshot of the chat (only detected on the web, and not everywhere); `call` logs a call the sender made; `live_invite` is posted in your chat when `from` asks you to a live game; `live_result` is how a live game you played alone against Six Frites Game ended, for you; in a group, `group_created`, `joined`, `left`, `removed`, `renamed` and `group_photo` tell what happened to the group and to whom (`name` is how they showed there) */
+                            /** @description What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `pin` means they pinned a message; `shared_to` means they shared a message from this chat to their story or as their note; `resend_request` means they couldn't open an encrypted message and asked the sender for it again; `screenshot` means they took a screenshot of the chat, or only tried to when `blocked` (the app stops them; detected on the web, on iOS and on Android 14 and up); `call` logs a call the sender made; `live_invite` is posted in your chat when `from` asks you to a live game; `live_result` is how a live game you played alone against Six Frites Game ended, for you; in a group, `group_created`, `joined`, `left`, `removed`, `renamed` and `group_photo` tell what happened to the group and to whom (`name` is how they showed there) */
                             action: ({
                                 /** @enum {string} */
                                 type: "auto_delete";
@@ -12801,6 +12928,7 @@ export interface paths {
                             } | {
                                 /** @enum {string} */
                                 type: "screenshot";
+                                blocked?: boolean;
                             } | {
                                 /** @enum {string} */
                                 type: "resend_request";
@@ -13208,6 +13336,11 @@ export interface paths {
                                  */
                                 resendUntil: string | null;
                             } | null;
+                            /** @description Its sender locked it: everyone, the sender included, needs their own app lock code to open it, each time. Null when it isn't locked */
+                            codeLock?: {
+                                /** @description Content is withheld for you; open it with your app lock code at POST /v1/messages/{id}/unlock */
+                                locked: boolean;
+                            } | null;
                             /** @description Photos and videos sent together share it and show as one album */
                             groupId: string | null;
                             /** @description In a group, the message this one comments on; it then shows only in that message's comments */
@@ -13242,6 +13375,8 @@ export interface paths {
                                  * @description When the quoted message was sent
                                  */
                                 sentAt: string;
+                                /** @description The quoted message is locked with a code, so its text never shows here */
+                                locked?: boolean;
                             } | null;
                             /** @description The story or note a message answers, as it was when they answered: it may be gone since */
                             story: {
@@ -13263,7 +13398,7 @@ export interface paths {
                                  */
                                 imageUrl: string | null;
                             } | null;
-                            /** @description What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `pin` means they pinned a message; `shared_to` means they shared a message from this chat to their story or as their note; `resend_request` means they couldn't open an encrypted message and asked the sender for it again; `screenshot` means they took a screenshot of the chat (only detected on the web, and not everywhere); `call` logs a call the sender made; `live_invite` is posted in your chat when `from` asks you to a live game; `live_result` is how a live game you played alone against Six Frites Game ended, for you; in a group, `group_created`, `joined`, `left`, `removed`, `renamed` and `group_photo` tell what happened to the group and to whom (`name` is how they showed there) */
+                            /** @description What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `pin` means they pinned a message; `shared_to` means they shared a message from this chat to their story or as their note; `resend_request` means they couldn't open an encrypted message and asked the sender for it again; `screenshot` means they took a screenshot of the chat, or only tried to when `blocked` (the app stops them; detected on the web, on iOS and on Android 14 and up); `call` logs a call the sender made; `live_invite` is posted in your chat when `from` asks you to a live game; `live_result` is how a live game you played alone against Six Frites Game ended, for you; in a group, `group_created`, `joined`, `left`, `removed`, `renamed` and `group_photo` tell what happened to the group and to whom (`name` is how they showed there) */
                             action: ({
                                 /** @enum {string} */
                                 type: "auto_delete";
@@ -13285,6 +13420,7 @@ export interface paths {
                             } | {
                                 /** @enum {string} */
                                 type: "screenshot";
+                                blocked?: boolean;
                             } | {
                                 /** @enum {string} */
                                 type: "resend_request";
@@ -13695,6 +13831,11 @@ export interface paths {
                                  */
                                 resendUntil: string | null;
                             } | null;
+                            /** @description Its sender locked it: everyone, the sender included, needs their own app lock code to open it, each time. Null when it isn't locked */
+                            codeLock?: {
+                                /** @description Content is withheld for you; open it with your app lock code at POST /v1/messages/{id}/unlock */
+                                locked: boolean;
+                            } | null;
                             /** @description Photos and videos sent together share it and show as one album */
                             groupId: string | null;
                             /** @description In a group, the message this one comments on; it then shows only in that message's comments */
@@ -13729,6 +13870,8 @@ export interface paths {
                                  * @description When the quoted message was sent
                                  */
                                 sentAt: string;
+                                /** @description The quoted message is locked with a code, so its text never shows here */
+                                locked?: boolean;
                             } | null;
                             /** @description The story or note a message answers, as it was when they answered: it may be gone since */
                             story: {
@@ -13750,7 +13893,7 @@ export interface paths {
                                  */
                                 imageUrl: string | null;
                             } | null;
-                            /** @description What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `pin` means they pinned a message; `shared_to` means they shared a message from this chat to their story or as their note; `resend_request` means they couldn't open an encrypted message and asked the sender for it again; `screenshot` means they took a screenshot of the chat (only detected on the web, and not everywhere); `call` logs a call the sender made; `live_invite` is posted in your chat when `from` asks you to a live game; `live_result` is how a live game you played alone against Six Frites Game ended, for you; in a group, `group_created`, `joined`, `left`, `removed`, `renamed` and `group_photo` tell what happened to the group and to whom (`name` is how they showed there) */
+                            /** @description What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `pin` means they pinned a message; `shared_to` means they shared a message from this chat to their story or as their note; `resend_request` means they couldn't open an encrypted message and asked the sender for it again; `screenshot` means they took a screenshot of the chat, or only tried to when `blocked` (the app stops them; detected on the web, on iOS and on Android 14 and up); `call` logs a call the sender made; `live_invite` is posted in your chat when `from` asks you to a live game; `live_result` is how a live game you played alone against Six Frites Game ended, for you; in a group, `group_created`, `joined`, `left`, `removed`, `renamed` and `group_photo` tell what happened to the group and to whom (`name` is how they showed there) */
                             action: ({
                                 /** @enum {string} */
                                 type: "auto_delete";
@@ -13772,6 +13915,7 @@ export interface paths {
                             } | {
                                 /** @enum {string} */
                                 type: "screenshot";
+                                blocked?: boolean;
                             } | {
                                 /** @enum {string} */
                                 type: "resend_request";
@@ -14183,6 +14327,11 @@ export interface paths {
                                  */
                                 resendUntil: string | null;
                             } | null;
+                            /** @description Its sender locked it: everyone, the sender included, needs their own app lock code to open it, each time. Null when it isn't locked */
+                            codeLock?: {
+                                /** @description Content is withheld for you; open it with your app lock code at POST /v1/messages/{id}/unlock */
+                                locked: boolean;
+                            } | null;
                             /** @description Photos and videos sent together share it and show as one album */
                             groupId: string | null;
                             /** @description In a group, the message this one comments on; it then shows only in that message's comments */
@@ -14217,6 +14366,8 @@ export interface paths {
                                  * @description When the quoted message was sent
                                  */
                                 sentAt: string;
+                                /** @description The quoted message is locked with a code, so its text never shows here */
+                                locked?: boolean;
                             } | null;
                             /** @description The story or note a message answers, as it was when they answered: it may be gone since */
                             story: {
@@ -14238,7 +14389,7 @@ export interface paths {
                                  */
                                 imageUrl: string | null;
                             } | null;
-                            /** @description What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `pin` means they pinned a message; `shared_to` means they shared a message from this chat to their story or as their note; `resend_request` means they couldn't open an encrypted message and asked the sender for it again; `screenshot` means they took a screenshot of the chat (only detected on the web, and not everywhere); `call` logs a call the sender made; `live_invite` is posted in your chat when `from` asks you to a live game; `live_result` is how a live game you played alone against Six Frites Game ended, for you; in a group, `group_created`, `joined`, `left`, `removed`, `renamed` and `group_photo` tell what happened to the group and to whom (`name` is how they showed there) */
+                            /** @description What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `pin` means they pinned a message; `shared_to` means they shared a message from this chat to their story or as their note; `resend_request` means they couldn't open an encrypted message and asked the sender for it again; `screenshot` means they took a screenshot of the chat, or only tried to when `blocked` (the app stops them; detected on the web, on iOS and on Android 14 and up); `call` logs a call the sender made; `live_invite` is posted in your chat when `from` asks you to a live game; `live_result` is how a live game you played alone against Six Frites Game ended, for you; in a group, `group_created`, `joined`, `left`, `removed`, `renamed` and `group_photo` tell what happened to the group and to whom (`name` is how they showed there) */
                             action: ({
                                 /** @enum {string} */
                                 type: "auto_delete";
@@ -14260,6 +14411,7 @@ export interface paths {
                             } | {
                                 /** @enum {string} */
                                 type: "screenshot";
+                                blocked?: boolean;
                             } | {
                                 /** @enum {string} */
                                 type: "resend_request";
@@ -14693,6 +14845,11 @@ export interface paths {
                                  */
                                 resendUntil: string | null;
                             } | null;
+                            /** @description Its sender locked it: everyone, the sender included, needs their own app lock code to open it, each time. Null when it isn't locked */
+                            codeLock?: {
+                                /** @description Content is withheld for you; open it with your app lock code at POST /v1/messages/{id}/unlock */
+                                locked: boolean;
+                            } | null;
                             /** @description Photos and videos sent together share it and show as one album */
                             groupId: string | null;
                             /** @description In a group, the message this one comments on; it then shows only in that message's comments */
@@ -14727,6 +14884,8 @@ export interface paths {
                                  * @description When the quoted message was sent
                                  */
                                 sentAt: string;
+                                /** @description The quoted message is locked with a code, so its text never shows here */
+                                locked?: boolean;
                             } | null;
                             /** @description The story or note a message answers, as it was when they answered: it may be gone since */
                             story: {
@@ -14748,7 +14907,7 @@ export interface paths {
                                  */
                                 imageUrl: string | null;
                             } | null;
-                            /** @description What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `pin` means they pinned a message; `shared_to` means they shared a message from this chat to their story or as their note; `resend_request` means they couldn't open an encrypted message and asked the sender for it again; `screenshot` means they took a screenshot of the chat (only detected on the web, and not everywhere); `call` logs a call the sender made; `live_invite` is posted in your chat when `from` asks you to a live game; `live_result` is how a live game you played alone against Six Frites Game ended, for you; in a group, `group_created`, `joined`, `left`, `removed`, `renamed` and `group_photo` tell what happened to the group and to whom (`name` is how they showed there) */
+                            /** @description What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `pin` means they pinned a message; `shared_to` means they shared a message from this chat to their story or as their note; `resend_request` means they couldn't open an encrypted message and asked the sender for it again; `screenshot` means they took a screenshot of the chat, or only tried to when `blocked` (the app stops them; detected on the web, on iOS and on Android 14 and up); `call` logs a call the sender made; `live_invite` is posted in your chat when `from` asks you to a live game; `live_result` is how a live game you played alone against Six Frites Game ended, for you; in a group, `group_created`, `joined`, `left`, `removed`, `renamed` and `group_photo` tell what happened to the group and to whom (`name` is how they showed there) */
                             action: ({
                                 /** @enum {string} */
                                 type: "auto_delete";
@@ -14770,6 +14929,7 @@ export interface paths {
                             } | {
                                 /** @enum {string} */
                                 type: "screenshot";
+                                blocked?: boolean;
                             } | {
                                 /** @enum {string} */
                                 type: "resend_request";
@@ -15176,6 +15336,11 @@ export interface paths {
                                      */
                                     resendUntil: string | null;
                                 } | null;
+                                /** @description Its sender locked it: everyone, the sender included, needs their own app lock code to open it, each time. Null when it isn't locked */
+                                codeLock?: {
+                                    /** @description Content is withheld for you; open it with your app lock code at POST /v1/messages/{id}/unlock */
+                                    locked: boolean;
+                                } | null;
                                 /** @description Photos and videos sent together share it and show as one album */
                                 groupId: string | null;
                                 /** @description In a group, the message this one comments on; it then shows only in that message's comments */
@@ -15210,6 +15375,8 @@ export interface paths {
                                      * @description When the quoted message was sent
                                      */
                                     sentAt: string;
+                                    /** @description The quoted message is locked with a code, so its text never shows here */
+                                    locked?: boolean;
                                 } | null;
                                 /** @description The story or note a message answers, as it was when they answered: it may be gone since */
                                 story: {
@@ -15231,7 +15398,7 @@ export interface paths {
                                      */
                                     imageUrl: string | null;
                                 } | null;
-                                /** @description What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `pin` means they pinned a message; `shared_to` means they shared a message from this chat to their story or as their note; `resend_request` means they couldn't open an encrypted message and asked the sender for it again; `screenshot` means they took a screenshot of the chat (only detected on the web, and not everywhere); `call` logs a call the sender made; `live_invite` is posted in your chat when `from` asks you to a live game; `live_result` is how a live game you played alone against Six Frites Game ended, for you; in a group, `group_created`, `joined`, `left`, `removed`, `renamed` and `group_photo` tell what happened to the group and to whom (`name` is how they showed there) */
+                                /** @description What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `pin` means they pinned a message; `shared_to` means they shared a message from this chat to their story or as their note; `resend_request` means they couldn't open an encrypted message and asked the sender for it again; `screenshot` means they took a screenshot of the chat, or only tried to when `blocked` (the app stops them; detected on the web, on iOS and on Android 14 and up); `call` logs a call the sender made; `live_invite` is posted in your chat when `from` asks you to a live game; `live_result` is how a live game you played alone against Six Frites Game ended, for you; in a group, `group_created`, `joined`, `left`, `removed`, `renamed` and `group_photo` tell what happened to the group and to whom (`name` is how they showed there) */
                                 action: ({
                                     /** @enum {string} */
                                     type: "auto_delete";
@@ -15253,6 +15420,510 @@ export interface paths {
                                 } | {
                                     /** @enum {string} */
                                     type: "screenshot";
+                                    blocked?: boolean;
+                                } | {
+                                    /** @enum {string} */
+                                    type: "resend_request";
+                                } | {
+                                    /** @enum {string} */
+                                    type: "shared_to";
+                                    /** @enum {string} */
+                                    to: "story" | "note";
+                                } | {
+                                    /** @enum {string} */
+                                    type: "group_created";
+                                    title: string;
+                                } | {
+                                    /** @enum {string} */
+                                    type: "joined";
+                                    name: string;
+                                } | {
+                                    /** @enum {string} */
+                                    type: "left";
+                                    name: string;
+                                } | {
+                                    /** @enum {string} */
+                                    type: "removed";
+                                    name: string;
+                                } | {
+                                    /** @enum {string} */
+                                    type: "renamed";
+                                    title: string;
+                                } | {
+                                    /** @enum {string} */
+                                    type: "group_photo";
+                                } | {
+                                    /** @enum {string} */
+                                    type: "call";
+                                    video: boolean;
+                                    /** @description How long it lasted; null if it was missed or declined */
+                                    secs: number | null;
+                                } | {
+                                    /** @enum {string} */
+                                    type: "live_invite";
+                                    /** @enum {string} */
+                                    game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory" | "reflex" | "market" | "snack";
+                                    roomId: string;
+                                    from: string;
+                                    /** @description The game is over and its room closed, so there is nothing to join */
+                                    ended?: boolean;
+                                } | {
+                                    /** @enum {string} */
+                                    type: "live_result";
+                                    /** @enum {string} */
+                                    game: "fanorona" | "ludo" | "eights" | "words" | "dots" | "memory" | "reflex" | "market" | "snack";
+                                    /** @enum {string} */
+                                    result: "won" | "lost" | "draw";
+                                    /** @description Your score, then the bot's best, in the games that keep one: boxes, pairs or word points */
+                                    score?: number[];
+                                }) | null;
+                                location: {
+                                    lat: number;
+                                    lng: number;
+                                    /** @description How far off it may be, in meters */
+                                    accuracy?: number | null;
+                                    /** @description What the place is called, for a place picked on the map */
+                                    name?: string;
+                                } | null;
+                                checklist: {
+                                    title: string;
+                                    items: string[];
+                                } | null;
+                                /** @description The checklist items marked done; either person can tick them */
+                                checks: {
+                                    /** @description Index in the checklist's items */
+                                    item: number;
+                                    /** @description Who marked it done */
+                                    userId: string;
+                                    /** Format: date-time */
+                                    at: string;
+                                }[];
+                                poll: {
+                                    question: string;
+                                    options: string[];
+                                } | null;
+                                /** @description How many people chose each of the poll's options, by index */
+                                votes: number[];
+                                /** @description The option you chose, if you voted */
+                                myVote: number | null;
+                                /** @description The poll shows who chose what; off, votes are anonymous and only counts show */
+                                pollVisible: boolean;
+                                /** @description Who chose which option, on a poll with `pollVisible`; empty on anonymous polls */
+                                voters: {
+                                    option: number;
+                                    userId: string;
+                                }[];
+                                /** @description In a group, the members mentioned with @, who are notified even if they muted it */
+                                mentions: string[];
+                                game: ({
+                                    /** @enum {string} */
+                                    game: "rps";
+                                    /** @enum {string} */
+                                    hand: "rock" | "paper" | "scissors";
+                                } | {
+                                    /** @enum {string} */
+                                    game: "dice";
+                                    pick: number;
+                                    seed: number;
+                                } | {
+                                    /** @enum {string} */
+                                    game: "guess";
+                                    secret: number;
+                                } | {
+                                    /** @enum {string} */
+                                    game: "penalty";
+                                    shots: ("left" | "middle" | "right")[];
+                                    dives: ("left" | "middle" | "right")[];
+                                } | {
+                                    /** @enum {string} */
+                                    game: "hangman";
+                                    word: string;
+                                } | {
+                                    /** @enum {string} */
+                                    game: "lie";
+                                    statements: string[];
+                                    lie: number;
+                                } | {
+                                    /** @enum {string} */
+                                    game: "rather";
+                                    options: string[];
+                                    choice: number;
+                                } | {
+                                    /** @enum {string} */
+                                    game: "riddle";
+                                    emojis: string;
+                                    answer: string;
+                                    /** @description A key the typed answers are sealed with, so only people who can read the game can read them */
+                                    key: string;
+                                } | {
+                                    /** @enum {string} */
+                                    game: "ships";
+                                    boats: number[][];
+                                } | {
+                                    /** @enum {string} */
+                                    game: "ttt";
+                                    cell: number;
+                                } | {
+                                    /** @enum {string} */
+                                    game: "four";
+                                    col: number;
+                                } | {
+                                    /** @enum {string} */
+                                    game: "sketch";
+                                    strokes: {
+                                        color: number;
+                                        points: number[];
+                                    }[];
+                                    answer: string;
+                                    /** @description A key the typed answers are sealed with, so only people who can read the game can read them */
+                                    key: string;
+                                }) | null;
+                                /** @description Answers to the game, oldest first; anyone but the sender can play */
+                                moves: {
+                                    userId: string;
+                                    move: {
+                                        /** @enum {string} */
+                                        hand: "rock" | "paper" | "scissors";
+                                    } | {
+                                        pick: number;
+                                        seed: number;
+                                    } | {
+                                        n: number;
+                                    } | {
+                                        shots: ("left" | "middle" | "right")[];
+                                        dives: ("left" | "middle" | "right")[];
+                                    } | {
+                                        letter: string;
+                                    } | {
+                                        choice: number;
+                                    } | {
+                                        sealed: string;
+                                    } | {
+                                        shot: number;
+                                    } | {
+                                        cell: number;
+                                    } | {
+                                        col: number;
+                                    };
+                                    /** Format: date-time */
+                                    at: string;
+                                }[];
+                                /** Format: date-time */
+                                createdAt: string;
+                                /** Format: date-time */
+                                editedAt: string | null;
+                                /** Format: date-time */
+                                deletedAt: string | null;
+                                /** @description Who deleted it for everyone: the sender, or the other person in a direct chat */
+                                deletedBy: string | null;
+                                /**
+                                 * Format: date-time
+                                 * @description When the chat's auto-delete timer removes it for everyone
+                                 */
+                                expiresAt: string | null;
+                                /** @description One entry per emoji, sticker or GIF, oldest first; a person can add several different ones */
+                                reactions: {
+                                    /** @description The emoji, or `sticker:<id>` / `gif:<id>` for a sticker or GIF; also what removes it */
+                                    emoji: string;
+                                    userIds: string[];
+                                    /** @description When each of them reacted, by user id */
+                                    reactedAt?: {
+                                        [key: string]: string;
+                                    };
+                                    /** @description For a sticker reaction; null once the sticker is gone */
+                                    sticker?: {
+                                        id: string;
+                                        packId: string;
+                                        emoji: string;
+                                        /**
+                                         * @description `lottie`: a Lottie JSON animation. `image`: a static WebP or PNG.
+                                         * @enum {string}
+                                         */
+                                        format: "lottie" | "image";
+                                        /**
+                                         * Format: uri
+                                         * @description Null while an uploaded sticker is still being processed
+                                         */
+                                        url: string | null;
+                                        width: number | null;
+                                        height: number | null;
+                                    } | null;
+                                    /** @description For a GIF reaction, as an MP4 to play muted on a loop */
+                                    gif?: {
+                                        /** Format: uri */
+                                        url: string;
+                                        width: number | null;
+                                        height: number | null;
+                                    } | null;
+                                }[];
+                                /** @description Set for end-to-end encrypted messages: `text`, `entities` and `spoiler` are then empty and the content is in your device's envelope */
+                                encryption: {
+                                    /** @description The device that encrypted it; open the envelope with your session with it */
+                                    senderDeviceId: string | null;
+                                    /** @description Only the envelopes for your own devices */
+                                    envelopes: {
+                                        deviceId: string;
+                                        envelope: {
+                                            /** @enum {number} */
+                                            v: 1;
+                                            x3dh?: {
+                                                identity: {
+                                                    /** @description Ed25519 identity key */
+                                                    signPub: string;
+                                                    /** @description X25519 identity key, signed by signPub */
+                                                    dhPub: string;
+                                                    /** @description A 64-byte Ed25519 signature, base64url without padding */
+                                                    dhSig: string;
+                                                };
+                                                /** @description A 32-byte public key, base64url without padding */
+                                                ephemeral: string;
+                                                signedPreKeyId: number;
+                                                oneTimePreKeyId: number | null;
+                                            };
+                                            header: string;
+                                            body: string;
+                                        };
+                                    }[];
+                                    /** @description Your backup copy, if you stored one */
+                                    backup: string | null;
+                                    /** @description `requested`: `by` couldn't decrypt it and asked the sender to encrypt it again (PUT /v1/messages/{id}/envelopes). `failed`: the sender's device couldn't read it either */
+                                    reseal: {
+                                        /** @enum {string} */
+                                        state: "requested" | "failed";
+                                        by: string;
+                                    } | null;
+                                } | null;
+                            };
+                            /**
+                             * Format: date-time
+                             * @description When the content will be destroyed, if a timer is running
+                             */
+                            expiresAt: string | null;
+                        };
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/messages/{id}/unlock": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Open a message locked with a code
+         * @description Needs your own app lock `code`, every time: nothing is remembered, the content (with download links valid for 5 minutes, and your envelopes when it's encrypted) only comes in this answer. APP_LOCK_REQUIRED if you have no app lock yet, WRONG_APP_LOCK_CODE if it doesn't match, RATE_LIMITED after 10 wrong codes in a day, counted with the app lock's other checks. Your own locked messages need it too. A self-destructing one is opened as by /view once the code matches: the view counts and `expiresAt` says when its timer ends; a wrong code counts nothing.
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        code: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            message: {
+                                id: string;
+                                chatId: string;
+                                senderId: string;
+                                clientId: string;
+                                /** @enum {string} */
+                                type: "text" | "image" | "video" | "video_note" | "voice" | "file" | "gif" | "sticker" | "service" | "location" | "checklist" | "game" | "poll";
+                                text: string | null;
+                                entities: {
+                                    /** @enum {string} */
+                                    type: "bold" | "italic" | "underline" | "strike" | "code" | "spoiler" | "color" | "font" | "size" | "highlight" | "outline";
+                                    offset: number;
+                                    length: number;
+                                    /** @description For color, highlight (a background behind the text) and outline (a line around its letters): a TEXT_COLORS or TEXT_GRADIENTS name, #rrggbb, or #rrggbb-#rrggbb; for font: a TEXT_FONTS name; for size: a whole size in points, 8 to 48 */
+                                    value?: string;
+                                }[];
+                                spoiler: boolean;
+                                /** @description Sent with `/silent`: it arrives without a notification or sound */
+                                silent: boolean;
+                                /** @description A bump: it brings the message in `replyTo` back to the bottom of the chat, as Messenger does */
+                                bump: boolean;
+                                /** @description Sent in vanish mode: it disappears once the other person has read it and left the chat */
+                                vanish: boolean;
+                                attachment: {
+                                    id: string;
+                                    /**
+                                     * @description `gif` uploads are only created by sending a `gifId`; `sticker` files go into sticker packs; a `sticker_zip` (admins only) is imported into official packs
+                                     * @enum {string}
+                                     */
+                                    kind: "image" | "video" | "video_note" | "voice" | "file" | "gif" | "sticker" | "sticker_zip";
+                                    /**
+                                     * @description `removed`: a large file a moderator deleted to free space
+                                     * @enum {string}
+                                     */
+                                    status: "pending" | "processing" | "ready" | "failed" | "removed";
+                                    name: string;
+                                    mime: string;
+                                    size: number;
+                                    /**
+                                     * Format: uri
+                                     * @description Signed link to the playable or viewable file, once ready
+                                     */
+                                    url: string | null;
+                                    /** Format: uri */
+                                    thumbUrl: string | null;
+                                    width: number | null;
+                                    height: number | null;
+                                    durationMs: number | null;
+                                    waveform: number[] | null;
+                                    /** @description The file is encrypted; its key, name, type and preview are in the message content */
+                                    encrypted: boolean;
+                                } | null;
+                                sticker: {
+                                    id: string;
+                                    packId: string;
+                                    emoji: string;
+                                    /**
+                                     * @description `lottie`: a Lottie JSON animation. `image`: a static WebP or PNG.
+                                     * @enum {string}
+                                     */
+                                    format: "lottie" | "image";
+                                    /**
+                                     * Format: uri
+                                     * @description Null while an uploaded sticker is still being processed
+                                     */
+                                    url: string | null;
+                                    width: number | null;
+                                    height: number | null;
+                                } | null;
+                                ephemeral: {
+                                    maxViews: number | null;
+                                    ttlSeconds: number | null;
+                                    /** @description How many times the recipient opened it */
+                                    views: number;
+                                    /** Format: date-time */
+                                    firstViewedAt: string | null;
+                                    /** @description Content is withheld for you; open it with POST /v1/messages/{id}/view */
+                                    locked: boolean;
+                                    /** @description Its views or timer ran out; the recipient can no longer open it */
+                                    expired: boolean;
+                                    /** @description Content permanently deleted; it can no longer be resent */
+                                    purged: boolean;
+                                    /** @description The sender re-armed it after it was opened */
+                                    resent: boolean;
+                                    /** @description How many more times the sender can re-arm it */
+                                    resendsLeft: number;
+                                    /**
+                                     * Format: date-time
+                                     * @description Until when the sender can resend it, once it has been opened
+                                     */
+                                    resendUntil: string | null;
+                                } | null;
+                                /** @description Its sender locked it: everyone, the sender included, needs their own app lock code to open it, each time. Null when it isn't locked */
+                                codeLock?: {
+                                    /** @description Content is withheld for you; open it with your app lock code at POST /v1/messages/{id}/unlock */
+                                    locked: boolean;
+                                } | null;
+                                /** @description Photos and videos sent together share it and show as one album */
+                                groupId: string | null;
+                                /** @description In a group, the message this one comments on; it then shows only in that message's comments */
+                                threadId: string | null;
+                                /** @description A group message's comments; null on comments themselves and on service messages */
+                                thread: {
+                                    /** @description How many comments it has */
+                                    count: number;
+                                    /** @description Its comments are closed, by an admin or by `limit` or `closesAt`: nobody can add one until an admin reopens them */
+                                    closed: boolean;
+                                    /** @description Comments close once this many come from people other than its author */
+                                    limit: number | null;
+                                    /**
+                                     * Format: date-time
+                                     * @description Comments close at this time
+                                     */
+                                    closesAt: string | null;
+                                } | null;
+                                replyTo: {
+                                    id: string;
+                                    senderId: string;
+                                    /** @enum {string} */
+                                    type: "text" | "image" | "video" | "video_note" | "voice" | "file" | "gif" | "sticker" | "service" | "location" | "checklist" | "game" | "poll";
+                                    text: string | null;
+                                    spoiler: boolean;
+                                    ephemeral: boolean;
+                                    deleted: boolean;
+                                    /** @description The quoted text is encrypted; show it from your own copy of that message */
+                                    encrypted: boolean;
+                                    /**
+                                     * Format: date-time
+                                     * @description When the quoted message was sent
+                                     */
+                                    sentAt: string;
+                                    /** @description The quoted message is locked with a code, so its text never shows here */
+                                    locked?: boolean;
+                                } | null;
+                                /** @description The story or note a message answers, as it was when they answered: it may be gone since */
+                                story: {
+                                    id: string;
+                                    /** @description Whose story or note it is */
+                                    ownerId: string;
+                                    /**
+                                     * @description note: a note they answered, its text in `text`
+                                     * @enum {string}
+                                     */
+                                    kind: "text" | "image" | "video" | "note";
+                                    /** @description The start of the story's text or caption */
+                                    text: string | null;
+                                    /** @description A text story's colour, or two for a gradient */
+                                    background: string | null;
+                                    /**
+                                     * Format: uri
+                                     * @description A photo story's picture, or a video's first frame; it stops working once the story is gone
+                                     */
+                                    imageUrl: string | null;
+                                } | null;
+                                /** @description What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `pin` means they pinned a message; `shared_to` means they shared a message from this chat to their story or as their note; `resend_request` means they couldn't open an encrypted message and asked the sender for it again; `screenshot` means they took a screenshot of the chat, or only tried to when `blocked` (the app stops them; detected on the web, on iOS and on Android 14 and up); `call` logs a call the sender made; `live_invite` is posted in your chat when `from` asks you to a live game; `live_result` is how a live game you played alone against Six Frites Game ended, for you; in a group, `group_created`, `joined`, `left`, `removed`, `renamed` and `group_photo` tell what happened to the group and to whom (`name` is how they showed there) */
+                                action: ({
+                                    /** @enum {string} */
+                                    type: "auto_delete";
+                                    secs: number | null;
+                                } | {
+                                    /** @enum {string} */
+                                    type: "theme";
+                                    theme: string | null;
+                                } | {
+                                    /** @enum {string} */
+                                    type: "e2ee";
+                                } | {
+                                    /** @enum {string} */
+                                    type: "vanish";
+                                    on: boolean;
+                                } | {
+                                    /** @enum {string} */
+                                    type: "pin";
+                                } | {
+                                    /** @enum {string} */
+                                    type: "screenshot";
+                                    blocked?: boolean;
                                 } | {
                                     /** @enum {string} */
                                     type: "resend_request";
@@ -15664,6 +16335,11 @@ export interface paths {
                                  */
                                 resendUntil: string | null;
                             } | null;
+                            /** @description Its sender locked it: everyone, the sender included, needs their own app lock code to open it, each time. Null when it isn't locked */
+                            codeLock?: {
+                                /** @description Content is withheld for you; open it with your app lock code at POST /v1/messages/{id}/unlock */
+                                locked: boolean;
+                            } | null;
                             /** @description Photos and videos sent together share it and show as one album */
                             groupId: string | null;
                             /** @description In a group, the message this one comments on; it then shows only in that message's comments */
@@ -15698,6 +16374,8 @@ export interface paths {
                                  * @description When the quoted message was sent
                                  */
                                 sentAt: string;
+                                /** @description The quoted message is locked with a code, so its text never shows here */
+                                locked?: boolean;
                             } | null;
                             /** @description The story or note a message answers, as it was when they answered: it may be gone since */
                             story: {
@@ -15719,7 +16397,7 @@ export interface paths {
                                  */
                                 imageUrl: string | null;
                             } | null;
-                            /** @description What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `pin` means they pinned a message; `shared_to` means they shared a message from this chat to their story or as their note; `resend_request` means they couldn't open an encrypted message and asked the sender for it again; `screenshot` means they took a screenshot of the chat (only detected on the web, and not everywhere); `call` logs a call the sender made; `live_invite` is posted in your chat when `from` asks you to a live game; `live_result` is how a live game you played alone against Six Frites Game ended, for you; in a group, `group_created`, `joined`, `left`, `removed`, `renamed` and `group_photo` tell what happened to the group and to whom (`name` is how they showed there) */
+                            /** @description What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `pin` means they pinned a message; `shared_to` means they shared a message from this chat to their story or as their note; `resend_request` means they couldn't open an encrypted message and asked the sender for it again; `screenshot` means they took a screenshot of the chat, or only tried to when `blocked` (the app stops them; detected on the web, on iOS and on Android 14 and up); `call` logs a call the sender made; `live_invite` is posted in your chat when `from` asks you to a live game; `live_result` is how a live game you played alone against Six Frites Game ended, for you; in a group, `group_created`, `joined`, `left`, `removed`, `renamed` and `group_photo` tell what happened to the group and to whom (`name` is how they showed there) */
                             action: ({
                                 /** @enum {string} */
                                 type: "auto_delete";
@@ -15741,6 +16419,7 @@ export interface paths {
                             } | {
                                 /** @enum {string} */
                                 type: "screenshot";
+                                blocked?: boolean;
                             } | {
                                 /** @enum {string} */
                                 type: "resend_request";
@@ -16146,6 +16825,11 @@ export interface paths {
                                  */
                                 resendUntil: string | null;
                             } | null;
+                            /** @description Its sender locked it: everyone, the sender included, needs their own app lock code to open it, each time. Null when it isn't locked */
+                            codeLock?: {
+                                /** @description Content is withheld for you; open it with your app lock code at POST /v1/messages/{id}/unlock */
+                                locked: boolean;
+                            } | null;
                             /** @description Photos and videos sent together share it and show as one album */
                             groupId: string | null;
                             /** @description In a group, the message this one comments on; it then shows only in that message's comments */
@@ -16180,6 +16864,8 @@ export interface paths {
                                  * @description When the quoted message was sent
                                  */
                                 sentAt: string;
+                                /** @description The quoted message is locked with a code, so its text never shows here */
+                                locked?: boolean;
                             } | null;
                             /** @description The story or note a message answers, as it was when they answered: it may be gone since */
                             story: {
@@ -16201,7 +16887,7 @@ export interface paths {
                                  */
                                 imageUrl: string | null;
                             } | null;
-                            /** @description What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `pin` means they pinned a message; `shared_to` means they shared a message from this chat to their story or as their note; `resend_request` means they couldn't open an encrypted message and asked the sender for it again; `screenshot` means they took a screenshot of the chat (only detected on the web, and not everywhere); `call` logs a call the sender made; `live_invite` is posted in your chat when `from` asks you to a live game; `live_result` is how a live game you played alone against Six Frites Game ended, for you; in a group, `group_created`, `joined`, `left`, `removed`, `renamed` and `group_photo` tell what happened to the group and to whom (`name` is how they showed there) */
+                            /** @description What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `pin` means they pinned a message; `shared_to` means they shared a message from this chat to their story or as their note; `resend_request` means they couldn't open an encrypted message and asked the sender for it again; `screenshot` means they took a screenshot of the chat, or only tried to when `blocked` (the app stops them; detected on the web, on iOS and on Android 14 and up); `call` logs a call the sender made; `live_invite` is posted in your chat when `from` asks you to a live game; `live_result` is how a live game you played alone against Six Frites Game ended, for you; in a group, `group_created`, `joined`, `left`, `removed`, `renamed` and `group_photo` tell what happened to the group and to whom (`name` is how they showed there) */
                             action: ({
                                 /** @enum {string} */
                                 type: "auto_delete";
@@ -16223,6 +16909,7 @@ export interface paths {
                             } | {
                                 /** @enum {string} */
                                 type: "screenshot";
+                                blocked?: boolean;
                             } | {
                                 /** @enum {string} */
                                 type: "resend_request";
@@ -16628,6 +17315,11 @@ export interface paths {
                                  */
                                 resendUntil: string | null;
                             } | null;
+                            /** @description Its sender locked it: everyone, the sender included, needs their own app lock code to open it, each time. Null when it isn't locked */
+                            codeLock?: {
+                                /** @description Content is withheld for you; open it with your app lock code at POST /v1/messages/{id}/unlock */
+                                locked: boolean;
+                            } | null;
                             /** @description Photos and videos sent together share it and show as one album */
                             groupId: string | null;
                             /** @description In a group, the message this one comments on; it then shows only in that message's comments */
@@ -16662,6 +17354,8 @@ export interface paths {
                                  * @description When the quoted message was sent
                                  */
                                 sentAt: string;
+                                /** @description The quoted message is locked with a code, so its text never shows here */
+                                locked?: boolean;
                             } | null;
                             /** @description The story or note a message answers, as it was when they answered: it may be gone since */
                             story: {
@@ -16683,7 +17377,7 @@ export interface paths {
                                  */
                                 imageUrl: string | null;
                             } | null;
-                            /** @description What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `pin` means they pinned a message; `shared_to` means they shared a message from this chat to their story or as their note; `resend_request` means they couldn't open an encrypted message and asked the sender for it again; `screenshot` means they took a screenshot of the chat (only detected on the web, and not everywhere); `call` logs a call the sender made; `live_invite` is posted in your chat when `from` asks you to a live game; `live_result` is how a live game you played alone against Six Frites Game ended, for you; in a group, `group_created`, `joined`, `left`, `removed`, `renamed` and `group_photo` tell what happened to the group and to whom (`name` is how they showed there) */
+                            /** @description What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `pin` means they pinned a message; `shared_to` means they shared a message from this chat to their story or as their note; `resend_request` means they couldn't open an encrypted message and asked the sender for it again; `screenshot` means they took a screenshot of the chat, or only tried to when `blocked` (the app stops them; detected on the web, on iOS and on Android 14 and up); `call` logs a call the sender made; `live_invite` is posted in your chat when `from` asks you to a live game; `live_result` is how a live game you played alone against Six Frites Game ended, for you; in a group, `group_created`, `joined`, `left`, `removed`, `renamed` and `group_photo` tell what happened to the group and to whom (`name` is how they showed there) */
                             action: ({
                                 /** @enum {string} */
                                 type: "auto_delete";
@@ -16705,6 +17399,7 @@ export interface paths {
                             } | {
                                 /** @enum {string} */
                                 type: "screenshot";
+                                blocked?: boolean;
                             } | {
                                 /** @enum {string} */
                                 type: "resend_request";
@@ -17141,6 +17836,11 @@ export interface paths {
                                  */
                                 resendUntil: string | null;
                             } | null;
+                            /** @description Its sender locked it: everyone, the sender included, needs their own app lock code to open it, each time. Null when it isn't locked */
+                            codeLock?: {
+                                /** @description Content is withheld for you; open it with your app lock code at POST /v1/messages/{id}/unlock */
+                                locked: boolean;
+                            } | null;
                             /** @description Photos and videos sent together share it and show as one album */
                             groupId: string | null;
                             /** @description In a group, the message this one comments on; it then shows only in that message's comments */
@@ -17175,6 +17875,8 @@ export interface paths {
                                  * @description When the quoted message was sent
                                  */
                                 sentAt: string;
+                                /** @description The quoted message is locked with a code, so its text never shows here */
+                                locked?: boolean;
                             } | null;
                             /** @description The story or note a message answers, as it was when they answered: it may be gone since */
                             story: {
@@ -17196,7 +17898,7 @@ export interface paths {
                                  */
                                 imageUrl: string | null;
                             } | null;
-                            /** @description What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `pin` means they pinned a message; `shared_to` means they shared a message from this chat to their story or as their note; `resend_request` means they couldn't open an encrypted message and asked the sender for it again; `screenshot` means they took a screenshot of the chat (only detected on the web, and not everywhere); `call` logs a call the sender made; `live_invite` is posted in your chat when `from` asks you to a live game; `live_result` is how a live game you played alone against Six Frites Game ended, for you; in a group, `group_created`, `joined`, `left`, `removed`, `renamed` and `group_photo` tell what happened to the group and to whom (`name` is how they showed there) */
+                            /** @description What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `pin` means they pinned a message; `shared_to` means they shared a message from this chat to their story or as their note; `resend_request` means they couldn't open an encrypted message and asked the sender for it again; `screenshot` means they took a screenshot of the chat, or only tried to when `blocked` (the app stops them; detected on the web, on iOS and on Android 14 and up); `call` logs a call the sender made; `live_invite` is posted in your chat when `from` asks you to a live game; `live_result` is how a live game you played alone against Six Frites Game ended, for you; in a group, `group_created`, `joined`, `left`, `removed`, `renamed` and `group_photo` tell what happened to the group and to whom (`name` is how they showed there) */
                             action: ({
                                 /** @enum {string} */
                                 type: "auto_delete";
@@ -17218,6 +17920,7 @@ export interface paths {
                             } | {
                                 /** @enum {string} */
                                 type: "screenshot";
+                                blocked?: boolean;
                             } | {
                                 /** @enum {string} */
                                 type: "resend_request";
@@ -17633,6 +18336,11 @@ export interface paths {
                                  */
                                 resendUntil: string | null;
                             } | null;
+                            /** @description Its sender locked it: everyone, the sender included, needs their own app lock code to open it, each time. Null when it isn't locked */
+                            codeLock?: {
+                                /** @description Content is withheld for you; open it with your app lock code at POST /v1/messages/{id}/unlock */
+                                locked: boolean;
+                            } | null;
                             /** @description Photos and videos sent together share it and show as one album */
                             groupId: string | null;
                             /** @description In a group, the message this one comments on; it then shows only in that message's comments */
@@ -17667,6 +18375,8 @@ export interface paths {
                                  * @description When the quoted message was sent
                                  */
                                 sentAt: string;
+                                /** @description The quoted message is locked with a code, so its text never shows here */
+                                locked?: boolean;
                             } | null;
                             /** @description The story or note a message answers, as it was when they answered: it may be gone since */
                             story: {
@@ -17688,7 +18398,7 @@ export interface paths {
                                  */
                                 imageUrl: string | null;
                             } | null;
-                            /** @description What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `pin` means they pinned a message; `shared_to` means they shared a message from this chat to their story or as their note; `resend_request` means they couldn't open an encrypted message and asked the sender for it again; `screenshot` means they took a screenshot of the chat (only detected on the web, and not everywhere); `call` logs a call the sender made; `live_invite` is posted in your chat when `from` asks you to a live game; `live_result` is how a live game you played alone against Six Frites Game ended, for you; in a group, `group_created`, `joined`, `left`, `removed`, `renamed` and `group_photo` tell what happened to the group and to whom (`name` is how they showed there) */
+                            /** @description What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `pin` means they pinned a message; `shared_to` means they shared a message from this chat to their story or as their note; `resend_request` means they couldn't open an encrypted message and asked the sender for it again; `screenshot` means they took a screenshot of the chat, or only tried to when `blocked` (the app stops them; detected on the web, on iOS and on Android 14 and up); `call` logs a call the sender made; `live_invite` is posted in your chat when `from` asks you to a live game; `live_result` is how a live game you played alone against Six Frites Game ended, for you; in a group, `group_created`, `joined`, `left`, `removed`, `renamed` and `group_photo` tell what happened to the group and to whom (`name` is how they showed there) */
                             action: ({
                                 /** @enum {string} */
                                 type: "auto_delete";
@@ -17710,6 +18420,7 @@ export interface paths {
                             } | {
                                 /** @enum {string} */
                                 type: "screenshot";
+                                blocked?: boolean;
                             } | {
                                 /** @enum {string} */
                                 type: "resend_request";
@@ -18167,6 +18878,11 @@ export interface paths {
                                      */
                                     resendUntil: string | null;
                                 } | null;
+                                /** @description Its sender locked it: everyone, the sender included, needs their own app lock code to open it, each time. Null when it isn't locked */
+                                codeLock?: {
+                                    /** @description Content is withheld for you; open it with your app lock code at POST /v1/messages/{id}/unlock */
+                                    locked: boolean;
+                                } | null;
                                 /** @description Photos and videos sent together share it and show as one album */
                                 groupId: string | null;
                                 /** @description In a group, the message this one comments on; it then shows only in that message's comments */
@@ -18201,6 +18917,8 @@ export interface paths {
                                      * @description When the quoted message was sent
                                      */
                                     sentAt: string;
+                                    /** @description The quoted message is locked with a code, so its text never shows here */
+                                    locked?: boolean;
                                 } | null;
                                 /** @description The story or note a message answers, as it was when they answered: it may be gone since */
                                 story: {
@@ -18222,7 +18940,7 @@ export interface paths {
                                      */
                                     imageUrl: string | null;
                                 } | null;
-                                /** @description What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `pin` means they pinned a message; `shared_to` means they shared a message from this chat to their story or as their note; `resend_request` means they couldn't open an encrypted message and asked the sender for it again; `screenshot` means they took a screenshot of the chat (only detected on the web, and not everywhere); `call` logs a call the sender made; `live_invite` is posted in your chat when `from` asks you to a live game; `live_result` is how a live game you played alone against Six Frites Game ended, for you; in a group, `group_created`, `joined`, `left`, `removed`, `renamed` and `group_photo` tell what happened to the group and to whom (`name` is how they showed there) */
+                                /** @description What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `pin` means they pinned a message; `shared_to` means they shared a message from this chat to their story or as their note; `resend_request` means they couldn't open an encrypted message and asked the sender for it again; `screenshot` means they took a screenshot of the chat, or only tried to when `blocked` (the app stops them; detected on the web, on iOS and on Android 14 and up); `call` logs a call the sender made; `live_invite` is posted in your chat when `from` asks you to a live game; `live_result` is how a live game you played alone against Six Frites Game ended, for you; in a group, `group_created`, `joined`, `left`, `removed`, `renamed` and `group_photo` tell what happened to the group and to whom (`name` is how they showed there) */
                                 action: ({
                                     /** @enum {string} */
                                     type: "auto_delete";
@@ -18244,6 +18962,7 @@ export interface paths {
                                 } | {
                                     /** @enum {string} */
                                     type: "screenshot";
+                                    blocked?: boolean;
                                 } | {
                                     /** @enum {string} */
                                     type: "resend_request";
@@ -18675,6 +19394,8 @@ export interface paths {
                             /** @description Destroy this many seconds after the recipient first opens it */
                             ttlSeconds?: number;
                         };
+                        /** @description Lock it: everyone, you included, opens it with their own app lock code, each time. Text, files and locations only; with `ephemeral` it also self-destructs once opened */
+                        codeLock?: boolean;
                         /** @description End-to-end encrypted content. The server rejects it with DEVICES_CHANGED if a device is missing or unknown. */
                         encrypted?: {
                             /** @description One per device of every member, your other devices included, except the one sending */
@@ -18811,6 +19532,11 @@ export interface paths {
                                  */
                                 resendUntil: string | null;
                             } | null;
+                            /** @description Its sender locked it: everyone, the sender included, needs their own app lock code to open it, each time. Null when it isn't locked */
+                            codeLock?: {
+                                /** @description Content is withheld for you; open it with your app lock code at POST /v1/messages/{id}/unlock */
+                                locked: boolean;
+                            } | null;
                             /** @description Photos and videos sent together share it and show as one album */
                             groupId: string | null;
                             /** @description In a group, the message this one comments on; it then shows only in that message's comments */
@@ -18845,6 +19571,8 @@ export interface paths {
                                  * @description When the quoted message was sent
                                  */
                                 sentAt: string;
+                                /** @description The quoted message is locked with a code, so its text never shows here */
+                                locked?: boolean;
                             } | null;
                             /** @description The story or note a message answers, as it was when they answered: it may be gone since */
                             story: {
@@ -18866,7 +19594,7 @@ export interface paths {
                                  */
                                 imageUrl: string | null;
                             } | null;
-                            /** @description What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `pin` means they pinned a message; `shared_to` means they shared a message from this chat to their story or as their note; `resend_request` means they couldn't open an encrypted message and asked the sender for it again; `screenshot` means they took a screenshot of the chat (only detected on the web, and not everywhere); `call` logs a call the sender made; `live_invite` is posted in your chat when `from` asks you to a live game; `live_result` is how a live game you played alone against Six Frites Game ended, for you; in a group, `group_created`, `joined`, `left`, `removed`, `renamed` and `group_photo` tell what happened to the group and to whom (`name` is how they showed there) */
+                            /** @description What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `pin` means they pinned a message; `shared_to` means they shared a message from this chat to their story or as their note; `resend_request` means they couldn't open an encrypted message and asked the sender for it again; `screenshot` means they took a screenshot of the chat, or only tried to when `blocked` (the app stops them; detected on the web, on iOS and on Android 14 and up); `call` logs a call the sender made; `live_invite` is posted in your chat when `from` asks you to a live game; `live_result` is how a live game you played alone against Six Frites Game ended, for you; in a group, `group_created`, `joined`, `left`, `removed`, `renamed` and `group_photo` tell what happened to the group and to whom (`name` is how they showed there) */
                             action: ({
                                 /** @enum {string} */
                                 type: "auto_delete";
@@ -18888,6 +19616,7 @@ export interface paths {
                             } | {
                                 /** @enum {string} */
                                 type: "screenshot";
+                                blocked?: boolean;
                             } | {
                                 /** @enum {string} */
                                 type: "resend_request";
@@ -19250,6 +19979,8 @@ export interface paths {
                                     maxViews: number | null;
                                     ttlSeconds: number | null;
                                 } | null;
+                                /** @description It will be sent locked with a code */
+                                codeLock?: boolean;
                                 replyTo: {
                                     id: string;
                                     senderId: string;
@@ -19266,6 +19997,8 @@ export interface paths {
                                      * @description When the quoted message was sent
                                      */
                                     sentAt: string;
+                                    /** @description The quoted message is locked with a code, so its text never shows here */
+                                    locked?: boolean;
                                 } | null;
                                 /** Format: date-time */
                                 sendAt: string;
@@ -19466,6 +20199,8 @@ export interface paths {
                             /** @description Destroy this many seconds after the recipient first opens it */
                             ttlSeconds?: number;
                         };
+                        /** @description Lock it: everyone, you included, opens it with their own app lock code, each time. Text, files and locations only; with `ephemeral` it also self-destructs once opened */
+                        codeLock?: boolean;
                         /** @description End-to-end encrypted content. The server rejects it with DEVICES_CHANGED if a device is missing or unknown. */
                         encrypted?: {
                             /** @description One per device of every member, your other devices included, except the one sending */
@@ -19565,6 +20300,8 @@ export interface paths {
                                 maxViews: number | null;
                                 ttlSeconds: number | null;
                             } | null;
+                            /** @description It will be sent locked with a code */
+                            codeLock?: boolean;
                             replyTo: {
                                 id: string;
                                 senderId: string;
@@ -19581,6 +20318,8 @@ export interface paths {
                                  * @description When the quoted message was sent
                                  */
                                 sentAt: string;
+                                /** @description The quoted message is locked with a code, so its text never shows here */
+                                locked?: boolean;
                             } | null;
                             /** Format: date-time */
                             sendAt: string;
@@ -19782,6 +20521,8 @@ export interface paths {
                                 maxViews: number | null;
                                 ttlSeconds: number | null;
                             } | null;
+                            /** @description It will be sent locked with a code */
+                            codeLock?: boolean;
                             replyTo: {
                                 id: string;
                                 senderId: string;
@@ -19798,6 +20539,8 @@ export interface paths {
                                  * @description When the quoted message was sent
                                  */
                                 sentAt: string;
+                                /** @description The quoted message is locked with a code, so its text never shows here */
+                                locked?: boolean;
                             } | null;
                             /** Format: date-time */
                             sendAt: string;
@@ -19965,6 +20708,11 @@ export interface paths {
                                  */
                                 resendUntil: string | null;
                             } | null;
+                            /** @description Its sender locked it: everyone, the sender included, needs their own app lock code to open it, each time. Null when it isn't locked */
+                            codeLock?: {
+                                /** @description Content is withheld for you; open it with your app lock code at POST /v1/messages/{id}/unlock */
+                                locked: boolean;
+                            } | null;
                             /** @description Photos and videos sent together share it and show as one album */
                             groupId: string | null;
                             /** @description In a group, the message this one comments on; it then shows only in that message's comments */
@@ -19999,6 +20747,8 @@ export interface paths {
                                  * @description When the quoted message was sent
                                  */
                                 sentAt: string;
+                                /** @description The quoted message is locked with a code, so its text never shows here */
+                                locked?: boolean;
                             } | null;
                             /** @description The story or note a message answers, as it was when they answered: it may be gone since */
                             story: {
@@ -20020,7 +20770,7 @@ export interface paths {
                                  */
                                 imageUrl: string | null;
                             } | null;
-                            /** @description What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `pin` means they pinned a message; `shared_to` means they shared a message from this chat to their story or as their note; `resend_request` means they couldn't open an encrypted message and asked the sender for it again; `screenshot` means they took a screenshot of the chat (only detected on the web, and not everywhere); `call` logs a call the sender made; `live_invite` is posted in your chat when `from` asks you to a live game; `live_result` is how a live game you played alone against Six Frites Game ended, for you; in a group, `group_created`, `joined`, `left`, `removed`, `renamed` and `group_photo` tell what happened to the group and to whom (`name` is how they showed there) */
+                            /** @description What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `pin` means they pinned a message; `shared_to` means they shared a message from this chat to their story or as their note; `resend_request` means they couldn't open an encrypted message and asked the sender for it again; `screenshot` means they took a screenshot of the chat, or only tried to when `blocked` (the app stops them; detected on the web, on iOS and on Android 14 and up); `call` logs a call the sender made; `live_invite` is posted in your chat when `from` asks you to a live game; `live_result` is how a live game you played alone against Six Frites Game ended, for you; in a group, `group_created`, `joined`, `left`, `removed`, `renamed` and `group_photo` tell what happened to the group and to whom (`name` is how they showed there) */
                             action: ({
                                 /** @enum {string} */
                                 type: "auto_delete";
@@ -20042,6 +20792,7 @@ export interface paths {
                             } | {
                                 /** @enum {string} */
                                 type: "screenshot";
+                                blocked?: boolean;
                             } | {
                                 /** @enum {string} */
                                 type: "resend_request";
@@ -20377,7 +21128,7 @@ export interface paths {
         put?: never;
         /**
          * Say you took a screenshot of the chat
-         * @description Posts a `screenshot` service message, so the others see it and get a push.
+         * @description Posts a `screenshot` service message, so the others see it and get a push. `blocked`: the app stopped the screenshot, so the message says they tried.
          */
         post: {
             parameters: {
@@ -20388,7 +21139,14 @@ export interface paths {
                 };
                 cookie?: never;
             };
-            requestBody?: never;
+            requestBody: {
+                content: {
+                    "application/json": {
+                        /** @default false */
+                        blocked?: boolean;
+                    } | null;
+                };
+            };
             responses: {
                 /** @description Default Response */
                 204: {
@@ -21095,6 +21853,11 @@ export interface paths {
                                          */
                                         resendUntil: string | null;
                                     } | null;
+                                    /** @description Its sender locked it: everyone, the sender included, needs their own app lock code to open it, each time. Null when it isn't locked */
+                                    codeLock?: {
+                                        /** @description Content is withheld for you; open it with your app lock code at POST /v1/messages/{id}/unlock */
+                                        locked: boolean;
+                                    } | null;
                                     /** @description Photos and videos sent together share it and show as one album */
                                     groupId: string | null;
                                     /** @description In a group, the message this one comments on; it then shows only in that message's comments */
@@ -21129,6 +21892,8 @@ export interface paths {
                                          * @description When the quoted message was sent
                                          */
                                         sentAt: string;
+                                        /** @description The quoted message is locked with a code, so its text never shows here */
+                                        locked?: boolean;
                                     } | null;
                                     /** @description The story or note a message answers, as it was when they answered: it may be gone since */
                                     story: {
@@ -21150,7 +21915,7 @@ export interface paths {
                                          */
                                         imageUrl: string | null;
                                     } | null;
-                                    /** @description What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `pin` means they pinned a message; `shared_to` means they shared a message from this chat to their story or as their note; `resend_request` means they couldn't open an encrypted message and asked the sender for it again; `screenshot` means they took a screenshot of the chat (only detected on the web, and not everywhere); `call` logs a call the sender made; `live_invite` is posted in your chat when `from` asks you to a live game; `live_result` is how a live game you played alone against Six Frites Game ended, for you; in a group, `group_created`, `joined`, `left`, `removed`, `renamed` and `group_photo` tell what happened to the group and to whom (`name` is how they showed there) */
+                                    /** @description What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `pin` means they pinned a message; `shared_to` means they shared a message from this chat to their story or as their note; `resend_request` means they couldn't open an encrypted message and asked the sender for it again; `screenshot` means they took a screenshot of the chat, or only tried to when `blocked` (the app stops them; detected on the web, on iOS and on Android 14 and up); `call` logs a call the sender made; `live_invite` is posted in your chat when `from` asks you to a live game; `live_result` is how a live game you played alone against Six Frites Game ended, for you; in a group, `group_created`, `joined`, `left`, `removed`, `renamed` and `group_photo` tell what happened to the group and to whom (`name` is how they showed there) */
                                     action: ({
                                         /** @enum {string} */
                                         type: "auto_delete";
@@ -21172,6 +21937,7 @@ export interface paths {
                                     } | {
                                         /** @enum {string} */
                                         type: "screenshot";
+                                        blocked?: boolean;
                                     } | {
                                         /** @enum {string} */
                                         type: "resend_request";
@@ -21542,6 +22308,11 @@ export interface paths {
                                          */
                                         resendUntil: string | null;
                                     } | null;
+                                    /** @description Its sender locked it: everyone, the sender included, needs their own app lock code to open it, each time. Null when it isn't locked */
+                                    codeLock?: {
+                                        /** @description Content is withheld for you; open it with your app lock code at POST /v1/messages/{id}/unlock */
+                                        locked: boolean;
+                                    } | null;
                                     /** @description Photos and videos sent together share it and show as one album */
                                     groupId: string | null;
                                     /** @description In a group, the message this one comments on; it then shows only in that message's comments */
@@ -21576,6 +22347,8 @@ export interface paths {
                                          * @description When the quoted message was sent
                                          */
                                         sentAt: string;
+                                        /** @description The quoted message is locked with a code, so its text never shows here */
+                                        locked?: boolean;
                                     } | null;
                                     /** @description The story or note a message answers, as it was when they answered: it may be gone since */
                                     story: {
@@ -21597,7 +22370,7 @@ export interface paths {
                                          */
                                         imageUrl: string | null;
                                     } | null;
-                                    /** @description What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `pin` means they pinned a message; `shared_to` means they shared a message from this chat to their story or as their note; `resend_request` means they couldn't open an encrypted message and asked the sender for it again; `screenshot` means they took a screenshot of the chat (only detected on the web, and not everywhere); `call` logs a call the sender made; `live_invite` is posted in your chat when `from` asks you to a live game; `live_result` is how a live game you played alone against Six Frites Game ended, for you; in a group, `group_created`, `joined`, `left`, `removed`, `renamed` and `group_photo` tell what happened to the group and to whom (`name` is how they showed there) */
+                                    /** @description What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `pin` means they pinned a message; `shared_to` means they shared a message from this chat to their story or as their note; `resend_request` means they couldn't open an encrypted message and asked the sender for it again; `screenshot` means they took a screenshot of the chat, or only tried to when `blocked` (the app stops them; detected on the web, on iOS and on Android 14 and up); `call` logs a call the sender made; `live_invite` is posted in your chat when `from` asks you to a live game; `live_result` is how a live game you played alone against Six Frites Game ended, for you; in a group, `group_created`, `joined`, `left`, `removed`, `renamed` and `group_photo` tell what happened to the group and to whom (`name` is how they showed there) */
                                     action: ({
                                         /** @enum {string} */
                                         type: "auto_delete";
@@ -21619,6 +22392,7 @@ export interface paths {
                                     } | {
                                         /** @enum {string} */
                                         type: "screenshot";
+                                        blocked?: boolean;
                                     } | {
                                         /** @enum {string} */
                                         type: "resend_request";
@@ -22064,6 +22838,11 @@ export interface paths {
                                              */
                                             resendUntil: string | null;
                                         } | null;
+                                        /** @description Its sender locked it: everyone, the sender included, needs their own app lock code to open it, each time. Null when it isn't locked */
+                                        codeLock?: {
+                                            /** @description Content is withheld for you; open it with your app lock code at POST /v1/messages/{id}/unlock */
+                                            locked: boolean;
+                                        } | null;
                                         /** @description Photos and videos sent together share it and show as one album */
                                         groupId: string | null;
                                         /** @description In a group, the message this one comments on; it then shows only in that message's comments */
@@ -22098,6 +22877,8 @@ export interface paths {
                                              * @description When the quoted message was sent
                                              */
                                             sentAt: string;
+                                            /** @description The quoted message is locked with a code, so its text never shows here */
+                                            locked?: boolean;
                                         } | null;
                                         /** @description The story or note a message answers, as it was when they answered: it may be gone since */
                                         story: {
@@ -22119,7 +22900,7 @@ export interface paths {
                                              */
                                             imageUrl: string | null;
                                         } | null;
-                                        /** @description What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `pin` means they pinned a message; `shared_to` means they shared a message from this chat to their story or as their note; `resend_request` means they couldn't open an encrypted message and asked the sender for it again; `screenshot` means they took a screenshot of the chat (only detected on the web, and not everywhere); `call` logs a call the sender made; `live_invite` is posted in your chat when `from` asks you to a live game; `live_result` is how a live game you played alone against Six Frites Game ended, for you; in a group, `group_created`, `joined`, `left`, `removed`, `renamed` and `group_photo` tell what happened to the group and to whom (`name` is how they showed there) */
+                                        /** @description What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `pin` means they pinned a message; `shared_to` means they shared a message from this chat to their story or as their note; `resend_request` means they couldn't open an encrypted message and asked the sender for it again; `screenshot` means they took a screenshot of the chat, or only tried to when `blocked` (the app stops them; detected on the web, on iOS and on Android 14 and up); `call` logs a call the sender made; `live_invite` is posted in your chat when `from` asks you to a live game; `live_result` is how a live game you played alone against Six Frites Game ended, for you; in a group, `group_created`, `joined`, `left`, `removed`, `renamed` and `group_photo` tell what happened to the group and to whom (`name` is how they showed there) */
                                         action: ({
                                             /** @enum {string} */
                                             type: "auto_delete";
@@ -22141,6 +22922,7 @@ export interface paths {
                                         } | {
                                             /** @enum {string} */
                                             type: "screenshot";
+                                            blocked?: boolean;
                                         } | {
                                             /** @enum {string} */
                                             type: "resend_request";
@@ -22529,6 +23311,11 @@ export interface paths {
                                              */
                                             resendUntil: string | null;
                                         } | null;
+                                        /** @description Its sender locked it: everyone, the sender included, needs their own app lock code to open it, each time. Null when it isn't locked */
+                                        codeLock?: {
+                                            /** @description Content is withheld for you; open it with your app lock code at POST /v1/messages/{id}/unlock */
+                                            locked: boolean;
+                                        } | null;
                                         /** @description Photos and videos sent together share it and show as one album */
                                         groupId: string | null;
                                         /** @description In a group, the message this one comments on; it then shows only in that message's comments */
@@ -22563,6 +23350,8 @@ export interface paths {
                                              * @description When the quoted message was sent
                                              */
                                             sentAt: string;
+                                            /** @description The quoted message is locked with a code, so its text never shows here */
+                                            locked?: boolean;
                                         } | null;
                                         /** @description The story or note a message answers, as it was when they answered: it may be gone since */
                                         story: {
@@ -22584,7 +23373,7 @@ export interface paths {
                                              */
                                             imageUrl: string | null;
                                         } | null;
-                                        /** @description What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `pin` means they pinned a message; `shared_to` means they shared a message from this chat to their story or as their note; `resend_request` means they couldn't open an encrypted message and asked the sender for it again; `screenshot` means they took a screenshot of the chat (only detected on the web, and not everywhere); `call` logs a call the sender made; `live_invite` is posted in your chat when `from` asks you to a live game; `live_result` is how a live game you played alone against Six Frites Game ended, for you; in a group, `group_created`, `joined`, `left`, `removed`, `renamed` and `group_photo` tell what happened to the group and to whom (`name` is how they showed there) */
+                                        /** @description What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `pin` means they pinned a message; `shared_to` means they shared a message from this chat to their story or as their note; `resend_request` means they couldn't open an encrypted message and asked the sender for it again; `screenshot` means they took a screenshot of the chat, or only tried to when `blocked` (the app stops them; detected on the web, on iOS and on Android 14 and up); `call` logs a call the sender made; `live_invite` is posted in your chat when `from` asks you to a live game; `live_result` is how a live game you played alone against Six Frites Game ended, for you; in a group, `group_created`, `joined`, `left`, `removed`, `renamed` and `group_photo` tell what happened to the group and to whom (`name` is how they showed there) */
                                         action: ({
                                             /** @enum {string} */
                                             type: "auto_delete";
@@ -22606,6 +23395,7 @@ export interface paths {
                                         } | {
                                             /** @enum {string} */
                                             type: "screenshot";
+                                            blocked?: boolean;
                                         } | {
                                             /** @enum {string} */
                                             type: "resend_request";
@@ -24008,6 +24798,11 @@ export interface paths {
                                  */
                                 resendUntil: string | null;
                             } | null;
+                            /** @description Its sender locked it: everyone, the sender included, needs their own app lock code to open it, each time. Null when it isn't locked */
+                            codeLock?: {
+                                /** @description Content is withheld for you; open it with your app lock code at POST /v1/messages/{id}/unlock */
+                                locked: boolean;
+                            } | null;
                             /** @description Photos and videos sent together share it and show as one album */
                             groupId: string | null;
                             /** @description In a group, the message this one comments on; it then shows only in that message's comments */
@@ -24042,6 +24837,8 @@ export interface paths {
                                  * @description When the quoted message was sent
                                  */
                                 sentAt: string;
+                                /** @description The quoted message is locked with a code, so its text never shows here */
+                                locked?: boolean;
                             } | null;
                             /** @description The story or note a message answers, as it was when they answered: it may be gone since */
                             story: {
@@ -24063,7 +24860,7 @@ export interface paths {
                                  */
                                 imageUrl: string | null;
                             } | null;
-                            /** @description What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `pin` means they pinned a message; `shared_to` means they shared a message from this chat to their story or as their note; `resend_request` means they couldn't open an encrypted message and asked the sender for it again; `screenshot` means they took a screenshot of the chat (only detected on the web, and not everywhere); `call` logs a call the sender made; `live_invite` is posted in your chat when `from` asks you to a live game; `live_result` is how a live game you played alone against Six Frites Game ended, for you; in a group, `group_created`, `joined`, `left`, `removed`, `renamed` and `group_photo` tell what happened to the group and to whom (`name` is how they showed there) */
+                            /** @description What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `pin` means they pinned a message; `shared_to` means they shared a message from this chat to their story or as their note; `resend_request` means they couldn't open an encrypted message and asked the sender for it again; `screenshot` means they took a screenshot of the chat, or only tried to when `blocked` (the app stops them; detected on the web, on iOS and on Android 14 and up); `call` logs a call the sender made; `live_invite` is posted in your chat when `from` asks you to a live game; `live_result` is how a live game you played alone against Six Frites Game ended, for you; in a group, `group_created`, `joined`, `left`, `removed`, `renamed` and `group_photo` tell what happened to the group and to whom (`name` is how they showed there) */
                             action: ({
                                 /** @enum {string} */
                                 type: "auto_delete";
@@ -24085,6 +24882,7 @@ export interface paths {
                             } | {
                                 /** @enum {string} */
                                 type: "screenshot";
+                                blocked?: boolean;
                             } | {
                                 /** @enum {string} */
                                 type: "resend_request";
@@ -28109,7 +28907,27 @@ export interface paths {
         };
         put?: never;
         post?: never;
-        delete?: never;
+        /** Delete all my notifications */
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                204: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": null;
+                    };
+                };
+            };
+        };
         options?: never;
         head?: never;
         patch?: never;
@@ -28125,6 +28943,45 @@ export interface paths {
         get?: never;
         put?: never;
         /** Mark every notification as seen */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                204: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": null;
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/notifications/read": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Mark every notification as read
+         * @description Unlike `seen`, this also marks read the ones marked unread again.
+         */
         post: {
             parameters: {
                 query?: never;
@@ -28455,6 +29312,11 @@ export interface paths {
                                      */
                                     resendUntil: string | null;
                                 } | null;
+                                /** @description Its sender locked it: everyone, the sender included, needs their own app lock code to open it, each time. Null when it isn't locked */
+                                codeLock?: {
+                                    /** @description Content is withheld for you; open it with your app lock code at POST /v1/messages/{id}/unlock */
+                                    locked: boolean;
+                                } | null;
                                 /** @description Photos and videos sent together share it and show as one album */
                                 groupId: string | null;
                                 /** @description In a group, the message this one comments on; it then shows only in that message's comments */
@@ -28489,6 +29351,8 @@ export interface paths {
                                      * @description When the quoted message was sent
                                      */
                                     sentAt: string;
+                                    /** @description The quoted message is locked with a code, so its text never shows here */
+                                    locked?: boolean;
                                 } | null;
                                 /** @description The story or note a message answers, as it was when they answered: it may be gone since */
                                 story: {
@@ -28510,7 +29374,7 @@ export interface paths {
                                      */
                                     imageUrl: string | null;
                                 } | null;
-                                /** @description What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `pin` means they pinned a message; `shared_to` means they shared a message from this chat to their story or as their note; `resend_request` means they couldn't open an encrypted message and asked the sender for it again; `screenshot` means they took a screenshot of the chat (only detected on the web, and not everywhere); `call` logs a call the sender made; `live_invite` is posted in your chat when `from` asks you to a live game; `live_result` is how a live game you played alone against Six Frites Game ended, for you; in a group, `group_created`, `joined`, `left`, `removed`, `renamed` and `group_photo` tell what happened to the group and to whom (`name` is how they showed there) */
+                                /** @description What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `pin` means they pinned a message; `shared_to` means they shared a message from this chat to their story or as their note; `resend_request` means they couldn't open an encrypted message and asked the sender for it again; `screenshot` means they took a screenshot of the chat, or only tried to when `blocked` (the app stops them; detected on the web, on iOS and on Android 14 and up); `call` logs a call the sender made; `live_invite` is posted in your chat when `from` asks you to a live game; `live_result` is how a live game you played alone against Six Frites Game ended, for you; in a group, `group_created`, `joined`, `left`, `removed`, `renamed` and `group_photo` tell what happened to the group and to whom (`name` is how they showed there) */
                                 action: ({
                                     /** @enum {string} */
                                     type: "auto_delete";
@@ -28532,6 +29396,7 @@ export interface paths {
                                 } | {
                                     /** @enum {string} */
                                     type: "screenshot";
+                                    blocked?: boolean;
                                 } | {
                                     /** @enum {string} */
                                     type: "resend_request";
@@ -28920,6 +29785,11 @@ export interface paths {
                                      */
                                     resendUntil: string | null;
                                 } | null;
+                                /** @description Its sender locked it: everyone, the sender included, needs their own app lock code to open it, each time. Null when it isn't locked */
+                                codeLock?: {
+                                    /** @description Content is withheld for you; open it with your app lock code at POST /v1/messages/{id}/unlock */
+                                    locked: boolean;
+                                } | null;
                                 /** @description Photos and videos sent together share it and show as one album */
                                 groupId: string | null;
                                 /** @description In a group, the message this one comments on; it then shows only in that message's comments */
@@ -28954,6 +29824,8 @@ export interface paths {
                                      * @description When the quoted message was sent
                                      */
                                     sentAt: string;
+                                    /** @description The quoted message is locked with a code, so its text never shows here */
+                                    locked?: boolean;
                                 } | null;
                                 /** @description The story or note a message answers, as it was when they answered: it may be gone since */
                                 story: {
@@ -28975,7 +29847,7 @@ export interface paths {
                                      */
                                     imageUrl: string | null;
                                 } | null;
-                                /** @description What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `pin` means they pinned a message; `shared_to` means they shared a message from this chat to their story or as their note; `resend_request` means they couldn't open an encrypted message and asked the sender for it again; `screenshot` means they took a screenshot of the chat (only detected on the web, and not everywhere); `call` logs a call the sender made; `live_invite` is posted in your chat when `from` asks you to a live game; `live_result` is how a live game you played alone against Six Frites Game ended, for you; in a group, `group_created`, `joined`, `left`, `removed`, `renamed` and `group_photo` tell what happened to the group and to whom (`name` is how they showed there) */
+                                /** @description What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `pin` means they pinned a message; `shared_to` means they shared a message from this chat to their story or as their note; `resend_request` means they couldn't open an encrypted message and asked the sender for it again; `screenshot` means they took a screenshot of the chat, or only tried to when `blocked` (the app stops them; detected on the web, on iOS and on Android 14 and up); `call` logs a call the sender made; `live_invite` is posted in your chat when `from` asks you to a live game; `live_result` is how a live game you played alone against Six Frites Game ended, for you; in a group, `group_created`, `joined`, `left`, `removed`, `renamed` and `group_photo` tell what happened to the group and to whom (`name` is how they showed there) */
                                 action: ({
                                     /** @enum {string} */
                                     type: "auto_delete";
@@ -28997,6 +29869,7 @@ export interface paths {
                                 } | {
                                     /** @enum {string} */
                                     type: "screenshot";
+                                    blocked?: boolean;
                                 } | {
                                     /** @enum {string} */
                                     type: "resend_request";
@@ -29524,6 +30397,11 @@ export interface paths {
                                      */
                                     resendUntil: string | null;
                                 } | null;
+                                /** @description Its sender locked it: everyone, the sender included, needs their own app lock code to open it, each time. Null when it isn't locked */
+                                codeLock?: {
+                                    /** @description Content is withheld for you; open it with your app lock code at POST /v1/messages/{id}/unlock */
+                                    locked: boolean;
+                                } | null;
                                 /** @description Photos and videos sent together share it and show as one album */
                                 groupId: string | null;
                                 /** @description In a group, the message this one comments on; it then shows only in that message's comments */
@@ -29558,6 +30436,8 @@ export interface paths {
                                      * @description When the quoted message was sent
                                      */
                                     sentAt: string;
+                                    /** @description The quoted message is locked with a code, so its text never shows here */
+                                    locked?: boolean;
                                 } | null;
                                 /** @description The story or note a message answers, as it was when they answered: it may be gone since */
                                 story: {
@@ -29579,7 +30459,7 @@ export interface paths {
                                      */
                                     imageUrl: string | null;
                                 } | null;
-                                /** @description What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `pin` means they pinned a message; `shared_to` means they shared a message from this chat to their story or as their note; `resend_request` means they couldn't open an encrypted message and asked the sender for it again; `screenshot` means they took a screenshot of the chat (only detected on the web, and not everywhere); `call` logs a call the sender made; `live_invite` is posted in your chat when `from` asks you to a live game; `live_result` is how a live game you played alone against Six Frites Game ended, for you; in a group, `group_created`, `joined`, `left`, `removed`, `renamed` and `group_photo` tell what happened to the group and to whom (`name` is how they showed there) */
+                                /** @description What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `pin` means they pinned a message; `shared_to` means they shared a message from this chat to their story or as their note; `resend_request` means they couldn't open an encrypted message and asked the sender for it again; `screenshot` means they took a screenshot of the chat, or only tried to when `blocked` (the app stops them; detected on the web, on iOS and on Android 14 and up); `call` logs a call the sender made; `live_invite` is posted in your chat when `from` asks you to a live game; `live_result` is how a live game you played alone against Six Frites Game ended, for you; in a group, `group_created`, `joined`, `left`, `removed`, `renamed` and `group_photo` tell what happened to the group and to whom (`name` is how they showed there) */
                                 action: ({
                                     /** @enum {string} */
                                     type: "auto_delete";
@@ -29601,6 +30481,7 @@ export interface paths {
                                 } | {
                                     /** @enum {string} */
                                     type: "screenshot";
+                                    blocked?: boolean;
                                 } | {
                                     /** @enum {string} */
                                     type: "resend_request";
@@ -29989,6 +30870,11 @@ export interface paths {
                                      */
                                     resendUntil: string | null;
                                 } | null;
+                                /** @description Its sender locked it: everyone, the sender included, needs their own app lock code to open it, each time. Null when it isn't locked */
+                                codeLock?: {
+                                    /** @description Content is withheld for you; open it with your app lock code at POST /v1/messages/{id}/unlock */
+                                    locked: boolean;
+                                } | null;
                                 /** @description Photos and videos sent together share it and show as one album */
                                 groupId: string | null;
                                 /** @description In a group, the message this one comments on; it then shows only in that message's comments */
@@ -30023,6 +30909,8 @@ export interface paths {
                                      * @description When the quoted message was sent
                                      */
                                     sentAt: string;
+                                    /** @description The quoted message is locked with a code, so its text never shows here */
+                                    locked?: boolean;
                                 } | null;
                                 /** @description The story or note a message answers, as it was when they answered: it may be gone since */
                                 story: {
@@ -30044,7 +30932,7 @@ export interface paths {
                                      */
                                     imageUrl: string | null;
                                 } | null;
-                                /** @description What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `pin` means they pinned a message; `shared_to` means they shared a message from this chat to their story or as their note; `resend_request` means they couldn't open an encrypted message and asked the sender for it again; `screenshot` means they took a screenshot of the chat (only detected on the web, and not everywhere); `call` logs a call the sender made; `live_invite` is posted in your chat when `from` asks you to a live game; `live_result` is how a live game you played alone against Six Frites Game ended, for you; in a group, `group_created`, `joined`, `left`, `removed`, `renamed` and `group_photo` tell what happened to the group and to whom (`name` is how they showed there) */
+                                /** @description What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `pin` means they pinned a message; `shared_to` means they shared a message from this chat to their story or as their note; `resend_request` means they couldn't open an encrypted message and asked the sender for it again; `screenshot` means they took a screenshot of the chat, or only tried to when `blocked` (the app stops them; detected on the web, on iOS and on Android 14 and up); `call` logs a call the sender made; `live_invite` is posted in your chat when `from` asks you to a live game; `live_result` is how a live game you played alone against Six Frites Game ended, for you; in a group, `group_created`, `joined`, `left`, `removed`, `renamed` and `group_photo` tell what happened to the group and to whom (`name` is how they showed there) */
                                 action: ({
                                     /** @enum {string} */
                                     type: "auto_delete";
@@ -30066,6 +30954,7 @@ export interface paths {
                                 } | {
                                     /** @enum {string} */
                                     type: "screenshot";
+                                    blocked?: boolean;
                                 } | {
                                     /** @enum {string} */
                                     type: "resend_request";
@@ -30573,6 +31462,11 @@ export interface paths {
                                      */
                                     resendUntil: string | null;
                                 } | null;
+                                /** @description Its sender locked it: everyone, the sender included, needs their own app lock code to open it, each time. Null when it isn't locked */
+                                codeLock?: {
+                                    /** @description Content is withheld for you; open it with your app lock code at POST /v1/messages/{id}/unlock */
+                                    locked: boolean;
+                                } | null;
                                 /** @description Photos and videos sent together share it and show as one album */
                                 groupId: string | null;
                                 /** @description In a group, the message this one comments on; it then shows only in that message's comments */
@@ -30607,6 +31501,8 @@ export interface paths {
                                      * @description When the quoted message was sent
                                      */
                                     sentAt: string;
+                                    /** @description The quoted message is locked with a code, so its text never shows here */
+                                    locked?: boolean;
                                 } | null;
                                 /** @description The story or note a message answers, as it was when they answered: it may be gone since */
                                 story: {
@@ -30628,7 +31524,7 @@ export interface paths {
                                      */
                                     imageUrl: string | null;
                                 } | null;
-                                /** @description What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `pin` means they pinned a message; `shared_to` means they shared a message from this chat to their story or as their note; `resend_request` means they couldn't open an encrypted message and asked the sender for it again; `screenshot` means they took a screenshot of the chat (only detected on the web, and not everywhere); `call` logs a call the sender made; `live_invite` is posted in your chat when `from` asks you to a live game; `live_result` is how a live game you played alone against Six Frites Game ended, for you; in a group, `group_created`, `joined`, `left`, `removed`, `renamed` and `group_photo` tell what happened to the group and to whom (`name` is how they showed there) */
+                                /** @description What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `pin` means they pinned a message; `shared_to` means they shared a message from this chat to their story or as their note; `resend_request` means they couldn't open an encrypted message and asked the sender for it again; `screenshot` means they took a screenshot of the chat, or only tried to when `blocked` (the app stops them; detected on the web, on iOS and on Android 14 and up); `call` logs a call the sender made; `live_invite` is posted in your chat when `from` asks you to a live game; `live_result` is how a live game you played alone against Six Frites Game ended, for you; in a group, `group_created`, `joined`, `left`, `removed`, `renamed` and `group_photo` tell what happened to the group and to whom (`name` is how they showed there) */
                                 action: ({
                                     /** @enum {string} */
                                     type: "auto_delete";
@@ -30650,6 +31546,7 @@ export interface paths {
                                 } | {
                                     /** @enum {string} */
                                     type: "screenshot";
+                                    blocked?: boolean;
                                 } | {
                                     /** @enum {string} */
                                     type: "resend_request";
@@ -31038,6 +31935,11 @@ export interface paths {
                                      */
                                     resendUntil: string | null;
                                 } | null;
+                                /** @description Its sender locked it: everyone, the sender included, needs their own app lock code to open it, each time. Null when it isn't locked */
+                                codeLock?: {
+                                    /** @description Content is withheld for you; open it with your app lock code at POST /v1/messages/{id}/unlock */
+                                    locked: boolean;
+                                } | null;
                                 /** @description Photos and videos sent together share it and show as one album */
                                 groupId: string | null;
                                 /** @description In a group, the message this one comments on; it then shows only in that message's comments */
@@ -31072,6 +31974,8 @@ export interface paths {
                                      * @description When the quoted message was sent
                                      */
                                     sentAt: string;
+                                    /** @description The quoted message is locked with a code, so its text never shows here */
+                                    locked?: boolean;
                                 } | null;
                                 /** @description The story or note a message answers, as it was when they answered: it may be gone since */
                                 story: {
@@ -31093,7 +31997,7 @@ export interface paths {
                                      */
                                     imageUrl: string | null;
                                 } | null;
-                                /** @description What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `pin` means they pinned a message; `shared_to` means they shared a message from this chat to their story or as their note; `resend_request` means they couldn't open an encrypted message and asked the sender for it again; `screenshot` means they took a screenshot of the chat (only detected on the web, and not everywhere); `call` logs a call the sender made; `live_invite` is posted in your chat when `from` asks you to a live game; `live_result` is how a live game you played alone against Six Frites Game ended, for you; in a group, `group_created`, `joined`, `left`, `removed`, `renamed` and `group_photo` tell what happened to the group and to whom (`name` is how they showed there) */
+                                /** @description What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `pin` means they pinned a message; `shared_to` means they shared a message from this chat to their story or as their note; `resend_request` means they couldn't open an encrypted message and asked the sender for it again; `screenshot` means they took a screenshot of the chat, or only tried to when `blocked` (the app stops them; detected on the web, on iOS and on Android 14 and up); `call` logs a call the sender made; `live_invite` is posted in your chat when `from` asks you to a live game; `live_result` is how a live game you played alone against Six Frites Game ended, for you; in a group, `group_created`, `joined`, `left`, `removed`, `renamed` and `group_photo` tell what happened to the group and to whom (`name` is how they showed there) */
                                 action: ({
                                     /** @enum {string} */
                                     type: "auto_delete";
@@ -31115,6 +32019,7 @@ export interface paths {
                                 } | {
                                     /** @enum {string} */
                                     type: "screenshot";
+                                    blocked?: boolean;
                                 } | {
                                     /** @enum {string} */
                                     type: "resend_request";
@@ -31597,6 +32502,11 @@ export interface paths {
                                      */
                                     resendUntil: string | null;
                                 } | null;
+                                /** @description Its sender locked it: everyone, the sender included, needs their own app lock code to open it, each time. Null when it isn't locked */
+                                codeLock?: {
+                                    /** @description Content is withheld for you; open it with your app lock code at POST /v1/messages/{id}/unlock */
+                                    locked: boolean;
+                                } | null;
                                 /** @description Photos and videos sent together share it and show as one album */
                                 groupId: string | null;
                                 /** @description In a group, the message this one comments on; it then shows only in that message's comments */
@@ -31631,6 +32541,8 @@ export interface paths {
                                      * @description When the quoted message was sent
                                      */
                                     sentAt: string;
+                                    /** @description The quoted message is locked with a code, so its text never shows here */
+                                    locked?: boolean;
                                 } | null;
                                 /** @description The story or note a message answers, as it was when they answered: it may be gone since */
                                 story: {
@@ -31652,7 +32564,7 @@ export interface paths {
                                      */
                                     imageUrl: string | null;
                                 } | null;
-                                /** @description What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `pin` means they pinned a message; `shared_to` means they shared a message from this chat to their story or as their note; `resend_request` means they couldn't open an encrypted message and asked the sender for it again; `screenshot` means they took a screenshot of the chat (only detected on the web, and not everywhere); `call` logs a call the sender made; `live_invite` is posted in your chat when `from` asks you to a live game; `live_result` is how a live game you played alone against Six Frites Game ended, for you; in a group, `group_created`, `joined`, `left`, `removed`, `renamed` and `group_photo` tell what happened to the group and to whom (`name` is how they showed there) */
+                                /** @description What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `pin` means they pinned a message; `shared_to` means they shared a message from this chat to their story or as their note; `resend_request` means they couldn't open an encrypted message and asked the sender for it again; `screenshot` means they took a screenshot of the chat, or only tried to when `blocked` (the app stops them; detected on the web, on iOS and on Android 14 and up); `call` logs a call the sender made; `live_invite` is posted in your chat when `from` asks you to a live game; `live_result` is how a live game you played alone against Six Frites Game ended, for you; in a group, `group_created`, `joined`, `left`, `removed`, `renamed` and `group_photo` tell what happened to the group and to whom (`name` is how they showed there) */
                                 action: ({
                                     /** @enum {string} */
                                     type: "auto_delete";
@@ -31674,6 +32586,7 @@ export interface paths {
                                 } | {
                                     /** @enum {string} */
                                     type: "screenshot";
+                                    blocked?: boolean;
                                 } | {
                                     /** @enum {string} */
                                     type: "resend_request";
@@ -32062,6 +32975,11 @@ export interface paths {
                                      */
                                     resendUntil: string | null;
                                 } | null;
+                                /** @description Its sender locked it: everyone, the sender included, needs their own app lock code to open it, each time. Null when it isn't locked */
+                                codeLock?: {
+                                    /** @description Content is withheld for you; open it with your app lock code at POST /v1/messages/{id}/unlock */
+                                    locked: boolean;
+                                } | null;
                                 /** @description Photos and videos sent together share it and show as one album */
                                 groupId: string | null;
                                 /** @description In a group, the message this one comments on; it then shows only in that message's comments */
@@ -32096,6 +33014,8 @@ export interface paths {
                                      * @description When the quoted message was sent
                                      */
                                     sentAt: string;
+                                    /** @description The quoted message is locked with a code, so its text never shows here */
+                                    locked?: boolean;
                                 } | null;
                                 /** @description The story or note a message answers, as it was when they answered: it may be gone since */
                                 story: {
@@ -32117,7 +33037,7 @@ export interface paths {
                                      */
                                     imageUrl: string | null;
                                 } | null;
-                                /** @description What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `pin` means they pinned a message; `shared_to` means they shared a message from this chat to their story or as their note; `resend_request` means they couldn't open an encrypted message and asked the sender for it again; `screenshot` means they took a screenshot of the chat (only detected on the web, and not everywhere); `call` logs a call the sender made; `live_invite` is posted in your chat when `from` asks you to a live game; `live_result` is how a live game you played alone against Six Frites Game ended, for you; in a group, `group_created`, `joined`, `left`, `removed`, `renamed` and `group_photo` tell what happened to the group and to whom (`name` is how they showed there) */
+                                /** @description What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `pin` means they pinned a message; `shared_to` means they shared a message from this chat to their story or as their note; `resend_request` means they couldn't open an encrypted message and asked the sender for it again; `screenshot` means they took a screenshot of the chat, or only tried to when `blocked` (the app stops them; detected on the web, on iOS and on Android 14 and up); `call` logs a call the sender made; `live_invite` is posted in your chat when `from` asks you to a live game; `live_result` is how a live game you played alone against Six Frites Game ended, for you; in a group, `group_created`, `joined`, `left`, `removed`, `renamed` and `group_photo` tell what happened to the group and to whom (`name` is how they showed there) */
                                 action: ({
                                     /** @enum {string} */
                                     type: "auto_delete";
@@ -32139,6 +33059,7 @@ export interface paths {
                                 } | {
                                     /** @enum {string} */
                                     type: "screenshot";
+                                    blocked?: boolean;
                                 } | {
                                     /** @enum {string} */
                                     type: "resend_request";
@@ -32634,6 +33555,11 @@ export interface paths {
                                      */
                                     resendUntil: string | null;
                                 } | null;
+                                /** @description Its sender locked it: everyone, the sender included, needs their own app lock code to open it, each time. Null when it isn't locked */
+                                codeLock?: {
+                                    /** @description Content is withheld for you; open it with your app lock code at POST /v1/messages/{id}/unlock */
+                                    locked: boolean;
+                                } | null;
                                 /** @description Photos and videos sent together share it and show as one album */
                                 groupId: string | null;
                                 /** @description In a group, the message this one comments on; it then shows only in that message's comments */
@@ -32668,6 +33594,8 @@ export interface paths {
                                      * @description When the quoted message was sent
                                      */
                                     sentAt: string;
+                                    /** @description The quoted message is locked with a code, so its text never shows here */
+                                    locked?: boolean;
                                 } | null;
                                 /** @description The story or note a message answers, as it was when they answered: it may be gone since */
                                 story: {
@@ -32689,7 +33617,7 @@ export interface paths {
                                      */
                                     imageUrl: string | null;
                                 } | null;
-                                /** @description What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `pin` means they pinned a message; `shared_to` means they shared a message from this chat to their story or as their note; `resend_request` means they couldn't open an encrypted message and asked the sender for it again; `screenshot` means they took a screenshot of the chat (only detected on the web, and not everywhere); `call` logs a call the sender made; `live_invite` is posted in your chat when `from` asks you to a live game; `live_result` is how a live game you played alone against Six Frites Game ended, for you; in a group, `group_created`, `joined`, `left`, `removed`, `renamed` and `group_photo` tell what happened to the group and to whom (`name` is how they showed there) */
+                                /** @description What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `pin` means they pinned a message; `shared_to` means they shared a message from this chat to their story or as their note; `resend_request` means they couldn't open an encrypted message and asked the sender for it again; `screenshot` means they took a screenshot of the chat, or only tried to when `blocked` (the app stops them; detected on the web, on iOS and on Android 14 and up); `call` logs a call the sender made; `live_invite` is posted in your chat when `from` asks you to a live game; `live_result` is how a live game you played alone against Six Frites Game ended, for you; in a group, `group_created`, `joined`, `left`, `removed`, `renamed` and `group_photo` tell what happened to the group and to whom (`name` is how they showed there) */
                                 action: ({
                                     /** @enum {string} */
                                     type: "auto_delete";
@@ -32711,6 +33639,7 @@ export interface paths {
                                 } | {
                                     /** @enum {string} */
                                     type: "screenshot";
+                                    blocked?: boolean;
                                 } | {
                                     /** @enum {string} */
                                     type: "resend_request";
@@ -33099,6 +34028,11 @@ export interface paths {
                                      */
                                     resendUntil: string | null;
                                 } | null;
+                                /** @description Its sender locked it: everyone, the sender included, needs their own app lock code to open it, each time. Null when it isn't locked */
+                                codeLock?: {
+                                    /** @description Content is withheld for you; open it with your app lock code at POST /v1/messages/{id}/unlock */
+                                    locked: boolean;
+                                } | null;
                                 /** @description Photos and videos sent together share it and show as one album */
                                 groupId: string | null;
                                 /** @description In a group, the message this one comments on; it then shows only in that message's comments */
@@ -33133,6 +34067,8 @@ export interface paths {
                                      * @description When the quoted message was sent
                                      */
                                     sentAt: string;
+                                    /** @description The quoted message is locked with a code, so its text never shows here */
+                                    locked?: boolean;
                                 } | null;
                                 /** @description The story or note a message answers, as it was when they answered: it may be gone since */
                                 story: {
@@ -33154,7 +34090,7 @@ export interface paths {
                                      */
                                     imageUrl: string | null;
                                 } | null;
-                                /** @description What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `pin` means they pinned a message; `shared_to` means they shared a message from this chat to their story or as their note; `resend_request` means they couldn't open an encrypted message and asked the sender for it again; `screenshot` means they took a screenshot of the chat (only detected on the web, and not everywhere); `call` logs a call the sender made; `live_invite` is posted in your chat when `from` asks you to a live game; `live_result` is how a live game you played alone against Six Frites Game ended, for you; in a group, `group_created`, `joined`, `left`, `removed`, `renamed` and `group_photo` tell what happened to the group and to whom (`name` is how they showed there) */
+                                /** @description What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `pin` means they pinned a message; `shared_to` means they shared a message from this chat to their story or as their note; `resend_request` means they couldn't open an encrypted message and asked the sender for it again; `screenshot` means they took a screenshot of the chat, or only tried to when `blocked` (the app stops them; detected on the web, on iOS and on Android 14 and up); `call` logs a call the sender made; `live_invite` is posted in your chat when `from` asks you to a live game; `live_result` is how a live game you played alone against Six Frites Game ended, for you; in a group, `group_created`, `joined`, `left`, `removed`, `renamed` and `group_photo` tell what happened to the group and to whom (`name` is how they showed there) */
                                 action: ({
                                     /** @enum {string} */
                                     type: "auto_delete";
@@ -33176,6 +34112,7 @@ export interface paths {
                                 } | {
                                     /** @enum {string} */
                                     type: "screenshot";
+                                    blocked?: boolean;
                                 } | {
                                     /** @enum {string} */
                                     type: "resend_request";
@@ -33696,6 +34633,11 @@ export interface paths {
                                      */
                                     resendUntil: string | null;
                                 } | null;
+                                /** @description Its sender locked it: everyone, the sender included, needs their own app lock code to open it, each time. Null when it isn't locked */
+                                codeLock?: {
+                                    /** @description Content is withheld for you; open it with your app lock code at POST /v1/messages/{id}/unlock */
+                                    locked: boolean;
+                                } | null;
                                 /** @description Photos and videos sent together share it and show as one album */
                                 groupId: string | null;
                                 /** @description In a group, the message this one comments on; it then shows only in that message's comments */
@@ -33730,6 +34672,8 @@ export interface paths {
                                      * @description When the quoted message was sent
                                      */
                                     sentAt: string;
+                                    /** @description The quoted message is locked with a code, so its text never shows here */
+                                    locked?: boolean;
                                 } | null;
                                 /** @description The story or note a message answers, as it was when they answered: it may be gone since */
                                 story: {
@@ -33751,7 +34695,7 @@ export interface paths {
                                      */
                                     imageUrl: string | null;
                                 } | null;
-                                /** @description What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `pin` means they pinned a message; `shared_to` means they shared a message from this chat to their story or as their note; `resend_request` means they couldn't open an encrypted message and asked the sender for it again; `screenshot` means they took a screenshot of the chat (only detected on the web, and not everywhere); `call` logs a call the sender made; `live_invite` is posted in your chat when `from` asks you to a live game; `live_result` is how a live game you played alone against Six Frites Game ended, for you; in a group, `group_created`, `joined`, `left`, `removed`, `renamed` and `group_photo` tell what happened to the group and to whom (`name` is how they showed there) */
+                                /** @description What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `pin` means they pinned a message; `shared_to` means they shared a message from this chat to their story or as their note; `resend_request` means they couldn't open an encrypted message and asked the sender for it again; `screenshot` means they took a screenshot of the chat, or only tried to when `blocked` (the app stops them; detected on the web, on iOS and on Android 14 and up); `call` logs a call the sender made; `live_invite` is posted in your chat when `from` asks you to a live game; `live_result` is how a live game you played alone against Six Frites Game ended, for you; in a group, `group_created`, `joined`, `left`, `removed`, `renamed` and `group_photo` tell what happened to the group and to whom (`name` is how they showed there) */
                                 action: ({
                                     /** @enum {string} */
                                     type: "auto_delete";
@@ -33773,6 +34717,7 @@ export interface paths {
                                 } | {
                                     /** @enum {string} */
                                     type: "screenshot";
+                                    blocked?: boolean;
                                 } | {
                                     /** @enum {string} */
                                     type: "resend_request";
@@ -34161,6 +35106,11 @@ export interface paths {
                                      */
                                     resendUntil: string | null;
                                 } | null;
+                                /** @description Its sender locked it: everyone, the sender included, needs their own app lock code to open it, each time. Null when it isn't locked */
+                                codeLock?: {
+                                    /** @description Content is withheld for you; open it with your app lock code at POST /v1/messages/{id}/unlock */
+                                    locked: boolean;
+                                } | null;
                                 /** @description Photos and videos sent together share it and show as one album */
                                 groupId: string | null;
                                 /** @description In a group, the message this one comments on; it then shows only in that message's comments */
@@ -34195,6 +35145,8 @@ export interface paths {
                                      * @description When the quoted message was sent
                                      */
                                     sentAt: string;
+                                    /** @description The quoted message is locked with a code, so its text never shows here */
+                                    locked?: boolean;
                                 } | null;
                                 /** @description The story or note a message answers, as it was when they answered: it may be gone since */
                                 story: {
@@ -34216,7 +35168,7 @@ export interface paths {
                                      */
                                     imageUrl: string | null;
                                 } | null;
-                                /** @description What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `pin` means they pinned a message; `shared_to` means they shared a message from this chat to their story or as their note; `resend_request` means they couldn't open an encrypted message and asked the sender for it again; `screenshot` means they took a screenshot of the chat (only detected on the web, and not everywhere); `call` logs a call the sender made; `live_invite` is posted in your chat when `from` asks you to a live game; `live_result` is how a live game you played alone against Six Frites Game ended, for you; in a group, `group_created`, `joined`, `left`, `removed`, `renamed` and `group_photo` tell what happened to the group and to whom (`name` is how they showed there) */
+                                /** @description What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `pin` means they pinned a message; `shared_to` means they shared a message from this chat to their story or as their note; `resend_request` means they couldn't open an encrypted message and asked the sender for it again; `screenshot` means they took a screenshot of the chat, or only tried to when `blocked` (the app stops them; detected on the web, on iOS and on Android 14 and up); `call` logs a call the sender made; `live_invite` is posted in your chat when `from` asks you to a live game; `live_result` is how a live game you played alone against Six Frites Game ended, for you; in a group, `group_created`, `joined`, `left`, `removed`, `renamed` and `group_photo` tell what happened to the group and to whom (`name` is how they showed there) */
                                 action: ({
                                     /** @enum {string} */
                                     type: "auto_delete";
@@ -34238,6 +35190,7 @@ export interface paths {
                                 } | {
                                     /** @enum {string} */
                                     type: "screenshot";
+                                    blocked?: boolean;
                                 } | {
                                     /** @enum {string} */
                                     type: "resend_request";
@@ -34732,6 +35685,11 @@ export interface paths {
                                      */
                                     resendUntil: string | null;
                                 } | null;
+                                /** @description Its sender locked it: everyone, the sender included, needs their own app lock code to open it, each time. Null when it isn't locked */
+                                codeLock?: {
+                                    /** @description Content is withheld for you; open it with your app lock code at POST /v1/messages/{id}/unlock */
+                                    locked: boolean;
+                                } | null;
                                 /** @description Photos and videos sent together share it and show as one album */
                                 groupId: string | null;
                                 /** @description In a group, the message this one comments on; it then shows only in that message's comments */
@@ -34766,6 +35724,8 @@ export interface paths {
                                      * @description When the quoted message was sent
                                      */
                                     sentAt: string;
+                                    /** @description The quoted message is locked with a code, so its text never shows here */
+                                    locked?: boolean;
                                 } | null;
                                 /** @description The story or note a message answers, as it was when they answered: it may be gone since */
                                 story: {
@@ -34787,7 +35747,7 @@ export interface paths {
                                      */
                                     imageUrl: string | null;
                                 } | null;
-                                /** @description What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `pin` means they pinned a message; `shared_to` means they shared a message from this chat to their story or as their note; `resend_request` means they couldn't open an encrypted message and asked the sender for it again; `screenshot` means they took a screenshot of the chat (only detected on the web, and not everywhere); `call` logs a call the sender made; `live_invite` is posted in your chat when `from` asks you to a live game; `live_result` is how a live game you played alone against Six Frites Game ended, for you; in a group, `group_created`, `joined`, `left`, `removed`, `renamed` and `group_photo` tell what happened to the group and to whom (`name` is how they showed there) */
+                                /** @description What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `pin` means they pinned a message; `shared_to` means they shared a message from this chat to their story or as their note; `resend_request` means they couldn't open an encrypted message and asked the sender for it again; `screenshot` means they took a screenshot of the chat, or only tried to when `blocked` (the app stops them; detected on the web, on iOS and on Android 14 and up); `call` logs a call the sender made; `live_invite` is posted in your chat when `from` asks you to a live game; `live_result` is how a live game you played alone against Six Frites Game ended, for you; in a group, `group_created`, `joined`, `left`, `removed`, `renamed` and `group_photo` tell what happened to the group and to whom (`name` is how they showed there) */
                                 action: ({
                                     /** @enum {string} */
                                     type: "auto_delete";
@@ -34809,6 +35769,7 @@ export interface paths {
                                 } | {
                                     /** @enum {string} */
                                     type: "screenshot";
+                                    blocked?: boolean;
                                 } | {
                                     /** @enum {string} */
                                     type: "resend_request";
@@ -35197,6 +36158,11 @@ export interface paths {
                                      */
                                     resendUntil: string | null;
                                 } | null;
+                                /** @description Its sender locked it: everyone, the sender included, needs their own app lock code to open it, each time. Null when it isn't locked */
+                                codeLock?: {
+                                    /** @description Content is withheld for you; open it with your app lock code at POST /v1/messages/{id}/unlock */
+                                    locked: boolean;
+                                } | null;
                                 /** @description Photos and videos sent together share it and show as one album */
                                 groupId: string | null;
                                 /** @description In a group, the message this one comments on; it then shows only in that message's comments */
@@ -35231,6 +36197,8 @@ export interface paths {
                                      * @description When the quoted message was sent
                                      */
                                     sentAt: string;
+                                    /** @description The quoted message is locked with a code, so its text never shows here */
+                                    locked?: boolean;
                                 } | null;
                                 /** @description The story or note a message answers, as it was when they answered: it may be gone since */
                                 story: {
@@ -35252,7 +36220,7 @@ export interface paths {
                                      */
                                     imageUrl: string | null;
                                 } | null;
-                                /** @description What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `pin` means they pinned a message; `shared_to` means they shared a message from this chat to their story or as their note; `resend_request` means they couldn't open an encrypted message and asked the sender for it again; `screenshot` means they took a screenshot of the chat (only detected on the web, and not everywhere); `call` logs a call the sender made; `live_invite` is posted in your chat when `from` asks you to a live game; `live_result` is how a live game you played alone against Six Frites Game ended, for you; in a group, `group_created`, `joined`, `left`, `removed`, `renamed` and `group_photo` tell what happened to the group and to whom (`name` is how they showed there) */
+                                /** @description What a `service` message announces: `auto_delete` means the sender set the timer to `secs` (null: off); `theme` means they set the chat background (null: back to each person's default); `e2ee` marks where end-to-end encryption starts; `vanish` means the sender turned vanish mode on or off; `pin` means they pinned a message; `shared_to` means they shared a message from this chat to their story or as their note; `resend_request` means they couldn't open an encrypted message and asked the sender for it again; `screenshot` means they took a screenshot of the chat, or only tried to when `blocked` (the app stops them; detected on the web, on iOS and on Android 14 and up); `call` logs a call the sender made; `live_invite` is posted in your chat when `from` asks you to a live game; `live_result` is how a live game you played alone against Six Frites Game ended, for you; in a group, `group_created`, `joined`, `left`, `removed`, `renamed` and `group_photo` tell what happened to the group and to whom (`name` is how they showed there) */
                                 action: ({
                                     /** @enum {string} */
                                     type: "auto_delete";
@@ -35274,6 +36242,7 @@ export interface paths {
                                 } | {
                                     /** @enum {string} */
                                     type: "screenshot";
+                                    blocked?: boolean;
                                 } | {
                                     /** @enum {string} */
                                     type: "resend_request";

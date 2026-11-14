@@ -218,6 +218,31 @@ describe("encrypted messages", () => {
     expect(laptop.read((await get(laptop.auth, `/v1/chats/${chatId}/messages`)).items[0], guest.id)).toBe("got it");
   });
 
+  it("withholds the envelopes of a message locked with a code until each person opens it with theirs, the sender too", async () => {
+    const { phone, laptop, guest, chatId } = await friendsWithDevices();
+    await call(guest.auth, "PUT", "/v1/me/app-lock", { code: "5555" });
+    await call(phone.auth, "PUT", "/v1/me/app-lock", { code: "7777" });
+    const sent = await call(phone.auth, "POST", `/v1/chats/${chatId}/messages`, {
+      clientId: "locked",
+      codeLock: true,
+      encrypted: { envelopes: await phone.seal(chatId, "sealed and locked") },
+    });
+    expect(sent.statusCode, sent.body).toBe(201);
+
+    const locked = (await get(guest.auth, `/v1/chats/${chatId}/messages`)).items[0];
+    expect(locked).toMatchObject({ codeLock: { locked: true }, encryption: { envelopes: [], backup: null } });
+    const opened = (await call(guest.auth, "POST", `/v1/messages/${locked.id}/unlock`, { code: "5555" })).json().message;
+    expect(opened.encryption.envelopes.map((e: DeviceEnvelope) => e.deviceId)).toEqual([guest.id]);
+    expect(guest.read(opened, phone.id)).toBe("sealed and locked");
+
+    expect(sent.json()).toMatchObject({ codeLock: { locked: true }, encryption: { envelopes: [], backup: null } });
+    const onLaptop = (await get(laptop.auth, `/v1/chats/${chatId}/messages`)).items[0];
+    expect(onLaptop).toMatchObject({ codeLock: { locked: true }, encryption: { envelopes: [], backup: null } });
+    expect((await call(laptop.auth, "POST", `/v1/messages/${locked.id}/unlock`, { code: "5555" })).json().error.code).toBe("WRONG_APP_LOCK_CODE");
+    const mine = (await call(laptop.auth, "POST", `/v1/messages/${locked.id}/unlock`, { code: "7777" })).json().message;
+    expect(laptop.read(mine, phone.id)).toBe("sealed and locked");
+  });
+
   it("refuses encrypted content from a device that has no keys", async () => {
     const { host, guest, chatId } = await makeFriends();
     const g = new Device(guest);

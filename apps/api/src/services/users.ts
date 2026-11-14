@@ -1,5 +1,6 @@
 import { createHash, randomBytes, randomUUID, scrypt, timingSafeEqual } from "node:crypto";
 import { promisify } from "node:util";
+import type { Redis } from "ioredis";
 import type { User } from "../generated/prisma/client.js";
 import {
   AppError,
@@ -14,6 +15,7 @@ import { generateCode, isUniqueViolation } from "../lib/codes.js";
 import { type Emit, type Tx, withEvents } from "../lib/events.js";
 import { presenceOf } from "../lib/presence.js";
 import { prisma } from "../lib/prisma.js";
+import { redisConnection } from "../lib/queue.js";
 import { deleteObjects, presignGet, putObject } from "../lib/storage.js";
 import { checkBackupPin } from "./backups.js";
 import { getChat } from "./chats.js";
@@ -248,9 +250,18 @@ export async function removeAppLock(userId: string) {
   return toUserDTO(await prisma.user.update({ where: { id: userId }, data: { appLockHash: null } }));
 }
 
+/** Wrong app lock codes an account may enter in a day, wherever it's asked for; the right one starts the count over. */
+export const APP_LOCK_TRIES = 10;
+const APP_LOCK_WINDOW = 24 * 60 * 60;
+
+let client: Redis | null = null;
+const redis = () => (client ??= redisConnection());
+const triesKey = (userId: string) => `${env.QUEUE_PREFIX}:app-lock-tries:${userId}`;
+
 /**
- * Checks `code` against the app lock. When it's the backup PIN, the try counts against the PIN's, so the lock can't
- * be used to guess it.
+ * Checks `code` against the app lock. Each try is counted before the code is checked, so parallel guesses count too,
+ * and past APP_LOCK_TRIES even the right code waits for the day to pass: guessing a 4-digit code takes over a year.
+ * When it's the backup PIN, the try also counts against the PIN's, so the lock can't be used to guess it.
  */
 async function checkAppLock(userId: string, code: string) {
   const u = await prisma.user.findUniqueOrThrow({
@@ -258,8 +269,13 @@ async function checkAppLock(userId: string, code: string) {
     select: { appLockHash: true, backupPinHash: true, appLockLength: true },
   });
   if (!u.appLockHash) return false;
+  const key = triesKey(userId);
+  const tries = await redis().incr(key);
+  if (tries === 1) await redis().expire(key, APP_LOCK_WINDOW);
+  if (tries > APP_LOCK_TRIES) throw new AppError("RATE_LIMITED", "Too many tries at the app lock code; try again later");
   if (u.appLockHash === u.backupPinHash) await checkBackupPin(userId, code);
   else if (!(await pinMatches(u.appLockHash, code))) throw new AppError("WRONG_APP_LOCK_CODE");
+  await redis().del(key);
   if (u.appLockLength !== code.length) await prisma.user.update({ where: { id: userId }, data: { appLockLength: code.length } });
   return true;
 }

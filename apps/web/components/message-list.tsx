@@ -1,6 +1,6 @@
 "use client";
 
-import { unwrap } from "@six/sdk";
+import { SixApiError, unwrap } from "@six/sdk";
 import {
   type ChatDTO,
   type ChatGame,
@@ -131,6 +131,7 @@ import { useRealtime } from "@/lib/realtime";
 import { HelloGif } from "./hello-gif";
 import { deliver, forwardMessages, queueMessage } from "@/lib/send";
 import { useSelection } from "@/lib/selection";
+import { useSession } from "@/lib/session";
 import { useSpoilers } from "@/lib/spoilers";
 import { useSwipe } from "@/lib/swipe";
 import { AnimatedEmoji } from "./animated-emoji";
@@ -146,6 +147,7 @@ import { PollView } from "./poll";
 import { GameView } from "./game";
 import { LocationCard } from "./location-card";
 import { EphemeralViewer } from "./ephemeral-viewer";
+import { LockScreen, TurnOnDialog } from "./app-lock";
 import { PackDialog } from "./pack-dialog";
 import { ReportDialog } from "./report-dialog";
 import { Styled } from "./rich-text";
@@ -192,6 +194,7 @@ interface MsgRow {
   type: MessageDTO["type"];
   ephemeral: EphemeralDTO | null;
   locked: boolean;
+  codeLocked: boolean;
   groupStart: boolean;
   groupEnd: boolean;
   delivery: Delivery | null;
@@ -260,7 +263,7 @@ function buildRows(
     const q = r && byId.get(r.id);
     if (!r || !q) return r;
     if (q.deletedAt) return { ...r, deleted: true, text: null };
-    return q.text !== null && !q.ephemeral ? { ...r, text: q.text } : r;
+    return q.text !== null && !q.ephemeral && !q.codeLock ? { ...r, text: q.text } : r;
   };
   const items: Item[] = [
     ...messages.map((m) => ({
@@ -299,6 +302,7 @@ function buildRows(
         type: m.type,
         ephemeral: m.ephemeral,
         locked: !!m.undecryptable,
+        codeLocked: !!m.codeLock?.locked,
       },
     })),
     ...pending
@@ -350,6 +354,7 @@ function buildRows(
                   ? "game"
                   : (p.attachment?.kind ?? "text")) as MessageDTO["type"],
           locked: false,
+          codeLocked: !!p.codeLock,
           ephemeral: p.ephemeral
             ? {
                 maxViews: p.ephemeral.maxViews ?? null,
@@ -517,6 +522,10 @@ function Quote({
           tr.messages.beforeYouJoined
         ) : reply.deleted ? (
           tr.summary.messageDeleted
+        ) : reply.locked ? (
+          <span className="inline-flex items-center gap-1">
+            <Lock className="size-3.5" /> {tr.summary.lockedMessage}
+          </span>
         ) : reply.ephemeral ? (
           <span className="inline-flex items-center gap-1">
             <Flame className="size-3.5" /> {tr.summary.selfDestructing}
@@ -739,6 +748,28 @@ function Sealed({ row, onOpen }: { row: MsgRow; onOpen: () => void }) {
   );
 }
 
+function CodeSealed({ row, onOpen }: { row: MsgRow; onOpen: () => void }) {
+  const tr = useT();
+  const hasLock = useSession((s) => !!s.user?.hasAppLock);
+  const kind = row.type === "text" || row.type === "service" ? tr.common.message : tr.summary.kinds[row.type];
+  const e = row.ephemeral;
+  return (
+    <button type="button" onClick={onOpen} disabled={e?.expired} className="flex min-w-48 items-center gap-3 py-1 text-left disabled:cursor-default">
+      <span className={`grid size-10 shrink-0 place-items-center rounded-full ${row.mine ? "bg-black/10" : "bg-brand/15 text-brand"}`}>
+        <Lock className="size-5" />
+      </span>
+      <span className="min-w-0">
+        <span className="block font-semibold">{e?.expired ? tr.messages.opened : tr.summary.lockedMessage}</span>
+        <span className="block text-xs opacity-70">
+          {kind}
+          {e && ` · ${shortRule(e, tr)}`}
+          {!e?.expired && ` · ${hasLock ? tr.messages.tapToOpen : tr.messages.setUpCodeToOpen}`}
+        </span>
+      </span>
+    </button>
+  );
+}
+
 export const canResend = (e: EphemeralDTO) =>
   e.expired && !e.purged && e.resendsLeft > 0 && !!e.resendUntil && Date.now() < Date.parse(e.resendUntil);
 
@@ -926,7 +957,7 @@ function Bubble({
   const { mine, groupStart, groupEnd } = row;
   const right = mine && !compact;
   const e = row.ephemeral;
-  const sealed = !!e && (mine || e.locked || e.expired);
+  const sealed = row.codeLocked || (!!e && (mine || e.locked || e.expired));
   const jumbo =
     !row.deleted &&
     !row.ephemeral &&
@@ -1143,7 +1174,7 @@ function Bubble({
               )}
               {sealed ? (
                 <div className="flex items-end gap-2">
-                  <Sealed row={row} onOpen={onOpenEphemeral} />
+                  {row.codeLocked ? <CodeSealed row={row} onOpen={onOpenEphemeral} /> : <Sealed row={row} onOpen={onOpenEphemeral} />}
                   <span className="mb-1 flex shrink-0 items-center gap-1 text-[11px] leading-none">
                     <span className="opacity-70">{clockTime(row.createdAt)}</span>
                     {row.delivery && <Ticks delivery={row.delivery} />}
@@ -1379,9 +1410,66 @@ export const MessageList = forwardRef<
       }
     }
 
+    const hasAppLock = useSession((s) => !!s.user?.hasAppLock);
+    const [unlocking, setUnlocking] = useState<MessageDTO | null>(null);
+    const [settingUpLock, setSettingUpLock] = useState(false);
+
+    async function unlockWith(m: MessageDTO, code: string) {
+      try {
+        const opened = unwrap(await six.api.POST("/v1/messages/{id}/unlock", { params: { path: { id: m.id } }, body: { code } }));
+        setViewing({ ...opened, message: await hydrate(opened.message) });
+      } catch (err) {
+        if (!(err instanceof SixApiError) || err.code !== "APP_LOCK_REQUIRED") throw err;
+        const { user, setUser } = useSession.getState();
+        if (user) setUser({ ...user, hasAppLock: false });
+        setUnlocking(null);
+        setSettingUpLock(true);
+      }
+    }
+
+    /** What needs the content of a message locked with a code, offered from the viewer once it's open. */
+    function unlockedActions(m: Hydrated): SheetAction[] {
+      if (!m.codeLock || m.ephemeral || m.undecryptable) return [];
+      const after = (fn: () => void) => () => {
+        closeViewer();
+        fn();
+      };
+      const mine = m.senderId === meId;
+      const photo = m.type === "image" && m.attachment?.status === "ready" && (m.file?.mime ?? m.attachment.mime) !== "image/gif";
+      return [
+        ...(m.text ? [{ label: tr.common.copy, icon: Copy, onSelect: () => void navigator.clipboard.writeText(m.text!).catch(() => null) }] : []),
+        ...(["game", "gif", "sticker"].includes(m.type) || (m.attachment && m.attachment.status !== "ready")
+          ? []
+          : [{ label: tr.messages.forward, icon: Forward, onSelect: after(() => setForwarding([m])) }]),
+        ...(mine && !frozen && !["sticker", "location", "checklist", "poll", "game"].includes(m.type)
+          ? [
+              {
+                label: tr.common.edit,
+                icon: Pencil,
+                onSelect: after(() =>
+                  photo
+                    ? void messageFile(m).then(
+                        (file) => setMarkingUp({ message: m, file }),
+                        () => setMode(slot, { kind: "edit", message: m }),
+                      )
+                    : setMode(slot, { kind: "edit", message: m }),
+                ),
+              },
+            ]
+          : []),
+        ...(mine && m.type === "text" && shareTargets(m.text).story
+          ? [{ label: tr.messages.shareToStory, icon: CircleFadingPlus, onSelect: after(() => setSharing({ text: shareTargets(m.text).text, message: m })) }]
+          : []),
+        ...(mine && m.type === "text" && shareTargets(m.text).note
+          ? [{ label: tr.messages.setAsNote, icon: StickyNote, onSelect: after(() => setNoting({ text: shareTargets(m.text).text, message: m })) }]
+          : []),
+      ];
+    }
+
     async function openEphemeral(row: MsgRow) {
       const id = row.id;
       if (!id) return;
+      if (row.codeLocked && row.message) return hasAppLock ? setUnlocking(row.message) : setSettingUpLock(true);
       if (row.mine && row.message) return setViewing({ message: row.message, expiresAt: null });
       setOpening(true);
       try {
@@ -1647,6 +1735,7 @@ export const MessageList = forwardRef<
               },
             ]),
         ...(m.ephemeral ||
+        m.codeLock?.locked ||
         m.undecryptable ||
         ["service", "game", "gif", "sticker"].includes(m.type) ||
         (m.attachment && m.attachment.status !== "ready")
@@ -1658,10 +1747,10 @@ export const MessageList = forwardRef<
                 onSelect: () => setForwarding(row.album?.flatMap((it) => (it.message ? [it.message] : [])) ?? [m]),
               },
             ]),
-        ...(m.type !== "text" || m.ephemeral || m.undecryptable || !shareTargets(m.text).story
+        ...(m.type !== "text" || m.ephemeral || m.codeLock || m.undecryptable || !shareTargets(m.text).story
           ? []
           : [{ label: tr.messages.shareToStory, icon: CircleFadingPlus, onSelect: () => setSharing({ text: shareTargets(m.text).text, message: m }) }]),
-        ...(m.type !== "text" || m.ephemeral || m.undecryptable || !shareTargets(m.text).note
+        ...(m.type !== "text" || m.ephemeral || m.codeLock || m.undecryptable || !shareTargets(m.text).note
           ? []
           : [{ label: tr.messages.setAsNote, icon: StickyNote, onSelect: () => setNoting({ text: shareTargets(m.text).text, message: m }) }]),
         ...(threadId ? [] : [{ label: tr.common.select, icon: CheckCircle2, onSelect: () => startSelection(chat.id, m.id) }]),
@@ -1683,6 +1772,7 @@ export const MessageList = forwardRef<
           ? [{ label: tr.messages.resendAgain, icon: RotateCcw, onSelect: () => void resendEphemeral(m) }]
           : []),
         ...(!m.ephemeral &&
+        !m.codeLock &&
         row.mine &&
         !["sticker", "location", "checklist", "poll", "game"].includes(m.type) &&
         !frozen &&
@@ -1974,12 +2064,22 @@ export const MessageList = forwardRef<
             }))}
           />
         )}
+        {unlocking && (
+          <LockScreen
+            title={tr.summary.lockedMessage}
+            onCancel={() => setUnlocking(null)}
+            onUnlock={() => setUnlocking(null)}
+            check={(code) => unlockWith(unlocking, code)}
+          />
+        )}
+        {settingUpLock && <TurnOnDialog onClose={() => setSettingUpLock(false)} />}
         {(viewing || opening) && (
           <EphemeralViewer
             message={viewing?.message ?? null}
             expiresAt={viewing?.expiresAt ?? null}
             mine={viewing?.message.senderId === meId}
             onClose={closeViewer}
+            actions={viewing ? unlockedActions(viewing.message) : []}
           />
         )}
         {reporting && (

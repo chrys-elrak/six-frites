@@ -50,6 +50,7 @@ export interface Draft {
   silent?: boolean;
   bump?: boolean;
   ephemeral?: EphemeralInput | null;
+  codeLock?: boolean;
   file?: LocalFile;
   gif?: GifDTO;
   sticker?: StickerDTO;
@@ -128,6 +129,7 @@ export async function deliver(qc: QueryClient, realtime: Realtime, pending: Pend
       replyToId: pending.replyTo?.id,
       storyId: pending.story?.id,
       ephemeral: pending.ephemeral ?? undefined,
+      codeLock: pending.codeLock || undefined,
       groupId: pending.groupId,
       threadId: pending.threadId,
       ...pending.comments,
@@ -227,12 +229,13 @@ export async function queueMessage(qc: QueryClient, realtime: Realtime, chatId: 
           id: replyTo.id,
           senderId: replyTo.senderId,
           type: replyTo.type,
-          text: replyTo.text === null || replyTo.ephemeral ? null : maskSpoilers(replyTo.text, replyTo.entities),
+          text: replyTo.text === null || replyTo.ephemeral || replyTo.codeLock ? null : maskSpoilers(replyTo.text, replyTo.entities),
           spoiler: replyTo.spoiler,
           ephemeral: replyTo.ephemeral !== null,
           deleted: false,
           encrypted: false,
           sentAt: replyTo.createdAt,
+          ...(replyTo.codeLock && { locked: true }),
         }
       : null,
     story: draft.story,
@@ -240,6 +243,7 @@ export async function queueMessage(qc: QueryClient, realtime: Realtime, chatId: 
     silent: draft.silent,
     bump: draft.bump,
     ephemeral: draft.ephemeral ?? null,
+    codeLock: draft.codeLock,
     attachment: file
       ? {
           kind: file.kind,
@@ -296,6 +300,7 @@ export async function forwardMessages(qc: QueryClient, realtime: Realtime, chatI
       spoiler: m.spoiler,
       location: m.location ?? undefined,
       checklist: m.checklist ?? undefined,
+      codeLock: !!m.codeLock,
       groupId,
       file: m.attachment ? await messageFile(m) : undefined,
     });

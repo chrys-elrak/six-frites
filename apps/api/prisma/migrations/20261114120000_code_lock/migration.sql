@@ -1,0 +1,2 @@
+ALTER TABLE "Message" ADD COLUMN "codeLock" BOOLEAN NOT NULL DEFAULT false;
+ALTER TABLE "ScheduledMessage" ADD COLUMN "codeLock" BOOLEAN NOT NULL DEFAULT false;

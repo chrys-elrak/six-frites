@@ -74,6 +74,7 @@ import {
   resealMessage,
   resendMessage,
   sendMessage,
+  unlockMessage,
   viewMessage,
 } from "../services/messages.js";
 import {
@@ -374,6 +375,24 @@ const chatRoutes: FastifyPluginAsyncZod = async (app) => {
       },
     },
     (req) => viewMessage(req.auth.userId, req.params.id),
+  );
+
+  app.post(
+    "/messages/:id/unlock",
+    {
+      config: { rateLimit: { max: 10, timeWindow: "1 minute" } },
+      schema: {
+        tags: ["messages"],
+        summary: "Open a message locked with a code",
+        description:
+          "Needs your own app lock `code`, every time: nothing is remembered, the content (with download links valid for 5 minutes, and your envelopes when it's encrypted) only comes in this answer. APP_LOCK_REQUIRED if you have no app lock yet, WRONG_APP_LOCK_CODE if it doesn't match, RATE_LIMITED after 10 wrong codes in a day, counted with the app lock's other checks. Your own locked messages need it too. A self-destructing one is opened as by /view once the code matches: the view counts and `expiresAt` says when its timer ends; a wrong code counts nothing.",
+        security,
+        params: MessageParams,
+        body: AppLockInput,
+        response: { 200: ViewMessageResult },
+      },
+    },
+    (req) => unlockMessage(req.auth.userId, req.params.id, req.body.code),
   );
 
   app.post(

@@ -3,6 +3,7 @@ export const COMMANDS = [
   "giphy",
   "sticker",
   "silent",
+  "lock",
   "emoji",
   "game",
   "play",
@@ -22,7 +23,7 @@ const ONE_TO_ONE: readonly CommandName[] = ["game", "play", "vanish"];
 /** The commands that still make sense in a group: no games, live games or vanish mode. */
 export const groupCommands = (commands: readonly CommandName[]) => commands.filter((c) => !ONE_TO_ONE.includes(c));
 
-const HAVE_BUTTONS: readonly CommandName[] = ["location", "game", "schedule", "giphy", "emoji"];
+const HAVE_BUTTONS: readonly CommandName[] = ["location", "game", "schedule", "giphy", "emoji", "lock"];
 
 /** The commands to offer in the attach menu, leaving out the ones the attach menu or the emoji button already offer. */
 export const attachCommands = (group: boolean) =>
@@ -52,8 +53,16 @@ export function parseCommand(text: string, commands: readonly CommandName[] = CO
   return { kind: "run", name: known, args };
 }
 
-/** The message typed after `/silent`, to send without a notification; null when the text isn't one. */
-export function silentMessage(text: string) {
+function typedAfter(text: string, name: CommandName) {
   const command = parseCommand(text);
-  return command?.kind === "run" && command.name === "silent" ? command.args : null;
+  return command?.kind === "run" && command.name === name ? command.args : null;
 }
+
+/** The message typed after `/silent`, to send without a notification; null when the text isn't one. */
+export const silentMessage = (text: string) => typedAfter(text, "silent");
+
+/** The message typed after `/lock`, to send locked with each reader's app lock code; null when the text isn't one. */
+export const lockedMessage = (text: string) => typedAfter(text, "lock");
+
+/** The message after `/silent` or `/lock`, which the composer sends rather than treats as a command. */
+export const typedMessage = (text: string) => silentMessage(text) ?? lockedMessage(text);

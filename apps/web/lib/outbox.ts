@@ -41,6 +41,7 @@ export interface PendingMessage {
   silent?: boolean;
   bump?: boolean;
   ephemeral: EphemeralInput | null;
+  codeLock?: boolean;
   attachment: PendingAttachment | null;
   gif: GifDTO | null;
   sticker: StickerDTO | null;

@@ -1,9 +1,10 @@
 import { type MessageDTO, previewLink } from "@six/shared";
 import { Image } from "expo-image";
-import { Flame, X } from "lucide-react-native";
+import { Flame, Lock, X } from "lucide-react-native";
 import { useEffect, useState } from "react";
 import { ActivityIndicator, Pressable, ScrollView, StyleSheet, useWindowDimensions, View } from "react-native";
 import { Modal } from "./modal";
+import type { SheetAction } from "./sheet";
 import { Text } from "./text";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { type BubbleColors, BubbleColorsContext } from "@/lib/bubble-colors";
@@ -27,11 +28,13 @@ export function EphemeralViewer({
   expiresAt,
   mine,
   onClose,
+  actions = [],
 }: {
   message: MessageDTO | null;
   expiresAt: string | null;
   mine: boolean;
   onClose: () => void;
+  actions?: SheetAction[];
 }) {
   const tr = useT();
   const insets = useSafeAreaInsets();
@@ -62,8 +65,8 @@ export function EphemeralViewer({
     <Modal animationType="fade" statusBarTranslucent navigationBarTranslucent onRequestClose={onClose}>
       <View style={[styles.screen, { paddingTop: insets.top, paddingBottom: Math.max(insets.bottom, 16) }]}>
         <View style={styles.bar}>
-          <Flame size={18} color={flame} fill={flame} />
-          <Text style={styles.rule}>{e ? shortRule(e, tr) : ""}</Text>
+          {message?.codeLock ? <Lock size={18} color="#fff" /> : <Flame size={18} color={flame} fill={flame} />}
+          <Text style={styles.rule}>{e ? shortRule(e, tr) : message?.codeLock ? tr.summary.lockedMessage : ""}</Text>
           {left !== null && <Text style={styles.countdown}>{tr.messages.seconds(Math.ceil(left / 1000))}</Text>}
           {message && (
             <Pressable accessibilityLabel={tr.common.close} onPress={onClose} hitSlop={8} style={styles.close}>
@@ -124,16 +127,32 @@ export function EphemeralViewer({
           )}
         </ScrollView>
 
+        {actions.length > 0 && (
+          <View style={styles.actions}>
+            {actions.map((a) => (
+              <Pressable key={a.label} onPress={a.onSelect} style={styles.action}>
+                {a.icon && <a.icon size={16} color="#fff" />}
+                <Text style={styles.actionLabel}>{a.label}</Text>
+              </Pressable>
+            ))}
+          </View>
+        )}
         <Text style={styles.footer}>
-          {mine || !message
+          {!message
             ? ""
-            : viewsLeft === 0
-              ? tr.messages.goneOnClose
-              : left !== null
-                ? tr.messages.goneOnTimer
-                : viewsLeft
-                  ? tr.messages.opensLeft(viewsLeft)
-                  : ""}
+            : mine || !e
+              ? message.codeLock
+                ? tr.messages.locksOnClose
+                : ""
+              : viewsLeft === 0
+                ? tr.messages.goneOnClose
+                : left !== null
+                  ? tr.messages.goneOnTimer
+                  : viewsLeft
+                    ? tr.messages.opensLeft(viewsLeft)
+                    : message.codeLock
+                      ? tr.messages.locksOnClose
+                      : ""}
         </Text>
       </View>
     </Modal>
@@ -151,4 +170,7 @@ const styles = StyleSheet.create({
   directions: { borderRadius: 999, backgroundColor: "rgba(255,255,255,0.12)", paddingVertical: 12, alignItems: "center" },
   text: { color: "#fff", fontSize: 19, lineHeight: 28, textAlign: "center" },
   footer: { color: "rgba(255,255,255,0.6)", fontSize: 12, textAlign: "center", paddingHorizontal: 16 },
+  actions: { flexDirection: "row", flexWrap: "wrap", justifyContent: "center", gap: 8, paddingHorizontal: 16, paddingBottom: 12 },
+  action: { flexDirection: "row", alignItems: "center", gap: 6, borderRadius: 999, backgroundColor: "rgba(255,255,255,0.12)", paddingHorizontal: 14, paddingVertical: 9 },
+  actionLabel: { color: "#fff", fontSize: 14, fontWeight: "600" },
 });

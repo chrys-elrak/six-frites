@@ -1,7 +1,7 @@
 "use client";
 
 import { previewLink } from "@six/shared";
-import { Flame, Loader2, X } from "lucide-react";
+import { Flame, Loader2, Lock, X } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useCloseOnBack } from "@/lib/back";
 import type { Hydrated } from "@/lib/e2ee";
@@ -14,6 +14,7 @@ import { LinkCard, Linked } from "./message-list";
 import { Portal } from "./portal";
 import { ProtectedImage, noSave } from "./protected-image";
 import { Styled } from "./rich-text";
+import type { SheetAction } from "./sheet";
 
 function Countdown({ msLeft, total }: { msLeft: number; total: number }) {
   const r = 16;
@@ -83,11 +84,13 @@ export function EphemeralViewer({
   expiresAt,
   mine,
   onClose,
+  actions = [],
 }: {
   message: Hydrated | null;
   expiresAt: string | null;
   mine: boolean;
   onClose: () => void;
+  actions?: SheetAction[];
 }) {
   const tr = useT();
   const deadline = expiresAt ? Date.parse(expiresAt) : null;
@@ -119,12 +122,12 @@ export function EphemeralViewer({
         className="fixed inset-0 z-[60] flex flex-col bg-black text-white"
         role="dialog"
         aria-modal
-        aria-label={tr.summary.selfDestructing}
+        aria-label={message?.codeLock ? tr.summary.lockedMessage : tr.summary.selfDestructing}
       >
         <div className="flex items-center gap-3 p-2 pt-[max(0.5rem,env(safe-area-inset-top))]">
           <span className="flex flex-1 items-center gap-2 pl-2 text-sm text-white/80">
-            <Flame className="size-4 fill-orange-500 text-orange-500" />
-            {e && shortRule(e, tr)}
+            {message?.codeLock ? <Lock className="size-4" /> : <Flame className="size-4 fill-orange-500 text-orange-500" />}
+            {e ? shortRule(e, tr) : message?.codeLock && tr.summary.lockedMessage}
           </span>
           {msLeft !== null && e?.ttlSeconds && <Countdown msLeft={msLeft} total={e.ttlSeconds * 1000} />}
           {message && (
@@ -174,16 +177,37 @@ export function EphemeralViewer({
           </div>
         </div>
 
+        {actions.length > 0 && (
+          <div className="flex flex-wrap justify-center gap-2 px-4">
+            {actions.map((a) => (
+              <button
+                key={a.label}
+                type="button"
+                onClick={a.onSelect}
+                className="flex items-center gap-1.5 rounded-full bg-white/10 px-3 py-2 text-sm font-medium hover:bg-white/20"
+              >
+                {a.icon && <a.icon className="size-4" />}
+                {a.label}
+              </button>
+            ))}
+          </div>
+        )}
         <p className="p-4 pb-[max(1rem,env(safe-area-inset-bottom))] text-center text-xs text-white/60">
-          {mine || !message
+          {!message
             ? null
-            : viewsLeft === 0
-              ? tr.messages.goneOnClose
-              : msLeft !== null
-                ? tr.messages.goneOnTimer
-                : viewsLeft
-                  ? tr.messages.opensLeft(viewsLeft)
-                  : null}
+            : mine || !e
+              ? message.codeLock
+                ? tr.messages.locksOnClose
+                : null
+              : viewsLeft === 0
+                ? tr.messages.goneOnClose
+                : msLeft !== null
+                  ? tr.messages.goneOnTimer
+                  : viewsLeft
+                    ? tr.messages.opensLeft(viewsLeft)
+                    : message.codeLock
+                      ? tr.messages.locksOnClose
+                      : null}
         </p>
       </div>
     </Portal>

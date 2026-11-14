@@ -282,6 +282,7 @@ export const ReplyPreview = z.object({
   deleted: z.boolean(),
   encrypted: z.boolean().describe("The quoted text is encrypted; show it from your own copy of that message"),
   sentAt: IsoDate.describe("When the quoted message was sent"),
+  locked: z.boolean().optional().describe("The quoted message is locked with a code, so its text never shows here"),
 });
 export type ReplyPreview = z.infer<typeof ReplyPreview>;
 
@@ -455,6 +456,11 @@ export const MessageDTO = z.object({
   attachment: AttachmentDTO.nullable(),
   sticker: StickerDTO.nullable(),
   ephemeral: EphemeralDTO.nullable(),
+  codeLock: z
+    .object({ locked: z.boolean().describe("Content is withheld for you; open it with your app lock code at POST /v1/messages/{id}/unlock") })
+    .nullable()
+    .optional()
+    .describe("Its sender locked it: everyone, the sender included, needs their own app lock code to open it, each time. Null when it isn't locked"),
   groupId: z.string().nullable().describe("Photos and videos sent together share it and show as one album"),
   threadId: Id.nullable().describe("In a group, the message this one comments on; it then shows only in that message's comments"),
   thread: z
@@ -616,6 +622,10 @@ export const SendMessageInput = z
     silent: z.boolean().optional().describe("Deliver it without a notification or sound"),
     bump: z.boolean().optional().describe("Bump the message in `replyToId`: bring it back to the bottom of the chat, on its own"),
     ephemeral: EphemeralInput.optional().describe("Self-destruct after viewing, like Telegram's view-once and timers"),
+    codeLock: z
+      .boolean()
+      .optional()
+      .describe("Lock it: everyone, you included, opens it with their own app lock code, each time. Text, files and locations only; with `ephemeral` it also self-destructs once opened"),
     encrypted: EncryptedInput.optional(),
     sentAt: IsoDate.optional().describe(
       "When the sender pressed send, on the server's clock (measure the offset with the socket `ping`). Shown in GET /v1/messages/{id}/timing",
@@ -685,6 +695,10 @@ export const SendMessageInput = z
     path: ["attachmentId"],
   })
   .refine((v) => !v.stickerId || v.text === undefined, { message: "Stickers have no caption", path: ["text"] })
+  .refine((v) => !v.codeLock || (!v.bump && !v.gifId && !v.stickerId && !v.checklist && !v.poll && !v.game && (!v.type || v.type === "location")), {
+    message: "Only text, files and locations can be locked with a code",
+    path: ["codeLock"],
+  })
   .refine((v) => entitiesFit(v.text ?? "", v.entities), {
     message: "Entities fall outside the text",
     path: ["entities"],
@@ -1038,6 +1052,7 @@ export const ScheduledMessageDTO = z.object({
   spoiler: z.boolean(),
   attachment: AttachmentDTO.nullable(),
   ephemeral: z.object({ maxViews: z.number().int().nullable(), ttlSeconds: z.number().int().nullable() }).nullable(),
+  codeLock: z.boolean().optional().describe("It will be sent locked with a code"),
   replyTo: ReplyPreview.nullable(),
   sendAt: IsoDate,
   createdAt: IsoDate,

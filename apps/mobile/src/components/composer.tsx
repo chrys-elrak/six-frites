@@ -18,7 +18,9 @@ import {
   type CommandName,
   type StickerDTO,
   parseCommand,
+  lockedMessage,
   silentMessage,
+  typedMessage,
   suggestEmoji,
   MESSAGE_TEXT_SIZES,
   TEXT_COLORS,
@@ -59,6 +61,7 @@ import {
   Italic,
   ListChecks,
   ChartBar,
+  Lock,
   ShieldCheck,
   Users,
   MapPin,
@@ -164,6 +167,7 @@ const COMMAND_ICONS: Record<CommandName, LucideIcon> = {
   giphy: Film,
   sticker: Sticker,
   silent: BellOff,
+  lock: Lock,
   emoji: Smile,
   game: Gamepad2,
   play: Dices,
@@ -265,6 +269,7 @@ export function Composer({
   const recState = useAudioRecorderState(recorder, 200);
   const [recording, setRecording] = useState(false);
   const [ephemeral, setEphemeral] = useState<EphemeralInput | null>(null);
+  const [codeLock, setCodeLock] = useState(false);
   const [scheduling, setScheduling] = useState<"now" | "next" | null>(null);
   const [sendAt, setSendAt] = useState<Date | null>(null);
   const [showScheduled, setShowScheduled] = useState(false);
@@ -394,7 +399,7 @@ export function Composer({
     return true;
   }
 
-  const query = parseCommand(text) && silentMessage(text) === null ? null : emojiQuery(text, caret);
+  const query = parseCommand(text) && typedMessage(text) === null ? null : emojiQuery(text, caret);
   const typed = query?.query;
   const suggestions = useMemo(() => (typed ? suggestEmoji(allEmoji, typed) : []), [typed]);
 
@@ -419,8 +424,9 @@ export function Composer({
   }
 
   const silent = editing ? null : silentMessage(text);
-  const commanding = silent === null && parseCommand(text) !== null;
-  const parsed = parseMarkup(emojifyEnd(silent ?? text));
+  const locked = editing ? null : lockedMessage(text);
+  const commanding = silent === null && locked === null && parseCommand(text) !== null;
+  const parsed = parseMarkup(emojifyEnd(silent ?? locked ?? text));
   const captionOnly = !!editing && (!!editing.attachment || (mode?.kind === "edit" && !!mode.photo));
   const canSubmit = (parsed.text.length > 0 || captionOnly) && realtime !== null && !saving;
 
@@ -486,6 +492,7 @@ export function Composer({
     useDrafts.getState().set(slot, "");
     setText("");
     setEphemeral(null);
+    setCodeLock(false);
     if (mode) cancel();
     onSent();
   }
@@ -528,13 +535,15 @@ export function Composer({
       text: file ? "" : parsed.text,
       entities: file ? [] : parsed.entities,
       replyTo: mode?.kind === "reply" ? mode.message : undefined,
-      ephemeral: chosen,
+      ephemeral: locked === null ? chosen : null,
+      codeLock: locked !== null || codeLock,
       spoiler,
       file,
       silent: silent !== null,
     });
     if (file) {
       setEphemeral(null);
+      setCodeLock(false);
       if (mode) cancel();
       onSent();
     } else reset();
@@ -555,13 +564,14 @@ export function Composer({
         replyTo: first && mode?.kind === "reply" ? mode.message : undefined,
         spoiler: hidden && (file.kind === "image" || file.kind === "video"),
         ephemeral: chosen,
+        codeLock,
         file,
       });
     });
     reset();
   }
 
-  function sendSpecial(extra: Pick<Draft, "location" | "checklist" | "poll" | "pollVisible" | "game" | "ephemeral">) {
+  function sendSpecial(extra: Pick<Draft, "location" | "checklist" | "poll" | "pollVisible" | "game" | "ephemeral" | "codeLock">) {
     if (!realtime) return;
     queue({
       text: "",
@@ -769,6 +779,15 @@ export function Composer({
             </Text>
             <Pressable onPress={() => setEphemeral(null)} accessibilityLabel={tr.composer.turnOffSelfDestruct} hitSlop={8} style={styles.round32}>
               <X size={16} color={flame} />
+            </Pressable>
+          </View>
+        )}
+        {codeLock && !editing && (
+          <View style={styles.ephemeralBar}>
+            <Lock size={16} color={accent.bg} />
+            <Text style={{ flex: 1, color: accent.bg, fontSize: 14 }}>{tr.composer.lockedRule}</Text>
+            <Pressable onPress={() => setCodeLock(false)} accessibilityLabel={tr.composer.dontLock} hitSlop={8} style={styles.round32}>
+              <X size={16} color={accent.bg} />
             </Pressable>
           </View>
         )}
@@ -1175,6 +1194,11 @@ export function Composer({
             ...(chat?.group ? [{ label: tr.composer.poll, icon: ChartBar, onSelect: () => setWritingPoll(true) }] : []),
             { label: tr.composer.game, icon: Gamepad2, onSelect: () => setStartingGame(true) },
             { label: tr.composer.scheduleMessage, icon: CalendarClock, onSelect: () => setScheduling("next") },
+            {
+              label: tr.composer.lockWithCode,
+              icon: Lock,
+              onSelect: () => setCodeLock(true),
+            },
             ...attachCommands(!!chat?.group).map((name) => ({
               label: `/${name}`,
               icon: COMMAND_ICONS[name],
@@ -1192,8 +1216,9 @@ export function Composer({
           onClose={() => setAskLocation(false)}
           onSend={(location, chosen) => {
             setAskLocation(false);
-            sendSpecial({ location, ephemeral: chosen });
+            sendSpecial({ location, ephemeral: chosen, codeLock });
             setEphemeral(null);
+            setCodeLock(false);
           }}
         />
       )}
